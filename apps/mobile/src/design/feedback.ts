@@ -17,13 +17,14 @@ export function getFeedbackPrefs(): Prefs {
   return { ...prefs };
 }
 
-export type SoundName = 'tap' | 'complete' | 'cleared' | 'brief';
+export type SoundName = 'tap' | 'complete' | 'cleared' | 'brief' | 'file';
 
 const sources: Record<SoundName, number> = {
   tap: require('../../assets/sounds/tap.wav'),
   complete: require('../../assets/sounds/complete.wav'),
   cleared: require('../../assets/sounds/cleared.wav'),
   brief: require('../../assets/sounds/brief.wav'),
+  file: require('../../assets/sounds/file.wav'),
 };
 
 const players: Partial<Record<SoundName, AudioPlayer>> = {};
@@ -44,7 +45,7 @@ export function playSound(name: SoundName): void {
       let p = players[name];
       if (!p) {
         p = createAudioPlayer(sources[name]);
-        p.volume = name === 'brief' ? 0.5 : 0.8;
+        p.volume = name === 'brief' ? 0.5 : name === 'file' ? 0.45 : 0.8;
         players[name] = p;
       }
       p.seekTo(0);
@@ -87,6 +88,11 @@ export const feedback = {
   cleared(): void {
     if (prefs.haptics) safe(Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
     playSound('cleared');
+  },
+  /** A record lands in the Filing tray or an answer is filed (DESIGN §23). */
+  file(): void {
+    if (prefs.haptics) safe(Haptics.selectionAsync());
+    playSound('file');
   },
   /** First open of the morning brief each day. */
   brief(): void {

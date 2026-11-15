@@ -105,3 +105,11 @@ function write(name, buf) {
   }
   write('brief', b);
 }
+
+// file: ≤120ms, two soft high sine blips (DESIGN.md §23), quieter than the rest
+{
+  const b = buffer(0.17);
+  partial(b, { f: 880, dur: 0.09, vol: 1 });
+  partial(b, { f: 1320, start: 0.05, dur: 0.12, vol: 0.8 });
+  write('file', b);
+}

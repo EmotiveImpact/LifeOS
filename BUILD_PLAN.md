@@ -1,7 +1,7 @@
 # life — Build Plan (v1)
 
 > **Who does what:** Antigravity builds each phase. **Claude reviews** at every 🛑 gate before the next phase starts.
-> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v9.html`** (every screen; the visual target). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
+> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v10.html`** (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
 > **The app:** `apps/mobile` (Expo SDK 58, expo-router, Reanimated 4, Gesture Handler). Logic: `packages/core` (don't change its logic; strings only).
 
 ---

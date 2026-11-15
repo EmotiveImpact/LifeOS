@@ -110,7 +110,7 @@ function TrayTile({ area, count }: { area: Area; count: number }) {
   useEffect(() => {
     if (count > prev.current) {
       s.value = withSequence(withSpring(1.06, springs.snappy), withSpring(1, springs.smooth));
-      feedback.select();
+      feedback.file();
     }
     prev.current = count;
   }, [count, s]);

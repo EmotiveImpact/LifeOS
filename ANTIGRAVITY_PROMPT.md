@@ -4,7 +4,7 @@ You are building **life**, an Expo app in `apps/mobile`. Claude designed it and 
 1. `BUILD_PLAN.md`: the phases, tasks, acceptance criteria and 🛑 review gates. **This is your job list.**
 2. `SPEC.md`: **how everything works**: the Life Engine, health (devices, readiness, sleep, food, habits), learning (Feynman + spaced recall), the behaviour of every component and screen, the data model, and blind spots with decisions.
 3. `DESIGN.md`: the rules. Every section is numbered (§). Later sections override earlier ones; the key ones are §25–§28 (look), §29 + §32 (screens), §40 (Pulse = dot field), §42 (motion), §43 (no glass or blur), §44 (generic imagery for v1).
-4. The visual target: **`design-board/life-design-board-v9.html`, every screen (55) with all feedback applied.** It supersedes v1–v8 wherever they differ. v8 is still the reference for motion demos.
+4. The visual target: **`design-board/life-design-board-v10.html`, every screen (70) plus the component library and the still-to-create list.** It supersedes v1–v9 wherever they differ. v8 is still the reference for motion demos.
 5. `apps/mobile/src/design/`: the design system that already exists, and `/design`, the live component gallery.
 
 **How to work:**
