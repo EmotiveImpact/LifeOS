@@ -109,7 +109,7 @@ function Toolbar({ mode, setMode, look, setLook }: { mode: string; setMode: (m: 
   const t = useTokens();
   const insets = useSafeAreaInsets();
   const seg = (items: [string, string][], value: string, on: (v: string) => void) => (
-    <View style={{ flexDirection: 'row', backgroundColor: t.surface2, borderRadius: 10, padding: 3, borderWidth: 1, borderColor: t.line }}>
+    <View style={{ flexDirection: 'row', backgroundColor: t.surface2, borderRadius: 10, padding: 3 }}>
       {items.map(([k, label]) => (
         <Text
           key={k}
@@ -124,7 +124,7 @@ function Toolbar({ mode, setMode, look, setLook }: { mode: string; setMode: (m: 
     </View>
   );
   return (
-    <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 10, gap: 8, backgroundColor: t.canvas, borderBottomWidth: 1, borderColor: t.line }}>
+    <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 10, gap: 8, backgroundColor: t.canvas }}>
       <Text variant="headline">life · design gallery</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {seg([['light', 'Light'], ['dark', 'Dark'], ['both', 'Both']], mode, (v) => setMode(v as 'light' | 'dark' | 'both'))}

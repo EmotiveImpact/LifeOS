@@ -90,7 +90,7 @@ export function Dock({ items, active, onChange, hidden }: { items: DockItem[]; a
       <View style={[{ borderRadius: radius.full }, floatShadow(t.shadow)]}>
       <View style={styles.dock} accessibilityRole="tablist">
         {/* Solid surface + hairline. No blur or glass anywhere (DESIGN.md §43). */}
-        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.dockBg, borderRadius: radius.full, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line }]} />
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.dockBg, borderRadius: radius.full }]} />
         {items.map((it) => {
           const on = it.key === active;
           return (

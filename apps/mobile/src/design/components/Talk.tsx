@@ -89,7 +89,7 @@ export function FilingTray({ counts }: { counts: Partial<Record<Area, number>> }
   const t = useTokens();
   const filed = Object.values(counts).reduce((a, b) => a + (b ?? 0), 0);
   return (
-    <View style={[styles.tray, { backgroundColor: t.surface, borderColor: t.line }]}>
+    <View style={[styles.tray, { backgroundColor: t.surface }]}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Callout style={{ fontFamily: 'Inter_600SemiBold' }}>Filing into place</Callout>
         <Callout tone="ink2">{`${filed} filed`}</Callout>
@@ -134,7 +134,7 @@ function TrayTile({ area, count }: { area: Area; count: number }) {
 export function UserBubble({ text }: { text: string }) {
   const t = useTokens();
   return (
-    <Animated.View entering={FadeInDown.springify().damping(18)} style={[styles.bubble, { backgroundColor: t.surface2, borderColor: t.line }]}>
+    <Animated.View entering={FadeInDown.springify().damping(18)} style={[styles.bubble, { backgroundColor: t.surface2 }]}>
       <Text variant="body">{text}</Text>
     </Animated.View>
   );
@@ -164,7 +164,7 @@ export function LifeReply({ segments, card, chips, onChip, thinking }: { segment
 function SuggestionChip({ label, onPress }: { label: string; onPress: () => void }) {
   const t = useTokens();
   return (
-    <Press haptic="select" onPress={onPress} style={[styles.chip, { backgroundColor: t.surface2, borderColor: t.line }]}>
+    <Press haptic="select" onPress={onPress} style={[styles.chip, { backgroundColor: t.surface2 }]}>
       <Callout>{label}</Callout>
     </Press>
   );
@@ -175,7 +175,7 @@ export function FileCard({ prompt, savedText, onSave }: { prompt: string; savedT
   const t = useTokens();
   const [saved, setSaved] = useState(false);
   return (
-    <View style={[styles.file, { backgroundColor: t.surface2, borderColor: t.line }]}>
+    <View style={[styles.file, { backgroundColor: t.surface2 }]}>
       {saved ? (
         <Ionicons name="checkmark-circle" size={22} color={t.gain} />
       ) : (
@@ -205,7 +205,7 @@ export function Composer({ value, onChangeText, onSend, onAttach, placeholder = 
   const t = useTokens();
   const empty = value.trim().length === 0;
   return (
-    <View style={[styles.composer, { backgroundColor: t.surface2, borderColor: t.line }]}>
+    <View style={[styles.composer, { backgroundColor: t.surface2 }]}>
       {onAttach ? (
         <Press haptic="select" onPress={onAttach} accessibilityLabel="Attach" style={styles.cIcon}>
           <Ionicons name="add" size={22} color={t.ink2} />
@@ -237,7 +237,7 @@ export function AttachMenu({ visible, options, onPick, onClose }: { visible: boo
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.scheme === 'dark' ? 'rgba(0,0,0,0.55)' : 'rgba(13,14,16,0.3)' }]} onPress={onClose} accessibilityLabel="Close attach menu" />
-      <View style={[styles.attach, { backgroundColor: t.surface, borderColor: t.line }]}>
+      <View style={[styles.attach, { backgroundColor: t.surface }]}>
         {options.map((o, i) => (
           <Animated.View key={o.key} entering={FadeInDown.delay(i * 40).springify().damping(16)}>
             <Press
@@ -265,12 +265,12 @@ export function AttachMenu({ visible, options, onPick, onClose }: { visible: boo
 
 const styles = StyleSheet.create({
   mic: { width: 74, height: 74, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  tray: { marginHorizontal: 14, borderRadius: 20, padding: 14, borderWidth: StyleSheet.hairlineWidth * 2 },
+  tray: { marginHorizontal: 14, borderRadius: 20, padding: 14 },
   tile: { width: '32%', flexGrow: 1, borderRadius: 11, paddingVertical: 9, paddingHorizontal: 10, gap: 3, overflow: 'hidden' },
-  bubble: { alignSelf: 'flex-end', maxWidth: '82%', borderRadius: 16, paddingVertical: 11, paddingHorizontal: 14, borderWidth: StyleSheet.hairlineWidth * 2 },
+  bubble: { alignSelf: 'flex-end', maxWidth: '82%', borderRadius: 16, paddingVertical: 11, paddingHorizontal: 14 },
   chip: { height: 36, paddingHorizontal: 14, borderRadius: radius.sm, justifyContent: 'center' },
-  file: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.lg, padding: 14, borderWidth: StyleSheet.hairlineWidth * 2 },
-  composer: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, borderRadius: 16, paddingHorizontal: 6, borderWidth: StyleSheet.hairlineWidth * 2 },
+  file: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.lg, padding: 14 },
+  composer: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, borderRadius: 16, paddingHorizontal: 6 },
   cIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  attach: { position: 'absolute', left: 14, right: 14, bottom: 110, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 8, borderWidth: StyleSheet.hairlineWidth * 2 },
+  attach: { position: 'absolute', left: 14, right: 14, bottom: 110, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 8 },
 });

@@ -20,7 +20,7 @@ Instructions for any coding agent working in this repo (Codex reads this file au
 - **Use the design system.** Import from `@/design`. No raw hex colours, no new font sizes, no new spacing scales. If a component is missing, add it to `src/design/components/` first and show it in `/design`.
 - **Numbers come from `packages/core`.** Never hard-code a £ figure, score or target in a screen. Don't change engine logic.
 - **No glass, no blur, no mesh gradients.** Solid surfaces only.
-- **No borders on buttons or chips.** Card and avatar hairlines are pending the owner's decision (DESIGN §47): leave them exactly as the design system draws them today; don't add new ones.
+- **No borders, ever** (DESIGN §47): no outlines on cards, tiles, avatars, inputs, buttons or chips. Surfaces separate by fill. Only list row dividers and state indicators (current step, today) draw lines.
 - **The top bar never moves** (DESIGN §46). Use `TopBar` (`root | push | sheet | flow`) *outside* the ScrollView; pick the kind from how the screen opens (the board shows it under every screen). Never two bars on one screen.
 - **The orb is `LifeOrb`** (`ring | sphere | voice | done`). Ring everywhere by default; sphere only for work longer than a second; voice only while listening or speaking.
 - **Motion via springs from `tokens.motion`**, haptics and sounds only via `feedback.*`. Respect Reduce Motion (`useCalmMotion`).

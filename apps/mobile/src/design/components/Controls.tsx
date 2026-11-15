@@ -102,7 +102,7 @@ export function CountStepper({ value, onChange, question, consequence, min = 0, 
 function RoundButton({ icon, label, disabled, onPress }: { icon: 'add' | 'remove'; label: string; disabled?: boolean; onPress: () => void }) {
   const t = useTokens();
   return (
-    <Press haptic={null} onPress={onPress} disabled={disabled} accessibilityLabel={label} style={[styles.round, { backgroundColor: t.surface2, borderColor: t.line, opacity: disabled ? 0.35 : 1 }]}>
+    <Press haptic={null} onPress={onPress} disabled={disabled} accessibilityLabel={label} style={[styles.round, { backgroundColor: t.surface2, opacity: disabled ? 0.35 : 1 }]}>
       <Ionicons name={icon} size={24} color={t.ink} />
     </Press>
   );
@@ -200,7 +200,7 @@ export function Toggle({ value, onChange, accessibilityLabel }: { value: boolean
 export function Segmented<T extends string>({ options, value, onChange }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
   const t = useTokens();
   return (
-    <View style={[styles.seg, { backgroundColor: t.surface2, borderColor: t.line }]} accessibilityRole="tablist">
+    <View style={[styles.seg, { backgroundColor: t.surface2 }]} accessibilityRole="tablist">
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -210,7 +210,7 @@ export function Segmented<T extends string>({ options, value, onChange }: { opti
             onPress={() => onChange(o.value)}
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
-            style={[styles.segItem, on && { backgroundColor: t.surface, borderColor: t.line, borderWidth: 1 }]}
+            style={[styles.segItem, on && { backgroundColor: t.surface }]}
           >
             <Callout tone={on ? 'ink' : 'ink2'}>{o.label}</Callout>
           </Press>
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   glyphs: { minHeight: 84, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 4, flexWrap: 'wrap' },
   round: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   thumb: { position: 'absolute', top: 5, width: 22, height: 22, borderRadius: 7, backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 3 },
-  seg: { flexDirection: 'row', padding: 3, borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth * 2 },
+  seg: { flexDirection: 'row', padding: 3, borderRadius: radius.md },
   segItem: { flex: 1, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   chip: { height: 38, paddingHorizontal: 14, borderRadius: radius.sm, justifyContent: 'center' },
 });

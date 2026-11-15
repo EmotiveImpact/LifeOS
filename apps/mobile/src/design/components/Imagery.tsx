@@ -64,7 +64,7 @@ export function ImageTreatment({ kind, source, height, children, style }: ImageT
   const t = useTokens();
   if (kind === 'card') {
     return (
-      <View style={[styles.card, { height: height ?? 220, borderColor: t.line }, style]}>
+      <View style={[styles.card, { height: height ?? 220 }, style]}>
         <Image source={source} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors />
         <LinearGradient colors={['rgba(8,9,10,0)', 'rgba(8,9,10,0.8)']} locations={[0.35, 1]} style={StyleSheet.absoluteFill} />
         <View style={styles.cardBody}>{children}</View>
@@ -89,7 +89,7 @@ export function PhotoChip({ children }: { children: ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.lg, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth * 2 },
+  card: { borderRadius: radius.lg, overflow: 'hidden' },
   cardBody: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, gap: 6 },
   chip: { alignSelf: 'flex-start', height: 24, paddingHorizontal: 9, borderRadius: 7, backgroundColor: '#0D0E10', justifyContent: 'center' },
 });

@@ -35,7 +35,7 @@ export function ListRow({ title, sub, icon, area, right, chevron, onPress, tone 
   const body = (
     <>
       {icon ? (
-        <View style={[styles.icon, { backgroundColor: t.surface2, borderColor: t.line }]}>
+        <View style={[styles.icon, { backgroundColor: t.surface2 }]}>
           <Ionicons name={icon} size={17} color={t.ink} />
         </View>
       ) : null}
@@ -63,7 +63,7 @@ export function ListRow({ title, sub, icon, area, right, chevron, onPress, tone 
 export function RowGroup({ children, header, count }: { children: ReactNode[]; header?: string; count?: string }) {
   const t = useTokens();
   return (
-    <View style={[styles.group, { backgroundColor: t.surface, borderColor: t.line }]}>
+    <View style={[styles.group, { backgroundColor: t.surface }]}>
       {header ? (
         <View style={styles.groupHead}>
           <Title>{header}</Title>
@@ -99,7 +99,7 @@ export function Checklist({ items, onToggle, header, count }: { items: CheckItem
           accessibilityLabel={it.label}
           style={styles.row}
         >
-          <View style={[styles.box, it.done ? { backgroundColor: t.ink } : { borderWidth: 1.5, borderColor: t.line2 }]}>
+          <View style={[styles.box, it.done ? { backgroundColor: t.ink } : { backgroundColor: t.surface3 }]}>
             {it.done ? <Ionicons name="checkmark" size={14} color={t.canvas} /> : null}
           </View>
           <View style={{ flex: 1, gap: 2 }}>
@@ -135,9 +135,9 @@ export function ToolTile({ title, icon, locked, level, onPress }: { title: strin
       haptic={locked ? 'select' : 'open'}
       onPress={onPress}
       accessibilityLabel={locked ? `${title}, unlocks at level ${level}` : title}
-      style={[styles.tool, { backgroundColor: locked ? 'transparent' : t.surface, borderColor: t.line }]}
+      style={[styles.tool, { backgroundColor: locked ? 'transparent' : t.surface }]}
     >
-      <View style={[styles.icon, { backgroundColor: t.surface2, borderColor: t.line, opacity: locked ? 0.4 : 1 }]}>
+      <View style={[styles.icon, { backgroundColor: t.surface2, opacity: locked ? 0.4 : 1 }]}>
         <Ionicons name={icon} size={17} color={t.ink} />
       </View>
       <Title style={{ fontSize: 15, lineHeight: 19, opacity: locked ? 0.45 : 1 }}>{title}</Title>
@@ -152,7 +152,7 @@ export function InsightCard({ area, source, value, text, width }: { area: Area; 
   const t = useTokens();
   const c = areaColors[t.scheme][area];
   return (
-    <View style={[styles.card, { backgroundColor: t.surface, borderColor: t.line, width, gap: 10 }]}>
+    <View style={[styles.card, { backgroundColor: t.surface, width, gap: 10 }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c }} />
         <Callout tone="ink2" numberOfLines={1} style={{ fontSize: 12, flex: 1 }}>
@@ -184,7 +184,7 @@ export function RecordRow({ area, badge, label, destination, removed, onToggleRe
         <Title style={[{ fontSize: 15 }, removed ? { textDecorationLine: 'line-through' } : null]}>{label}</Title>
         <Callout tone="ink2">{`→ ${destination}`}</Callout>
       </View>
-      <Press haptic="select" onPress={onToggleRemove} accessibilityLabel={removed ? `Undo removing ${label}` : `Remove ${label}`} style={[styles.small, { backgroundColor: t.surface2, borderColor: t.line }]}>
+      <Press haptic="select" onPress={onToggleRemove} accessibilityLabel={removed ? `Undo removing ${label}` : `Remove ${label}`} style={[styles.small, { backgroundColor: t.surface2 }]}>
         <Callout>{removed ? 'Undo' : 'Remove'}</Callout>
       </Press>
     </Animated.View>
@@ -221,7 +221,7 @@ export function HabitRow({ name, cue, last14, meta, source, onToggleToday }: Hab
   const t = useTokens();
   const done = last14.filter(Boolean).length;
   return (
-    <View style={[styles.card, { backgroundColor: t.surface, borderColor: t.line, gap: 10 }]}>
+    <View style={[styles.card, { backgroundColor: t.surface, gap: 10 }]}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
         <Title style={{ flex: 1 }}>{name}</Title>
         {source ? (
@@ -344,7 +344,7 @@ export function StageBar({ segments, start, end }: { segments: { stage: SleepSta
 export function MetricTile({ label, value, unit, meaning, children, onPress }: { label: string; value: string; unit?: string; meaning?: string; children?: ReactNode; onPress?: () => void }) {
   const t = useTokens();
   return (
-    <Press haptic="open" onPress={onPress} accessibilityLabel={`${label} ${value} ${unit ?? ''}`} style={[styles.card, { backgroundColor: t.surface, borderColor: t.line, gap: 10, flex: 1 }]}>
+    <Press haptic="open" onPress={onPress} accessibilityLabel={`${label} ${value} ${unit ?? ''}`} style={[styles.card, { backgroundColor: t.surface, gap: 10, flex: 1 }]}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Callout tone="ink2">{label}</Callout>
         <Ionicons name="chevron-forward" size={16} color={t.inkQuiet} />
@@ -365,13 +365,13 @@ export function MetricTile({ label, value, unit, meaning, children, onPress }: {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, minHeight: 52 },
-  icon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth * 2 },
-  group: { borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 2, borderWidth: StyleSheet.hairlineWidth * 2 },
+  icon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  group: { borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 2 },
   groupHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, paddingBottom: 4 },
   box: { width: 22, height: 22, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
   tag: { alignSelf: 'flex-start', height: 22, paddingHorizontal: 8, borderRadius: 7, justifyContent: 'center' },
-  tool: { flex: 1, minHeight: 112, borderRadius: 16, padding: 14, gap: 20, borderWidth: StyleSheet.hairlineWidth * 2 },
-  card: { borderRadius: radius.lg, padding: 16, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: 'transparent' },
+  tool: { flex: 1, minHeight: 112, borderRadius: 16, padding: 14, gap: 20 },
+  card: { borderRadius: radius.lg, padding: 16, borderColor: 'transparent' },
   badge: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   small: { height: 30, paddingHorizontal: 10, borderRadius: 9, justifyContent: 'center' },
 });

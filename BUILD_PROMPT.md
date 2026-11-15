@@ -19,7 +19,7 @@ Build PHASE 1 from BUILD_PLAN.md now (then stop):
 - Use only components and tokens from apps/mobile/src/design (import from "@/design").
   If something is missing, add it to the design system first and show it in the /design gallery.
 - Every screen uses TopBar (root | push | sheet | flow) outside its ScrollView. The header never moves.
-- Every number comes from packages/core. No glass, no blur. No borders on buttons or chips.
+- Every number comes from packages/core. No glass, no blur. No borders anywhere.
 - It must typecheck and bundle for both iOS and Android.
 
 When the phase is done:

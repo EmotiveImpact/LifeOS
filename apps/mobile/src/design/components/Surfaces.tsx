@@ -77,8 +77,7 @@ export function Card({ variant = 'default', domain = 'admin', padding, style, ch
     padding: padding ?? (isTile ? 12 : 16),
     overflow: 'hidden',
     // v4 hairline depth: a 1px edge defines the surface.
-    borderWidth: variant === 'inverted' || isTile ? 0 : StyleSheet.hairlineWidth * 2,
-    borderColor: t.line,
+    // No borders, ever (DESIGN §47): surfaces separate by fill alone.
   };
   const tint =
     variant === 'tinted' ? (

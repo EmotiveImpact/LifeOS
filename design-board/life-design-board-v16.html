@@ -333,10 +333,10 @@ textarea.aimt{width:100%;min-height:84px;resize:none;background:var(--surface-2)
 .tb-collapse{position:absolute;left:0;right:0;top:56px;justify-content:center;background:var(--bg);box-shadow:0 1px 0 var(--line);opacity:0;pointer-events:none;transition:opacity .2s;z-index:7}
 .tb-collapse.scrolled{opacity:1}.tb-collapse .tb-t{position:static}
 
-/* v16: borders off by default inside the phones; the Borders toggle brings the hairlines back to compare */
-[data-borders="off"] .screen .card{box-shadow:var(--hi)!important}
-[data-borders="off"] .screen .ic,[data-borders="off"] .screen .sqb,[data-borders="off"] .screen .segm,[data-borders="off"] .screen .seg,[data-borders="off"] .screen .t-card,[data-borders="off"] .screen .aimt,[data-borders="off"] .screen .chipb,[data-borders="off"] .screen .tag{box-shadow:none!important}
-[data-borders="off"] .screen .adot{box-shadow:none!important}
+/* v16 (final): no borders, ever, inside the app (DESIGN §47). Row dividers in lists stay. */
+.screen .card{box-shadow:var(--hi)!important}
+.screen .ic,.screen .sqb,.screen .segm,.screen .seg,.screen .t-card,.screen .aimt,.screen .chipb,.screen .tag{box-shadow:none!important}
+.screen .adot{box-shadow:none!important}
 
 #s-addperson .li.done .lt,#s-addperson .li.done .lt *{text-decoration:none!important;color:var(--text)!important;opacity:1!important}#s-addperson .li.done .lt .t-callout{color:var(--text-2)!important}
 </style>
@@ -347,12 +347,12 @@ textarea.aimt{width:100%;min-height:84px;resize:none;background:var(--surface-2)
     <div class="ctrl">
       <div class="seg" role="group" aria-label="Theme"><button data-th="dark">Dark</button><button data-th="light">Light</button></div>
       <div class="seg" role="group" aria-label="Phone size"><button data-z="1" aria-pressed="true">1×</button><button data-z="0.75">Fit</button><button data-z="0.5">Overview</button></div>
-      <div class="seg"><button id="brd" aria-pressed="false">Borders</button></div><div class="seg"><button id="snd" aria-pressed="true">Sound</button></div>
+      <div class="seg"><button id="snd" aria-pressed="true">Sound</button></div>
     </div>
   </div>
 
   <section class="col" style="gap:24px">
-    <span class="eyebrow"><i></i>v16 · No borders (toggle to compare), a better sphere, ready to build</span>
+    <span class="eyebrow"><i></i>v16 · No borders, a better sphere, ready to build</span>
     <h1 class="h-hero">Every feature. One calm app that grows with you.</h1>
     <p class="p-lead">This is the whole of life, with every piece of your feedback in: solid surfaces (no glass), the dot-field Pulse driving a diverse cast of photos, the Chief Aim, a full Body chapter (devices, readiness, sleep, load, photo food logging, habits) and Teach it back. In total, <span id="countScreens">34</span> screens in 21 chapters, organised the way you move through the app (tab → area → screen, with how each one opens), from first open to level four. Every function already in the engine has a home here, the numbers come from the engine itself, and it all speaks one language.</p>
   </section>
@@ -428,7 +428,6 @@ var redraw=[];
 document.querySelectorAll('[data-th]').forEach(function(b){b.addEventListener('click',function(){root.setAttribute('data-theme',b.dataset.th);syncTheme()})});
 matchMedia('(prefers-color-scheme: light)').addEventListener('change',syncTheme);
 document.querySelectorAll('[data-z]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('[data-z]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});document.querySelectorAll('.shot').forEach(function(s){s.style.setProperty('--z',b.dataset.z)});setTimeout(function(){redraw.forEach(function(f){f()})},50)})});
-var brdB=document.getElementById('brd');function setBorders(on){document.documentElement.setAttribute('data-borders',on?'on':'off');brdB.setAttribute('aria-pressed',on)}setBorders(false);brdB.addEventListener('click',function(){setBorders(brdB.getAttribute('aria-pressed')!=='true')});
 var soundOn=true,ctx=null,sndB=document.getElementById('snd');
 sndB.addEventListener('click',function(){soundOn=!soundOn;sndB.setAttribute('aria-pressed',soundOn)});
 function ac(){if(!ctx){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C()}if(ctx.state==='suspended')ctx.resume();return ctx}
@@ -1561,7 +1560,7 @@ S15('system','topbars','The top bar, everywhere','One rule decides the top of ev
   ['Sheet','<div class="tb sheet" style="padding:0"><i class="tb-grab"></i><div class="row sb" style="width:100%"><span class="tb-t">Add something</span><span class="sq">'+IC.close+'</span></div></div>'],
   ['Full-screen flow','<div class="tb flow" style="padding:0;display:flex;justify-content:space-between;align-items:center"><span class="sq">'+IC.close+'</span><span class="t-callout c2">Tax codes</span><span class="t-mono c2">2 / 3</span></div><div style="margin-top:6px">'+bitebar(2,3)+'</div>'],
   ['Over an image','<div style="border-radius:14px;overflow:hidden;position:relative;height:96px">'+img('area-home')+'<div class="tb push onimg" style="position:absolute;left:0;right:0;top:8px;padding:0 10px"><span class="sq">'+IC.back+'</span><span class="tb-t" style="color:#fff;opacity:0">Home</span><span class="sq">'+IC.more+'</span></div></div>']].map(function(r){return '<div class="col" style="gap:6px"><span class="t-callout c2">'+r[0]+'</span><div class="card" style="padding:10px 12px">'+r[1]+'</div></div>'}).join('')+
- '<span class="t-callout cq">Never two bars. Never more than one action on a pushed screen. The hairline under the bar only appears once you scroll.</span></div></div>');
+ '<span class="t-callout cq">Never two bars. Never more than one action on a pushed screen. The bar never moves.</span></div></div>');
 
 /* ---------- KNOW YOURSELF: personality and more (You) ---------- */
 S15('self','tests','Know yourself','Short, research-backed questionnaires, each with a plain reason: what life will do differently with the answer. Personality (the Big Five), when your body likes to work and sleep, what you value most, and how you think about money. No horoscopes, no “learning styles”.','IPIP Big Five (public domain) · rMEQ chronotype · values card sort · money mindset',0,

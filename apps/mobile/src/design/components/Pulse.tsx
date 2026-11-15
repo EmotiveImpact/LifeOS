@@ -109,7 +109,7 @@ export function PulseField({ initial = { x: 0.72, y: 0.48 }, onChange, height = 
       {...responder.panHandlers}
       accessibilityRole="adjustable"
       accessibilityLabel={`Mood: ${mood.id}`}
-      style={[styles.field, { height, backgroundColor: t.surface, borderColor: t.line }]}
+      style={[styles.field, { height, backgroundColor: t.surface }]}
     >
       <Svg width={size.w} height={size.h}>
         {dots}
@@ -149,6 +149,6 @@ export function PulseCheckIn({ onChange }: { onChange?: (mood: Mood) => void }) 
 }
 
 const styles = StyleSheet.create({
-  field: { borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth * 2, overflow: 'hidden' },
+  field: { borderRadius: radius.lg, overflow: 'hidden' },
   axis: { position: 'absolute' },
 });

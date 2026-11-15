@@ -138,5 +138,5 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Voice behind `voice.ts`: on-device first, Phonon for speech, cloud fallback.** |
 | 15 Nov 2026 | **Models chosen per job by evals; no lock-in. Today's plan is decided by rules + a bandit, not an LLM.** |
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
-| 15 Nov 2026 | **v16: orb v2 (globe, no core); borders off on the board with a toggle, owner to decide; AGENTS.md + BUILD_PROMPT.md for any builder.** |
+| 15 Nov 2026 | **v16: orb v2 (globe, no core); no borders anywhere (owner's decision); AGENTS.md + BUILD_PROMPT.md for any builder.** |
 | 15 Nov 2026 | **v14: no borders on buttons (avatars and cards keep theirs); the orb evolves ring → sphere → core; chat restored; board organised by navigation; 188 screens.** |

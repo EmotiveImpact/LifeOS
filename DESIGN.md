@@ -722,7 +722,7 @@ Reduce Motion: springs become 160ms fades, drift and particles stop, and shared 
 - **Never ask for race or ethnicity.** If enabled later, ask about appearance only (§41).
 
 ## 45. v14 refinements (final)
-- **No borders on buttons.** Secondary buttons, square icon buttons, chips and plain tags are solid `surface-2` with no hairline. Cards, list groups, icon tiles and **avatars keep their hairline or ring**, because there the edge does a job (separating stacked surfaces, framing a face).
+- **No borders on buttons.** (Superseded by §47: no borders anywhere.)
 - **The orb evolves** (MOTION.md §3.2, `LifeOrb`): ring → sphere → core → done. Ring everywhere by default; sphere only for real work over a second; core only for voice; never decorative.
 - **Imagery for Learn and moments** is the diverse daylight cast (people mid-moment: understanding, deciding, moving in), never a colour-field still life. The plant-on-blue `c-growth` frame is retired.
 - **Chat is back** as the Talk button's tap action: a clean thread, the Island growing into a card with the sphere orb while life checks things, two-tone replies with live cards inside, suggestion chips. Hold the button to talk.
@@ -740,4 +740,4 @@ Reduce Motion: springs become 160ms fades, drift and particles stop, and shared 
 
 ## 47. v16 (final): the globe, and borders on trial
 - **LifeOrb v2.** The ring *is* the equator of a globe of dots, seen from straight above. Working: the view tilts to 24° and the other latitude rings fade in, so it becomes a globe turning in 3D, with near dots bigger and brighter and the back half faint. Voice: a soft wave travels across the dots with the voice level. **The glowing ember core is gone.** Done: dots gather, then it tilts back to the ring. Under 40pt it's always the ring. (`Orb.tsx`, board screen "The orb, evolving".)
-- **Borders on trial.** The board now shows every screen with **no borders at all** (cards, icon tiles, avatars, inputs), and a **Borders** toggle in its top controls brings the hairlines back to compare. The owner decides; until then the code keeps card and avatar hairlines as they are, and buttons and chips have none (§45).
+- **No borders, ever** (decided by the owner, 15 Nov 2026). No outlines on cards, list groups, icon tiles, avatars, inputs, segmented controls, image cards, the Pulse field, the Talk tray, bubbles, composer or the dock. Surfaces separate by fill alone (`surface` on `canvas`, `surface-2` inside). The only lines left are the dividers between rows inside a list, and state indicators (the current step ring, today's ring, a radio's ring).
