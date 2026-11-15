@@ -1,0 +1,554 @@
+<title>life Design Language v3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: thesis → the loop (talk → file → know → guide → act → level up) → rail of 7 live phones → understanding map → spec notes. Tokens mirror DESIGN.md. */
+:root{
+  --canvas:#F6F5F1; --surface:#FFFFFF; --surface-2:#EFECE6; --surface-3:#E7E3DC;
+  --ink:#141417; --ink-2:#5E5D65; --ink-quiet:#8A8890;
+  --ember:#E8553A; --ember-text:#C8391E; --ember-tint:rgba(232,85,58,.12);
+  --gain:#0B7A5A; --gain-tint:rgba(11,122,90,.10);
+  --paper:#F4F3EE; --float-shadow:0 12px 32px rgba(20,20,23,.12); --bubble-shadow:0 2px 10px rgba(20,20,23,.06);
+  --bezel:#1d1d21; --bezel-edge:#3a3a40; --page-bg:#E9E7E1;
+  --c-you:#6F7D86; --c-home:#8A6A58; --c-money:#0B7A5A; --c-work:#4B6CB7; --c-health:#C2457A; --c-goal:#E8553A; --c-mission:#141417;
+  --serif:'Instrument Serif','New York',Georgia,serif; --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; --mono:'JetBrains Mono','SF Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --canvas:#0E0E11; --surface:#18181D; --surface-2:#222228; --surface-3:#2C2C34; --ink:#F4F3EE; --ink-2:#A9A7B0; --ink-quiet:#75737C;
+  --ember:#FF6A3D; --ember-text:#FF6A3D; --ember-tint:rgba(255,106,61,.16); --gain:#2FD39F; --gain-tint:rgba(47,211,159,.14);
+  --float-shadow:0 12px 32px rgba(0,0,0,.5); --bubble-shadow:none; --page-bg:#060608;
+  --c-you:#A9B4BB; --c-home:#C9A48E; --c-money:#2FD39F; --c-work:#8FA7F0; --c-health:#F08AB0; --c-goal:#FF6A3D; --c-mission:#F4F3EE; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --canvas:#0E0E11; --surface:#18181D; --surface-2:#222228; --surface-3:#2C2C34; --ink:#F4F3EE; --ink-2:#A9A7B0; --ink-quiet:#75737C;
+  --ember:#FF6A3D; --ember-text:#FF6A3D; --ember-tint:rgba(255,106,61,.16); --gain:#2FD39F; --gain-tint:rgba(47,211,159,.14);
+  --float-shadow:0 12px 32px rgba(0,0,0,.5); --bubble-shadow:none; --page-bg:#060608;
+  --c-you:#A9B4BB; --c-home:#C9A48E; --c-money:#2FD39F; --c-work:#8FA7F0; --c-health:#F08AB0; --c-goal:#FF6A3D; --c-mission:#F4F3EE; color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{background:var(--page-bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;margin:0}
+button,input{font:inherit;color:inherit;background:none;border:0;padding:0}
+button{cursor:pointer}
+button:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+.wrap{padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px}
+.brand{display:flex;flex-direction:column;gap:12px;min-width:0}
+.wordmark{font-family:var(--serif);font-size:64px;line-height:.9;letter-spacing:-1.5px}
+.wordmark small{font-family:var(--sans);font-size:15px;letter-spacing:0;color:var(--ink-2);margin-left:10px;font-weight:500}
+.lede{font-size:24px;line-height:32px;font-weight:500;letter-spacing:-.4px;max-width:800px;margin:0;text-wrap:balance}
+.q{color:var(--ink-quiet)}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:40px;padding:0 16px;border-radius:999px;background:var(--surface);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:8px;transition:transform .15s;white-space:nowrap}
+.chip:active{transform:scale(.97)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--canvas)}
+h2.sec{font-family:var(--serif);font-weight:400;font-size:40px;line-height:44px;letter-spacing:-.8px;margin:0}
+.sec-head{display:flex;flex-direction:column;gap:8px;max-width:780px}
+.sec-head p{margin:0;font-size:15px;line-height:22px;color:var(--ink-2)}
+
+/* loop */
+.loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:10px;counter-reset:s}
+.step{background:var(--canvas);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:8px;position:relative}
+.step .k{font-family:var(--serif);font-size:30px;line-height:32px}
+.step b{font-size:15px}
+.step span{font-size:13px;line-height:18px;color:var(--ink-2)}
+.step .arrow{position:absolute;right:14px;top:18px;color:var(--ink-quiet);font-size:18px}
+
+/* rail */
+.rail{display:flex;gap:40px;overflow-x:auto;padding:8px 4px 28px;scroll-snap-type:x mandatory}
+.rail::-webkit-scrollbar{height:6px}.rail::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:3px}
+.shot{display:flex;flex-direction:column;gap:14px;scroll-snap-align:start;flex:0 0 auto;width:375px}
+.shot-cap{display:flex;flex-direction:column;gap:4px;padding-left:6px}
+.shot-cap b{font-size:15px;font-weight:600}
+.shot-cap span{font-size:13px;color:var(--ink-2);line-height:18px}
+.phone{width:375px;height:780px;border-radius:56px;padding:11px;background:var(--bezel);box-shadow:0 0 0 1.5px var(--bezel-edge),0 30px 60px rgba(0,0,0,.18);position:relative}
+.screen{width:100%;height:100%;border-radius:45px;overflow:hidden;position:relative;background:var(--canvas);color:var(--ink)}
+.scroll{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:120px}
+.scroll::-webkit-scrollbar{display:none}
+.notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:35px;border-radius:20px;background:#000;z-index:30}
+.status{height:54px;display:flex;justify-content:space-between;align-items:center;padding:6px 30px 0 34px;font-size:15px;font-weight:600;position:relative;z-index:5}
+.pad{padding:0 20px}
+.col{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:10px}
+
+.title-serif{font-family:var(--serif);font-size:30px;line-height:34px;letter-spacing:-.4px}
+.numeral-l{font-family:var(--serif);font-size:40px;line-height:44px;letter-spacing:-.8px}
+.statement{font-size:26px;line-height:32px;letter-spacing:-.6px;font-weight:500}
+.prose{font-size:20px;line-height:27px;letter-spacing:-.3px;font-weight:500}
+.headline{font-size:22px;line-height:28px;letter-spacing:-.4px;font-weight:600}
+.title{font-size:17px;line-height:22px;letter-spacing:-.2px;font-weight:600}
+.body{font-size:15px;line-height:22px}
+.callout{font-size:13px;line-height:18px;font-weight:500}
+.mono{font-family:var(--mono);font-size:13px;line-height:16px}
+.micro{font-size:11px;font-weight:600;line-height:13px}
+.unit{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-2);vertical-align:top;margin-left:2px}
+.ink2{color:var(--ink-2)}
+.card{background:var(--surface);border-radius:24px;padding:18px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.pill.live{background:var(--ember-tint);color:var(--ember-text)}
+.pill.done{background:var(--gain-tint);color:var(--gain)}
+.press{transition:transform .18s cubic-bezier(.2,.9,.3,1.2)}
+.press:active{transform:scale(.97)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:56px;border-radius:999px;background:var(--ink);color:var(--canvas);font-size:16px;font-weight:600}
+.btn.s{height:44px;font-size:15px;background:var(--surface-2);color:var(--ink)}
+.btn.link{background:transparent;color:var(--ink);height:40px;font-size:15px;text-decoration:underline;text-underline-offset:3px}
+.ticks{display:flex;align-items:flex-end;justify-content:space-between;height:30px}
+.ticks i{width:2px;height:18px;border-radius:2px 2px 0 0;background:var(--surface-3);transition:background .3s,height .3s}
+.ticks i.f{background:var(--ink)}.ticks i.a{background:var(--ember);height:30px}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rise{animation:rise .45s cubic-bezier(.2,.9,.3,1.1)}
+
+/* orb */
+.orb{width:22px;height:22px;position:relative;flex:0 0 auto}
+.orb i{position:absolute;left:50%;top:50%;width:3px;height:3px;margin:-1.5px;border-radius:50%;background:currentColor}
+.orb.spin{animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ask bar */
+.ask-bar{position:absolute;left:14px;right:14px;bottom:26px;height:56px;border-radius:999px;background:color-mix(in srgb,var(--surface) 84%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--float-shadow);display:flex;align-items:center;gap:8px;padding:0 6px 0 16px;z-index:10}
+.ask-bar .ph{flex:1;font-size:15px;color:var(--ink-quiet);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ask-bar .mic{width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--canvas);display:flex;align-items:center;justify-content:center}
+.ask-bar svg{width:19px;height:19px}
+.tabs{display:flex;gap:2px}
+.tabs span{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-2)}
+.tabs span.on{background:var(--surface-2);color:var(--ink)}
+
+/* home: knowing meter + life asked + things to know */
+.know{display:flex;align-items:center;gap:12px}
+.know .bar{flex:1;height:8px;border-radius:4px;background:var(--surface-3);overflow:hidden}
+.know .bar b{display:block;height:100%;background:var(--ink);border-radius:4px;transition:width .8s cubic-bezier(.2,.9,.3,1)}
+.asked{background:var(--surface);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px;transition:opacity .35s,transform .45s cubic-bezier(.2,.9,.3,1.1)}
+.asked.out{opacity:0;transform:translateX(40px) scale(.96)}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opts button{height:40px;padding:0 16px;border-radius:999px;background:var(--surface-2);font-size:15px;font-weight:500;transition:transform .15s,background .2s,color .2s}
+.opts button:active{transform:scale(.96)}
+.insights{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px 4px}
+.insights::-webkit-scrollbar{display:none}
+.ins{flex:0 0 232px;background:var(--surface);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:150px}
+.ins .src{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--ink-2)}
+.ins .src i{width:6px;height:6px;border-radius:50%}
+.ins .big{font-family:var(--serif);font-size:30px;line-height:32px}
+
+/* nudge */
+.lock{position:absolute;inset:0;background:linear-gradient(180deg,#2A1B12 0%,#5A1708 45%,#120806 100%);display:flex;flex-direction:column;align-items:center;padding-top:96px;gap:4px;color:#F4F3EE;transition:opacity .45s}
+.lock .time{font-family:var(--serif);font-size:84px;line-height:84px;letter-spacing:-2px}
+.lock .date{font-size:17px;font-weight:500;opacity:.8}
+.notif{position:absolute;left:14px;right:14px;top:300px;border-radius:24px;padding:14px 16px;background:rgba(244,243,238,.16);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;gap:12px;color:#F4F3EE;text-align:left;animation:drop .7s cubic-bezier(.2,.9,.3,1.2) .4s both}
+@keyframes drop{from{opacity:0;transform:translateY(-30px) scale(.96)}to{opacity:1;transform:none}}
+.notif .app{width:38px;height:38px;border-radius:10px;background:#F4F3EE;color:#141417;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-family:var(--serif);font-size:18px}
+.conv{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .45s}
+.conv.on{opacity:1;pointer-events:auto}
+.msg-u{align-self:flex-end;max-width:80%;background:var(--surface);box-shadow:var(--bubble-shadow);border-radius:20px;padding:11px 15px;font-size:15px;line-height:21px}
+.msg-l{display:flex;flex-direction:column;gap:12px}
+.chk{display:flex;align-items:center;gap:12px;padding:10px 0;text-align:left;width:100%}
+.chk + .chk{box-shadow:0 -1px 0 var(--surface-3)}
+.chk .box{width:24px;height:24px;border-radius:50%;background:var(--surface-2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--canvas);transition:background .25s}
+.chk .box svg{width:12px;height:12px;opacity:0}
+.chk.done .box{background:var(--ink)}.chk.done .box svg{opacity:1}
+.chk.done .t{color:var(--ink-quiet);text-decoration:line-through}
+
+/* talk mode */
+.talk{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--canvas)}
+.talk-head{padding:62px 20px 0;display:flex;justify-content:space-between;align-items:center}
+.transcript{flex:1;padding:18px 20px 0;overflow:hidden;font-size:24px;line-height:32px;letter-spacing:-.4px;font-weight:500;color:var(--ink-quiet);min-height:0}
+.transcript .w{opacity:0;transition:opacity .25s}
+.transcript .w.on{opacity:1}
+.transcript mark{background:transparent;color:var(--ink);border-radius:6px;transition:background .4s,color .4s;padding:0 2px;margin:0 -2px}
+.transcript mark.hit{background:var(--hl)}
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:40px}
+.wave i{width:3px;border-radius:2px;background:var(--ink);height:6px;transition:height .12s}
+.tray{margin:10px 12px 0;border-radius:28px;background:var(--surface);padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--float-shadow)}
+.tray-areas{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ta{border-radius:14px;background:var(--surface-2);padding:8px 10px;display:flex;flex-direction:column;gap:2px;position:relative;overflow:hidden;transition:transform .3s}
+.ta.bump{animation:bump .5s cubic-bezier(.2,.9,.3,1.6)}
+@keyframes bump{40%{transform:scale(1.06)}}
+.ta b{font-size:13px}.ta span{font-size:11px;font-weight:600;color:var(--ink-2)}
+.ta .fill{position:absolute;left:0;bottom:0;height:3px;background:var(--ac);transition:width .6s}
+.flyer{position:absolute;z-index:40;height:30px;padding:0 12px;border-radius:999px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#fff;white-space:nowrap;pointer-events:none;transition:transform .75s cubic-bezier(.5,0,.2,1),opacity .75s;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.talk-foot{display:flex;align-items:center;justify-content:center;gap:18px;padding:14px 0 30px}
+.bigmic{width:72px;height:72px;border-radius:50%;background:var(--ink);color:var(--canvas);display:flex;align-items:center;justify-content:center;position:relative}
+.bigmic svg{width:28px;height:28px}
+.bigmic.live::after{content:"";position:absolute;inset:-8px;border-radius:50%;box-shadow:0 0 0 3px var(--ember);animation:halo 1.6s ease-out infinite}
+@keyframes halo{from{transform:scale(.9);opacity:.8}to{transform:scale(1.25);opacity:0}}
+.small-round{width:48px;height:48px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center}
+.small-round svg{width:20px;height:20px}
+
+/* understood */
+.und{display:flex;align-items:center;gap:12px;padding:12px 0}
+.und + .und{box-shadow:0 -1px 0 var(--surface-3)}
+.und .dot{width:30px;height:30px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+.und .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.und .to{font-size:13px;color:var(--ink-2)}
+.und .x{height:32px;padding:0 12px;border-radius:999px;background:var(--surface-2);font-size:13px;font-weight:500}
+.und.removed .tx{opacity:.4;text-decoration:line-through}
+
+/* vantage */
+.vantage{position:absolute;inset:0;background:linear-gradient(180deg,#120806 0%,#3A1408 30%,#B8330F 62%,#FF7A45 80%,var(--canvas) 100%)}
+.ridge{position:absolute;left:0;right:0;top:250px;height:220px}
+.vbody{position:absolute;left:0;right:0;bottom:0;padding:0 20px 30px;display:flex;flex-direction:column;gap:12px}
+
+/* map */
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px}
+.area{background:var(--canvas);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.area .pct{font-family:var(--serif);font-size:36px;line-height:38px}
+.area .bar{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden}
+.area .bar b{display:block;height:100%;border-radius:3px}
+.area ul{margin:0;padding:0;list-style:none;font-size:13px;line-height:19px;color:var(--ink-2)}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
+.notes div{background:var(--canvas);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:8px}
+.notes b{font-size:15px}.notes p{margin:0;font-size:13px;line-height:19px;color:var(--ink-2)}
+.foot{font-size:13px;color:var(--ink-2);text-align:center}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:520px){.wordmark{font-size:52px}.lede{font-size:20px;line-height:27px}h2.sec{font-size:32px;line-height:36px}.shot{width:338px}.phone{transform:scale(.9);transform-origin:top left;margin-right:-38px;margin-bottom:-78px}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="wordmark">life<small>Design language v3</small></div>
+      <p class="lede"><span class="q">Home is where you</span> live your plan. <span class="q">Chat is how</span> life gets you moving <span class="q">and how</span> you figure things out. <span class="q">Everything said gets</span> filed into its place, <span class="q">so life can</span> guide you to the next vantage point.</p>
+    </div>
+    <div class="controls">
+      <button class="chip" id="themeBtn">Dark mode</button>
+      <button class="chip" id="soundBtn" aria-pressed="true">Sound on</button>
+    </div>
+  </header>
+
+  <section class="col" style="gap:20px">
+    <div class="sec-head"><h2 class="sec">The loop</h2><p>This is the whole product in six moves. Each phone below is one of them.</p></div>
+    <div class="loop">
+      <div class="step"><span class="k">Talk</span><b>You speak or type</b><span>Brain-dump your situation, or ask a question. No forms.</span><span class="arrow">→</span></div>
+      <div class="step"><span class="k">File</span><b>life puts it in place</b><span>Facts go to You, worries become missions, money goes to Money. You see each one land.</span><span class="arrow">→</span></div>
+      <div class="step"><span class="k">Know</span><b>Things to know</b><span>Insights, with where they came from: "You're likely owed £840 · from your chat".</span><span class="arrow">→</span></div>
+      <div class="step"><span class="k">Ask</span><b>life asks what it's missing</b><span>One question at a time on Home, answered in a tap. Understanding goes up.</span><span class="arrow">→</span></div>
+      <div class="step"><span class="k">Nudge</span><b>life gets you moving</b><span>At the right moment: "You have 20 minutes. Finish the P87?"</span><span class="arrow">→</span></div>
+      <div class="step"><span class="k">Rise</span><b>Next vantage point</b><span>Each level shows more of the view and unlocks new tools and routines.</span></div>
+    </div>
+  </section>
+
+  <section class="col" style="gap:20px">
+    <div class="sec-head"><h2 class="sec">Seven screens, all live</h2><p>Start with <b>Talk</b> (screen 2): press the mic and watch what you say get filed. Then answer life's question on Home, and open the nudge.</p></div>
+    <div class="rail">
+
+      <!-- 1 HOME -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="status"><span>9:41</span><span>●●●</span></div>
+            <div class="pad col" style="gap:18px;padding-top:10px">
+              <div class="row" style="justify-content:space-between;align-items:flex-start">
+                <div class="row" style="gap:8px"><span class="title-serif" style="font-size:44px;line-height:44px">Mon</span><span style="width:12px;height:12px;border-radius:50%;background:var(--ember);margin-top:6px"></span></div>
+                <span class="pill" style="height:32px">Level 1 · Starting out</span>
+              </div>
+              <div class="statement"><span class="q">Morning, Ada. Nothing urgent —</span> your rebate <span class="q">needs</span> one form <span class="q">and your</span> referral <span class="q">expires in 9 days.</span></div>
+              <div class="know"><span class="callout ink2" style="white-space:nowrap">life knows you</span><span class="bar"><b id="knowBar" style="width:64%"></b></span><span class="callout" id="knowPct">64%</span></div>
+
+              <div class="col" style="gap:10px">
+                <div class="row" style="justify-content:space-between"><span class="title">life is asking</span><span class="callout ink2" id="askCount">1 of 3</span></div>
+                <div class="asked" id="asked"></div>
+              </div>
+
+              <div class="col" style="gap:10px">
+                <div class="row" style="justify-content:space-between"><span class="title">Things to know</span><span class="callout ink2" id="insCount">3 new</span></div>
+                <div class="insights" id="insights"></div>
+              </div>
+
+              <div class="col" style="gap:10px">
+                <div class="title">Worth doing today</div>
+                <div class="card col press" style="gap:12px">
+                  <div class="row" style="justify-content:space-between"><span class="title">HMRC tax rebate</span><span class="pill live">● One form left</span></div>
+                  <div class="ticks" data-ticks="24" data-fill="14" style="height:22px"></div>
+                  <div class="row callout ink2" style="justify-content:space-between"><span>Est. £840</span><span style="color:var(--ember-text)">Takes 6 min</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ask-bar"><span class="orb spin" data-orb></span><span class="ph">Talk to life…</span><span class="tabs"><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg></span></span><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span></div>
+        </div></div>
+        <div class="shot-cap"><b>Home · the core screen</b><span>Your day, your level, and two new rows: <b>life is asking</b> (tap an answer and watch "life knows you" go up) and <b>Things to know</b>, insights filed from your talks. The bar at the bottom opens Talk.</span></div>
+      </div>
+
+      <!-- 2 TALK -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="notch"></div>
+          <div class="talk">
+            <div class="talk-head"><span class="callout ink2" id="talkState">Tap the mic and talk about your life</span><span class="pill" id="talkTimer">0:00</span></div>
+            <div class="transcript" id="transcript"></div>
+            <div class="wave" id="wave"></div>
+            <div class="tray" id="tray">
+              <div class="row" style="justify-content:space-between"><span class="callout" style="font-weight:600">Filing into place</span><span class="callout ink2" id="filedCount">0 filed</span></div>
+              <div class="tray-areas" id="trayAreas"></div>
+            </div>
+            <div class="talk-foot">
+              <button class="small-round" id="talkReset" aria-label="Start again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/></svg></button>
+              <button class="bigmic" id="bigMic" aria-label="Start talking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+              <button class="small-round" aria-label="Type instead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 10h.01M11 10h.01M15 10h.01M8 14h8"/></svg></button>
+            </div>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Talk · transcribe and file</b><span>Speak freely. Words appear as you say them, and the moment life recognises something it highlights it and flies a chip into its place: You, Home, Work, Money, Health or Goals. (Demo plays a sample; the real app uses the mic.)</span></div>
+      </div>
+
+      <!-- 3 UNDERSTOOD -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="status"><span>9:41</span><span>●●●</span></div>
+            <div class="pad col" style="gap:16px;padding-top:6px">
+              <span class="callout ink2">From your 48-second talk</span>
+              <div class="statement" style="font-size:26px"><span class="q">Here's what I</span> understood. <span class="q">Remove anything I got wrong.</span></div>
+              <div class="card" style="padding:4px 18px" id="undList"></div>
+              <div class="card col" style="gap:8px;background:var(--ember-tint)">
+                <span class="callout" style="color:var(--ember-text);font-weight:600">What this changed</span>
+                <span class="body">2 new missions · 1 urgent · life knows you <b>64% → 81%</b> · Home now shows Rent vs buy at level 3</span>
+              </div>
+              <button class="btn press" id="undOk">Looks right</button>
+              <button class="btn link">Keep talking</button>
+            </div>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Understood · you stay in control</b><span>After every talk, one calm summary: each fact, where it went, and a "Remove" button. Nothing is filed silently, so you can trust what life knows.</span></div>
+      </div>
+
+      <!-- 4 NUDGE -->
+      <div class="shot">
+        <div class="phone"><div class="screen" id="nudgeScreen">
+          <div class="notch"></div>
+          <div class="lock" id="lock">
+            <span class="date">Monday 16 November</span>
+            <span class="time">13:40</span>
+            <button class="notif press" id="notif">
+              <span class="app">l</span>
+              <span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><span class="row" style="justify-content:space-between"><b style="font-size:15px">life</b><span style="font-size:13px;opacity:.7">now</span></span><span style="font-size:15px;line-height:20px">You've got 20 free minutes. Finish the P87 and £840 starts moving.</span></span>
+            </button>
+            <span class="callout" style="position:absolute;bottom:40px;opacity:.7">Tap the notification</span>
+          </div>
+          <div class="conv" id="conv">
+            <div class="status"><span>13:40</span><span>●●●</span></div>
+            <div class="pad col" style="gap:14px;padding-top:8px">
+              <div class="row"><span class="orb spin" data-orb></span><span class="callout ink2">life · just now</span></div>
+              <div class="prose"><span class="q">You're free until</span> 2pm. <span class="q">The P87 is the only thing between you and</span> £840. <span class="q">Three steps, about</span> 6 minutes.</div>
+              <div class="card" style="padding:4px 18px" id="p87"></div>
+              <div class="col" style="gap:8px" id="nudgeBtns">
+                <button class="btn press" id="nudgeGo">Start step 1</button>
+                <div class="row" style="gap:8px"><button class="btn s press" style="flex:1" data-later>At 6pm</button><button class="btn s press" style="flex:1" data-later>Not this week</button></div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Nudge · life gets you moving</b><span>life writes first, at the right moment, with the reason and the time it takes. Open it and the steps are right there. "Later" choices teach life when to ask.</span></div>
+      </div>
+
+      <!-- 5 ASK TO FIGURE OUT -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="notch"></div>
+          <div class="scroll" style="padding-bottom:110px">
+            <div class="status"><span>9:41</span><span>●●●</span></div>
+            <div class="pad col" style="gap:16px;padding-top:8px">
+              <div class="msg-u">Should I go limited company or stay a sole trader?</div>
+              <div class="msg-l">
+                <div class="prose"><span class="q">At your</span> £48k <span class="q">profit, a limited company saves about</span> £2,100 a year <span class="q">— but adds</span> accountant fees <span class="q">of roughly £1,000.</span></div>
+                <div class="card col" style="gap:10px">
+                  <div class="row" style="justify-content:space-between"><span class="callout ink2">Take-home, per year</span><span class="pill">2025/26</span></div>
+                  <div class="row" style="justify-content:space-between;align-items:flex-end"><span class="body">Sole trader</span><span class="title">£36,420</span></div>
+                  <div class="row" style="justify-content:space-between;align-items:flex-end"><span class="body">Limited company</span><span class="title" style="color:var(--gain)">£38,520</span></div>
+                </div>
+                <div class="card row" id="fileCard" style="gap:12px;background:var(--surface-2)">
+                  <span class="orb" data-orb style="color:var(--ink)"></span>
+                  <span class="callout" style="flex:1">Save this to <b>Work</b> as a decision to revisit in April?</span>
+                  <button class="pill press" id="fileBtn" style="background:var(--ink);color:var(--canvas)">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ask-bar"><span class="ph">Ask a follow-up…</span><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span></div>
+        </div></div>
+        <div class="shot-cap"><b>Ask · figure it out</b><span>When you ask, life answers with your real numbers. Then it offers to <b>file the answer</b> back into the app as a decision, an insight or a mission, so the conversation leaves something behind.</span></div>
+      </div>
+
+      <!-- 6 THINGS TO KNOW -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="status"><span>9:41</span><span>●●●</span></div>
+            <div class="pad col" style="gap:14px;padding-top:8px">
+              <span class="title-serif">Things to know</span>
+              <div class="row" style="gap:8px;overflow-x:auto;scrollbar-width:none" id="ttkFilter"></div>
+              <div class="col" id="ttkList" style="gap:10px"></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Things to know · the app's memory</b><span>Every insight life has, each with its source (your talk, a letter, a question you answered) and what to do with it. Filter by area. This is what "the app understands you" looks like.</span></div>
+      </div>
+
+      <!-- 7 VANTAGE POINT -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="notch"></div>
+          <div class="vantage">
+            <div class="status" style="color:#F4F3EE"><span>9:41</span><span>●●●</span></div>
+            <div class="pad col" style="gap:6px;color:#F4F3EE;margin-top:6px">
+              <span class="callout" style="opacity:.75">Your next vantage point</span>
+              <span class="title-serif" style="font-size:40px;line-height:42px">Stable ground</span>
+              <span class="body" style="opacity:.8">Level 2 · From here you'll see your routines, your money clearly, and your health stack.</span>
+            </div>
+            <svg class="ridge" viewBox="0 0 351 220" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M0 200 L40 170 L80 182 L130 120 L170 140 L215 70 L250 96 L300 30 L351 60 L351 220 L0 220Z" fill="rgba(18,8,6,.55)"/>
+              <path d="M0 200 L40 170 L80 182 L130 120 L170 140 L215 70 L250 96 L300 30 L351 60" fill="none" stroke="rgba(244,243,238,.6)" stroke-width="1.5" stroke-dasharray="3 5"/>
+              <g id="peaks"></g>
+            </svg>
+            <div class="vbody">
+              <div class="card col" style="gap:4px">
+                <div class="row" style="justify-content:space-between"><span class="title">To get there</span><span class="callout ink2" id="vCount">1 of 3</span></div>
+                <div id="vGates"></div>
+              </div>
+              <button class="btn press" id="vGo">Take the next step</button>
+            </div>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Vantage point · keep rising</b><span>Levels shown as ground you climb. You can see where you are, the next point, and exactly what gets you there. Tick the steps and you climb to the next peak.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="col" style="gap:20px">
+    <div class="sec-head"><h2 class="sec">What life understands</h2><p>Talking fills in this map. Each area has a level of understanding, and the gaps become life's next questions. Run the Talk demo and these numbers update.</p></div>
+    <div class="map" id="map"></div>
+  </section>
+
+  <section class="col" style="gap:20px">
+    <div class="sec-head"><h2 class="sec">Rules for the builder</h2></div>
+    <div class="notes">
+      <div><b>Home is the core</b><p>The app opens on Today. Talk and Chat are full-screen layers opened from the bar's mic or text field, and they always close back to Home.</p></div>
+      <div><b>Nothing said is lost</b><p>Every recognised fact becomes a typed record (fact, insight, mission, decision, goal) with its source and time, shown on the Understood screen and in Things to know.</p></div>
+      <div><b>Never file silently</b><p>Each talk ends with "Here's what I understood", and every item can be removed. Insights always show where they came from.</p></div>
+      <div><b>One question at a time</b><p>life asks for at most one thing on Home at a time, using an instrument (choice chips, count stepper, pulse field), never a form.</p></div>
+      <div><b>Nudges earn their place</b><p>At most 1 a day. Each one has a reason, a time cost and a value ("6 min · £840"). Snooze choices train when to ask next.</p></div>
+      <div><b>The climb is always visible</b><p>Home shows the level pill and "To move up". The vantage screen shows the next peak and what it unlocks. Each level-up plays the cleared sound once.</p></div>
+    </div>
+  </section>
+
+  <p class="foot">v3 supersedes v2's "chat-first" idea. Source of truth: DESIGN.md §19–§24 at the LifeOS repo root.</p>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  var themeBtn=document.getElementById('themeBtn');
+  function isDark(){var t=root.getAttribute('data-theme');if(t)return t==='dark';return matchMedia('(prefers-color-scheme: dark)').matches}
+  function syncTheme(){themeBtn.textContent=isDark()?'Light mode':'Dark mode'}
+  themeBtn.addEventListener('click',function(){root.setAttribute('data-theme',isDark()?'light':'dark');syncTheme()});
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',syncTheme);syncTheme();
+  var soundOn=true,ctx=null,sb=document.getElementById('soundBtn');
+  sb.addEventListener('click',function(){soundOn=!soundOn;sb.setAttribute('aria-pressed',soundOn);sb.textContent=soundOn?'Sound on':'Sound off'});
+  function ac(){if(!ctx){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C()}if(ctx.state==='suspended')ctx.resume();return ctx}
+  function note(c,f,t,d,v,w){var o=c.createOscillator(),g=c.createGain();o.type=w||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+.05)}
+  function mar(c,f,t,v){note(c,f,t,.45,v);note(c,f*4,t,.07,v*.22);note(c,f*2,t,.18,v*.12,'triangle')}
+  function sfx(n){if(!soundOn)return;var c=ac();if(!c)return;var t=c.currentTime+.01;
+    if(n==='tap'){note(c,190,t,.06,.2,'triangle');note(c,95,t,.05,.1)}
+    else if(n==='file'){note(c,880,t,.09,.05);note(c,1320,t+.05,.12,.04)}
+    else if(n==='complete'){mar(c,523.25,t,.17);mar(c,783.99,t+.11,.15)}
+    else if(n==='cleared'){mar(c,523.25,t,.14);mar(c,659.25,t+.09,.13);mar(c,783.99,t+.18,.13);note(c,2093,t+.26,.6,.03);note(c,3136,t+.3,.5,.018)}}
+  document.querySelectorAll('[data-orb]').forEach(function(o){var s=o.offsetWidth||22,r=s/2-2;for(var i=0;i<10;i++){var d=document.createElement('i');var a=i/10*Math.PI*2;d.style.transform='translate('+(Math.cos(a)*r)+'px,'+(Math.sin(a)*r)+'px)';d.style.opacity=.35+.65*(i/10);o.appendChild(d)}});
+  function ticks(el){var n=+el.dataset.ticks,f=+el.dataset.fill;el.innerHTML='';for(var i=0;i<n;i++){var t=document.createElement('i');if(i<f-1)t.className='f';else if(i===f-1)t.className='a';el.appendChild(t)}}
+  document.querySelectorAll('[data-ticks]').forEach(ticks);
+  var check='<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg>';
+
+  /* ===== shared model ===== */
+  var AREAS=[['you','You','--c-you'],['home','Home','--c-home'],['work','Work','--c-work'],['money','Money','--c-money'],['health','Health','--c-health'],['goal','Goals','--c-goal']];
+  var know={you:40,home:30,work:20,money:55,health:25,goal:10};
+  var areaFacts={you:['Ada, 27'],home:['Renting'],work:[],money:['Buffer £2,340'],health:[],goal:[]};
+  function overall(){var s=0;for(var k in know)s+=know[k];return Math.round(s/6)}
+  var knowPct=64;
+  function setKnow(v){knowPct=Math.min(99,v);document.getElementById('knowBar').style.width=knowPct+'%';document.getElementById('knowPct').textContent=knowPct+'%'}
+  function renderMap(){var m=document.getElementById('map');m.innerHTML='';AREAS.forEach(function(a){var d=document.createElement('div');d.className='area';d.innerHTML='<div class="row" style="justify-content:space-between"><b style="font-size:15px">'+a[1]+'</b><span class="pct">'+know[a[0]]+'<span class="unit">%</span></span></div><div class="bar"><b style="width:'+know[a[0]]+'%;background:var('+a[2]+')"></b></div><ul>'+(areaFacts[a[0]].length?areaFacts[a[0]].map(function(f){return '<li>'+f+'</li>'}).join(''):'<li>Nothing yet. life will ask</li>')+'</ul>';m.appendChild(d)})}
+
+  /* ===== HOME: life is asking ===== */
+  var questions=[
+    {q:['Are you registered for',1,'Self Assessment?',0],o:['Yes','No','Not sure'],ins:{area:'work',big:'31 Jan',t:'Your Self Assessment is due. life will remind you on 5 January.'}},
+    {q:['Do you have a',1,'workplace pension?',0],o:['Yes','No','Self-employed'],ins:{area:'money',big:'+£1,920',t:'As self-employed, a SIPP gets 25% tax relief on what you pay in.'}},
+    {q:['When did you last see a',1,'dentist?',0],o:['This year','1–2 years','Longer'],ins:{area:'health',big:'Free',t:'NHS check-ups are £27.40, or free if you qualify. Two practices near you are taking patients.'}}];
+  var qi=0,asked=document.getElementById('asked');
+  function renderAsk(){if(qi>=questions.length){asked.innerHTML='<div class="row" style="gap:12px"><span style="width:30px;height:30px;border-radius:50%;background:var(--gain-tint);color:var(--gain);display:flex;align-items:center;justify-content:center">'+check+'</span><span class="body">That\'s all for today. Talk to life any time to add more.</span></div>';document.getElementById('askCount').textContent='Done';return}
+    var q=questions[qi];asked.className='asked rise';asked.innerHTML='<div class="prose" style="font-size:22px;line-height:28px"><span class="q">'+q.q[0]+'</span> '+q.q[2]+'</div><div class="opts">'+q.o.map(function(o){return '<button>'+o+'</button>'}).join('')+'</div><span class="callout ink2">Helps life find tax deadlines and reliefs you may be missing.</span>';
+    document.getElementById('askCount').textContent=(qi+1)+' of '+questions.length;
+    asked.querySelectorAll('.opts button').forEach(function(b){b.addEventListener('click',function(){b.style.background='var(--ink)';b.style.color='var(--canvas)';sfx('file');
+      var ins=q.ins;addInsight(ins.area,ins.big,ins.t,'From a question you answered',true);know[ins.area]=Math.min(95,know[ins.area]+12);areaFacts[ins.area].push(q.q[2].replace('?','')+': '+b.textContent);renderMap();setKnow(knowPct+4);
+      setTimeout(function(){asked.classList.add('out');setTimeout(function(){qi++;renderAsk()},380)},420)})})}
+  var insightsEl=document.getElementById('insights'),insN=0;
+  function addInsight(area,big,text,src,fresh){var a=AREAS.filter(function(x){return x[0]===area})[0];var d=document.createElement('div');d.className='ins'+(fresh?' rise':'');
+    d.innerHTML='<span class="src"><i style="background:var('+a[2]+')"></i>'+a[1]+' · '+src+'</span><span class="big">'+big+'</span><span class="body" style="font-size:14px;line-height:20px">'+text+'</span>';
+    insightsEl.insertBefore(d,insightsEl.firstChild);insN++;document.getElementById('insCount').textContent=insN+' new';insightsEl.scrollLeft=0;addTTK(area,big,text,src,fresh)}
+
+  /* ===== THINGS TO KNOW list ===== */
+  var ttk=[],ttkFilter='all';
+  function addTTK(area,big,text,src,fresh){ttk.unshift({area:area,big:big,text:text,src:src,fresh:fresh});renderTTK()}
+  function renderTTK(){var l=document.getElementById('ttkList');l.innerHTML='';ttk.filter(function(x){return ttkFilter==='all'||x.area===ttkFilter}).forEach(function(x,i){var a=AREAS.filter(function(y){return y[0]===x.area})[0];var d=document.createElement('div');d.className='card col'+(x.fresh&&i===0?' rise':'');d.style.gap='8px';
+    d.innerHTML='<span class="row callout ink2" style="gap:6px"><i style="width:6px;height:6px;border-radius:50%;background:var('+a[2]+')"></i>'+a[1]+' · '+x.src+'</span><div class="row" style="align-items:flex-start;gap:14px"><span class="numeral-l" style="font-size:30px;line-height:32px;flex:0 0 auto">'+x.big+'</span><span class="body" style="flex:1">'+x.text+'</span></div>';l.appendChild(d)})}
+  var tf=document.getElementById('ttkFilter');[['all','All']].concat(AREAS).forEach(function(a,i){var b=document.createElement('button');b.className='pill press';b.textContent=a[1];b.style.height='34px';if(i===0){b.style.background='var(--ink)';b.style.color='var(--canvas)'}b.addEventListener('click',function(){tf.querySelectorAll('button').forEach(function(x){x.style.background='';x.style.color=''});b.style.background='var(--ink)';b.style.color='var(--canvas)';ttkFilter=a[0];renderTTK();sfx('tap')});tf.appendChild(b)});
+  addInsight('home','25%','Living alone gets you 25% off council tax. Apply on the council site in 4 minutes.','From a letter you scanned');
+  addInsight('health','9 days','Your cardiology referral lapses at week 13. Book a slot before 25 Nov.','From your NHS record');
+  addInsight('money','£840','You\'re likely owed a tax rebate for work expenses in 2024/25.','From your talk · 12 Nov');
+  insN=3;document.getElementById('insCount').textContent='3 new';
+  renderAsk();renderMap();
+
+  /* ===== TALK ===== */
+  var script=[
+    ['So',0],['I\'m',0],['27,',['you','Age 27']],['I',0],['live',0],['in',0],['London',['you','London']],['with',0],['two flatmates,',['home','Household: 3']],['and',0],['I\'ve',0],['gone',0],['self-employed',['work','Sole trader']],['doing',0],['design',0],['work.',0],['I',0],['think',0],['I',0],['overpaid tax',['money','Mission: tax rebate']],['last',0],['year.',0],['Oh,',0],['and',0],['I\'ve',0],['been',0],['waiting',0],['eleven weeks',['health','Referral · urgent']],['for',0],['a',0],['heart',0],['referral.',0],['Long',0],['term',0],['I',0],['want',0],['to',0],['buy a place',['goal','Goal: first home']],['in',0],['the',0],['next',0],['few',0],['years,',0],['and',0],['I',0],['spend',0],['about',0],['£1,150 on rent.',['money','Rent £1,150']]];
+  var tr=document.getElementById('transcript'),wave=document.getElementById('wave'),mic=document.getElementById('bigMic'),tState=document.getElementById('talkState'),timerEl=document.getElementById('talkTimer'),trayAreas=document.getElementById('trayAreas'),filed=0,running=false,timers=[],t0=0,timerI=0;
+  for(var i=0;i<28;i++){var b=document.createElement('i');wave.appendChild(b)}
+  var counts={};
+  function renderTray(){trayAreas.innerHTML='';AREAS.forEach(function(a){counts[a[0]]=counts[a[0]]||0;var d=document.createElement('div');d.className='ta';d.id='ta-'+a[0];d.style.setProperty('--ac','var('+a[2]+')');d.innerHTML='<b>'+a[1]+'</b><span>'+(counts[a[0]]?counts[a[0]]+' new':'—')+'</span><span class="fill" style="width:'+Math.min(100,counts[a[0]]*45)+'%"></span>';trayAreas.appendChild(d)})}
+  function buildTranscript(){tr.innerHTML='';script.forEach(function(w,i){var s=document.createElement('span');s.className='w';s.id='w'+i;if(w[1]){var m=document.createElement('mark');m.textContent=w[0];var a=AREAS.filter(function(x){return x[0]===w[1][0]})[0];m.style.setProperty('--hl','color-mix(in srgb, var('+a[2]+') 22%, transparent)');s.appendChild(m)}else s.textContent=w[0];tr.appendChild(s);tr.appendChild(document.createTextNode(' '))})}
+  function fly(fromEl,area,label){var a=AREAS.filter(function(x){return x[0]===area})[0];var screen=tr.closest('.screen'),sr=screen.getBoundingClientRect(),fr=fromEl.getBoundingClientRect(),to=document.getElementById('ta-'+area).getBoundingClientRect();
+    var f=document.createElement('div');f.className='flyer';f.style.background='var('+a[2]+')';if(area==='money'||area==='you'||area==='home'||area==='health'||area==='work'||area==='goal')f.style.color=isDark()?'#141417':'#fff';f.textContent=label;f.style.left=(fr.left-sr.left)+'px';f.style.top=(fr.top-sr.top+fr.height+4)+'px';screen.appendChild(f);
+    requestAnimationFrame(function(){requestAnimationFrame(function(){f.style.transform='translate('+(to.left-fr.left+6)+'px,'+(to.top-fr.top-fr.height-4)+'px) scale(.55)';f.style.opacity='0'})});
+    setTimeout(function(){f.remove();counts[area]++;filed++;document.getElementById('filedCount').textContent=filed+' filed';renderTray();var el=document.getElementById('ta-'+area);el.classList.add('bump');sfx('file');
+      know[area]=Math.min(95,know[area]+15);areaFacts[area].push(label);renderMap()},760)}
+  function stop(){running=false;timers.forEach(clearTimeout);timers=[];clearInterval(timerI);mic.classList.remove('live');mic.setAttribute('aria-label','Start talking');wave.querySelectorAll('i').forEach(function(b){b.style.height='6px'})}
+  function start(){if(running){stop();tState.textContent='Paused';return}
+    running=true;mic.classList.add('live');mic.setAttribute('aria-label','Stop');tState.textContent='Listening…';sfx('tap');
+    if(!tr.children.length)buildTranscript();t0=Date.now();timerI=setInterval(function(){var s=Math.floor((Date.now()-t0)/1000)+0;timerEl.textContent='0:'+String(s).padStart(2,'0');wave.querySelectorAll('i').forEach(function(b){b.style.height=(6+Math.random()*30)+'px'})},120);
+    var delay=0;script.forEach(function(w,i){var el=document.getElementById('w'+i);if(el.classList.contains('on'))return;delay+=150+(w[0].length*14);timers.push(setTimeout(function(){el.classList.add('on');
+      var lines=tr.scrollHeight-tr.clientHeight;if(lines>0)tr.scrollTop=tr.scrollHeight;
+      if(w[1]){var m=el.querySelector('mark');setTimeout(function(){m.classList.add('hit');fly(m,w[1][0],w[1][1])},220)}
+      if(i===script.length-1){setTimeout(function(){stop();tState.textContent='Done: '+filed+' things filed. See "Understood" →';setKnow(81);sfx('complete')},900)}},delay))})}
+  mic.addEventListener('click',start);
+  document.getElementById('talkReset').addEventListener('click',function(){stop();tr.innerHTML='';filed=0;counts={};renderTray();document.getElementById('filedCount').textContent='0 filed';timerEl.textContent='0:00';tState.textContent='Tap the mic and talk about your life';sfx('tap')});
+  tr.style.overflowY='auto';tr.style.scrollbarWidth='none';
+  renderTray();
+
+  /* ===== UNDERSTOOD ===== */
+  var und=[['you','27','Age 27 · London','You'],['home','3','Lives with 2 flatmates','Home · household'],['work','ST','Self-employed designer','Work · sole trader'],['money','£','Overpaid tax in 2024/25','New mission · HMRC rebate'],['health','!','Heart referral, 11 weeks','New mission · urgent'],['goal','⌂','Buy a first home in 2–3 years','Goals · Rent vs buy at level 3'],['money','£','Rent £1,150 a month','Money · 30-day cash plan']];
+  var ul=document.getElementById('undList');und.forEach(function(u){var a=AREAS.filter(function(x){return x[0]===u[0]})[0];var d=document.createElement('div');d.className='und';d.innerHTML='<span class="dot" style="background:var('+a[2]+');color:'+(isDark()?'#141417':'#fff')+'">'+u[1]+'</span><span class="tx"><span class="title" style="font-size:15px;line-height:20px">'+u[2]+'</span><span class="to">→ '+u[3]+'</span></span><button class="x press">Remove</button>';
+    d.querySelector('.x').addEventListener('click',function(){var r=d.classList.toggle('removed');this.textContent=r?'Undo':'Remove';sfx('tap')});ul.appendChild(d)});
+  document.getElementById('undOk').addEventListener('click',function(){this.textContent='Saved to your life';sfx('complete')});
+
+  /* ===== NUDGE ===== */
+  var steps=['Sign in to your Government Gateway','Add £1,240 of design software and equipment','Submit the P87 and save the reference'],sd=0;
+  var p87=document.getElementById('p87');
+  function renderP87(){p87.innerHTML='';steps.forEach(function(s,i){var b=document.createElement('button');b.className='chk press'+(i<sd?' done':'');b.innerHTML='<span class="box">'+check+'</span><span class="t body" style="flex:1">'+s+'</span><span class="callout ink2">'+(i===0?'1 min':i===1?'3 min':'2 min')+'</span>';b.addEventListener('click',function(){if(i===sd)advance()});p87.appendChild(b)})}
+  function advance(){if(sd>=steps.length)return;sd++;renderP87();var go=document.getElementById('nudgeGo');if(sd<steps.length){go.textContent='Start step '+(sd+1);sfx('complete')}else{go.textContent='£840 is on its way';go.style.background='var(--gain)';sfx('cleared')}}
+  renderP87();
+  document.getElementById('notif').addEventListener('click',function(){document.getElementById('lock').style.opacity=0;document.getElementById('lock').style.pointerEvents='none';document.getElementById('conv').classList.add('on');sfx('tap')});
+  document.getElementById('nudgeGo').addEventListener('click',advance);
+  document.querySelectorAll('[data-later]').forEach(function(b){b.addEventListener('click',function(){b.textContent='Okay, noted';sfx('tap')})});
+
+  /* ===== ASK → FILE ===== */
+  document.getElementById('fileBtn').addEventListener('click',function(){var c=document.getElementById('fileCard');c.innerHTML='<span style="width:26px;height:26px;border-radius:50%;background:var(--gain);color:var(--canvas);display:flex;align-items:center;justify-content:center">'+check+'</span><span class="callout" style="flex:1">Saved to <b>Work</b>. life will bring it back in April.</span>';c.classList.add('rise');addInsight('work','£2,100','A limited company could save you £2,100 a year at £48k profit. Revisit in April.','From a question you asked',true);sfx('file')});
+
+  /* ===== VANTAGE ===== */
+  var vg=[['Save your 30-day cash plan',true],['Review this year\'s tax',false],['Book your heart referral',false]],lvl=1;
+  var peaks=[[40,170,'1'],[130,120,'2'],[215,70,'3'],[300,30,'4']];
+  function renderPeaks(){var g=document.getElementById('peaks');g.innerHTML='';peaks.forEach(function(p,i){var on=i+1<=lvl,next=i+1===lvl+1;g.innerHTML+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(next?9:6)+'" fill="'+(on?'#F4F3EE':next?'#FF6A3D':'rgba(244,243,238,.35)')+'"/>'+(next?'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="16" fill="none" stroke="#FF6A3D" stroke-width="2" opacity=".6"><animate attributeName="r" values="10;20;10" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".7;0;.7" dur="2s" repeatCount="indefinite"/></circle>':'')+'<text x="'+p[0]+'" y="'+(p[1]-16)+'" text-anchor="middle" fill="#F4F3EE" font-family="Instrument Serif,Georgia,serif" font-size="18">'+p[2]+'</text>'})}
+  function renderV(){var el=document.getElementById('vGates');el.innerHTML='';var done=0;vg.forEach(function(g,i){if(g[1])done++;var b=document.createElement('button');b.className='chk press'+(g[1]?' done':'');b.innerHTML='<span class="box">'+check+'</span><span class="t body" style="flex:1">'+g[0]+'</span>';b.addEventListener('click',function(){g[1]=!g[1];if(g[1])sfx('complete');renderV();check2()});el.appendChild(b)});document.getElementById('vCount').textContent=done+' of '+vg.length}
+  function check2(){if(vg.every(function(g){return g[1]})&&lvl<4){setTimeout(function(){lvl++;sfx('cleared');renderPeaks();var names=['','Starting out','Stable ground','Room to decide','Momentum'];document.querySelector('.vantage .title-serif').textContent=lvl<4?names[lvl+1]:'The long view';document.querySelector('.vantage .body').textContent=lvl<4?'Level '+(lvl+1)+' · New tools, routines and decisions open up from here.':'Level 4 reached. Keep your new normal working.';vg=lvl<4?[['Next step one',false],['Next step two',false]]:[];renderV()},500)}}
+  document.getElementById('vGo').addEventListener('click',function(){var g=vg.filter(function(x){return !x[1]})[0];if(g){g[1]=true;sfx('complete');renderV();check2()}});
+  renderPeaks();renderV();
+})();
+</script>

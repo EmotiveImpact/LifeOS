@@ -1,0 +1,523 @@
+<title>life Design Language v4</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* v4 — Inter only, dark-first, hairline depth. Layout: hero (statement + flagship Home) → keep/evolve/drop → type → colour → 8 true-size screens (393×852) → component sheet. */
+:root{
+  color-scheme:dark;
+  --bg:#08090A; --bg-2:#0C0D0E; --surface:#141517; --surface-2:#1B1C1F; --surface-3:#26272B;
+  --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.11); --hi:inset 0 1px 0 rgba(255,255,255,.045);
+  --text:#F7F8F8; --text-2:#8A8F98; --quiet:#62666D; --on-accent:#0D0E10;
+  --ember:#FF6B3D; --ember-text:#FF7A50; --ember-tint:rgba(255,107,61,.14); --ember-glow:rgba(255,107,61,.28);
+  --gain:#3DD68C; --gain-tint:rgba(61,214,140,.13);
+  --shadow:0 20px 40px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);
+  --glass:rgba(20,21,23,.72);
+  --a-you:#9AA4AE; --a-home:#D6A47E; --a-work:#8FA2FF; --a-money:#3DD68C; --a-health:#FF7EB0; --a-goal:#FF6B3D;
+  --page:#050506;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  color-scheme:light;
+  --bg:#F7F7F8; --bg-2:#F1F1F3; --surface:#FFFFFF; --surface-2:#F3F3F5; --surface-3:#E6E6EA;
+  --line:rgba(13,14,16,.08); --line-2:rgba(13,14,16,.13); --hi:0 1px 2px rgba(13,14,16,.04);
+  --text:#0D0E10; --text-2:#5C6068; --quiet:#8B8F97; --on-accent:#FFFFFF;
+  --ember:#E5532B; --ember-text:#C2410C; --ember-tint:rgba(229,83,43,.10); --ember-glow:rgba(229,83,43,.18);
+  --gain:#0B7A55; --gain-tint:rgba(11,122,85,.10);
+  --shadow:0 20px 40px -16px rgba(13,14,16,.18),0 0 0 1px rgba(13,14,16,.06);
+  --glass:rgba(255,255,255,.78);
+  --a-you:#5D6B78; --a-home:#A0704C; --a-work:#4C5FD5; --a-money:#0B7A55; --a-health:#C2457A; --a-goal:#E5532B;
+  --page:#E9E9EC;}}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#F7F7F8; --bg-2:#F1F1F3; --surface:#FFFFFF; --surface-2:#F3F3F5; --surface-3:#E6E6EA;
+  --line:rgba(13,14,16,.08); --line-2:rgba(13,14,16,.13); --hi:0 1px 2px rgba(13,14,16,.04);
+  --text:#0D0E10; --text-2:#5C6068; --quiet:#8B8F97; --on-accent:#FFFFFF;
+  --ember:#E5532B; --ember-text:#C2410C; --ember-tint:rgba(229,83,43,.10); --ember-glow:rgba(229,83,43,.18);
+  --gain:#0B7A55; --gain-tint:rgba(11,122,85,.10);
+  --shadow:0 20px 40px -16px rgba(13,14,16,.18),0 0 0 1px rgba(13,14,16,.06);
+  --glass:rgba(255,255,255,.78);
+  --a-you:#5D6B78; --a-home:#A0704C; --a-work:#4C5FD5; --a-money:#0B7A55; --a-health:#C2457A; --a-goal:#E5532B;
+  --page:#E9E9EC;}
+
+*{box-sizing:border-box}
+html{font-optical-sizing:auto}
+body{margin:0;background:var(--page);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-feature-settings:"cv11","ss01","ss03";letter-spacing:-.006em}
+button,input{font:inherit;color:inherit;background:none;border:0;padding:0;letter-spacing:inherit}
+button{cursor:pointer}
+button:focus-visible{outline:2px solid var(--ember);outline-offset:2px;border-radius:8px}
+.tnum{font-variant-numeric:tabular-nums}
+.wrap{padding-block:56px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1560px;margin:0 auto;display:flex;flex-direction:column;gap:96px}
+
+/* page type */
+.eyebrow{font-size:13px;font-weight:500;color:var(--text-2);display:flex;align-items:center;gap:8px}
+.eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--ember);box-shadow:0 0 12px var(--ember)}
+.h-hero{font-size:clamp(44px,6.2vw,84px);line-height:1.02;letter-spacing:-.045em;font-weight:600;margin:0;max-width:980px;text-wrap:balance;
+  background:linear-gradient(180deg,var(--text) 30%,color-mix(in srgb,var(--text) 55%,transparent));-webkit-background-clip:text;background-clip:text;color:transparent}
+.h-sec{font-size:clamp(30px,3.4vw,44px);line-height:1.08;letter-spacing:-.035em;font-weight:600;margin:0;text-wrap:balance}
+.p-lead{font-size:19px;line-height:28px;color:var(--text-2);max-width:640px;margin:0;letter-spacing:-.012em}
+.p-sec{font-size:15px;line-height:23px;color:var(--text-2);max-width:620px;margin:0}
+.sec-head{display:flex;flex-direction:column;gap:12px}
+.q{color:var(--quiet)}
+
+/* top bar */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.mark{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-.02em}
+.mark .orbm{width:22px;height:22px;position:relative;color:var(--text)}
+.ctrl{display:flex;gap:6px}
+.seg{display:inline-flex;padding:3px;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.seg button{height:30px;padding:0 12px;border-radius:7px;font-size:13px;font-weight:500;color:var(--text-2);transition:background .2s,color .2s}
+.seg button[aria-pressed="true"]{background:var(--surface-3);color:var(--text);box-shadow:var(--hi)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) auto;gap:48px;align-items:center}
+.hero-copy{display:flex;flex-direction:column;gap:28px;min-width:0}
+.hero-stats{display:flex;gap:28px;flex-wrap:wrap}
+.hero-stats div{display:flex;flex-direction:column;gap:2px}
+.hero-stats b{font-size:28px;font-weight:600;letter-spacing:-.03em}
+.hero-stats span{font-size:13px;color:var(--text-2)}
+.hero-phone{position:relative}
+.hero-phone::before{content:"";position:absolute;inset:-80px -60px;background:radial-gradient(50% 50% at 50% 40%,var(--ember-glow),transparent 70%);filter:blur(20px);z-index:0;pointer-events:none}
+@media (max-width:1000px){.hero{grid-template-columns:1fr}.hero-phone{justify-self:center}}
+
+/* panels */
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.panel{background:var(--bg);border-radius:20px;box-shadow:inset 0 0 0 1px var(--line);padding:24px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-.012em;display:flex;align-items:center;gap:8px}
+.panel ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.panel li{font-size:14px;line-height:20px;color:var(--text-2);display:grid;grid-template-columns:auto 1fr;gap:10px}
+.panel li b{color:var(--text);font-weight:500}
+.dotk{width:8px;height:8px;border-radius:50%;margin-top:6px}
+
+/* type specimen */
+.spec{background:var(--bg);border-radius:20px;box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.spec-row{display:grid;grid-template-columns:160px 1fr 170px;gap:20px;align-items:baseline;padding:18px 24px;box-shadow:0 -1px 0 var(--line)}
+.spec-row:first-child{box-shadow:none}
+.spec-row .k{font-family:var(--mono);font-size:12px;color:var(--text-2)}
+.spec-row .m{font-family:var(--mono);font-size:12px;color:var(--quiet);text-align:right}
+@media (max-width:760px){.spec-row{grid-template-columns:1fr}.spec-row .m{text-align:left}}
+
+/* colour */
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.swc{border-radius:14px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line);background:var(--bg)}
+.swc .c{height:72px}
+.swc .t{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.swc b{font-size:13px;font-weight:600}.swc span{font-family:var(--mono);font-size:11.5px;color:var(--text-2)}
+
+/* rail of phones */
+.rail{display:flex;gap:48px;overflow-x:auto;padding:12px 4px 32px;scroll-snap-type:x mandatory}
+.rail::-webkit-scrollbar{height:6px}.rail::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:3px}
+.shot{display:flex;flex-direction:column;gap:18px;scroll-snap-align:start;flex:0 0 auto;width:calc(415px*var(--z,1))}
+.shot-cap{display:flex;flex-direction:column;gap:6px;padding:0 6px;max-width:400px}
+.shot-cap .n{font-family:var(--mono);font-size:12px;color:var(--quiet)}
+.shot-cap b{font-size:16px;font-weight:600;letter-spacing:-.015em}
+.shot-cap span{font-size:14px;line-height:21px;color:var(--text-2)}
+.frame{width:calc(415px*var(--z,1));height:calc(874px*var(--z,1))}
+.phone{width:415px;height:874px;border-radius:66px;padding:11px;position:relative;transform:scale(var(--z,1));transform-origin:top left;
+  background:linear-gradient(145deg,#3a3b40,#16171a 40%,#2a2b2f);box-shadow:0 0 0 1px rgba(255,255,255,.09),0 40px 80px -20px rgba(0,0,0,.7),inset 0 0 0 1.5px rgba(255,255,255,.08)}
+.screen{width:393px;height:852px;border-radius:55px;overflow:hidden;position:relative;background:var(--bg);color:var(--text)}
+.notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:124px;height:36px;border-radius:20px;background:#000;z-index:40}
+.status{height:56px;display:flex;justify-content:space-between;align-items:center;padding:8px 34px 0 40px;font-size:16px;font-weight:600;letter-spacing:-.02em;position:relative;z-index:5}
+.status .sig{display:flex;gap:5px;align-items:center}
+.status .sig i{display:block;width:3px;border-radius:1px;background:currentColor}
+.scroll{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:130px}
+.scroll::-webkit-scrollbar{display:none}
+.pad{padding:0 20px}
+.col{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:10px}
+.sb{justify-content:space-between}
+
+/* app type (in-phone) */
+.t-display{font-size:56px;line-height:56px;font-weight:600;letter-spacing:-.045em}
+.t-title1{font-size:30px;line-height:34px;font-weight:600;letter-spacing:-.03em}
+.t-statement{font-size:24px;line-height:31px;font-weight:500;letter-spacing:-.022em;text-wrap:pretty}
+.t-title2{font-size:20px;line-height:26px;font-weight:600;letter-spacing:-.02em}
+.t-title3{font-size:16px;line-height:21px;font-weight:600;letter-spacing:-.014em}
+.t-body{font-size:15px;line-height:22px;letter-spacing:-.008em}
+.t-callout{font-size:13px;line-height:18px;font-weight:500;letter-spacing:-.003em}
+.t-micro{font-size:11px;line-height:13px;font-weight:600;letter-spacing:.01em}
+.t-mono{font-family:var(--mono);font-size:12.5px;line-height:16px;letter-spacing:0}
+.c2{color:var(--text-2)}
+
+/* app surfaces */
+.card{background:var(--surface);border-radius:20px;padding:16px;box-shadow:inset 0 0 0 1px var(--line),var(--hi)}
+.card.flat{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.tile{background:var(--surface-2);border-radius:12px;padding:12px}
+.press{transition:transform .2s cubic-bezier(.2,.9,.3,1.2)}
+.press:active{transform:scale(.97)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:50px;border-radius:14px;background:var(--text);color:var(--bg);font-size:15px;font-weight:600;letter-spacing:-.012em}
+.btn.s{background:var(--surface-2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.g{background:transparent;color:var(--text-2);height:40px}
+.btn.e{background:var(--ember);color:#fff}
+.tag{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:7px;font-size:12px;font-weight:500;background:var(--surface-2);color:var(--text-2);box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap}
+.tag.live{background:var(--ember-tint);color:var(--ember-text);box-shadow:none}
+.tag.live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ember);box-shadow:0 0 8px var(--ember)}
+.tag.done{background:var(--gain-tint);color:var(--gain);box-shadow:none}
+.chipb{height:36px;padding:0 14px;border-radius:10px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);font-size:14px;font-weight:500;transition:transform .15s,background .2s,color .2s;white-space:nowrap}
+.chipb:active{transform:scale(.96)}
+.chipb.on{background:var(--text);color:var(--bg);box-shadow:none}
+.hair{height:1px;background:var(--line)}
+.ticks{display:flex;align-items:flex-end;justify-content:space-between;height:28px}
+.ticks i{width:2px;height:16px;border-radius:1px;background:var(--surface-3);transition:background .3s,height .3s}
+.ticks i.f{background:var(--text)}.ticks i.a{background:var(--ember);height:28px;box-shadow:0 0 10px var(--ember)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.rise{animation:rise .45s cubic-bezier(.2,.9,.3,1.05)}
+
+/* orb */
+.orb{width:20px;height:20px;position:relative;flex:0 0 auto;color:var(--text)}
+.orb i{position:absolute;left:50%;top:50%;width:2.6px;height:2.6px;margin:-1.3px;border-radius:50%;background:currentColor}
+.orb.spin{animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* glow field (v4 atmosphere) */
+.glow{position:absolute;left:0;right:0;top:0;height:420px;pointer-events:none;z-index:0}
+.glow.ember{background:radial-gradient(70% 55% at 50% -5%,var(--ember-glow),transparent 70%)}
+.glow.money{background:radial-gradient(70% 55% at 50% -5%,color-mix(in srgb,var(--a-money) 28%,transparent),transparent 70%)}
+.glow.admin{background:radial-gradient(70% 55% at 50% -5%,color-mix(in srgb,var(--a-work) 24%,transparent),transparent 70%)}
+.glow::after{content:"";position:absolute;inset:0;background-image:radial-gradient(color-mix(in srgb,var(--text) 10%,transparent) 1px,transparent 1px);background-size:14px 14px;-webkit-mask-image:radial-gradient(60% 50% at 50% 0%,#000,transparent);mask-image:radial-gradient(60% 50% at 50% 0%,#000,transparent);opacity:.5}
+
+/* ask bar */
+.askbar{position:absolute;left:14px;right:14px;bottom:28px;height:58px;border-radius:18px;background:var(--glass);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);box-shadow:var(--shadow);display:flex;align-items:center;gap:6px;padding:0 6px 0 14px;z-index:20}
+.askbar .ph{flex:1;font-size:15px;color:var(--quiet);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.askbar .tb{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--text-2)}
+.askbar .tb.on{background:var(--surface-3);color:var(--text)}
+.askbar .mic{width:46px;height:46px;border-radius:13px;background:var(--text);color:var(--bg);display:flex;align-items:center;justify-content:center}
+.askbar svg{width:19px;height:19px}
+
+/* home specifics */
+.know{display:flex;align-items:center;gap:12px}
+.know .k-bar{flex:1;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden}
+.know .k-bar b{display:block;height:100%;background:linear-gradient(90deg,var(--text-2),var(--text));border-radius:2px;transition:width .8s cubic-bezier(.2,.9,.3,1)}
+.asked{transition:opacity .3s,transform .4s cubic-bezier(.2,.9,.3,1.1)}
+.asked.out{opacity:0;transform:translateX(30px)}
+.ins-row{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px 2px}
+.ins-row::-webkit-scrollbar{display:none}
+.ins{flex:0 0 236px;display:flex;flex-direction:column;gap:10px;min-height:156px}
+.src{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--text-2)}
+.src i{width:6px;height:6px;border-radius:50%}
+.big{font-size:30px;line-height:32px;font-weight:600;letter-spacing:-.035em}
+
+/* talk */
+.talk{position:absolute;inset:0;display:flex;flex-direction:column}
+.transcript{flex:1;padding:12px 22px 0;overflow-y:auto;scrollbar-width:none;font-size:25px;line-height:33px;letter-spacing:-.025em;font-weight:500;color:var(--quiet);min-height:0}
+.transcript::-webkit-scrollbar{display:none}
+.transcript .w{opacity:0;transition:opacity .22s}
+.transcript .w.on{opacity:1}
+.transcript mark{background:transparent;color:var(--text);border-radius:6px;padding:0 3px;margin:0 -3px;transition:background .4s,box-shadow .4s}
+.transcript mark.hit{background:var(--hl);box-shadow:inset 0 0 0 1px var(--hlb)}
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:36px}
+.wave i{width:2.5px;border-radius:2px;background:var(--text);height:4px;transition:height .12s;opacity:.85}
+.tray{margin:8px 14px 0;border-radius:20px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line),var(--hi);padding:14px}
+.tray-g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.ta{border-radius:11px;background:var(--surface-2);padding:9px 10px;display:flex;flex-direction:column;gap:3px;position:relative;overflow:hidden}
+.ta.bump{animation:bump .5s cubic-bezier(.2,.9,.3,1.6)}
+@keyframes bump{40%{transform:scale(1.06)}}
+.ta b{font-size:13px;font-weight:600}.ta span{font-size:11.5px;font-weight:500;color:var(--text-2)}
+.ta .fl{position:absolute;left:0;bottom:0;height:2px;background:var(--ac);box-shadow:0 0 8px var(--ac);transition:width .6s}
+.flyer{position:absolute;z-index:50;height:28px;padding:0 10px;border-radius:8px;display:flex;align-items:center;font-size:12.5px;font-weight:600;color:#0D0E10;white-space:nowrap;pointer-events:none;transition:transform .75s cubic-bezier(.5,0,.2,1),opacity .75s;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.talk-foot{display:flex;align-items:center;justify-content:center;gap:22px;padding:16px 0 34px}
+.bigmic{width:74px;height:74px;border-radius:24px;background:var(--text);color:var(--bg);display:flex;align-items:center;justify-content:center;position:relative}
+.bigmic svg{width:28px;height:28px}
+.bigmic.live{background:var(--ember);color:#fff;box-shadow:0 0 40px var(--ember-glow)}
+.sq{width:48px;height:48px;border-radius:14px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;justify-content:center;color:var(--text-2)}
+.sq svg{width:20px;height:20px}
+
+/* lists */
+.li{display:flex;align-items:center;gap:12px;padding:12px 0}
+.li + .li{box-shadow:0 -1px 0 var(--line)}
+.box{width:22px;height:22px;border-radius:7px;box-shadow:inset 0 0 0 1.5px var(--line-2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--bg);transition:background .2s,box-shadow .2s}
+.box svg{width:12px;height:12px;opacity:0}
+.li.done .box{background:var(--text);box-shadow:none}.li.done .box svg{opacity:1}
+.li.done .lt{color:var(--quiet);text-decoration:line-through}
+.adot{width:28px;height:28px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0D0E10}
+.li.removed .lx{opacity:.35;text-decoration:line-through}
+
+/* stepper */
+.stepper{display:grid;grid-template-columns:1fr 1fr 1fr;position:relative}
+.stepper .ln{position:absolute;top:11px;left:12px;right:12px;height:2px;background:var(--surface-3)}
+.stepper .ln b{display:block;height:100%;background:var(--text);transition:width .5s cubic-bezier(.2,.9,.3,1)}
+.st{display:flex;flex-direction:column;gap:6px;position:relative;z-index:1}
+.st:nth-child(3){align-items:center;text-align:center}.st:nth-child(4){align-items:flex-end;text-align:right}
+.node{width:24px;height:24px;border-radius:8px;background:var(--surface-3);display:flex;align-items:center;justify-content:center;color:var(--bg)}
+.node svg{width:12px;height:12px;opacity:0}
+.st.done .node{background:var(--text)}.st.done .node svg{opacity:1}
+.st.cur .node{background:var(--bg);box-shadow:inset 0 0 0 2px var(--ember),0 0 14px var(--ember-glow)}
+
+/* lock + nudge */
+.lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding-top:110px;gap:2px;color:#F7F8F8;background:radial-gradient(80% 60% at 50% 100%,#3A1408,transparent 70%),linear-gradient(180deg,#0A0A0C,#140806);transition:opacity .45s;z-index:30}
+.lock .clock{font-size:92px;line-height:92px;font-weight:600;letter-spacing:-.05em}
+.lock .date{font-size:17px;font-weight:500;opacity:.7}
+.notif{position:absolute;left:14px;right:14px;top:320px;border-radius:22px;padding:14px;background:rgba(255,255,255,.1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);display:flex;gap:12px;text-align:left;color:#F7F8F8;animation:drop .7s cubic-bezier(.2,.9,.3,1.2) .4s both}
+@keyframes drop{from{opacity:0;transform:translateY(-24px) scale(.97)}to{opacity:1;transform:none}}
+.notif .app{width:38px;height:38px;border-radius:10px;background:#F7F8F8;color:#0D0E10;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+
+/* vantage */
+.ridge{width:100%;height:230px;display:block}
+
+/* component sheet */
+.cs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px}
+.cs .panel{gap:16px}
+.cs .lab{font-family:var(--mono);font-size:12px;color:var(--quiet)}
+.toggle{width:44px;height:26px;border-radius:999px;background:var(--surface-3);position:relative;transition:background .25s;flex:0 0 auto}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.2,.9,.3,1.2)}
+.toggle[aria-checked="true"]{background:var(--ember)}.toggle[aria-checked="true"]::after{transform:translateX(18px)}
+.input{height:44px;border-radius:12px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:10px;padding:0 14px;font-size:15px;color:var(--quiet)}
+.foot{font-size:13px;color:var(--text-2);text-align:center}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap" id="top">
+  <div class="bar">
+    <div class="mark"><span class="orbm orb spin" data-orb></span>life <span style="color:var(--text-2);font-weight:500">Design language v4</span></div>
+    <div class="ctrl">
+      <div class="seg" role="group" aria-label="Theme"><button data-th="dark">Dark</button><button data-th="light">Light</button></div>
+      <div class="seg" role="group" aria-label="Phone size"><button data-z="1" aria-pressed="true">1×</button><button data-z="0.8">Fit</button></div>
+      <div class="seg"><button id="snd" aria-pressed="true">Sound</button></div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="eyebrow"><i></i>v4 · One typeface, one signal, real depth</span>
+      <h1 class="h-hero">Life, handled. Quietly, precisely, and always one step ahead.</h1>
+      <p class="p-lead">v4 keeps the ideas that work (talk and file, the climb, the instruments) and rebuilds the surface with a product designer's precision: Inter throughout, dark-first, hairline depth, and only one colour that ever shouts.</p>
+      <div class="hero-stats">
+        <div><b class="tnum">1</b><span>typeface: Inter</span></div>
+        <div><b class="tnum">1</b><span>signal colour: ember</span></div>
+        <div><b class="tnum">8</b><span>screens at 393 × 852</span></div>
+        <div><b class="tnum">0</b><span>serif, photos or rings</span></div>
+      </div>
+    </div>
+    <div class="hero-phone"><div class="frame" style="--z:1"><div class="phone" id="heroPhone"></div></div></div>
+  </section>
+
+  <!-- KEEP / EVOLVE / DROP -->
+  <section class="col" style="gap:28px">
+    <div class="sec-head"><span class="eyebrow">01 · Evolution</span><h2 class="h-sec">Keep the ideas. Rebuild the surface.</h2><p class="p-sec">What carries over from v1–v3, what gets reworked so it stops echoing the references, and what goes.</p></div>
+    <div class="grid3">
+      <div class="panel"><h3><span class="dotk" style="background:var(--gain);margin:0"></span>Keep, because it's ours</h3><ul>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Talk → File → Know → Ask → Nudge → Rise.</b> The product loop.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Two-tone sentences.</b> Now Inter 500 with tight tracking.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Ticks</b> as the only progress style.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>The dotted orb</b> as the brand mark.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Instruments</b> (pulse, count, attach), never forms.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Levels as vantage points.</b></span></li></ul></div>
+      <div class="panel"><h3><span class="dotk" style="background:var(--ember);margin:0"></span>Evolve, so it stops echoing</h3><ul>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Photo atmospheres</b> become <b>light fields</b>: a soft domain-coloured glow over a faint dot grid.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Pill buttons</b> become 14px-radius slabs. Pills stay for tags only.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>"No borders"</b> becomes <b>hairline depth</b>: 1px light edges define surfaces.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Big rounded cards</b> become 20px cards with 12px tiles. Tighter and more precise.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Circle checks</b> become 7px-radius squares, like a real checklist.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Island</b> stays, as a quiet status. No globe theatrics.</span></li></ul></div>
+      <div class="panel"><h3><span class="dotk" style="background:var(--quiet);margin:0"></span>Drop</h3><ul>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Instrument Serif.</b> Inter only, with display weights for numbers.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Warm stone paper.</b> Light mode is now a cool, neutral white.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Stock-photo cards</b> and full-bleed sunsets.</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Reference layouts</b> 1:1 (the ledger, subscribe screen, check-in).</span></li>
+        <li><span class="dotk" style="background:var(--text-2)"></span><span><b>Decorative gradients</b> on cards. Glow lives in one place per screen.</span></li></ul></div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section class="col" style="gap:28px">
+    <div class="sec-head"><span class="eyebrow">02 · Type</span><h2 class="h-sec">Inter, set tight and confident.</h2><p class="p-sec">One family carries everything. Optical sizing switches to the Display cut at large sizes. Big type gets negative tracking, numbers use tabular figures, and weight does the work the serif used to.</p></div>
+    <div class="spec">
+      <div class="spec-row"><span class="k">display · 56/56 · 600</span><span class="t-display tnum">£2,340<span style="color:var(--quiet)">.50</span></span><span class="m">−0.045em · tnum</span></div>
+      <div class="spec-row"><span class="k">title-1 · 30/34 · 600</span><span class="t-title1">Things to know</span><span class="m">−0.030em</span></div>
+      <div class="spec-row"><span class="k">statement · 24/31 · 500</span><span class="t-statement"><span class="q">Nothing urgent —</span> your rebate <span class="q">needs</span> one form.</span><span class="m">−0.022em · two-tone</span></div>
+      <div class="spec-row"><span class="k">title-2 · 20/26 · 600</span><span class="t-title2">HMRC tax rebate</span><span class="m">−0.020em</span></div>
+      <div class="spec-row"><span class="k">title-3 · 16/21 · 600</span><span class="t-title3">Book your heart referral</span><span class="m">−0.014em</span></div>
+      <div class="spec-row"><span class="k">body · 15/22 · 400</span><span class="t-body">Claim by bank transfer, not cheque. It's usually paid within five working days.</span><span class="m">−0.008em</span></div>
+      <div class="spec-row"><span class="k">callout · 13/18 · 500</span><span class="t-callout c2">Takes 6 min · From your talk · 12 Nov</span><span class="m">minimum size</span></div>
+      <div class="spec-row"><span class="k">mono · 12.5/16</span><span class="t-mono">P800-7Q2-K41 · 08:30</span><span class="m">IDs + times only</span></div>
+    </div>
+  </section>
+
+  <!-- COLOUR -->
+  <section class="col" style="gap:28px">
+    <div class="sec-head"><span class="eyebrow">03 · Colour</span><h2 class="h-sec">Neutral by default. Ember when it matters.</h2><p class="p-sec">Dark-first, with full light parity. Area colours appear only as 6px dots, filing chips and one glow per screen.</p></div>
+    <div class="sw" id="sw"></div>
+  </section>
+
+  <!-- SCREENS -->
+  <section class="col" style="gap:28px">
+    <div class="sec-head"><span class="eyebrow">04 · Screens</span><h2 class="h-sec">Eight screens, true size, all live.</h2><p class="p-sec">Shown at real iPhone size (393 × 852). Press the mic on Talk, answer life's question on Home, open the nudge, and tick your way up the ridge.</p></div>
+    <div class="rail" id="rail"></div>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section class="col" style="gap:28px">
+    <div class="sec-head"><span class="eyebrow">05 · Components</span><h2 class="h-sec">The parts, at a glance.</h2></div>
+    <div class="cs">
+      <div class="panel"><span class="lab">Buttons</span><button class="btn press">Book appointment</button><button class="btn s press">Copy draft</button><button class="btn e press">Take the next step</button><button class="btn g press">Not this week</button></div>
+      <div class="panel"><span class="lab">Tags · chips · toggle</span><div class="row" style="flex-wrap:wrap;gap:6px"><span class="tag live">One form left</span><span class="tag done">Cleared</span><span class="tag">Level 2</span><span class="tag">From your talk</span></div><div class="row" style="flex-wrap:wrap;gap:6px" id="csChips"></div><div class="row sb"><span class="t-body">Sounds</span><button class="toggle" role="switch" aria-checked="true" data-tog aria-label="Sounds"></button></div><div class="input"><span class="orb" data-orb style="color:var(--text-2)"></span>Talk to life…</div></div>
+      <div class="panel"><span class="lab">Progress · stepper · ticks</span><div class="stepper"><div class="ln"><b style="width:50%"></b></div><div class="st done"><div class="node"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg></div><span class="t-callout">Started</span><span class="t-mono c2">12 Nov</span></div><div class="st cur"><div class="node"></div><span class="t-callout">Submitted</span><span class="t-mono c2">Today</span></div><div class="st"><div class="node"></div><span class="t-callout">Cleared</span><span class="t-mono c2">~22 Nov</span></div></div><div class="ticks" data-ticks="30" data-fill="12"></div><div class="know"><span class="t-callout c2">life knows you</span><span class="k-bar"><b style="width:64%"></b></span><span class="t-callout tnum">64%</span></div></div>
+    </div>
+  </section>
+
+  <p class="foot">v4 · Source of truth: DESIGN.md §25+ at the LifeOS repo root · Earlier boards: v1, v2, v3</p>
+</div>
+
+<!-- ============== SCREEN TEMPLATES ============== -->
+<template id="tpl-status"><div class="status"><span class="tnum">9:41</span><span class="sig"><i style="height:5px"></i><i style="height:7px"></i><i style="height:9px"></i><i style="height:11px"></i><svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="18" height="8" rx="2" fill="currentColor"/><path d="M23 4v4" stroke="currentColor" opacity=".4"/></svg></span></div></template>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  var CHECK='<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 6.5 5 9l5-6"/></svg>';
+  var IC={
+    mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+    today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg>',
+    plan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/></svg>',
+    back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
+    reset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/></svg>',
+    kb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 10h.01M11 10h.01M15 10h.01M8 14h8"/></svg>'};
+  var status=document.getElementById('tpl-status').innerHTML;
+
+  /* theme / size / sound */
+  function isDark(){var t=root.getAttribute('data-theme');if(t)return t==='dark';return !matchMedia('(prefers-color-scheme: light)').matches}
+  function syncTheme(){document.querySelectorAll('[data-th]').forEach(function(b){b.setAttribute('aria-pressed',(b.dataset.th==='dark')===isDark())});renderSwatches()}
+  document.querySelectorAll('[data-th]').forEach(function(b){b.addEventListener('click',function(){root.setAttribute('data-theme',b.dataset.th);syncTheme()})});
+  matchMedia('(prefers-color-scheme: light)').addEventListener('change',syncTheme);
+  document.querySelectorAll('[data-z]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('[data-z]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});document.querySelectorAll('.shot,.frame').forEach(function(s){s.style.setProperty('--z',b.dataset.z)})})});
+  var soundOn=true,ctx=null,sndB=document.getElementById('snd');
+  sndB.addEventListener('click',function(){soundOn=!soundOn;sndB.setAttribute('aria-pressed',soundOn)});
+  function ac(){if(!ctx){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C()}if(ctx.state==='suspended')ctx.resume();return ctx}
+  function note(c,f,t,d,v,w){var o=c.createOscillator(),g=c.createGain();o.type=w||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+.05)}
+  function mar(c,f,t,v){note(c,f,t,.45,v);note(c,f*4,t,.07,v*.22);note(c,f*2,t,.18,v*.12,'triangle')}
+  function sfx(n){if(!soundOn)return;var c=ac();if(!c)return;var t=c.currentTime+.01;
+    if(n==='tap'){note(c,190,t,.06,.18,'triangle');note(c,95,t,.05,.09)}
+    else if(n==='file'){note(c,880,t,.09,.05);note(c,1320,t+.05,.12,.04)}
+    else if(n==='complete'){mar(c,523.25,t,.16);mar(c,783.99,t+.11,.14)}
+    else if(n==='cleared'){mar(c,523.25,t,.13);mar(c,659.25,t+.09,.12);mar(c,783.99,t+.18,.12);note(c,2093,t+.26,.6,.028);note(c,3136,t+.3,.5,.016)}}
+
+  /* helpers */
+  function orbs(scope){scope.querySelectorAll('[data-orb]').forEach(function(o){if(o.children.length)return;var s=o.offsetWidth||20,r=s/2-2;for(var i=0;i<10;i++){var d=document.createElement('i');var a=i/10*Math.PI*2;d.style.transform='translate('+(Math.cos(a)*r)+'px,'+(Math.sin(a)*r)+'px)';d.style.opacity=.3+.7*(i/10);o.appendChild(d)}})}
+  function ticks(scope){scope.querySelectorAll('[data-ticks]').forEach(function(el){var n=+el.dataset.ticks,f=+el.dataset.fill;el.innerHTML='';for(var i=0;i<n;i++){var t=document.createElement('i');if(i<f-1)t.className='f';else if(i===f-1)t.className='a';el.appendChild(t)}})}
+  function askbar(active,ph){return '<div class="askbar"><span class="orb spin" data-orb></span><span class="ph">'+(ph||'Talk to life…')+'</span><span class="tb'+(active==='today'?' on':'')+'">'+IC.today+'</span><span class="tb'+(active==='plan'?' on':'')+'">'+IC.plan+'</span><span class="mic">'+IC.mic+'</span></div>'}
+  var AREAS=[['you','You','--a-you'],['home','Home','--a-home'],['work','Work','--a-work'],['money','Money','--a-money'],['health','Health','--a-health'],['goal','Goals','--a-goal']];
+  function A(k){return AREAS.filter(function(x){return x[0]===k})[0]}
+
+  /* ============ SCREENS ============ */
+  var rail=document.getElementById('rail');
+  function addShot(n,title,desc,html,init){var s=document.createElement('div');s.className='shot';s.innerHTML='<div class="frame"><div class="phone"><div class="screen"><div class="notch"></div>'+html+'</div></div></div><div class="shot-cap"><span class="n">'+n+'</span><b>'+title+'</b><span>'+desc+'</span></div>';rail.appendChild(s);var scr=s.querySelector('.screen');orbs(scr);ticks(scr);init&&init(scr);return scr}
+
+  /* 1 HOME */
+  var homeHTML=function(){return '<div class="glow ember"></div><div class="scroll">'+status+
+    '<div class="pad col" style="gap:20px;padding-top:6px;position:relative">'+
+      '<div class="row sb"><div class="col" style="gap:2px"><span class="t-callout c2">Monday, 16 Nov</span><span class="t-title1">Good morning, Ada</span></div><span class="tag" style="height:28px">Level 1</span></div>'+
+      '<div class="t-statement"><span class="q">Nothing urgent —</span> your rebate <span class="q">needs</span> one form <span class="q">and your</span> referral <span class="q">expires in</span> 9 days.</div>'+
+      '<div class="know"><span class="t-callout c2">life knows you</span><span class="k-bar"><b data-kb style="width:64%"></b></span><span class="t-callout tnum" data-kp>64%</span></div>'+
+      '<div class="col" style="gap:10px"><div class="row sb"><span class="t-title3">life is asking</span><span class="t-callout c2 tnum" data-ac>1 of 3</span></div><div class="card asked col" data-asked style="gap:14px"></div></div>'+
+      '<div class="col" style="gap:10px"><div class="row sb"><span class="t-title3">Things to know</span><span class="t-callout c2" data-ic>3 new</span></div><div class="ins-row" data-ins></div></div>'+
+      '<div class="col" style="gap:10px"><span class="t-title3">Worth doing today</span>'+
+        '<div class="card col press" style="gap:14px"><div class="row sb"><span class="t-title3">HMRC tax rebate</span><span class="tag live">One form left</span></div><div class="ticks" data-ticks="28" data-fill="16"></div><div class="row sb t-callout c2"><span class="tnum">Est. £840</span><span style="color:var(--ember-text)">Takes 6 min</span></div></div>'+
+        '<div class="card col press" style="gap:14px"><div class="row sb"><span class="t-title3">Hospital referral</span><span class="tag">Started</span></div><div class="ticks" data-ticks="28" data-fill="7"></div><div class="row sb t-callout c2"><span>Cardiology · Guy\'s</span><span class="tnum">Expires in 9 days</span></div></div>'+
+      '</div></div></div>'+askbar('today')};
+  var questions=[
+    {q:['Are you registered for','Self Assessment?'],o:['Yes','No','Not sure'],why:'Helps life find deadlines and reliefs you might be missing.',ins:['work','31 Jan','Your Self Assessment is due. life will remind you on 5 January.']},
+    {q:['Do you have a','workplace pension?'],o:['Yes','No','Self-employed'],why:'Pension relief is often the biggest thing people miss.',ins:['money','+£1,920','Self-employed? A SIPP adds 25% tax relief to what you pay in.']},
+    {q:['When did you last see a','dentist?'],o:['This year','1–2 years','Longer'],why:'life checks which NHS practices near you are taking patients.',ins:['health','2 near you','Two NHS practices within a mile are taking new patients.']}];
+  var homeState={qi:0,know:64,ins:[['money','£840','You\'re likely owed a tax rebate for 2024/25 work expenses.','From your talk · 12 Nov'],['health','9 days','Your cardiology referral lapses at week 13. Book before 25 Nov.','From your NHS record'],['home','25%','Living alone gets 25% off council tax. Takes 4 min to apply.','From a letter you scanned']]};
+  var homeScreens=[];
+  function renderHome(scr){var asked=scr.querySelector('[data-asked]');if(homeState.qi>=questions.length){asked.innerHTML='<div class="row" style="gap:12px"><span class="adot" style="background:var(--gain-tint);color:var(--gain)">'+CHECK+'</span><span class="t-body">That\'s everything for today. Talk to life any time to add more.</span></div>';scr.querySelector('[data-ac]').textContent='Done'}
+    else{var q=questions[homeState.qi];asked.className='card asked col rise';asked.innerHTML='<div class="t-statement" style="font-size:21px;line-height:27px"><span class="q">'+q.q[0]+'</span> '+q.q[1]+'</div><div class="row" style="gap:6px;flex-wrap:wrap">'+q.o.map(function(o){return '<button class="chipb">'+o+'</button>'}).join('')+'</div><span class="t-callout c2">'+q.why+'</span>';scr.querySelector('[data-ac]').textContent=(homeState.qi+1)+' of '+questions.length;
+      asked.querySelectorAll('.chipb').forEach(function(b){b.addEventListener('click',function(){b.classList.add('on');sfx('file');var ins=q.ins;homeState.ins.unshift([ins[0],ins[1],ins[2],'From a question you answered']);homeState.know=Math.min(96,homeState.know+5);
+        setTimeout(function(){asked.classList.add('out');setTimeout(function(){homeState.qi++;homeScreens.forEach(renderHome)},320)},380)})})}
+    scr.querySelector('[data-kb]').style.width=homeState.know+'%';scr.querySelector('[data-kp]').textContent=homeState.know+'%';
+    var row=scr.querySelector('[data-ins]');row.innerHTML='';homeState.ins.forEach(function(x,i){var a=A(x[0]);var d=document.createElement('div');d.className='card ins'+(i===0&&homeState.qi>0?' rise':'');d.innerHTML='<span class="src"><i style="background:var('+a[2]+');box-shadow:0 0 6px var('+a[2]+')"></i>'+a[1]+' · '+x[3]+'</span><span class="big tnum">'+x[1]+'</span><span class="t-body" style="font-size:14px;line-height:20px;color:var(--text-2)">'+x[2]+'</span>';row.appendChild(d)});
+    scr.querySelector('[data-ic]').textContent=homeState.ins.length+' new';renderTTK()}
+  // hero phone
+  var hp=document.getElementById('heroPhone');hp.innerHTML='<div class="screen"><div class="notch"></div>'+homeHTML()+'</div>';var hs=hp.querySelector('.screen');orbs(hs);ticks(hs);homeScreens.push(hs);
+  homeScreens.push(addShot('01','Home','The core screen. Your day in one calm sentence, how well life knows you, one question at a time, things to know, and what\'s worth doing. Answer the question and watch it file.',homeHTML()));
+
+  /* 2 TALK */
+  var script=[['So',0],['I\'m',0],['27,',['you','Age 27']],['I',0],['live',0],['in',0],['London',['you','London']],['with',0],['two flatmates,',['home','Household · 3']],['and',0],['I\'ve',0],['gone',0],['self-employed',['work','Sole trader']],['doing',0],['design',0],['work.',0],['I',0],['think',0],['I',0],['overpaid tax',['money','Mission · rebate']],['last',0],['year.',0],['Oh,',0],['and',0],['I\'ve',0],['been',0],['waiting',0],['eleven weeks',['health','Referral · urgent']],['for',0],['a',0],['heart',0],['referral.',0],['Long',0],['term',0],['I',0],['want',0],['to',0],['buy a place,',['goal','Goal · first home']],['and',0],['rent',0],['is',0],['£1,150 a month.',['money','Rent £1,150']]];
+  addShot('02','Talk','Speak freely. Words appear as you say them. Recognised phrases light up in their area colour and file into place as a chip. The demo plays a sample; the real app uses the mic.',
+    '<div class="talk">'+status+'<div class="pad row sb" style="padding-top:4px"><span class="t-callout c2" data-ts>Tap the mic and talk about your life</span><span class="tag tnum" data-tm>0:00</span></div><div class="transcript" data-tr></div><div class="wave" data-wv></div><div class="tray"><div class="row sb"><span class="t-callout" style="font-weight:600">Filing into place</span><span class="t-callout c2 tnum" data-fc>0 filed</span></div><div class="tray-g" data-tg></div></div><div class="talk-foot"><button class="sq press" data-rs aria-label="Start again">'+IC.reset+'</button><button class="bigmic press" data-mic aria-label="Start talking">'+IC.mic+'</button><button class="sq press" aria-label="Type instead">'+IC.kb+'</button></div></div>',
+    function(scr){var tr=scr.querySelector('[data-tr]'),wv=scr.querySelector('[data-wv]'),tg=scr.querySelector('[data-tg]'),mic=scr.querySelector('[data-mic]'),ts=scr.querySelector('[data-ts]'),tm=scr.querySelector('[data-tm]'),fc=scr.querySelector('[data-fc]');var counts={},filed=0,running=false,timers=[],ti=0,t0=0;
+      for(var i=0;i<30;i++)wv.appendChild(document.createElement('i'));
+      function tray(){tg.innerHTML='';AREAS.forEach(function(a){var c=counts[a[0]]||0;var d=document.createElement('div');d.className='ta';d.dataset.a=a[0];d.style.setProperty('--ac','var('+a[2]+')');d.innerHTML='<b>'+a[1]+'</b><span>'+(c?c+' new':'—')+'</span><span class="fl" style="width:'+Math.min(100,c*50)+'%"></span>';tg.appendChild(d)})}
+      function build(){tr.innerHTML='';script.forEach(function(w,i){var s=document.createElement('span');s.className='w';s.dataset.i=i;if(w[1]){var m=document.createElement('mark');m.textContent=w[0];var a=A(w[1][0]);m.style.setProperty('--hl','color-mix(in srgb, var('+a[2]+') 18%, transparent)');m.style.setProperty('--hlb','color-mix(in srgb, var('+a[2]+') 40%, transparent)');s.appendChild(m)}else s.textContent=w[0];tr.appendChild(s);tr.appendChild(document.createTextNode(' '))})}
+      function fly(m,area,label){var a=A(area);var sr=scr.getBoundingClientRect(),fr=m.getBoundingClientRect(),to=tg.querySelector('[data-a="'+area+'"]').getBoundingClientRect();var z=sr.width/393;
+        var f=document.createElement('div');f.className='flyer';f.style.background='var('+a[2]+')';f.textContent=label;f.style.left=((fr.left-sr.left)/z)+'px';f.style.top=((fr.bottom-sr.top)/z+4)+'px';scr.appendChild(f);
+        requestAnimationFrame(function(){requestAnimationFrame(function(){f.style.transform='translate('+((to.left-fr.left)/z+8)+'px,'+((to.top-fr.bottom)/z-2)+'px) scale(.5)';f.style.opacity='0'})});
+        setTimeout(function(){f.remove();counts[area]=(counts[area]||0)+1;filed++;fc.textContent=filed+' filed';tray();var el=tg.querySelector('[data-a="'+area+'"]');el.classList.add('bump');sfx('file')},760)}
+      function stop(){running=false;timers.forEach(clearTimeout);timers=[];clearInterval(ti);mic.classList.remove('live');wv.querySelectorAll('i').forEach(function(b){b.style.height='4px'})}
+      mic.addEventListener('click',function(){if(running){stop();ts.textContent='Paused';return}running=true;mic.classList.add('live');ts.textContent='Listening…';sfx('tap');if(!tr.children.length)build();t0=Date.now();
+        ti=setInterval(function(){tm.textContent='0:'+String(Math.floor((Date.now()-t0)/1000)).padStart(2,'0');wv.querySelectorAll('i').forEach(function(b){b.style.height=(4+Math.random()*28)+'px'})},110);
+        var delay=0;script.forEach(function(w,i){var el=tr.querySelector('[data-i="'+i+'"]');if(el.classList.contains('on'))return;delay+=140+w[0].length*13;timers.push(setTimeout(function(){el.classList.add('on');tr.scrollTop=tr.scrollHeight;if(w[1]){var m=el.querySelector('mark');setTimeout(function(){m.classList.add('hit');fly(m,w[1][0],w[1][1])},200)}
+          if(i===script.length-1)setTimeout(function(){stop();ts.textContent=filed+' things filed · review them next';sfx('complete')},900)},delay))})});
+      scr.querySelector('[data-rs]').addEventListener('click',function(){stop();tr.innerHTML='';counts={};filed=0;fc.textContent='0 filed';tm.textContent='0:00';ts.textContent='Tap the mic and talk about your life';tray();sfx('tap')});
+      tray()});
+
+  /* 3 UNDERSTOOD */
+  var und=[['you','27','Age 27, London','You'],['home','3','Lives with 2 flatmates','Home · household'],['work','ST','Self-employed designer','Work · sole trader'],['money','£','Overpaid tax in 2024/25','New mission · HMRC rebate'],['health','!','Heart referral, 11 weeks','New mission · urgent'],['goal','⌂','Buy a first home','Goals · Rent vs buy at level 3'],['money','£','Rent £1,150 a month','Money · 30-day cash plan']];
+  addShot('03','Understood','After every talk, one calm summary: each fact and where it went, with Remove on every row. Nothing is filed silently, and the "What changed" line shows the payoff.',
+    '<div class="scroll">'+status+'<div class="pad col" style="gap:18px;padding-top:4px"><span class="t-callout c2">From your 48-second talk</span><div class="t-statement"><span class="q">Here\'s what I</span> understood. <span class="q">Remove anything I got wrong.</span></div><div class="card" style="padding:2px 16px" data-ul></div><div class="card col" style="gap:6px;background:var(--ember-tint);box-shadow:none"><span class="t-callout" style="color:var(--ember-text);font-weight:600">What this changed</span><span class="t-body">2 new missions, 1 of them urgent. life knows you <b class="tnum">64% → 81%</b>. Rent vs buy is now on your path.</span></div><button class="btn press" data-ok>Looks right</button><button class="btn g press">Keep talking</button></div></div>',
+    function(scr){var ul=scr.querySelector('[data-ul]');und.forEach(function(u){var a=A(u[0]);var d=document.createElement('div');d.className='li';d.innerHTML='<span class="adot" style="background:var('+a[2]+')">'+u[1]+'</span><span class="lx col" style="gap:1px;flex:1;min-width:0"><span class="t-title3" style="font-size:15px">'+u[2]+'</span><span class="t-callout c2">→ '+u[3]+'</span></span><button class="chipb press" style="height:30px;font-size:13px;padding:0 10px">Remove</button>';d.querySelector('button').addEventListener('click',function(){var r=d.classList.toggle('removed');this.textContent=r?'Undo':'Remove';sfx('tap')});ul.appendChild(d)});
+      scr.querySelector('[data-ok]').addEventListener('click',function(){this.textContent='Saved to your life';sfx('complete')})});
+
+  /* 4 NUDGE */
+  addShot('04','Nudge','life writes first, at most once a day, with a reason, a time cost and a value. Tap it and the steps are right there. "Later" choices teach life when to ask.',
+    '<div class="lock" data-lock><span class="date">Monday 16 November</span><span class="clock tnum">13:40</span><button class="notif press" data-nt><span class="app"><span class="orb" data-orb style="color:#0D0E10;width:18px;height:18px"></span></span><span class="col" style="gap:2px;flex:1;min-width:0"><span class="row sb"><b style="font-size:15px">life</b><span style="font-size:13px;opacity:.6">now</span></span><span style="font-size:15px;line-height:20px">You\'ve got 20 free minutes. Finish the P87 and £840 starts moving.</span></span></button><span class="t-callout" style="position:absolute;bottom:44px;opacity:.55">Tap the notification</span></div>'+
+    '<div class="glow ember"></div><div class="scroll">'+status+'<div class="pad col" style="gap:16px;padding-top:6px;position:relative"><div class="row"><span class="orb spin" data-orb></span><span class="t-callout c2">life · just now</span></div><div class="t-statement"><span class="q">You\'re free until</span> 2pm. <span class="q">The P87 is all that stands between you and</span> £840. <span class="q">Three steps, about</span> 6 minutes.</div><div class="card" style="padding:2px 16px" data-p87></div><button class="btn press" data-go>Start step 1</button><div class="row" style="gap:8px"><button class="btn s press" style="flex:1" data-l>At 6pm</button><button class="btn s press" style="flex:1" data-l>Not this week</button></div></div></div>',
+    function(scr){var steps=[['Sign in to Government Gateway','1 min'],['Add £1,240 of software and kit','3 min'],['Submit and save the reference','2 min']],sd=0,box=scr.querySelector('[data-p87]'),go=scr.querySelector('[data-go]');
+      function r(){box.innerHTML='';steps.forEach(function(s,i){var b=document.createElement('button');b.className='li press'+(i<sd?' done':'');b.style.width='100%';b.style.textAlign='left';b.innerHTML='<span class="box">'+CHECK+'</span><span class="lt t-body" style="flex:1">'+s[0]+'</span><span class="t-callout c2">'+s[1]+'</span>';b.addEventListener('click',function(){if(i===sd)adv()});box.appendChild(b)})}
+      function adv(){if(sd>=steps.length)return;sd++;r();if(sd<steps.length){go.textContent='Start step '+(sd+1);sfx('complete')}else{go.textContent='£840 is on its way';go.style.background='var(--gain)';go.style.color='#0D0E10';sfx('cleared')}}
+      r();go.addEventListener('click',adv);scr.querySelector('[data-nt]').addEventListener('click',function(){var l=scr.querySelector('[data-lock]');l.style.opacity=0;l.style.pointerEvents='none';sfx('tap')});
+      scr.querySelectorAll('[data-l]').forEach(function(b){b.addEventListener('click',function(){b.textContent='Noted';sfx('tap')})})});
+
+  /* 5 MISSION DETAIL */
+  addShot('05','Mission','Every mission has the same shape: status, a three-stage stepper, the reference, what to do, a ready draft, and what\'s happened so far. One primary action.',
+    '<div class="glow admin"></div><div class="scroll">'+status+'<div class="pad col" style="gap:18px;padding-top:4px;position:relative"><div class="row sb"><span class="sq" style="width:40px;height:40px;border-radius:12px">'+IC.back+'</span><span class="tag live" data-mp>Submitted</span></div><div class="col" style="gap:6px"><span class="t-callout c2">Money · HMRC</span><span class="t-title1">Tax rebate</span><span class="t-body c2">Est. <b style="color:var(--text)" class="tnum">£840</b> back · about 12 minutes in total</span></div>'+
+    '<div class="card col" style="gap:18px"><div class="stepper" data-sp><div class="ln"><b style="width:50%"></b></div><div class="st done"><div class="node">'+CHECK+'</div><span class="t-callout" style="font-weight:600">Started</span><span class="t-mono c2">12 Nov</span></div><div class="st cur"><div class="node">'+CHECK+'</div><span class="t-callout" style="font-weight:600">Submitted</span><span class="t-mono c2">Today</span></div><div class="st"><div class="node">'+CHECK+'</div><span class="t-callout" style="font-weight:600">Cleared</span><span class="t-mono c2">~22 Nov</span></div></div><div class="hair"></div><div class="row sb"><div class="col" style="gap:3px"><span class="t-callout c2">Reference</span><span class="t-mono">P800-7Q2-K41</span></div><button class="chipb press" data-cp>Copy</button></div></div>'+
+    '<span class="t-title3">What to do</span><div class="row" style="gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px"><div class="card col" style="flex:0 0 150px;gap:10px"><span class="tag tnum">1 · 3 min</span><span class="t-body">Sign in to Government Gateway</span></div><div class="card col" style="flex:0 0 150px;gap:10px"><span class="tag tnum">2 · 5 min</span><span class="t-body">Check the P800 against payslips</span></div><div class="card col" style="flex:0 0 150px;gap:10px"><span class="tag tnum">3 · 4 min</span><span class="t-body">Claim by bank transfer</span></div></div>'+
+    '<div class="card col" style="gap:8px"><div class="row sb"><span class="t-title3">Draft message</span><button class="chipb press" data-cd>Copy</button></div><span class="t-body c2">Hello, I\'m following up on my P800 (ref P800-7Q2-K41) and would like the refund paid by bank transfer.</span></div></div></div>'+
+    '<div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 30px;background:linear-gradient(0deg,var(--bg) 70%,transparent);z-index:6"><button class="btn press" data-ad>Mark as cleared</button></div>',
+    function(scr){var st=scr.querySelectorAll('.st'),ln=scr.querySelector('.ln b'),mp=scr.querySelector('[data-mp]'),ad=scr.querySelector('[data-ad]'),done=false;
+      ad.addEventListener('click',function(){done=!done;if(done){st[1].className='st done';st[2].className='st done';ln.style.width='100%';mp.className='tag done';mp.textContent='Cleared · £840 paid';ad.textContent='Undo';sfx('cleared')}else{st[1].className='st cur';st[2].className='st';ln.style.width='50%';mp.className='tag live';mp.textContent='Submitted';ad.textContent='Mark as cleared';sfx('tap')}});
+      ['[data-cp]','[data-cd]'].forEach(function(s){var b=scr.querySelector(s);b.addEventListener('click',function(){try{navigator.clipboard.writeText(s==='[data-cp]'?'P800-7Q2-K41':'Hello, I\'m following up on my P800 (ref P800-7Q2-K41).').catch(function(){})}catch(e){}b.textContent='Copied';sfx('tap');setTimeout(function(){b.textContent='Copy'},1400)})})});
+
+  /* 6 ASK → FILE */
+  addShot('06','Ask, then file','Ask anything and life answers with your real numbers. Then it offers to file the answer back into the app as a decision, an insight or a mission, so the conversation leaves something behind.',
+    '<div class="scroll">'+status+'<div class="pad col" style="gap:16px;padding-top:6px"><div style="align-self:flex-end;max-width:82%;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);border-radius:16px;padding:11px 14px" class="t-body">Should I go limited company or stay a sole trader?</div>'+
+    '<div class="row"><span class="orb" data-orb></span><span class="t-callout c2">life</span></div><div class="t-statement" style="font-size:21px;line-height:28px"><span class="q">At your</span> £48k <span class="q">profit, a limited company saves about</span> £2,100 a year<span class="q">, minus roughly</span> £1,000 <span class="q">in accountant fees.</span></div>'+
+    '<div class="card col" style="gap:0;padding:4px 16px"><div class="li" style="justify-content:space-between"><span class="t-body">Sole trader</span><span class="t-title3 tnum">£36,420</span></div><div class="li" style="justify-content:space-between"><span class="t-body">Limited company</span><span class="t-title3 tnum" style="color:var(--gain)">£38,520</span></div><div class="li" style="justify-content:space-between"><span class="t-callout c2">Take-home per year · 2025/26</span><span class="tag">Estimate</span></div></div>'+
+    '<div class="card row" data-fc style="gap:12px;background:var(--surface-2)"><span class="orb" data-orb></span><span class="t-callout" style="flex:1">Save to <b>Work</b> as a decision to revisit in April?</span><button class="chipb on press" data-fb>Save</button></div></div></div>'+askbar('',"Ask a follow-up…"),
+    function(scr){scr.querySelector('[data-fb]').addEventListener('click',function(){var c=scr.querySelector('[data-fc]');c.innerHTML='<span class="adot" style="background:var(--gain-tint);color:var(--gain)">'+CHECK+'</span><span class="t-callout" style="flex:1">Saved to <b>Work</b>. life will bring it back in April.</span>';c.classList.add('rise');homeState.ins.unshift(['work','£2,100','A limited company could save £2,100 a year at £48k profit. Revisit in April.','From a question you asked']);homeScreens.forEach(renderHome);sfx('file')})});
+
+  /* 7 THINGS TO KNOW */
+  var ttkScr=addShot('07','Things to know','The app\'s memory. Every insight with its source and what it means, filterable by area. It fills from your talks, your answers and your documents, so watch it update as you use the other screens.',
+    '<div class="scroll">'+status+'<div class="pad col" style="gap:16px;padding-top:6px"><span class="t-title1">Things to know</span><div class="row" style="gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px" data-tf></div><div class="col" style="gap:10px" data-tl></div></div></div>'+askbar('plan'));
+  var ttkF='all';
+  (function(){var tf=ttkScr.querySelector('[data-tf]');[['all','All']].concat(AREAS).forEach(function(a,i){var b=document.createElement('button');b.className='chipb press'+(i===0?' on':'');b.textContent=a[1];b.addEventListener('click',function(){tf.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');ttkF=a[0];renderTTK();sfx('tap')});tf.appendChild(b)})})();
+  function renderTTK(){var l=ttkScr.querySelector('[data-tl]');l.innerHTML='';homeState.ins.filter(function(x){return ttkF==='all'||x[0]===ttkF}).forEach(function(x){var a=A(x[0]);var d=document.createElement('div');d.className='card col';d.style.gap='10px';d.innerHTML='<span class="src"><i style="background:var('+a[2]+');box-shadow:0 0 6px var('+a[2]+')"></i>'+a[1]+' · '+x[3]+'</span><div class="row" style="align-items:flex-start;gap:14px"><span class="big tnum" style="font-size:26px;line-height:28px;flex:0 0 auto">'+x[1]+'</span><span class="t-body c2" style="flex:1">'+x[2]+'</span></div>';l.appendChild(d)})}
+
+  /* 8 VANTAGE */
+  addShot('08','Vantage point','Levels drawn as ground you climb. You can see where you stand, the next point glowing ahead, and exactly what gets you there. Tick the steps to climb.',
+    '<div class="glow ember" style="height:560px"></div><div class="scroll" style="padding-bottom:40px">'+status+'<div class="pad col" style="gap:6px;padding-top:6px;position:relative"><span class="t-callout c2">Your next vantage point</span><span class="t-title1" data-vt style="font-size:36px;line-height:40px;letter-spacing:-.04em">Stable ground</span><span class="t-body c2" data-vd>Level 2 · From here: your routines, your money in full view, and your health stack.</span></div>'+
+    '<svg class="ridge" viewBox="0 0 393 230" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--ember)" stop-opacity=".22"/><stop offset="1" stop-color="var(--ember)" stop-opacity="0"/></linearGradient></defs><path d="M0 210 L50 180 L95 192 L150 128 L195 150 L245 80 L285 104 L340 36 L393 66 L393 230 L0 230Z" fill="url(#rg)"/><path d="M0 210 L50 180 L95 192 L150 128 L195 150 L245 80 L285 104 L340 36 L393 66" fill="none" stroke="var(--text-2)" stroke-width="1.25" stroke-dasharray="2 5"/><g data-pk></g></svg>'+
+    '<div class="pad col" style="gap:12px;position:relative"><div class="card col" style="gap:0;padding:6px 16px"><div class="row sb" style="padding:8px 0"><span class="t-title3">To get there</span><span class="t-callout c2 tnum" data-vc>1 of 3</span></div><div data-vg></div></div><button class="btn e press" data-vb>Take the next step</button></div></div>',
+    function(scr){var lvl=1,vg=[['Save your 30-day cash plan',true],['Review this year\'s tax',false],['Book your heart referral',false]],pk=[[50,180],[150,128],[245,80],[340,36]],names=['','Starting out','Stable ground','Room to decide','Momentum','The long view'];
+      function peaks(){var g=scr.querySelector('[data-pk]');g.innerHTML='';pk.forEach(function(p,i){var on=i+1<=lvl,nx=i+1===lvl+1;g.innerHTML+=(nx?'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="18" fill="var(--ember)" opacity=".18"><animate attributeName="r" values="10;22;10" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".3;0;.3" dur="2.4s" repeatCount="indefinite"/></circle>':'')+'<rect x="'+(p[0]-(nx?8:6))+'" y="'+(p[1]-(nx?8:6))+'" width="'+(nx?16:12)+'" height="'+(nx?16:12)+'" rx="4" fill="'+(on?'var(--text)':nx?'var(--ember)':'var(--surface-3)')+'"/><text x="'+p[0]+'" y="'+(p[1]-16)+'" text-anchor="middle" fill="var(--text-2)" font-family="Inter,sans-serif" font-size="12" font-weight="600">L'+(i+1)+'</text>'})}
+      function gates(){var el=scr.querySelector('[data-vg]');el.innerHTML='';var d=0;vg.forEach(function(g){if(g[1])d++;var b=document.createElement('button');b.className='li press'+(g[1]?' done':'');b.style.width='100%';b.style.textAlign='left';b.innerHTML='<span class="box">'+CHECK+'</span><span class="lt t-body" style="flex:1">'+g[0]+'</span>';b.addEventListener('click',function(){g[1]=!g[1];if(g[1])sfx('complete');gates();chk()});el.appendChild(b)});scr.querySelector('[data-vc]').textContent=d+' of '+vg.length}
+      function chk(){if(vg.length&&vg.every(function(g){return g[1]})&&lvl<4)setTimeout(function(){lvl++;sfx('cleared');peaks();scr.querySelector('[data-vt]').textContent=names[lvl+1];scr.querySelector('[data-vd]').textContent=lvl<4?'Level '+(lvl+1)+' · New tools, routines and decisions open up from here.':'Level 4 reached. Keep your new normal working.';vg=lvl<4?[['Finish one routine for a month',false],['Complete one bigger decision',false]]:[];gates()},450)}
+      scr.querySelector('[data-vb]').addEventListener('click',function(){var g=vg.filter(function(x){return !x[1]})[0];if(g){g[1]=true;sfx('complete');gates();chk()}});peaks();gates()});
+
+  homeScreens.forEach(renderHome);
+
+  /* swatches */
+  function renderSwatches(){var cs=getComputedStyle(root),el=document.getElementById('sw');var list=[['bg','Background'],['surface','Surface'],['surface-2','Raised'],['surface-3','Track'],['text','Text'],['text-2','Secondary'],['quiet','Quiet half'],['ember','Signal'],['gain','Money in'],['a-work','Area · Work'],['a-health','Area · Health'],['a-home','Area · Home']];
+    el.innerHTML=list.map(function(s){return '<div class="swc"><div class="c" style="background:var(--'+s[0]+')"></div><div class="t"><b>'+s[1]+'</b><span>--'+s[0]+' '+cs.getPropertyValue('--'+s[0]).trim()+'</span></div></div>'}).join('')}
+
+  /* component sheet bits */
+  var cc=document.getElementById('csChips');['Yes','No','Not sure'].forEach(function(t,i){var b=document.createElement('button');b.className='chipb press'+(i===0?' on':'');b.textContent=t;b.addEventListener('click',function(){cc.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');sfx('tap')});cc.appendChild(b)});
+  document.querySelectorAll('[data-tog]').forEach(function(t){t.addEventListener('click',function(){t.setAttribute('aria-checked',t.getAttribute('aria-checked')!=='true');sfx('tap')})});
+  orbs(document);ticks(document.querySelector('.cs'));
+  syncTheme();
+})();
+</script>

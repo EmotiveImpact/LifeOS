@@ -129,8 +129,8 @@ Rules:
 - **Grid:** 4pt. Screen gutter **20**. Card padding **20**. Gap between cards **12**. Gap between sections **32**. Touch targets ≥ **44×44**.
 - **Radius:** `xs 10` (pills inside tiles) · `sm 14` (tiles, inputs, choice-card media) · `md 20` (inner cards) · `lg 28` (cards) · `xl 36` (sheet top corners, phone-edge cards) · `full` (buttons, chips, dock). **Nested rule:** inner radius = outer radius − padding.
 - **Depth:** cards are **flat** (tonal). Only floating things cast shadow: dock, FAB, sheets, the front card of a peek stack.
-  - Light shadow: `0 12 32 rgba(20,20,23,0.12)`; dark: no shadow, use `surface-3` + `expo-blur` (intensity 40, tint dark).
-- **Blur:** the dock and sheet backdrops use `BlurView`. Nothing else blurs.
+  - Light shadow: `0 12 32 rgba(20,20,23,0.12)`; dark: no shadow, the floating element sits on `surface-3` with a hairline.
+- **No blur, no glass, anywhere** (§43). Floating elements are solid surfaces with a hairline and, in light mode, a soft shadow.
 
 ---
 
@@ -149,7 +149,7 @@ Build these in `apps/mobile/src/design/` with no business logic. Screens compose
 9. **`MetricRow`**: 3 equal tiles (`surface-2`, radius `md`), each with a callout label above a `title` value (ref 05).
 10. **`StageStepper`**: 3 nodes (`Started → Submitted → Cleared`, or custom labels), each with a mono timestamp. Done = ink filled check node. Current = ember ring node with a pulsing halo (respects Reduce Motion). Future = `surface-3` node. Connector line: ink up to the current node, `surface-3` after it (ref 09).
 11. **`ActivityTimeline`**: rows with a mono time and date in a left gutter, a check node on a dotted vertical line, and body text (ref 09 right).
-12. **`Dock`**: floating pill, bottom inset 12 + safe area, blur background, 4 items. Active = inverted capsule containing icon + label. Inactive = icon only, `ink-2`. Hides on scroll down and returns on scroll up (spring).
+12. **`Dock`**: floating pill, bottom inset 12 + safe area, solid `surface` background with hairline, 4 items. Active = inverted capsule containing icon + label. Inactive = icon only, `ink-2`. Hides on scroll down and returns on scroll up (spring).
 13. **`Button`**: `primary` = full-width pill, height 56, `ink` fill with paper text (on an atmosphere it inverts to paper fill with ink text). `secondary` = `surface-2` pill. `link` = underlined callout text. Exactly one primary per screen.
 14. **`ChoiceCard`**: onboarding option (ref 01). Radio + `title` + `callout` description. When selected, the card reveals a photo on its right half behind a scrim and flips to paper text, with a spring and a selection haptic.
 15. **`PromptBanner`**: translucent warm card (Growth atmosphere at 20%) with a small icon + label ("Inspiration", "Check-in"), a `title`, a callout subtitle, and a `♡` save toggle (ref 16).
@@ -157,7 +157,7 @@ Build these in `apps/mobile/src/design/` with no business logic. Screens compose
 17. **`MoneyFigure`**: serif whole part + quiet decimals + optional delta pill (`▲ 12.4%` in gain). Includes an `eye` toggle that masks the value as `••••` with a crossfade, and the setting persists (ref 09).
 18. **`StatusPill`**: callout text on a tint. Kinds: `neutral` (`surface-2`/`ink-2`), `live` (`ember-tint`/`ember-text`), `done` (`gain-tint`/`gain`).
 19. **`Countdown`**: relative time label (`in 1h 15m`, `in 3 days`). Below 24h it renders in `ember-text`. Updates every minute.
-20. **`Sheet`**: `@gorhom/bottom-sheet` with top radius `xl`, a grabber (36×5, `surface-3`), backdrop at 35% `canvas` + blur, snap points `[55%, 92%]`.
+20. **`Sheet`**: `@gorhom/bottom-sheet` with top radius `xl`, a grabber (36×5, `surface-3`), backdrop: solid dim at 35% (no blur), snap points `[55%, 92%]`.
 21. **`DottedOrb`**: the brand symbol (a ring of dots, ref 10). Idle = slow 12s rotation. "Thinking" = dots pulse in sequence. Also used as the Ask tab icon and the loading state.
 
 Each component has a story in the **design gallery** route (`/design`, dev-only) showing every variant in light and dark.
@@ -269,3 +269,454 @@ Examples of the two-tone voice:
 - [ ] Light and dark screenshots both look intentional
 - [ ] Reduce Motion and Dynamic Type 1.3× tested
 - [ ] Copy passes §10 (no banned words, verbs on buttons, numbers present)
+
+---
+
+# v2: chat-first, grows with you
+
+> v2 changes §11 (app structure). Everything in §1–§10 still applies. Visual target:
+> `design-board/life-design-board-v2.html` (seven live screens, the growth model, and the feature inventory).
+
+## 13. The two principles
+
+1. **The conversation is the home.** life opens on a clean chat. The Island shows what life is checking. Replies are calm two-tone prose (no bubble) with live cards inside: missions, steppers, money, drafts. Every other tab is one tap away, and chat is one tap from every tab via the **AskBar**.
+2. **It grows with the user.** The app reveals itself by **level** (`computeLifeLevelState`): 1 Starting out → 2 Stabilize → 3 Set your routines → 4 Build momentum. Nothing appears before it's useful. Locked tools are visible as quiet outlines with "Level N", so the path ahead is clear but never noisy.
+
+## 14. Inputs are instruments, not forms
+
+Anything life needs to know is asked inside the chat or a sheet using a tactile instrument:
+
+| Instrument | Asks | Feel | Replaces |
+|---|---|---|---|
+| **PulseField** | "How are you arriving?" | Drag across a dot matrix. Dots swell near your finger, and colour and word change by mood. A selection haptic fires on each mood change. Sets `pulse.focusBias`, which reorders Today | DotMatrixPulseSheet |
+| **CountStepper** | "How many people live with you?" | A huge serif number with ± buttons. A figure steps in per person (spring pop), capped at 16+, with a live consequence line underneath (`getCrowdUnlockSummary`) | CrowdStepperSheet |
+| **AttachMenu** | Documents | The thread dims (solid overlay, no blur) and options spring up one after another: **Scan a letter** (hero), Camera, Photos, Files, How I'm feeling. Parsed docs patch the profile and unlock tasks | BlurIntakeOverlay |
+| **ChoiceCard** | Onboarding questions | One question at a time. After onboarding, remaining questions trickle into chat as chips | IntakeState / ProgressiveQuestion |
+
+## 15. New components (add to `apps/mobile/src/design`)
+
+`Island` (pill → card with a rotating dot globe + status text; opens while life works, closes when the reply lands) · `ChatThread`, `UserBubble`, `LifeReply` (two-tone prose + inline cards + chips) · `Composer` (pill input, + attach, send; send becomes a mic when empty) · `AttachMenu` · `PulseField` · `CountStepper` · `AskBar` (replaces the Dock: orb + "Ask life anything…" + 3 mini tabs) · `LevelPath` + `GateList` (checkable gates; when the last gate is ticked → level up) · `IntroCarousel` (segmented bars over gradient art, title, body, Next / Show me; used for level-ups and life+) · `ToolTile` (unlocked / locked "Level N") · `NewTag` (ember "New at level N", fades after first visit).
+
+## 16. App structure v2 (replaces §11)
+
+**AskBar tabs:** Today · Plan · You, with **Chat** opened from the bar's text field (or the orb) as a full-screen stack route.
+
+| Screen | Contents | Level |
+|---|---|---|
+| **Chat** | Island · thread · Composer with AttachMenu. Opening message is today's brief + top mission card + chips | 1 |
+| **Today** | `Mon ●` header + level pill → two-tone brief → **To move up** GateList → Worth doing today → (L2) Your routines → (L3) One bigger decision → (L4) This month's gambit · PromptBanners | 1, grows |
+| **Plan** | Area chips (Money, Work, Home, Health, Relationships, Life admin) → Missions → **Toolkit** grid of ToolTiles | 1, tools unlock |
+| **Mission detail** | as §11 (atmosphere, StageStepper, steps, Draft message, timeline) | 1 |
+| **Money** | as §11 (emerald atmosphere, ledger, scrubber, privacy eye) | 2 |
+| **Health stack / Bloodwork** | bronze atmosphere, AM/PM routines, ticks, lab reader | 2 / 3 |
+| **You** | Score + streak, Household (CountStepper), Pulse history, Weekly recap PeekStack (L3), Settings | 1 |
+| **Level up** | IntroCarousel, one page per unlock, with the cleared sound. Shown once per level | 2+ |
+| **Membership** | IntroCarousel variant + plan tiles (ember atmosphere). Never blocks level 1 | — |
+
+## 17. Feature inventory: nothing gets lost
+
+| Existing | v2 home | Level |
+|---|---|---|
+| ChatState + processLifeOSMessage | Chat (home), AskBar everywhere | 1 |
+| ScanningState + DynamicIsland | Island in chat | 1 |
+| BlurIntakeOverlay + SAMPLE_EVIDENCE_DOCS | AttachMenu → Scan a letter | 1 |
+| DotMatrixPulseSheet | PulseField (morning check-in, attach) | 1 |
+| CrowdStepperSheet | CountStepper (You → Home, inline in chat) | 1 |
+| IntakeState + ProgressiveQuestion | Onboarding + chat chips | 1 |
+| HubState + TodayBriefSheet | Today | 1 |
+| PortalSpotlightState + TaskReadingSheet | Mission detail + Draft sheet | 1 |
+| TaskDeckState + TaskAuraState | Plan → Missions | 1 |
+| RunwayCalculatorSheet | Toolkit → 30-day cash plan (L1 gate) | 1 |
+| MoneyWorkStackSheet | Toolkit → Tax & NI, Subscriptions; Money | 1–2 |
+| CashflowLedgerSheet | Money screen | 2 |
+| HealthStackSheet | Toolkit → Health stack | 2 |
+| Operating rules (normals) | Today → Your routines | 2–3 |
+| IncomeDecisionPanel | Toolkit → Income & structure | 3 |
+| HousingDecisionTools | Toolkit → Rent vs buy (3), Mortgage vs invest (4) | 3–4 |
+| BloodworkPanel | Toolkit → Bloodwork reader | 3 |
+| weeklyRecap | You → Weekly recap | 3 |
+| GameOfLifeSheet + chapters | LevelPath + IntroCarousel | 2+ |
+| LevelsThinkersSheet (THINKER_ATEAM) | PromptBanners + Toolkit → Thinkers | 4 |
+| GrowthPathSheet + GrowthCheckIns | Toolkit → Growth path; check-ins in chat | 4 |
+| STAGE_GAMBITS | Today "One bigger decision" + Monthly gambit | 3–4 |
+| MembershipSheet | Membership modal | — |
+| PRESET_PROFILES / StudioSidebar | Dev-only debug menu + /design gallery | dev |
+
+## 18. Chat rules
+
+- life never uses a bubble. It writes like a person: two-tone, short, specific, with numbers.
+- At most **one card** and **up to 4 chips** per reply. Cards are the real components (StageStepper, MoneyFigure, CountStepper…), not screenshots of them.
+- The Island opens with a specific verb ("Checking HMRC records…", "Reading the letter…") for ≥ 900ms, then closes as the reply rises in (`enter.item`).
+- User messages: `surface` bubble on the right, radius 20, `body` text, soft shadow in light only.
+- The composer's send button fires the `primary` feedback, a reply arriving fires `tap`, and a task completed from chat fires `complete`.
+
+---
+
+# v3: home-first; talk, file, guide
+
+> **v3 supersedes v2 where they disagree:** life is NOT chat-first. §13.1 ("the conversation is the home") and the
+> Chat row of §16 are replaced by this section. v2's growth model, instruments, toolkit and inventory (§13.2, §14, §15, §17) all still apply.
+> Visual target: `design-board/life-design-board-v3.html`.
+
+## 19. The model
+
+**Home (Today) is the core screen.** Chat and Talk are a two-way channel layered on top of it:
+- **life → you (get you moving):** life writes first, at the right moment, with a reason, a time cost and a value ("You've got 20 free minutes. Finish the P87 and £840 starts moving."). The steps open inline.
+- **you → life (figure things out):** you ask or brain-dump by voice or text. life answers with your real numbers.
+- **Everything said is filed back into the app** as typed records, so the app understands you and the conversation always leaves something behind.
+
+**The loop:** Talk → File → Know → Ask → Nudge → Rise (to the next vantage point = level).
+
+## 20. Filed records (data model for the builder)
+
+Every recognised piece of a talk/chat becomes one record:
+
+```ts
+type FiledRecord = {
+  id: string;
+  kind: 'fact' | 'insight' | 'mission' | 'decision' | 'goal' | 'answer';
+  area: 'you' | 'home' | 'work' | 'money' | 'health' | 'goal'; // maps onto LIFE_AREAS
+  label: string;            // "Lives with 2 flatmates"
+  value?: string | number;  // 3
+  profilePatch?: Partial<UserProfile>;   // reuse processLifeOSMessage's extraction
+  taskId?: string;          // when it creates or updates a mission
+  source: { type: 'talk' | 'chat' | 'question' | 'document' | 'record'; at: string; excerpt?: string };
+  status: 'proposed' | 'confirmed' | 'removed';
+};
+```
+
+- Records start as `proposed` and become `confirmed` on **Looks right**. Nothing is filed silently.
+- **Understanding** = the share of each area's key questions that have confirmed records. It's shown on Home as "life knows you NN%" and per area on You. The gaps become life's next questions.
+
+## 21. New screens
+
+| Screen | What it is | Components |
+|---|---|---|
+| **Talk** (full-screen layer from the AskBar mic) | Live transcript, quiet ink with recognised phrases highlighted in their area colour. Each recognised phrase **flies as a chip** into the **Filing tray** (6 area tiles with counts) with a soft `file` sound + selection haptic. Waveform, timer, big mic with an ember halo while listening | `Transcript`, `FilingTray`, `FlyChip`, `Waveform`, `BigMic` |
+| **Understood** (after every talk) | "Here's what I understood. Remove anything I got wrong." A list of records → destination, each with Remove/Undo, then a "What this changed" summary (new missions, understanding Δ, unlocks) and **Looks right** | `RecordRow`, `ChangeSummary` |
+| **Ask / Chat** | Your question → life's answer with real numbers → a **FileCard**: "Save this to Work as a decision to revisit in April?" | `UserBubble`, `LifeReply`, `FileCard` |
+| **Nudge** | A push notification (≤ 1/day) opens a short life message with the steps inline (checkable) + primary "Start step 1" + "At 6pm" / "Not this week" (these train timing) | `NudgeMessage`, `StepChecklist` |
+| **Things to know** | The app's memory. Insight cards: area dot · source ("From your talk · 12 Nov") · serif value · one-line meaning. Filter by area | `InsightCard`, area filter chips |
+| **Vantage point** | Levels drawn as a ridge you climb (ember dusk atmosphere). Current peak in paper, next peak in ember with a pulse. "To get there" gates, then "Take the next step" | `Ridge`, `GateList` |
+
+## 22. Home (Today) v3 order
+
+`Mon ●` + level pill → two-tone brief → **life knows you** meter → **life is asking** (one question card, answered with chips/instruments; it slides out on answer, adds an insight and raises understanding) → **Things to know** (horizontal insight cards, newest first) → **Worth doing today** → level sections (v2 §16) → PromptBanners.
+AskBar: orb + "Talk to life…" (opens Chat) + Today/Plan mini tabs + a **mic** button (opens Talk).
+
+## 23. Sound additions
+
+Add a fifth, tiny sound: `file.wav` (≤ 120ms, two soft high sine blips, −20 dBFS). It plays when a record lands in the tray or an answer is filed. Always paired with a `select` haptic.
+
+## 24. Rules
+
+- Home is the core. Talk and Chat always close back to Home.
+- Never file silently. Every record shows its source and can be removed.
+- One question at a time on Home, and always an instrument, never a form.
+- Nudges: at most 1 a day, each with a reason, time cost and value.
+- The climb is always visible: the level pill on Home, and the vantage screen one tap away.
+
+---
+
+# v4: Inter, dark-first, hairline depth
+
+> **v4 is the current visual language. It overrides §3–§5 wherever they disagree.** The product model (v3 §19–§24),
+> growth (v2 §13.2, §14, §17), components, motion, haptics and sound all carry over.
+> Visual target: `design-board/life-design-board-v4.html` (8 screens at true 393×852).
+> Code: `apps/mobile/src/design/tokens.ts` and `fonts.ts` already use v4.
+
+## 25. Type: Inter only
+
+- **One family: Inter** (`@expo-google-fonts/inter` 400/500/600/700) plus **JetBrains Mono** for IDs and times. **Instrument Serif is removed.**
+- Weight and tracking do the work the serif used to. Big type is set tight; numbers use **tabular figures**.
+
+| Style | Size/line | Weight | Tracking |
+|---|---|---|---|
+| display (hero numbers) | 56/58 | 600 | −0.045em, tnum |
+| numeral-l | 32/36 | 600 | −0.035em, tnum |
+| title-1 (screen titles) | 30/34 | 600 | −0.03em |
+| statement (two-tone) | 24/31 | 500 | −0.022em |
+| title-2 | 20/26 | 600 | −0.02em |
+| title-3 | 16/21 | 600 | −0.014em |
+| body | 15/22 | 400 | −0.008em |
+| callout (minimum) | 13/18 | 500 | −0.003em |
+| mono | 12.5/16 | 400 | 0 |
+
+## 26. Colour: dark-first, one signal
+
+| Token | Dark (default) | Light |
+|---|---|---|
+| canvas | `#08090A` | `#F7F7F8` |
+| surface | `#141517` | `#FFFFFF` |
+| surface-2 | `#1B1C1F` | `#F3F3F5` |
+| surface-3 | `#26272B` | `#E6E6EA` |
+| line (hairline) | `rgba(255,255,255,.07)` | `rgba(13,14,16,.08)` |
+| ink | `#F7F8F8` | `#0D0E10` |
+| ink-2 | `#8A8F98` | `#5C6068` |
+| ink-quiet (two-tone, ≥20px only) | `#62666D` | `#8B8F97` |
+| ember | `#FF6B3D` | `#E5532B` |
+| ember-text | `#FF7A50` | `#C2410C` |
+| gain | `#3DD68C` | `#0B7A55` |
+
+**Area colours** (you/home/work/money/health/goal) appear only as 6px dots, filing chips and the one glow per screen. See `areaColors` in tokens.ts.
+
+## 27. Depth, shape, atmosphere
+
+- **Hairline depth replaces "no borders".** Surfaces get a 1px `line` edge (+ a faint top highlight in dark). Separation inside cards uses 1px `line` dividers.
+- **Radius:** tag 7 · tile 10–12 · **button 14** (slabs, not pills) · card 20 · sheet 28. Pills are only for tags and chips.
+- **Checks are 7px-radius squares** (like a real checklist). Stepper nodes are 8px-radius squares; the current node has an ember ring with a soft glow.
+- **Light fields replace photo atmospheres:** one radial glow per screen in the domain colour (ember / money / work…) at the top, over a faint 14px dot grid that fades out. No full-bleed photos or sunsets.
+- **Floating elements** (AskBar, notifications): solid `surface` + 1px hairline + soft shadow (light mode). No blur, no translucency.
+
+## 28. Evolved, not copied
+
+- Kept as ours: the loop, two-tone sentences, ticks, dotted orb, instruments, levels as vantage points.
+- Evolved: photo atmospheres → light fields; pill buttons → slabs; no borders → hairlines; big rounded cards → precise 20/12 radii; circle checks → squares; Island → a quiet status, no globe.
+- Dropped: Instrument Serif, warm stone paper, stock-photo cards, 1:1 reference layouts, decorative card gradients.
+
+---
+
+# v5: the complete screen catalogue
+
+> **This is the build list.** 40 screens in 9 chapters (see §32 for the Learn chapter and mood history added after the first v5), in the v4 visual language (§25–§28) and the v3 product model (§19–§24).
+> Visual target: `design-board/life-design-board-v5.html` (system map, every screen interactive, coverage table).
+> Calculator figures on the board come from `packages/core` (tax year 2026/27). Screens must call the engine, never hard-code numbers.
+
+## 29. Screens (expo-router)
+
+| # | Screen | Route (suggested) | Level | Engine / existing function |
+|---|---|---|---|---|
+| **1 · Arrive** |||||
+| 01 | Welcome | `onboarding/index` | — | IntakeState |
+| 02 | One question at a time (destinations) | `onboarding/question/[n]` | — | ProgressiveQuestion · LIFE_DESTINATIONS · ONBOARDING_QUESTIONS |
+| 03 | Or just tell life | `onboarding/tell` | — | Talk → processLifeOSMessage |
+| 04 | Building your plan | `onboarding/building` | — | ScanningState · getEligibleTasks |
+| **2 · Core (tabs)** |||||
+| 05 | Today (home) | `(tabs)/index` | — | HubState · TodayBriefSheet · computeLifeLevelState |
+| 06 | Plan | `(tabs)/plan` | — | TaskDeckState · LIFE_AREAS · STAGE_GAMBITS · toolkit |
+| 07 | You | `(tabs)/you` | — | computeLifeScore · understanding per area |
+| **3 · Talk and file** |||||
+| 08 | Talk | `talk` (full-screen modal) | — | processLifeOSMessage → FiledRecord |
+| 09 | Understood | `talk/review` | — | FiledRecord proposed → confirmed |
+| 10 | Ask, then file | `chat` | — | compareUKBusinessStructures etc. + FileCard |
+| 11 | Attach | sheet over `chat` | — | BlurIntakeOverlay |
+| 12 | Letter, understood | `documents/[id]` | — | SAMPLE_EVIDENCE_DOCS · profilePatch · unlocksTaskId |
+| **4 · Nudges and instruments** |||||
+| 13 | Nudge | notification → `nudge/[id]` | — | operating rules · notifications |
+| 14 | Pulse | `pulse` (sheet) | — | DotMatrixPulseSheet · focusBias |
+| 15 | Household | `household` (sheet) | — | CrowdStepperSheet · getCrowdUnlockSummary |
+| **5 · Missions and memory** |||||
+| 16 | Mission | `mission/[id]` | — | PortalSpotlightState · TaskReadingSheet |
+| 17 | Draft message | `mission/[id]/draft` (sheet) | — | copilotDraft |
+| 18 | Things to know | `know` | — | FiledRecord · WORLD_RULES · DAILY_PRACTICAL_NOTES |
+| **6 · Toolkit** |||||
+| 19 | 30-day cash plan | `tools/cash-plan` | 1 | RunwayCalculatorSheet |
+| 20 | Tax & NI check | `tools/tax` | 1 | MoneyWorkStackSheet · tax record |
+| 21 | Money | `tools/money` | 2 | CashflowLedgerSheet · getAvailableBankAccounts |
+| 22 | Subscriptions | `tools/subscriptions` | 2 | DEFAULT_SUBSCRIPTIONS |
+| 23 | Health stack | `tools/health` | 2 | HealthStackSheet · computeHealthTargets |
+| 24 | Income & structure | `tools/income` | 3 | compareUKBusinessStructures |
+| 25 | Rent vs buy (+ mortgage vs invest) | `tools/home` | 3 (4) | compareRentAndBuy · compareMortgageAndInvest |
+| 26 | Bloodwork reader | `tools/bloodwork` | 3 | BloodworkPanel · LAB_GUIDES · interpretLabResult |
+| 27 | Protection review | `tools/protection` | 4 | getProtectionChecklist |
+| 28 | Growth path | `tools/growth` | 4 | GrowthPathSheet · GROWTH_CHECK_INS · RESET_STEPS |
+| 29 | ~~Thinkers~~ → replaced by the Learn chapter (§32) | — | — | — |
+| **7 · Grow** |||||
+| 30 | Weekly recap | `recap` | 3 | buildWeeklyRecapDeck |
+| 31 | Vantage point | `vantage` | — | computeLifeLevelState.toAdvance |
+| 32 | Level up | `level-up` (modal, once per level) | 2+ | computeGameChapter |
+| **8 · Account** |||||
+| 33 | life+ | `plus` (modal) | — | MembershipSheet (never blocks level 1) |
+| 34 | Settings | `settings` | — | prefs · getConnectedPortals · export/delete |
+
+## 30. Build order
+
+1. Tabs shell + Today + Plan + You (05–07) wired to the store and engine.
+2. Talk → Understood → Things to know (08, 09, 18) with the FiledRecord model (§20).
+3. Mission + Draft (16, 17), then Nudge (13).
+4. Onboarding (01–04).
+5. Toolkit, level by level: L1 (19, 20) → L2 (21–23) → L3 (24–26, 30) → L4 (27–29).
+6. Instruments (14, 15), Attach + Letter (11, 12), Ask (10).
+7. Vantage + Level up (31, 32), life+ and Settings (33, 34).
+
+## 31. Accuracy rules
+
+- Every money figure comes from `packages/core` at render time. Show "Estimate" and "not tax advice" on tax and structure tools.
+- Health screens explain and refer ("ask your GP"). They never diagnose. Use NHS guidance where it exists.
+- Thinkers' ideas are paraphrased in life's voice. Don't quote them.
+
+
+## 32. Learn from the best (+ mood history)
+
+Experts are **lenses**, not quotes. Each thinker in `THINKER_ATEAM` (Naval, Taleb, Housel, Munger, Clear, Newport, Attia, Huberman, Sethi…) is a way of looking at the user's own situation. Learning is measured by what it changed.
+
+| # | Screen | Route | Level | Engine |
+|---|---|---|---|---|
+| L1 | Learn (library): today's idea, lenses row, "For where you are", collections | `learn` (also Plan → Toolkit → Learn) | 1 | THINKER_ATEAM · gambits.thinkerId |
+| L2 | A lens (thinker page): their view in plain words, ideas (level-gated), where life uses this lens, books to read | `learn/lens/[id]` | 1 | ThinkerWisdom.coreIdea · appliedRule · linkUrl |
+| L3 | An idea in 60 seconds: 3 cards (the idea → in your life with real numbers → do this) + a simple diagram. Finishing files an insight and opens the linked tool | `learn/idea/[id]` | per idea | FiledRecord kind `insight` |
+| L4 | Ask through a lens: lens chips (e.g. Taleb / Housel / Munger) re-frame life's answer to your question | chat with `lens` param | 1 | processLifeOSMessage + appliedRule |
+| L5 | Quick recall: one question a few days later, with spaced intervals (1d → 3d → 7d → 21d → 60d) | `learn/recall` | 1 | recall schedule on FiledRecord |
+| L6 | Ideas into action: applied ideas → linked results (£ saved, routines set), learning streak | `learn/progress` | 1 | FiledRecord + weeklyRecap |
+| M1 | Mood over time: 14-day coloured bars from Pulse check-ins, patterns life noticed and what it changed | `pulse/history` | 1 | PulseFeeling history · focusBias |
+
+Placement: a **Today's idea** card on Today (after Things to know); "Your learning" and "How you've been" rows on You.
+
+Rules:
+- **Never quote** the thinkers. Explain each idea in life's voice and credit the thinker and book. Link to their own sources.
+- **Never impersonate.** "life, through Taleb's lens" applies an idea to the user's numbers. It never speaks *as* the person.
+- Every idea ends in **one action** linked to a real tool, mission or routine. Money ideas carry "general guidance, not regulated financial advice", and health ideas defer to NHS guidance and the GP.
+- Ideas are **level-gated** like tools (e.g. Taleb's "Skin in the game" at L3, "Lindy" at L4), so the library grows with the user.
+
+---
+
+# v6: imagery
+
+> Visual target: `design-board/life-design-board-v6.html`. The images are in `apps/mobile/assets/images/scenes/` (JPEG, 1200px, about 90 KB each).
+> Full-resolution originals: `design-references/generated/`. They were generated for life through the gpt-image bridge.
+
+## 33. Where photos go (and where they never do)
+
+Photography is only for **threshold moments**. Everywhere the user works, the app stays clean (v4 light fields).
+
+| Treatment | What | Screens |
+|---|---|---|
+| **Cover** | Full-bleed over the top ~70%, fading to `canvas`. Type sits in the photo's calm area | Welcome (01) · life+ (33) · Level up (32), with one image per page |
+| **Hero band** | Photo across the top ~44% (360–470pt), behind the title only. Content starts on plain background | Goal missions (e.g. first home) · Lens page (L2) · Vantage point (31) |
+| **Card image** | A photo inside one card with a bottom scrim; text in paper white | Today's idea on Today (05) · Learn hero (L1) · the selected goal card in onboarding (02) |
+| **Wallpaper** | Outside the app only | The lock screen behind a nudge · weekly recap share card |
+
+**Never:** on working screens (Today's lists, Plan, tools, money, settings, forms); behind chat or Talk; more than one image per screen; faces or stock clichés; text over a busy area; hand-graded images.
+
+**The set** (one art direction: quiet cinematic 35mm, a single warm ember light against cool shadow, a small subject, a calm top, a dark base):
+`welcome` (arrival) · `home` (first-home goal) · `learn` (ideas) · `vantage` (the climb, level up) · `calm` (health and rest) · `plus` (life+).
+New images must follow the same prompt recipe. See the `STYLE` string in the generation command in this session's history, summarised here: *"quiet cinematic editorial photography, 35mm, fine grain, muted desaturated palette with a single warm ember-orange light against cool near-black shadows, lots of negative space, subject small in frame, calm top two-thirds for text, dark lower third, no text, no faces, portrait 2:3"*.
+
+## 34. Grade and implementation
+
+- One component, `<ImageTreatment kind="cover" | "band" | "card" source={…} height={…}>`, built on **expo-image** (`contentFit="cover"`, `transition={400}`, blurhash placeholder) + **expo-linear-gradient** scrims.
+- Grade in code: saturation 0.85 and contrast 1.02 (or bake them once at export) + a 12% grain overlay. Never grade images one by one.
+- Scrims: top `rgba(8,9,10,.45)` → 0 by 22%. Bottom → `canvas` at 100%. Text on an image must reach 4.5:1.
+- Type on images is paper `#F7F8F8` (72% / 50% for the softer tones). Buttons: paper primary, solid dark secondary (`rgba(8,9,10,.6)` → use `surface` at 100% on scrim areas). Never ember text on a photo.
+- Motion: a slow drift, scaling 1.00 → 1.06 over 24s, alternating. Off with Reduce Motion.
+- Light mode: images keep their dark grade; only the bottom fade ends in the light canvas. Use light status-bar content over covers and bands.
+- Fallback: show the domain light field until the image loads, and if it fails. Layout never depends on the photo.
+
+---
+
+# v7: Aim, adaptive imagery, Apple-native effects
+
+> Visual target: `design-board/life-design-board-v7.html`. All 17 images are in `apps/mobile/assets/images/scenes/` (originals in `design-references/generated/`).
+> **v7 relaxes v6's "no faces" rule for direction B only.**
+
+## 35. Four art directions, each with a job
+
+| Dir | Look | Job | Files |
+|---|---|---|---|
+| A · Quiet (v6) | Dark, cinematic, one ember light | Low moods, night, rest | `welcome` `learn` `calm` `vantage` `home` `plus` |
+| **B · Daylight** | Bright sun, vivid blue sky, real people, real joy (Commune energy) | **Brand:** Welcome, life+, level-up, share cards. Faces allowed | `b-welcome` `b-home` `b-health` |
+| **C · Colour field** | One everyday object on a bold saturated colour, studio light | **Tools and Learn** headers/cards. Each area owns a colour and an object | `c-home` (orange/keys) `c-growth` (cobalt/plant) `c-health` (lime/shoes) |
+| **D · Glimpses** | Bright, believable scenes of a better everyday life | **Growth system:** mood images and earned glimpses of the Aim | `d-drained` `d-calm` `d-glimpse-home` `d-glimpse-freedom` `d-glimpse-sunday` |
+
+v6 placement rules (§33) still apply: Cover / Hero band / Card image only, at most one per screen, never on working screens, chat or Talk.
+
+## 36. Mood-adaptive imagery and glimpses
+
+- Every image is tagged `{ direction, moods[], areas[], aims[], minProgress, minLevel }`.
+- **Today's card:** choose by the latest Pulse mood first (drained/anxious → soft D or A; calm → D calm; driven → B energy).
+- **Glimpses** (pictures of the user's own Chief Aim) appear only when **earned**: progress toward the Aim ≥ 40% *or* a mission cleared this week, **and** the mood isn't drained or anxious. At most one a day.
+- A glimpse always says **why it appeared** (the actions that earned it) and **what it's tied to** (the Aim). Glimpses never depict anything the user hasn't stated as their aim.
+- Settings: "Show glimpses" toggle (default on). With Reduce Motion, glimpses crossfade without drift.
+
+## 37. Chief Aim
+
+The idea of a *definite major aim*, popularised by Napoleon Hill (*Think and Grow Rich*, 1937), explained in life's own words (no quotes).
+
+- **Hierarchy:** Chief Aim (years) → this month's gambit → today's moves. Every mission can be tagged "for your Aim".
+- **Write your Aim** (`aim/new`): 4 steps, one at a time: *what exactly* · *by when* · *what you'll give for it* · *your first plan*. The statement builds live; life suggests answers from FiledRecords; voice input supported.
+  Statement format: "By {when}, I will {what}. In return I will {give}. My plan: {plan}."
+- **Your Aim** (`aim`): the statement over its glimpse (hero band), a twice-daily **read** ritual (morning/night, with a streak), progress toward the aim (ticks), the breakdown (gambit → today's move), and edit (with history kept).
+- **Today:** a one-line Aim card pinned at the top (thumbnail + "Your Aim · N% there").
+- **Learn:** a lens, "Napoleon Hill · Definiteness of purpose", with 4 checkable principles ending in *Write your Aim* / *Read your Aim*. Related lenses: Clear, Munger.
+- Data: `ChiefAim { what, when, give, plan, createdAt, history[], readLog[] }`, which feeds glimpse selection and gambit suggestions.
+
+## 38. Apple-native effects (all available for SDK 58, checked on npm)
+
+| Effect | Package | Use in life |
+|---|---|---|
+| ~~Liquid Glass~~ | — | **Removed (§43).** Standard solid native tabs/AskBar. |
+| SF Symbols, animated | `expo-symbols` | All icons. Bounce on tap, pulse while waiting, variable colour while syncing, replace on state change |
+| Mesh gradients | `expo-mesh-gradient` | ~~Pulse~~ **Not for the mood check-in (see §40).** Optional for the Aim and life+ backgrounds only |
+| Native SwiftUI controls | `@expo/ui` | Aim date picker, cash plan slider, toggles, menus |
+| Shaders and particles | `@shopify/react-native-skia` | Film grain, glow, level-up particles |
+| Illustrations | `rive-react-native` / `lottie-react-native` | Small animated moments (empty states, success) |
+| Images | `expo-image` | All photography: blurhash placeholder, 400ms transition |
+| Widgets + Live Activities | `@bacons/apple-targets` + ActivityKit | Home Screen "today's move" widget; mission progress live in the **Dynamic Island** and on the Lock Screen |
+
+## 39. Still to bring in (see the v7 board, section 05)
+
+Now: Sign in with Apple and sync · notification strategy · privacy by design · real connections (Open Banking, NHS, HMRC, VisionKit OCR) · the AI layer behind talk/file/ask/lens · empty, error and offline states.
+Later: accessibility pass · regulated-wording review · respectful analytics · other countries · App Store assets · shared life (Commune-style households).
+
+
+---
+
+# v8: one story, pictures that look like you, motion
+
+> Visual target: `design-board/life-design-board-v8.html`. Story images: `apps/mobile/assets/images/scenes/p{1,2,3}-{drained,calm,driven,home}.jpg`.
+
+## 40. Pulse stays the dot field
+
+The mood check-in is **always the v5 dot field** (§14, `DotMatrixPulseSheet` design): a 12×14 grid, dots swell (radius 1.1 → 7.6) within ~95pt of the finger in the mood's colour, the word and hint update live, and a selection haptic fires on each mood change. **No mesh gradients on the Pulse.** After it's set, Today's image follows the mood (§36).
+
+## 41. Images as one story, opt-in representation
+
+- **One protagonist.** All story images show the *same person*: the user's chosen look. They are frames of one life, not unrelated stock.
+- **The four frames** (the same scenes for every look): `drained` (rainy window seat, tea) · `calm` (sunny desk, notebook) · `driven` (riverside run) · `home` (their own green front door, keys in hand: the glimpse).
+- **Threads that connect every frame:** the same warm golden daylight grade · the same 35mm eye-level camera · **the protagonist always wears ember-orange** (the app's signal colour) · the same places recurring (flat, desk, river, front door).
+- **New scenes** must reuse the same prompt recipe (see the generation command used for `img3`): `"Series style, one frame from a continuous photo story about the same person: bright warm natural daylight… the protagonist always wears something soft ember-orange…"`, rendered for every supported look.
+- **Pictures that look like you (opt-in):**
+  - Asked once in onboarding ("Who should appear in your pictures?"), optional and skippable, with **"Someone like me" · "Mix it up" · "Places only"** given equal weight.
+  - "Someone like me" asks about **appearance, not ethnic labels**: a skin-tone swatch (6), how you present (woman / man / non-binary / rather not say) and an age range.
+  - **Never infer** appearance from a name, photo, voice or location.
+  - **Scenes never vary by appearance.** Only the person in the frame changes.
+  - **Stored on the device only**, used for nothing except choosing images, never sent to analytics. Treat it as special-category-adjacent under UK GDPR, so get explicit consent, and let people change or clear it in Settings → Pictures (images update immediately).
+  - "Places only" uses people-free frames (`d-drained`, `d-calm`, `d-glimpse-freedom`, `d-glimpse-home`).
+  - Coverage plan: generate each frame for a range of looks (at least 6 skin tones × 3 presentations × 2 age bands) before launch; the 3 looks in `img3` are the proof of concept.
+
+## 42. Motion, the Apple way, on iOS and Android
+
+The feel comes from five habits, all built with **Reanimated 4 + Gesture Handler** (both already installed) so iOS and Android match:
+
+1. **Springs, not timed curves.** `withSpring({ duration: 350–500, dampingRatio: 0.75–0.9 })`, the same model as SwiftUI's `.spring(response:dampingFraction:)`.
+2. **Interruptible and gesture-driven.** Anything you can see move, you can grab mid-flight. On release, hand the gesture velocity to the spring (cards, sheets, the peek stack, the scrubber).
+3. **Grow from what you tapped.** Shared element transitions (mission card → mission detail, the Today's idea card → Idea, the Aim card → Your Aim). Nothing appears from nowhere.
+4. **Settle in, one after another.** Lists use `FadeInDown.springify().delay(i * 40)`, capped at 6 items.
+5. **Numbers roll.** Spring-driven counting with tabular figures (score, money, progress).
+
+Platform pairs (same intent, native on each):
+
+| Effect | iOS | Android |
+|---|---|---|
+| Animated icons | SF Symbols via `expo-symbols` | Material Symbols, animated with Reanimated |
+| Glass | — removed (§43) | — removed (§43) |
+| Particles, grain, glow | Skia | Skia |
+| Illustrated moments | Rive | Rive |
+| Live progress outside the app | Live Activities / Dynamic Island | Ongoing notification with progress + Glance widget |
+| Haptics | `expo-haptics` | `expo-haptics` |
+
+Reduce Motion: springs become 160ms fades, drift and particles stop, and shared transitions crossfade.
+
+
+## 43. No glass (final)
+
+**No Liquid Glass, no blur, no frosted or translucent surfaces, on any platform.** It's tighter, faster on Android, and more legible.
+- AskBar, Dock, sheets, notifications, chips over images: **solid** `surface` / `surface-2` with a 1px `line` hairline. Over photos, use a solid near-black chip (`#0D0E10` at 100%) with paper text, or paper with ink text.
+- Sheet and overlay backdrops: a solid dim (`rgba(0,0,0,.45)` dark, `rgba(13,14,16,.3)` light).
+- Remove `expo-glass-effect`, NativeTabs glass and `expo-blur` from the plan. Motion (§42) carries the premium feel.
+
+## 44. Imagery for v1: generic first
+
+- **v1 ships without "pictures that look like you", but with a diverse mixed cast.** Default `pictures.look = 'mix'`: each story moment shows a different person, so people of every race and gender appear across the app (`storyImage('mix', moment)`). 'places' stays available as an option. The per-look architecture (`Look`, `SCENES`) stays for v2.
+- The "Who should appear in your pictures?" question (§41) stays behind a `picturesLikeMe` feature flag, **off**, until: every frame is generated for full coverage (≥6 skin tones × 3 presentations × 2 age bands), each image is checked by a human for awkward or stereotyped poses, and it has been tested with real users.
+- **Never ask for race or ethnicity.** If enabled later, ask about appearance only (§41).

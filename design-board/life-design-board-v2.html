@@ -1,0 +1,704 @@
+<title>life Design Language v2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: thesis → growth model (levels 1–4) → rail of 7 live phones (chat-first) → feature inventory → new components. Tokens mirror DESIGN.md. */
+:root{
+  --canvas:#F6F5F1; --surface:#FFFFFF; --surface-2:#EFECE6; --surface-3:#E7E3DC;
+  --ink:#141417; --ink-2:#5E5D65; --ink-quiet:#8A8890;
+  --ember:#E8553A; --ember-text:#C8391E; --ember-tint:rgba(232,85,58,.12);
+  --gain:#0B7A5A; --gain-tint:rgba(11,122,90,.10);
+  --paper:#F4F3EE; --float-shadow:0 12px 32px rgba(20,20,23,.12); --bubble-shadow:0 2px 10px rgba(20,20,23,.06);
+  --bezel:#1d1d21; --bezel-edge:#3a3a40; --page-bg:#E9E7E1;
+  --tint-admin:rgba(141,154,163,.22); --tint-health:rgba(110,95,85,.20); --tint-growth:rgba(255,74,28,.16); --tint-money:rgba(11,42,38,.12);
+  --serif:'Instrument Serif','New York',Georgia,serif; --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; --mono:'JetBrains Mono','SF Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --canvas:#0E0E11; --surface:#18181D; --surface-2:#222228; --surface-3:#2C2C34; --ink:#F4F3EE; --ink-2:#A9A7B0; --ink-quiet:#75737C;
+  --ember:#FF6A3D; --ember-text:#FF6A3D; --ember-tint:rgba(255,106,61,.16); --gain:#2FD39F; --gain-tint:rgba(47,211,159,.14);
+  --float-shadow:0 12px 32px rgba(0,0,0,.5); --bubble-shadow:none; --page-bg:#060608;
+  --tint-admin:rgba(141,154,163,.16); --tint-health:rgba(160,135,118,.18); --tint-growth:rgba(255,74,28,.18); --tint-money:rgba(47,211,159,.10); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --canvas:#0E0E11; --surface:#18181D; --surface-2:#222228; --surface-3:#2C2C34; --ink:#F4F3EE; --ink-2:#A9A7B0; --ink-quiet:#75737C;
+  --ember:#FF6A3D; --ember-text:#FF6A3D; --ember-tint:rgba(255,106,61,.16); --gain:#2FD39F; --gain-tint:rgba(47,211,159,.14);
+  --float-shadow:0 12px 32px rgba(0,0,0,.5); --bubble-shadow:none; --page-bg:#060608;
+  --tint-admin:rgba(141,154,163,.16); --tint-health:rgba(160,135,118,.18); --tint-growth:rgba(255,74,28,.18); --tint-money:rgba(47,211,159,.10); color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{background:var(--page-bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;margin:0}
+button,input{font:inherit;color:inherit;background:none;border:0;padding:0}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+.wrap{padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px}
+.brand{display:flex;flex-direction:column;gap:12px;min-width:0}
+.wordmark{font-family:var(--serif);font-size:64px;line-height:.9;letter-spacing:-1.5px}
+.wordmark small{font-family:var(--sans);font-size:15px;letter-spacing:0;color:var(--ink-2);margin-left:10px;font-weight:500}
+.lede{font-size:24px;line-height:32px;font-weight:500;letter-spacing:-.4px;max-width:760px;margin:0;text-wrap:balance}
+.q{color:var(--ink-quiet)}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:40px;padding:0 16px;border-radius:999px;background:var(--surface);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:8px;transition:transform .15s,background .2s,color .2s;white-space:nowrap}
+.chip:active{transform:scale(.97)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--canvas)}
+h2.sec{font-family:var(--serif);font-weight:400;font-size:40px;line-height:44px;letter-spacing:-.8px;margin:0}
+.sec-head{display:flex;flex-direction:column;gap:8px;max-width:760px}
+.sec-head p{margin:0;font-size:15px;line-height:22px;color:var(--ink-2)}
+
+/* growth model */
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
+.lvl{background:var(--canvas);border-radius:28px;padding:22px;display:flex;flex-direction:column;gap:14px;cursor:pointer;transition:transform .2s,box-shadow .2s;text-align:left}
+.lvl:active{transform:scale(.985)}
+.lvl.on{box-shadow:0 0 0 2px var(--ink)}
+.lvl .n{font-family:var(--serif);font-size:44px;line-height:44px}
+.lvl .n small{font-family:var(--sans);font-size:13px;color:var(--ink-2);margin-left:4px}
+.lvl h3{margin:0;font-size:17px;font-weight:600}
+.lvl p{margin:0;font-size:13px;line-height:18px;color:var(--ink-2)}
+.lvl ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:18px}
+.lvl li{display:flex;gap:8px}
+.lvl li::before{content:"";flex:0 0 6px;height:6px;border-radius:50%;background:var(--ink);margin-top:6px}
+.lvl li.new::before{background:var(--ember)}
+
+/* rail */
+.rail{display:flex;gap:40px;overflow-x:auto;padding:8px 4px 28px;scroll-snap-type:x mandatory}
+.rail::-webkit-scrollbar{height:6px}.rail::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:3px}
+.shot{display:flex;flex-direction:column;gap:14px;scroll-snap-align:start;flex:0 0 auto;width:375px}
+.shot-cap{display:flex;flex-direction:column;gap:4px;padding-left:6px}
+.shot-cap b{font-size:15px;font-weight:600}
+.shot-cap span{font-size:13px;color:var(--ink-2);line-height:18px}
+.shot-cap .src{font-family:var(--mono);font-size:12px;color:var(--ink-quiet)}
+.phone{width:375px;height:780px;border-radius:56px;padding:11px;background:var(--bezel);box-shadow:0 0 0 1.5px var(--bezel-edge),0 30px 60px rgba(0,0,0,.18);position:relative;flex:0 0 auto}
+.screen{width:100%;height:100%;border-radius:45px;overflow:hidden;position:relative;background:var(--canvas);color:var(--ink)}
+.scroll{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:120px}
+.scroll::-webkit-scrollbar{display:none}
+.status{height:54px;display:flex;justify-content:space-between;align-items:center;padding:6px 30px 0 34px;font-size:15px;font-weight:600;position:relative;z-index:5}
+.pad{padding:0 20px}
+.col{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:10px}
+
+/* island */
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:35px;border-radius:20px;background:#000;z-index:30;transition:width .5s cubic-bezier(.2,.9,.25,1.1),height .5s cubic-bezier(.2,.9,.25,1.1),border-radius .5s;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;color:#F4F3EE}
+.island.open{width:184px;height:150px;border-radius:38px;padding-bottom:16px}
+.island canvas{width:84px;height:62px;opacity:0;transition:opacity .3s .15s;margin-bottom:8px}
+.island .itxt{font-size:13px;line-height:17px;text-align:center;padding:0 14px;opacity:0;transition:opacity .3s .2s;font-weight:500}
+.island.open canvas,.island.open .itxt{opacity:1}
+
+/* type */
+.numeral-xl{font-family:var(--serif);font-size:64px;line-height:64px;letter-spacing:-1.5px}
+.numeral-l{font-family:var(--serif);font-size:40px;line-height:44px;letter-spacing:-.8px}
+.title-serif{font-family:var(--serif);font-size:30px;line-height:34px;letter-spacing:-.4px}
+.statement{font-size:28px;line-height:34px;letter-spacing:-.6px;font-weight:500}
+.prose{font-size:20px;line-height:27px;letter-spacing:-.3px;font-weight:500}
+.headline{font-size:22px;line-height:28px;letter-spacing:-.4px;font-weight:600}
+.title{font-size:17px;line-height:22px;letter-spacing:-.2px;font-weight:600}
+.body{font-size:15px;line-height:22px}
+.callout{font-size:13px;line-height:18px;font-weight:500}
+.mono{font-family:var(--mono);font-size:13px;line-height:16px}
+.unit{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-2);vertical-align:top;margin-left:2px;letter-spacing:0}
+.ink2{color:var(--ink-2)}
+
+.card{background:var(--surface);border-radius:24px;padding:18px}
+.tile{background:var(--surface-2);border-radius:20px;padding:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.pill.live{background:var(--ember-tint);color:var(--ember-text)}
+.pill.done{background:var(--gain-tint);color:var(--gain)}
+.press{transition:transform .18s cubic-bezier(.2,.9,.3,1.2)}
+.press:active{transform:scale(.97)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;height:56px;border-radius:999px;background:var(--ink);color:var(--canvas);font-size:16px;font-weight:600}
+.btn.sec{background:transparent;color:var(--ink);height:44px;font-size:15px;text-decoration:underline;text-underline-offset:3px}
+.ticks{display:flex;align-items:flex-end;justify-content:space-between;height:32px}
+.ticks i{width:2px;height:20px;border-radius:2px 2px 0 0;background:var(--surface-3)}
+.ticks i.f{background:var(--ink)}.ticks i.a{background:var(--ember);height:32px}
+
+/* chat */
+.chat{position:absolute;inset:0;display:flex;flex-direction:column}
+.chat-top{height:96px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 10px;flex:0 0 auto}
+.icon-btn{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.icon-btn svg{width:22px;height:22px}
+.thread{flex:1;overflow-y:auto;scrollbar-width:none;padding:12px 18px 16px;display:flex;flex-direction:column;gap:14px;justify-content:flex-end;min-height:0}
+.thread::-webkit-scrollbar{display:none}
+.thread-inner{display:flex;flex-direction:column;gap:14px}
+.msg-u{align-self:flex-end;max-width:80%;background:var(--surface);box-shadow:var(--bubble-shadow);border-radius:20px;padding:11px 15px;font-size:15px;line-height:21px;animation:rise .35s cubic-bezier(.2,.9,.3,1.1)}
+.msg-l{align-self:stretch;display:flex;flex-direction:column;gap:12px;animation:rise .45s cubic-bezier(.2,.9,.3,1.1)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:0 18px}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:0 0 auto;height:36px;padding:0 14px;border-radius:999px;background:var(--surface-2);font-size:13px;font-weight:500;transition:transform .15s}
+.chips button:active{transform:scale(.96)}
+.composer{flex:0 0 auto;padding:8px 14px 30px;display:flex;align-items:center;gap:8px}
+.composer .field{flex:1;height:50px;border-radius:999px;background:var(--surface-2);display:flex;align-items:center;gap:6px;padding:0 6px 0 6px}
+.composer input{flex:1;height:100%;font-size:15px;min-width:0;outline:none}
+.composer input::placeholder{color:var(--ink-quiet)}
+.composer .plus{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-2)}
+.composer .send{width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--canvas);display:flex;align-items:center;justify-content:center;transition:transform .2s,opacity .2s}
+.composer svg{width:20px;height:20px}
+.inline-card{background:var(--surface);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--bubble-shadow)}
+
+/* attach (blur) */
+.attach{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;justify-content:flex-end;padding:0 18px 108px;background:color-mix(in srgb,var(--canvas) 45%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;pointer-events:none;transition:opacity .3s}
+.attach.open{opacity:1;pointer-events:auto}
+.attach .list{display:flex;flex-direction:column;gap:6px}
+.attach .opt{display:flex;align-items:center;gap:14px;height:52px;padding:0 6px;font-size:17px;font-weight:600;transform:translateY(16px);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.15),opacity .3s;text-align:left}
+.attach.open .opt{transform:none;opacity:1}
+.attach .opt .ic{width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--canvas);display:flex;align-items:center;justify-content:center}
+.attach .opt .ic svg{width:17px;height:17px}
+.attach .opt span small{display:block;font-size:13px;font-weight:500;color:var(--ink-2)}
+.attach .sep{height:1px;background:var(--surface-3);margin:8px 6px}
+
+/* pulse */
+.pulse-wrap{position:absolute;left:12px;right:12px;bottom:12px;border-radius:36px;padding:22px 20px 20px;transition:background .5s;display:flex;flex-direction:column;gap:16px}
+.pulse-sent{font-size:24px;line-height:30px;font-weight:500;letter-spacing:-.4px}
+.pulse-sent em{font-style:normal;transition:color .4s}
+.pulse-field{position:relative;height:300px;border-radius:26px;background:rgba(255,255,255,.45);touch-action:none;cursor:crosshair;overflow:hidden}
+:root[data-theme="dark"] .pulse-field{background:rgba(255,255,255,.05)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pulse-field{background:rgba(255,255,255,.05)}}
+.pulse-field canvas{position:absolute;inset:0;width:100%;height:100%}
+.pulse-axis{position:absolute;font-size:11px;font-weight:600;color:var(--ink-2);opacity:.8}
+
+/* stepper sheet */
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:36px 36px 45px 45px;padding:14px 20px 30px;box-shadow:0 -12px 40px rgba(0,0,0,.12)}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--surface-3);margin:0 auto 12px}
+.figures{height:76px;display:flex;align-items:flex-end;justify-content:center;gap:4px}
+.fig{display:flex;flex-direction:column;align-items:center;gap:2px;animation:pop .5s cubic-bezier(.2,.9,.3,1.4)}
+.fig .h{width:11px;height:11px;border-radius:50%}
+.fig .b{width:14px;border-radius:7px 7px 3px 3px}
+@keyframes pop{from{transform:translateY(14px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+.count{font-family:var(--serif);font-size:120px;line-height:110px;letter-spacing:-3px;text-align:center;font-variant-numeric:tabular-nums}
+.count sup{font-family:var(--sans);font-size:32px;font-weight:600;vertical-align:top;line-height:60px;letter-spacing:0}
+.round{width:52px;height:52px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:24px;transition:transform .15s,opacity .2s}
+.round:active{transform:scale(.92)}
+.round:disabled{opacity:.35}
+
+/* today */
+.lv-block{transition:opacity .35s,transform .45s cubic-bezier(.2,.9,.3,1.1);transform-origin:top}
+.lv-block[hidden]{display:none!important}
+.lv-block.fresh{animation:rise .5s cubic-bezier(.2,.9,.3,1.1)}
+.new-tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:var(--ember-tint);color:var(--ember-text);font-size:11px;font-weight:600}
+.ask-bar{position:absolute;left:14px;right:14px;bottom:26px;height:56px;border-radius:999px;background:color-mix(in srgb,var(--surface) 82%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--float-shadow);display:flex;align-items:center;gap:10px;padding:0 8px 0 18px;z-index:10}
+.ask-bar .ph{flex:1;font-size:15px;color:var(--ink-quiet)}
+.ask-bar .tabs{display:flex;gap:2px}
+.ask-bar .tabs span{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-2)}
+.ask-bar .tabs span.on{background:var(--ink);color:var(--canvas)}
+.ask-bar svg{width:19px;height:19px}
+.orb{width:22px;height:22px;position:relative;flex:0 0 auto}
+.orb i{position:absolute;left:50%;top:50%;width:3px;height:3px;margin:-1.5px;border-radius:50%;background:currentColor}
+.orb.spin{animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gate{display:flex;align-items:center;gap:12px;padding:10px 0}
+.gate + .gate{box-shadow:0 -1px 0 var(--surface-3)}
+.gate .box{width:24px;height:24px;border-radius:50%;background:var(--surface-2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--canvas)}
+.gate.done .box{background:var(--ink)}
+.gate.done .t{color:var(--ink-quiet);text-decoration:line-through}
+.gate .box svg{width:12px;height:12px}
+
+/* intro carousel */
+.intro{position:absolute;inset:0;display:flex;flex-direction:column}
+.intro-art{height:58%;position:relative;overflow:hidden;transition:background .6s}
+.intro-art .blob{position:absolute;border-radius:50%;filter:blur(2px);transition:all .8s cubic-bezier(.2,.9,.3,1)}
+.intro-bars{position:absolute;top:62px;left:20px;right:20px;display:flex;gap:4px;z-index:3}
+.intro-bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.35);overflow:hidden}
+.intro-bars i b{display:block;height:100%;width:0;background:#fff;transition:width .4s}
+.intro-body{flex:1;padding:24px 24px 30px;display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center}
+.intro-body .title-serif{font-size:32px;line-height:36px}
+.intro-body p{margin:0;font-size:15px;line-height:22px;color:var(--ink-2);max-width:290px}
+
+/* toolkit */
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tool{background:var(--surface);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:22px;min-height:118px;position:relative;text-align:left}
+.tool .ic{width:34px;height:34px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center}
+.tool .ic svg{width:17px;height:17px}
+.tool.locked{background:transparent;box-shadow:inset 0 0 0 1.5px var(--surface-3)}
+.tool.locked .title,.tool.locked .ic{opacity:.45}
+.tool .lock{position:absolute;top:14px;right:14px;font-size:11px;font-weight:600;color:var(--ink-2)}
+
+/* inventory */
+.inv-wrap{overflow-x:auto;background:var(--canvas);border-radius:28px;padding:8px 20px}
+table.inv{width:100%;border-collapse:collapse;font-size:13px;line-height:18px;min-width:820px}
+.inv th{text-align:left;font-weight:600;color:var(--ink-2);padding:14px 12px 10px 0;font-size:13px}
+.inv td{padding:12px 12px 12px 0;vertical-align:top;box-shadow:0 -1px 0 var(--surface-3)}
+.inv td:first-child{font-weight:600;width:200px}
+.inv .tag{display:inline-block;font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.inv .lv{font-family:var(--serif);font-size:20px}
+.comp{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.comp div{background:var(--canvas);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.comp b{font-size:15px}.comp span{font-size:13px;line-height:18px;color:var(--ink-2)}
+.comp code{font-family:var(--mono);font-size:12px;color:var(--ink-quiet)}
+.foot{font-size:13px;color:var(--ink-2);text-align:center}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:520px){.wordmark{font-size:52px}.lede{font-size:20px;line-height:27px}h2.sec{font-size:32px;line-height:36px}
+  .shot{width:338px}.phone{transform:scale(.9);transform-origin:top left;margin-right:-38px;margin-bottom:-78px}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="wordmark">life<small>Design language v2</small></div>
+      <p class="lede"><span class="q">A simple app that</span> grows with you. <span class="q">It opens as a</span> clean conversation, <span class="q">asks for things with</span> instruments instead of forms, <span class="q">and unlocks new tools as you</span> level up.</p>
+    </div>
+    <div class="controls">
+      <button class="chip" id="themeBtn" aria-pressed="false">Dark mode</button>
+      <button class="chip" id="soundBtn" aria-pressed="true">Sound on</button>
+    </div>
+  </header>
+
+  <!-- GROWTH MODEL -->
+  <section class="col" style="gap:20px">
+    <div class="sec-head">
+      <h2 class="sec">How it grows</h2>
+      <p>These are the four levels already in the engine (<span class="mono">computeLifeLevelState</span>). Each level adds a little to the app, and nothing appears before it's useful. Tap a level and the Today screen below changes to match.</p>
+    </div>
+    <div class="levels" id="levels">
+      <button class="lvl on" data-l="1"><span class="n">1<small>Starting out</small></span><p>Know where your cash is going. Handle what's time-sensitive.</p><ul><li>Chat + morning brief</li><li>Urgent moves (HMRC, GP referral)</li><li>Gates: 30-day cash plan, tax check</li></ul></button>
+      <button class="lvl" data-l="2"><span class="n">2<small>Stabilize</small></span><p>Bills, care and recurring costs on a routine you can keep.</p><ul><li class="new">Routines unlock: payday sweep, annual tax check</li><li class="new">Money tab: ledger, accounts, subscriptions</li><li class="new">Health stack</li></ul></button>
+      <button class="lvl" data-l="3"><span class="n">3<small>Set your routines</small></span><p>Use the breathing room to make one bigger decision.</p><ul><li class="new">Gambits: rent vs buy, business structure</li><li class="new">Bloodwork reader, care review</li><li class="new">Weekly recap deck</li></ul></button>
+      <button class="lvl" data-l="4"><span class="n">4<small>Build momentum</small></span><p>Build assets, improve recovery plans, review what's working.</p><ul><li class="new">Mortgage vs invest, income protection</li><li class="new">Thinkers A-team, growth path</li><li class="new">Monthly gambit + quarterly review</li></ul></button>
+    </div>
+  </section>
+
+  <!-- PHONES -->
+  <section class="col" style="gap:20px">
+    <div class="sec-head">
+      <h2 class="sec">Seven screens, all live</h2>
+      <p>The chat has a working demo brain: try "what's urgent", "I live with 3 people", "how am I doing" or "my money". The tag under each screen shows which existing function it upgrades.</p>
+    </div>
+    <div class="rail">
+
+      <!-- 1 CHAT -->
+      <div class="shot">
+        <div class="phone"><div class="screen" id="chatScreen">
+          <div class="island" id="island"><canvas id="islandCanvas" width="168" height="124"></canvas><div class="itxt" id="islandTxt">Scanning London schemes &amp; NHS…</div></div>
+          <div class="chat">
+            <div class="chat-top">
+              <button class="icon-btn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+              <button class="icon-btn" aria-label="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+            <div class="thread" id="thread"><div class="thread-inner" id="threadInner"></div></div>
+            <form class="composer" id="composer" autocomplete="off">
+              <div class="field">
+                <button type="button" class="plus" id="plusBtn" aria-label="Attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+                <input id="chatInput" placeholder="Message" aria-label="Message life">
+                <button type="submit" class="send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+              </div>
+            </form>
+          </div>
+          <div class="attach" id="attach" aria-hidden="true">
+            <div class="list">
+              <button class="opt" data-att="letter"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span>Scan a letter<small>HMRC, council, NHS: life reads it for you</small></span></button>
+              <button class="opt" data-att="camera" style="transition-delay:.04s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span><span>Camera</span></button>
+              <button class="opt" data-att="photos" style="transition-delay:.08s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg></span><span>Photos</span></button>
+              <button class="opt" data-att="files" style="transition-delay:.12s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></span><span>Files</span></button>
+              <div class="sep"></div>
+              <button class="opt" data-att="pulse" style="transition-delay:.16s"><span class="ic"><span class="orb" data-orb style="width:18px;height:18px"></span></span><span>How I'm feeling<small>Opens the pulse</small></span></button>
+            </div>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Chat · the home of the app</b><span>Clean thread. The Island shows what life is checking. Replies are calm two-tone prose with live cards inside: steppers, money, missions. Tap + to attach.</span><span class="src">upgrades ChatState · ScanningState · DynamicIsland · processLifeOSMessage</span></div>
+      </div>
+
+      <!-- 2 ATTACH (static open) -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="island"></div>
+          <div class="chat" style="filter:none">
+            <div class="chat-top"><span></span><span></span></div>
+            <div class="thread"><div class="thread-inner">
+              <div class="msg-u" style="animation:none">I got a letter from the council</div>
+              <div class="msg-l" style="animation:none"><div class="prose"><span class="q">Send me a photo of it and I'll</span> find the deadline <span class="q">and</span> what you owe.</div></div>
+            </div></div>
+            <div class="composer"><div class="field"><span class="plus" style="background:var(--ink);color:var(--canvas)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></span><span style="flex:1;color:var(--ink-quiet);font-size:15px">Message</span></div></div>
+          </div>
+          <div class="attach open" aria-hidden="true" style="pointer-events:none">
+            <div class="list">
+              <div class="opt"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span>Scan a letter<small>HMRC, council, NHS: life reads it for you</small></span></div>
+              <div class="opt"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span><span>Camera</span></div>
+              <div class="opt"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg></span><span>Photos</span></div>
+              <div class="opt"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></span><span>Files</span></div>
+              <div class="sep"></div>
+              <div class="opt"><span class="ic"><span class="orb spin" data-orb style="width:18px;height:18px"></span></span><span>How I'm feeling<small>Opens the pulse</small></span></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Attach · blur and choose</b><span>The thread blurs behind a short list that springs up. "Scan a letter" is the hero: the engine already turns evidence docs into profile updates and unlocked tasks.</span><span class="src">upgrades BlurIntakeOverlay · SAMPLE_EVIDENCE_DOCS</span></div>
+      </div>
+
+      <!-- 3 PULSE -->
+      <div class="shot">
+        <div class="phone"><div class="screen" id="pulseScreen" style="transition:background .5s">
+          <div class="island"></div>
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="pad col" style="gap:6px;margin-top:8px">
+            <span class="callout ink2">Morning check-in</span>
+            <span class="title-serif">How are you arriving?</span>
+          </div>
+          <div class="pulse-wrap" id="pulseWrap">
+            <div class="pulse-sent">I'm arriving today feeling <em id="pulseWord">calm</em></div>
+            <div class="pulse-field" id="pulseField">
+              <canvas id="pulseCanvas"></canvas>
+              <span class="pulse-axis" style="top:10px;left:50%;transform:translateX(-50%)">Energised</span>
+              <span class="pulse-axis" style="bottom:10px;left:50%;transform:translateX(-50%)">Drained</span>
+              <span class="pulse-axis" style="left:12px;top:50%;transform:translateY(-50%)">Tense</span>
+              <span class="pulse-axis" style="right:12px;top:50%;transform:translateY(-50%)">Easy</span>
+            </div>
+            <div class="callout ink2" id="pulseHint">Today leans toward calm admin: small, quiet wins first.</div>
+            <button class="btn press" id="pulseSave">Set today's pace</button>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Pulse · drag to say how you feel</b><span>A dot field you drag across. Colour and word follow your finger, and the pace you set reorders Today. It replaces a mood picker with something you feel.</span><span class="src">upgrades DotMatrixPulseSheet · PulseFeeling.focusBias</span></div>
+      </div>
+
+      <!-- 4 HOUSEHOLD STEPPER -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="island"></div>
+          <div class="status"><span>9:41</span><span>●●●</span></div>
+          <div class="pad col" style="opacity:.35;margin-top:10px">
+            <span class="title-serif">You</span>
+            <div class="card"><div class="title">Home</div><div class="callout ink2">Renting · London</div></div>
+            <div class="card"><div class="title">Relationships</div><div class="callout ink2">Who you live with</div></div>
+          </div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="col" style="align-items:center;gap:14px">
+              <div class="figures" id="figures"></div>
+              <div class="title" style="text-align:center">How many people live with you?</div>
+              <div class="row" style="gap:28px;justify-content:center">
+                <button class="round" id="minus" aria-label="Fewer">−</button>
+                <div class="count" id="count">1</div>
+                <button class="round" id="plus" aria-label="More">+</button>
+              </div>
+              <div class="callout ink2" id="unlockTxt" style="text-align:center;min-height:36px;max-width:280px">Living alone: you may get 25% off council tax.</div>
+              <button class="btn press" id="hhSave">Save household</button>
+            </div>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Household · count with people</b><span>A huge serif number, and a person steps in each time you tap +. The line underneath tells you right away what that number changes (council tax, childcare, benefits).</span><span class="src">upgrades CrowdStepperSheet · getCrowdUnlockSummary</span></div>
+      </div>
+
+      <!-- 5 TODAY (levels) -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="island"></div>
+          <div class="scroll" id="todayScroll">
+            <div class="status"><span>9:41</span><span>●●●</span></div>
+            <div class="pad col" style="gap:18px;padding-top:10px">
+              <div class="row" style="justify-content:space-between;align-items:flex-start">
+                <div class="row" style="gap:8px"><span class="title-serif" style="font-size:44px;line-height:44px">Mon</span><span style="width:12px;height:12px;border-radius:50%;background:var(--ember);margin-top:6px"></span></div>
+                <button class="pill press" id="lvlPill" style="height:32px">Level 1 · Starting out</button>
+              </div>
+              <div class="statement"><span class="q">Morning, Ada. Nothing urgent —</span> your HMRC rebate <span class="q">needs</span> one form <span class="q">and your</span> GP referral <span class="q">expires in 9 days.</span></div>
+
+              <div class="card col lv-block" data-min="1" style="gap:4px">
+                <div class="row" style="justify-content:space-between"><span class="title">To move up</span><span class="callout ink2" id="gateCount">1 of 3</span></div>
+                <div id="gates"></div>
+              </div>
+
+              <div class="col lv-block" data-min="1" style="gap:10px">
+                <div class="title">Worth doing today</div>
+                <div class="card col press" style="gap:12px;background:linear-gradient(0deg,var(--tint-admin),var(--tint-admin)),var(--surface)">
+                  <div class="row" style="justify-content:space-between"><span class="title">HMRC tax rebate</span><span class="pill live">Submitted</span></div>
+                  <div class="ticks" data-ticks="24" data-fill="14" style="height:22px"></div>
+                  <div class="row callout ink2" style="justify-content:space-between"><span>Est. £840</span><span style="color:var(--ember-text)">Decision in 6 days</span></div>
+                </div>
+              </div>
+
+              <div class="col lv-block" data-min="2" hidden style="gap:10px">
+                <div class="row" style="justify-content:space-between"><span class="title">Your routines</span><span class="new-tag">New at level 2</span></div>
+                <div class="card col" style="gap:0;padding:6px 18px">
+                  <div class="gate"><span class="box"></span><span class="t" style="flex:1"><b class="title" style="font-size:15px">Payday sweep</b><br><span class="callout ink2">Every month · next 28 Nov</span></span></div>
+                  <div class="gate"><span class="box"></span><span class="t" style="flex:1"><b class="title" style="font-size:15px">Annual NI and tax check</b><br><span class="callout ink2">Every year · next April</span></span></div>
+                </div>
+              </div>
+
+              <div class="col lv-block" data-min="3" hidden style="gap:10px">
+                <div class="row" style="justify-content:space-between"><span class="title">One bigger decision</span><span class="new-tag">New at level 3</span></div>
+                <div class="card col press" style="gap:10px;background:linear-gradient(0deg,var(--tint-growth),var(--tint-growth)),var(--surface)">
+                  <span class="callout ink2">Gambit · Home</span>
+                  <span class="headline" style="font-size:20px;line-height:26px">Rent vs buy in London: run your numbers</span>
+                  <span class="callout ink2">Takes 8 min · uses your saved cash plan</span>
+                </div>
+              </div>
+
+              <div class="col lv-block" data-min="4" hidden style="gap:10px">
+                <div class="row" style="justify-content:space-between"><span class="title">This month's gambit</span><span class="new-tag">New at level 4</span></div>
+                <div class="card"><div class="prose" style="font-size:22px;line-height:28px"><span class="q">I want to</span> move £400 a month <span class="q">into investments and</span> review my protection <span class="q">before</span> March.</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="ask-bar">
+            <span class="orb spin" data-orb style="color:var(--ink)"></span>
+            <span class="ph">Ask life anything…</span>
+            <span class="tabs">
+              <span class="on" aria-label="Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg></span>
+              <span aria-label="Plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg></span>
+              <span aria-label="You"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>
+            </span>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Today · it grows</b><span>Same screen, four levels. Tick the gates (or tap a level above) and new sections slide in with an ember "New" tag. The dock becomes an ask bar, so chat is one tap from everywhere.</span><span class="src">upgrades HubState · TodayBriefSheet · computeLifeLevelState</span></div>
+      </div>
+
+      <!-- 6 LEVEL-UP INTRO -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="island"></div>
+          <div class="intro">
+            <div class="intro-art" id="introArt">
+              <div class="intro-bars" id="introBars"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+              <div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div>
+            </div>
+            <div class="intro-body">
+              <span class="pill" id="introPill">Level 2 unlocked</span>
+              <span class="title-serif" id="introTitle">You're stable now</span>
+              <p id="introText">Your cash plan is saved and nothing's overdue. Next, life puts bills and care on a routine.</p>
+              <div style="flex:1"></div>
+              <button class="btn press" id="introNext">Next</button>
+              <button class="btn sec" id="introTry">Show me</button>
+            </div>
+          </div>
+        </div></div>
+        <div class="shot-cap"><b>Level up · what's new</b><span>A short, beautiful tour when you level up, one card for each thing that unlocked. It plays the cleared sound once and never shows again.</span><span class="src">upgrades GameOfLifeSheet · MembershipSheet · computeGameChapter</span></div>
+      </div>
+
+      <!-- 7 PLAN TOOLKIT -->
+      <div class="shot">
+        <div class="phone"><div class="screen">
+          <div class="island"></div>
+          <div class="scroll">
+            <div class="status"><span>9:41</span><span>●●●</span></div>
+            <div class="pad col" style="gap:14px;padding-top:10px">
+              <div class="row" style="justify-content:space-between"><span class="title-serif">Plan</span><span class="pill">6 areas</span></div>
+              <div class="row" style="gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px" id="areas"></div>
+              <div class="title" style="margin-top:6px">Your toolkit</div>
+              <div class="tools" id="tools"></div>
+            </div>
+          </div>
+          <div class="ask-bar"><span class="orb spin" data-orb style="color:var(--ink)"></span><span class="ph">Ask life anything…</span><span class="tabs"><span aria-label="Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg></span><span class="on" aria-label="Plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg></span><span aria-label="You"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span></span></div>
+        </div></div>
+        <div class="shot-cap"><b>Plan · the toolkit</b><span>Every calculator and checker the app already has, in one place. Tools you haven't unlocked show as quiet outlines with their level, so you can see what's coming without being overwhelmed.</span><span class="src">upgrades Runway · Income · Housing · Bloodwork · HealthStack · Growth · Thinkers sheets</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- INVENTORY -->
+  <section class="col" style="gap:20px">
+    <div class="sec-head">
+      <h2 class="sec">Nothing gets lost</h2>
+      <p>Every function already built in the app (prototype sheets, screens and engine), with where it lives in v2 and when it appears.</p>
+    </div>
+    <div class="inv-wrap"><table class="inv">
+      <thead><tr><th>Existing function</th><th>What it does</th><th>Where it lives in v2</th><th>Appears</th></tr></thead>
+      <tbody id="invBody"></tbody>
+    </table></div>
+  </section>
+
+  <section class="col" style="gap:20px">
+    <div class="sec-head">
+      <h2 class="sec">New components for v2</h2>
+      <p>These are added to the 21 already built in <span class="mono">apps/mobile/src/design</span>.</p>
+    </div>
+    <div class="comp" id="comp"></div>
+  </section>
+
+  <p class="foot">Source of truth: DESIGN.md (v2 section) at the LifeOS repo root. v1 board: life-design-board.html.</p>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  /* theme */
+  var themeBtn=document.getElementById('themeBtn');
+  function isDark(){var t=root.getAttribute('data-theme');if(t)return t==='dark';return matchMedia('(prefers-color-scheme: dark)').matches}
+  function syncTheme(){themeBtn.textContent=isDark()?'Light mode':'Dark mode';drawPulse()}
+  themeBtn.addEventListener('click',function(){root.setAttribute('data-theme',isDark()?'light':'dark');syncTheme()});
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',syncTheme);
+
+  /* sound */
+  var soundOn=true,ctx=null,soundBtn=document.getElementById('soundBtn');
+  soundBtn.addEventListener('click',function(){soundOn=!soundOn;soundBtn.setAttribute('aria-pressed',soundOn);soundBtn.textContent=soundOn?'Sound on':'Sound off'});
+  function ac(){if(!ctx){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C()}if(ctx.state==='suspended')ctx.resume();return ctx}
+  function note(c,f,t,d,v,w){var o=c.createOscillator(),g=c.createGain();o.type=w||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+.05)}
+  function mar(c,f,t,v){note(c,f,t,.45,v);note(c,f*4,t,.07,v*.22);note(c,f*2,t,.18,v*.12,'triangle')}
+  function sfx(n){if(!soundOn)return;var c=ac();if(!c)return;var t=c.currentTime+.01;
+    if(n==='tap'){note(c,190,t,.06,.2,'triangle');note(c,95,t,.05,.1)}
+    else if(n==='tick'){note(c,1800,t,.012,.04)}
+    else if(n==='complete'){mar(c,523.25,t,.17);mar(c,783.99,t+.11,.15)}
+    else if(n==='cleared'){mar(c,523.25,t,.14);mar(c,659.25,t+.09,.13);mar(c,783.99,t+.18,.13);note(c,2093,t+.26,.6,.03);note(c,3136,t+.3,.5,.018)}
+    else if(n==='brief'){[261.63,392,659.25].forEach(function(f,i){var o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.04-i*.008,t+.5);g.gain.exponentialRampToValueAtTime(.0001,t+1.5);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+1.6)})}}
+
+  /* orbs + ticks */
+  document.querySelectorAll('[data-orb]').forEach(function(o){var s=o.offsetWidth||22,r=s/2-2;for(var i=0;i<10;i++){var d=document.createElement('i');var a=i/10*Math.PI*2;d.style.transform='translate('+(Math.cos(a)*r)+'px,'+(Math.sin(a)*r)+'px)';d.style.opacity=.35+.65*(i/10);o.appendChild(d)}});
+  function ticks(el){var n=+el.dataset.ticks,f=+el.dataset.fill;el.innerHTML='';for(var i=0;i<n;i++){var t=document.createElement('i');if(i<f-1||(i===f-1&&f===n))t.className='f';else if(i===f-1)t.className='a';el.appendChild(t)}}
+  document.querySelectorAll('[data-ticks]').forEach(ticks);
+
+  /* ========== ISLAND ========== */
+  var island=document.getElementById('island'),itxt=document.getElementById('islandTxt'),icv=document.getElementById('islandCanvas'),ictx=icv.getContext('2d'),iraf=0;
+  var pts=[];for(var i=0;i<220;i++){var u=Math.random()*2-1,th=Math.random()*Math.PI*2;pts.push([Math.sqrt(1-u*u)*Math.cos(th),u,Math.sqrt(1-u*u)*Math.sin(th)])}
+  function drawGlobe(t){ictx.clearRect(0,0,168,124);var a=t/2400;for(var k=0;k<pts.length;k++){var p=pts[k];var x=p[0]*Math.cos(a)-p[2]*Math.sin(a),z=p[0]*Math.sin(a)+p[2]*Math.cos(a);var y=p[1];if(z<-.2)continue;var sx=84+x*52,sy=62+y*52*.82;var al=.25+.75*(z+1)/2;ictx.fillStyle='rgba(244,243,238,'+al.toFixed(2)+')';ictx.fillRect(sx,sy,1.6,1.6)}iraf=requestAnimationFrame(drawGlobe)}
+  function scan(text,ms,cb){itxt.textContent=text;island.classList.add('open');cancelAnimationFrame(iraf);iraf=requestAnimationFrame(drawGlobe);setTimeout(function(){island.classList.remove('open');setTimeout(function(){cancelAnimationFrame(iraf)},500);cb&&cb()},ms)}
+
+  /* ========== CHAT ========== */
+  var inner=document.getElementById('threadInner'),thread=document.getElementById('thread'),input=document.getElementById('chatInput');
+  function scrollEnd(){thread.scrollTop=thread.scrollHeight}
+  function userMsg(t){var d=document.createElement('div');d.className='msg-u';d.textContent=t;inner.appendChild(d);scrollEnd()}
+  function lifeMsg(html,chips){var d=document.createElement('div');d.className='msg-l';d.innerHTML=html;if(chips){var c=document.createElement('div');c.className='chips';chips.forEach(function(ch){var b=document.createElement('button');b.textContent=ch;b.addEventListener('click',function(){send(ch)});c.appendChild(b)});d.appendChild(c)}inner.appendChild(d);d.querySelectorAll('[data-ticks]').forEach(ticks);wire(d);scrollEnd();return d}
+  function tt(parts){return '<div class="prose">'+parts.map(function(p){return p[1]?'<span class="q">'+p[0]+'</span>':p[0]}).join(' ')+'</div>'}
+  var mission='<div class="inline-card press" style="background:linear-gradient(0deg,var(--tint-admin),var(--tint-admin)),var(--surface)"><div class="row" style="justify-content:space-between"><span class="title">HMRC tax rebate</span><span class="pill live">Submitted</span></div><div class="ticks" data-ticks="24" data-fill="14" style="height:22px"></div><div class="row callout ink2" style="justify-content:space-between"><span>Est. £840</span><span style="color:var(--ember-text)">Decision in 6 days</span></div></div>';
+  var replies=[
+    {k:/urgent|first|today|what now/i,scan:'Checking deadlines…',html:function(){return tt([['Only one thing is',1],['time-sensitive:'],['your',1],['cardiology referral',0],['expires in',1],['9 days.',0]])+'<div class="inline-card"><div class="row" style="justify-content:space-between"><span class="title">Hospital referral</span><span class="pill">Started</span></div><div class="ticks" data-ticks="24" data-fill="6" style="height:22px"></div><button class="btn press" data-done style="height:48px;font-size:15px">Book at Guy\'s</button></div>'},chips:['Draft the email for me','What else?']},
+    {k:/live with|people|household|kids|partner|flat/i,scan:'Checking council tax rules…',html:function(){return tt([['Got it. Set the exact number and I\'ll',1],['re-check your discounts.',0]])+'<div class="inline-card" style="align-items:center"><div class="row" style="gap:22px"><button class="round" data-hh="-1" aria-label="Fewer">−</button><span class="numeral-l" data-hhn style="font-size:56px;line-height:56px;min-width:56px;text-align:center">3</span><button class="round" data-hh="1" aria-label="More">+</button></div><span class="callout ink2" data-hht style="text-align:center">3 people: the single-person discount no longer applies.</span></div>'},chips:['How am I doing?']},
+    {k:/how am i|score|doing|progress|level/i,scan:'Adding up your week…',html:function(){return tt([['You\'re',1],['72 out of 100',0],['and',1],['one gate away',0],['from level 2.',1]])+'<div class="inline-card"><div class="row" style="justify-content:space-between;align-items:flex-end"><span class="numeral-l">72<span class="unit">/100</span></span><span class="callout ink2">Day streak 4 / 30</span></div><div class="ticks" data-ticks="30" data-fill="4"></div></div>'},chips:['What\'s the last gate?','My money']},
+    {k:/money|cash|balance|£|rebate|save/i,scan:'Reading your accounts…',html:function(){return tt([['Your buffer is',1],['£2,340',0],[', about',1],['1.4 months',0],['of costs. The rebate would take it to',1],['£3,180.',0]])+mission},chips:['Set up a payday sweep','Hide my balance']},
+    {k:/draft|email|write/i,scan:'Writing your draft…',html:function(){return tt([['Here\'s a draft for',1],['Guy\'s outpatients.',0],['Copy it, or I can send it from your mail app.',1]])+'<div class="inline-card"><span class="callout ink2">Draft message</span><span class="body">Hello, I was referred to cardiology 11 weeks ago (ref UBRN 4471 9902 113) and would like the earliest morning slot before week 13.</span><button class="btn press" data-copy style="height:44px;font-size:15px;background:var(--surface-2);color:var(--ink)">Copy draft</button></div>'},chips:['Thanks']},
+    {k:/letter|scan|photo|council|document/i,scan:'Reading the letter…',html:function(){return tt([['That\'s a',1],['council tax bill',0],['for',1],['£1,812.',0],['You qualify for',1],['25% off',0],['if you live alone — want me to apply?',1]])},chips:['Yes, apply','I live with 3 people']}
+  ];
+  function respond(text){
+    var r=null;for(var i=0;i<replies.length;i++){if(replies[i].k.test(text)){r=replies[i];break}}
+    if(!r){scan('Looking into it…',1100,function(){lifeMsg(tt([['I\'ll keep an eye on',1],['"'+text.replace(/</g,'&lt;')+'"',0],['and tell you if it affects your plan. Try asking',1],['what\'s urgent.',0]]),['What\'s urgent?']);sfx('tap')});return}
+    scan(r.scan,1300,function(){lifeMsg(r.html(),r.chips);sfx('tap')});
+  }
+  function send(text){text=(text||'').trim();if(!text)return;userMsg(text);input.value='';sfx('tap');setTimeout(function(){respond(text)},250)}
+  document.getElementById('composer').addEventListener('submit',function(e){e.preventDefault();send(input.value)});
+  function wire(scope){
+    scope.querySelectorAll('[data-done]').forEach(function(b){b.addEventListener('click',function(){b.textContent='Booked · +14 pts';b.style.background='var(--gain)';sfx('complete')})});
+    scope.querySelectorAll('[data-copy]').forEach(function(b){b.addEventListener('click',function(){try{navigator.clipboard.writeText(scope.querySelector('.body').textContent).catch(function(){})}catch(e){}b.textContent='Copied';sfx('tap')})});
+    var n=3,nn=scope.querySelector('[data-hhn]'),ht=scope.querySelector('[data-hht]');
+    scope.querySelectorAll('[data-hh]').forEach(function(b){b.addEventListener('click',function(){n=Math.max(1,Math.min(16,n+ +b.dataset.hh));nn.textContent=n===16?'16+':n;ht.textContent=hhText(n);sfx('tick')})});
+  }
+  // opening conversation
+  userMsg('Hey life');
+  lifeMsg(tt([['Morning, Ada. I checked',1],['London schemes',0],['and the',1],['NHS',0],['overnight —',1],['2 things',0],['need you this week.',1]])+mission,['What\'s urgent?','I live with 3 people','How am I doing?','My money']);
+  setTimeout(function(){scan('Scanning London schemes & NHS…',2200)},700);
+
+  /* attach */
+  var attach=document.getElementById('attach'),plus=document.getElementById('plusBtn');
+  function setAttach(o){attach.classList.toggle('open',o);attach.setAttribute('aria-hidden',!o);plus.innerHTML=o?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';plus.style.background=o?'var(--ink)':'';plus.style.color=o?'var(--canvas)':''}
+  plus.addEventListener('click',function(){setAttach(!attach.classList.contains('open'));sfx('tap')});
+  attach.addEventListener('click',function(e){if(e.target===attach)setAttach(false)});
+  attach.querySelectorAll('[data-att]').forEach(function(b){b.addEventListener('click',function(){setAttach(false);var k=b.dataset.att;
+    if(k==='pulse'){send('How am I doing?');return}
+    userMsg(k==='letter'?'[Scanned] Council tax letter.pdf':k==='camera'?'[Camera] Photo of letter':k==='photos'?'[Photos] IMG_2041':'[Files] P60_2025.pdf');
+    setTimeout(function(){respond('letter')},250)})});
+
+  /* ========== PULSE ========== */
+  var field=document.getElementById('pulseField'),cv=document.getElementById('pulseCanvas'),pc=cv.getContext('2d'),wrap=document.getElementById('pulseWrap'),word=document.getElementById('pulseWord'),hint=document.getElementById('pulseHint');
+  var pos={x:.72,y:.42};
+  var moods=[
+    {n:'calm',x:.75,y:.55,c:[45,170,150],bg:'rgba(120,205,190,.28)',h:'Today leans toward calm admin: small, quiet wins first.'},
+    {n:'driven',x:.72,y:.15,c:[232,85,58],bg:'rgba(255,140,90,.26)',h:'Today leans toward momentum: your one bigger decision goes first.'},
+    {n:'restless',x:.22,y:.18,c:[200,150,30],bg:'rgba(240,200,90,.28)',h:'Today leans toward quick wins: three five-minute tasks.'},
+    {n:'anxious',x:.18,y:.5,c:[150,110,210],bg:'rgba(180,150,235,.28)',h:'Today leans toward clarity: life shows only what\'s due this week.'},
+    {n:'drained',x:.35,y:.85,c:[120,130,150],bg:'rgba(170,175,190,.28)',h:'Today leans toward rest: nothing new, just one gentle step.'},
+    {n:'peaceful',x:.8,y:.85,c:[90,150,220],bg:'rgba(140,185,240,.26)',h:'Today leans toward care: health and home come first.'}];
+  var cur=moods[0];
+  function nearest(){var best=moods[0],bd=9;moods.forEach(function(m){var d=Math.hypot(m.x-pos.x,m.y-pos.y);if(d<bd){bd=d;best=m}});return best}
+  function drawPulse(){var r=field.getBoundingClientRect();if(!r.width)return;var dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;pc.setTransform(dpr,0,0,dpr,0,0);pc.clearRect(0,0,r.width,r.height);
+    var cols=11,rows=13,c=cur.c,dark=isDark();var px=pos.x*r.width,py=pos.y*r.height;
+    for(var i=0;i<cols;i++)for(var j=0;j<rows;j++){var x=(i+.5)/cols*r.width,y=(j+.5)/rows*r.height;var d=Math.hypot(x-px,y-py);var k=Math.max(0,1-d/95);var rad=1.2+k*7.5;
+      pc.beginPath();pc.arc(x,y,rad,0,Math.PI*2);var a=k>0?(.25+.75*k):(dark?.22:.18);pc.fillStyle=k>0?'rgba('+c[0]+','+c[1]+','+c[2]+','+a.toFixed(2)+')':(dark?'rgba(244,243,238,'+a+')':'rgba(20,20,23,'+a+')');pc.fill()}
+    pc.beginPath();pc.arc(px,py,13,0,Math.PI*2);pc.fillStyle='rgba(255,255,255,.95)';pc.shadowColor='rgba('+c[0]+','+c[1]+','+c[2]+',.8)';pc.shadowBlur=18;pc.fill();pc.shadowBlur=0}
+  function setMood(){var m=nearest();if(m!==cur){cur=m;sfx('tick')}word.textContent=cur.n;word.style.color='rgb('+cur.c.join(',')+')';wrap.style.background=cur.bg;hint.textContent=cur.h;drawPulse()}
+  var dragging=false;function pp(e){var r=field.getBoundingClientRect();pos.x=Math.max(.04,Math.min(.96,(e.clientX-r.left)/r.width));pos.y=Math.max(.04,Math.min(.96,(e.clientY-r.top)/r.height));setMood()}
+  field.addEventListener('pointerdown',function(e){dragging=true;field.setPointerCapture(e.pointerId);pp(e)});field.addEventListener('pointermove',function(e){if(dragging)pp(e)});field.addEventListener('pointerup',function(){dragging=false});
+  document.getElementById('pulseSave').addEventListener('click',function(){this.textContent='Pace set · '+cur.n;sfx('complete')});
+  setMood();if(document.fonts)document.fonts.ready.then(drawPulse);window.addEventListener('resize',drawPulse);
+
+  /* ========== HOUSEHOLD ========== */
+  var figs=document.getElementById('figures'),countEl=document.getElementById('count'),ut=document.getElementById('unlockTxt'),hh=1;
+  var palette=['#6F7D86','#B8330F','#8A6A58','#3E6B5E','#C2457A','#5B3B8C','#D9A441','#2F4858','#A0522D','#7A8C5A','#4B6CB7','#9C6B98','#C97B4A','#556270','#8E7DBE','#B5651D'];
+  function hhText(n){if(n===1)return 'Living alone: you may get 25% off council tax.';if(n===2)return '2 people: check Marriage Allowance (worth up to £252 a year).';if(n<=4)return n+' people: the single-person discount no longer applies. Check Child Benefit if any are under 16.';if(n<16)return n+' people: you may be a large household. Check your band and HMO licensing.';return '16+ people: life will ask a few questions about your living setup.'}
+  function renderFigs(){var have=figs.children.length,show=Math.min(hh,16);while(have<show){var f=document.createElement('div');f.className='fig';var col=palette[have%palette.length];var hgt=26+((have*7)%14);f.innerHTML='<span class="h" style="background:'+col+'"></span><span class="b" style="height:'+hgt+'px;background:'+col+'"></span>';figs.appendChild(f);have++}while(have>show){figs.removeChild(figs.lastChild);have--}
+    var w=show>10?10:14;figs.querySelectorAll('.b').forEach(function(b){b.style.width=w+'px'});
+    countEl.innerHTML=hh>=16?'16<sup>+</sup>':hh;ut.textContent=hhText(hh);document.getElementById('minus').disabled=hh<=1;document.getElementById('plus').disabled=hh>=16}
+  document.getElementById('minus').addEventListener('click',function(){hh=Math.max(1,hh-1);renderFigs();sfx('tick')});
+  document.getElementById('plus').addEventListener('click',function(){hh=Math.min(16,hh+1);renderFigs();sfx('tick')});
+  document.getElementById('hhSave').addEventListener('click',function(){this.textContent='Saved · '+(hh>=16?'16+':hh)+(hh===1?' person':' people');sfx('complete')});
+  renderFigs();
+
+  /* ========== LEVELS / TODAY ========== */
+  var level=1,names=['','Starting out','Stabilize','Set your routines','Build momentum'];
+  var gateSets={1:['Save your 30-day cash plan','Review this year\'s tax','Handle your hospital referral'],2:['Review water, food and care plan','Open bills + emergency accounts','Review subscriptions'],3:['Review income protection','Complete a Stage III gambit'],4:['Keep your new normal working']};
+  var gateDone={};
+  function renderGates(){var g=document.getElementById('gates'),list=gateSets[level];g.innerHTML='';var done=0;
+    list.forEach(function(label,i){var key=level+'-'+i,isD=gateDone[key]||(level===1&&i===0&&gateDone[key]!==false);if(level===1&&i===0&&gateDone[key]===undefined){gateDone[key]=true;isD=true}if(isD)done++;
+      var b=document.createElement('button');b.className='gate press'+(isD?' done':'');b.style.width='100%';b.style.textAlign='left';
+      b.innerHTML='<span class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg></span><span class="t body" style="flex:1">'+label+'</span>';
+      b.addEventListener('click',function(){gateDone[key]=!isD;if(!isD)sfx('complete');renderGates();var all=list.every(function(_,j){return gateDone[level+'-'+j]});if(all&&level<4){setTimeout(function(){setLevel(level+1,true)},450)}});g.appendChild(b)});
+    document.getElementById('gateCount').textContent=done+' of '+list.length}
+  function setLevel(l,celebrate){var prev=level;level=l;document.getElementById('lvlPill').textContent='Level '+l+' · '+names[l];
+    document.querySelectorAll('.lv-block').forEach(function(b){var show=+b.dataset.min<=l;var was=!b.hidden;b.hidden=!show;if(show&&!was){b.classList.remove('fresh');void b.offsetWidth;b.classList.add('fresh')}});
+    document.querySelectorAll('.lvl').forEach(function(b){b.classList.toggle('on',+b.dataset.l===l)});renderGates();renderTools();
+    if(celebrate&&l>prev){sfx('cleared');showIntro(l)}else sfx('tap')}
+  document.querySelectorAll('.lvl').forEach(function(b){b.addEventListener('click',function(){setLevel(+b.dataset.l,+b.dataset.l>level)})});
+  document.getElementById('lvlPill').addEventListener('click',function(){setLevel(level===4?1:level+1,level<4)});
+
+  /* ========== INTRO CAROUSEL ========== */
+  var intros={
+    2:[['Level 2 unlocked','You\'re stable now','Your cash plan is saved and nothing is overdue. Next, life puts bills and care on a routine.',['#C9D7F5','#E9D8F2'],[['#8FA7F0',150,40,30],['#F2B8D8',90,190,60],['#FFFFFF',60,120,130]]],
+       ['New routine','Payday sweep','On payday, life reminds you to move what\'s left after bills into your buffer.',['#BFE6DA','#E6F2EC'],[['#2FD39F',140,60,60],['#FFFFFF',70,170,40],['#9FD8C8',100,40,170]]],
+       ['New tool','Your money, clearly','A ledger of what came in and went out, with your buffer and balances one tap from hidden.',['#0B2A26','#15514A'],[['#2FD39F',120,110,60],['#F4F3EE',40,60,150],['#1E7A66',160,170,10]]],
+       ['New tool','Health stack','Morning and evening routines, with the reasons behind each one.',['#E8D5C4','#F5E9DD'],[['#C98F6B',130,70,50],['#FFFFFF',80,180,120],['#E8B48F',90,30,170]]]],
+    3:[['Level 3 unlocked','Room to decide','You have breathing room. Now life helps you make one bigger decision safely.',['#F8C9B8','#FBE3D6'],[['#FF6A3D',130,60,50],['#FFD3B0',90,170,140],['#FFFFFF',60,40,170]]],
+       ['New gambit','Rent vs buy','Run the real numbers for your city using your saved cash plan.',['#C9D3DA','#E7E1D8'],[['#6F7D86',140,80,40],['#FFFFFF',80,170,140],['#B6ADA2',100,20,180]]],
+       ['New tool','Bloodwork reader','Add your results, and life explains each marker in plain English and what to ask your GP.',['#F1D2D2','#F8E8E8'],[['#C2457A',110,90,60],['#FFFFFF',70,30,150],['#E8A0B4',120,170,30]]],
+       ['New','Weekly recap','Every Sunday, a short story of your week: what moved, what\'s next.',['#E4E2F5','#F1EFFA'],[['#8E7DBE',130,60,60],['#FFFFFF',80,170,120],['#C4B8EE',100,30,170]]]],
+    4:[['Level 4 unlocked','Build momentum','Now it\'s about building assets and protecting what you\'ve built.',['#2A1B12','#5A1708'],[['#FF6A3D',140,70,50],['#FFB37A',70,170,140],['#F4F3EE',40,40,180]]],
+       ['New gambit','Mortgage vs invest','Overpay the mortgage or invest the difference? See both paths side by side.',['#0B2A26','#15514A'],[['#2FD39F',130,80,40],['#F4F3EE',60,180,140],['#1E7A66',150,20,170]]],
+       ['New','Thinkers A-team','Short prompts from people who\'ve done it, saved to your plan.',['#3A1D12','#7A2A16'],[['#FF9A5A',120,70,60],['#F4F3EE',60,170,130],['#C2457A',100,20,170]]],
+       ['New','Monthly gambit','Write one commitment for the month, and life checks in on it with you.',['#1B1A2E','#2A2850'],[['#8E7DBE',130,80,50],['#F4F3EE',50,170,140],['#4B6CB7',120,20,170]]]]};
+  var introL=2,page=0;
+  function renderIntro(){var p=intros[introL][page];document.getElementById('introPill').textContent=p[0];document.getElementById('introTitle').textContent=p[1];document.getElementById('introText').textContent=p[2];
+    document.getElementById('introArt').style.background='linear-gradient(160deg,'+p[3][0]+','+p[3][1]+')';
+    p[4].forEach(function(b,i){var el=document.getElementById('b'+(i+1));el.style.background='radial-gradient(circle at 35% 30%,#fff8,'+b[0]+' 60%)';el.style.width=el.style.height=b[1]+'px';el.style.left=b[2]+'px';el.style.top=(b[3]+90)+'px'});
+    document.querySelectorAll('#introBars b').forEach(function(b,i){b.style.width=i<=page?'100%':'0'});
+    document.getElementById('introNext').textContent=page===3?'Done':'Next'}
+  function showIntro(l){introL=Math.max(2,l);page=0;renderIntro()}
+  document.getElementById('introNext').addEventListener('click',function(){if(page<3){page++;sfx('tap')}else{page=0;introL=introL===4?2:introL+1;sfx('cleared')}renderIntro()});
+  document.getElementById('introTry').addEventListener('click',function(){sfx('tap')});
+  renderIntro();
+
+  /* ========== TOOLKIT ========== */
+  var areas=['Money','Work','Home','Health','Relationships','Life admin'];
+  var ar=document.getElementById('areas');areas.forEach(function(a,i){var b=document.createElement('button');b.className='pill press';b.textContent=a;b.style.height='36px';if(i===0){b.style.background='var(--ink)';b.style.color='var(--canvas)'}b.addEventListener('click',function(){ar.querySelectorAll('button').forEach(function(x){x.style.background='';x.style.color=''});b.style.background='var(--ink)';b.style.color='var(--canvas)';sfx('tap')});ar.appendChild(b)});
+  var toolList=[['30-day cash plan',1,'M4 12h16M4 6h16M4 18h10'],['Tax & NI check',1,'M6 3h9l3 3v15H6zM9 12h6M9 16h4'],['Ledger & buffer',2,'M3 17l6-6 4 4 8-8'],['Subscriptions',2,'M4 7h16v10H4zM4 11h16'],['Health stack',2,'M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z'],['Income & structure',3,'M12 3v18M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H6'],['Rent vs buy',3,'M3 11l9-7 9 7v9H3z'],['Bloodwork reader',3,'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z'],['Mortgage vs invest',4,'M4 20V10M10 20V4M16 20v-7M22 20H2'],['Protection review',4,'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z'],['Growth path',4,'M4 18c4-1 6-5 8-9s5-6 8-6'],['Thinkers A-team',4,'M8 8a4 4 0 1 1 8 0c0 3-4 3-4 6M12 19h.01']];
+  function renderTools(){var t=document.getElementById('tools');t.innerHTML='';toolList.forEach(function(x){var locked=x[1]>level;var b=document.createElement('button');b.className='tool press'+(locked?' locked':'');
+    b.innerHTML='<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+x[2]+'"/></svg></span><span class="title" style="font-size:15px;line-height:19px">'+x[0]+'</span>'+(locked?'<span class="lock">Level '+x[1]+'</span>':'');
+    b.addEventListener('click',function(){sfx(locked?'tick':'tap')});t.appendChild(b)})}
+
+  /* ========== INVENTORY ========== */
+  var inv=[
+    ['ChatState + processLifeOSMessage','Understands "I\'m 27 in London and run a business", updates your profile, returns task cards','Chat: the home screen. Ask bar on every tab','1'],
+    ['ScanningState + DynamicIsland','Shows life scanning schemes and the NHS for your city','The Island above the chat expands while life works','1'],
+    ['BlurIntakeOverlay + evidence docs','Attach a document; it updates your profile and unlocks tasks','Chat + → Scan a letter / Camera / Photos / Files','1'],
+    ['DotMatrixPulseSheet','Mood → focusBias (calm, growth, urgent…)','Pulse instrument: morning check-in, and from attach','1'],
+    ['CrowdStepperSheet','Household size → council tax, benefits, unlocks','Household instrument: You → Home, or inline in chat','1'],
+    ['IntakeState + ProgressiveQuestion','One question at a time onboarding','Onboarding (ChoiceCards), then questions trickle into chat','1'],
+    ['HubState + TodayBriefSheet','Score, active tasks, morning brief','Today: brief, gates, worth doing today; grows by level','1'],
+    ['PortalSpotlightState + TaskReadingSheet','Mission detail: why, steps, co-pilot draft, outcome','Mission detail (stack push) with stepper + draft sheet','1'],
+    ['TaskDeckState + TaskAuraState','Active, coming up, completed tasks','Plan → Missions list, filtered by area','1'],
+    ['RunwayCalculatorSheet','30-day cash plan (level 1 gate)','Toolkit → 30-day cash plan','1'],
+    ['MoneyWorkStackSheet','Tax record, accounts, subscriptions, protection','Toolkit → Tax & NI, Subscriptions; Money screen','1–2'],
+    ['CashflowLedgerSheet','Balance, scrubber, transactions, hide balances','Money screen (emerald atmosphere)','2'],
+    ['HealthStackSheet','Water, food, care plan, AM/PM protocols','Toolkit → Health stack (bronze atmosphere)','2'],
+    ['Operating rules (normals)','Payday sweep, annual tax, care review, subscriptions','Today → Your routines, with next-due dates','2–3'],
+    ['IncomeDecisionPanel','Sole trader vs Ltd, income scenarios','Toolkit → Income & structure (gambit)','3'],
+    ['HousingDecisionTools','Rent vs buy, mortgage vs invest','Toolkit → Rent vs buy (3), Mortgage vs invest (4)','3–4'],
+    ['BloodworkPanel','Enter lab results, plain-English interpretation','Toolkit → Bloodwork reader','3'],
+    ['weeklyRecap','Week-by-week deltas','You → Weekly recap peek stack','3'],
+    ['GameOfLifeSheet + chapters','Chapters, destination, readiness','Level path + level-up intro carousel','2+'],
+    ['LevelsThinkersSheet (THINKER_ATEAM)','Wisdom prompts from thinkers','Prompt banners on Today; Toolkit → Thinkers A-team','4'],
+    ['GrowthPathSheet + GrowthCheckIns','Growth plan, lessons, reset steps, check-ins','Toolkit → Growth path; check-ins arrive in chat','4'],
+    ['gambits (STAGE_GAMBITS)','Bigger moves unlocked by level','"One bigger decision" card on Today; Monthly gambit','3–4'],
+    ['MembershipSheet','life+ plans','Membership modal (ember atmosphere); never blocks level 1','—'],
+    ['PRESET_PROFILES / StudioSidebar','Demo personas for the prototype','Dev-only: the /design gallery and a debug menu','dev']];
+  var tb=document.getElementById('invBody');inv.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td><span class="tag">'+r[0]+'</span></td><td>'+r[1]+'</td><td>'+r[2]+'</td><td><span class="lv">'+r[3]+'</span></td>';tb.appendChild(tr)});
+
+  var comps=[['Island','The Dynamic-Island-style status at the top of chat: a pill that grows into a card with a dot globe and what life is checking.','ScanningState'],['ChatThread + Bubble','User bubbles on the right; life replies with no bubble, as two-tone prose with inline cards and suggestion chips.','ChatState'],['Composer','Pill input with + (attach) and send, plus a keyboard-aware inset. The send button morphs into a mic when empty.','—'],['AttachMenu','The background blurs and options spring up in sequence: Scan a letter, Camera, Photos, Files, Feeling.','BlurIntakeOverlay'],['PulseField','A draggable dot matrix; colour and word follow your finger and set focusBias. Selection haptic on each mood change.','DotMatrixPulseSheet'],['CountStepper','A huge serif count with figures that step in, ± buttons, a 16+ cap and a live consequence line.','CrowdStepperSheet'],['AskBar','A floating bar that replaces the dock: orb + "Ask life anything" + 3 small tabs. Tapping the text opens chat.','Dock v2'],['LevelPath + GateList','The current level, what you need to move up, and checkable gates that trigger the level-up.','computeLifeLevelState'],['IntroCarousel','Segmented progress bars over gradient art, then a title, body, Next and "Show me". Used for level-ups and life+.','GameOfLife / Membership'],['ToolTile','A toolkit grid tile: icon, name, and a locked state as a quiet outline with "Level N".','all tool sheets'],['NewTag','The ember "New at level N" tag on freshly unlocked sections. It fades after the first visit.','—']];
+  var cp=document.getElementById('comp');comps.forEach(function(c){var d=document.createElement('div');d.innerHTML='<b>'+c[0]+'</b><span>'+c[1]+'</span><code>from '+c[2]+'</code>';cp.appendChild(d)});
+
+  renderGates();renderTools();syncTheme();
+})();
+</script>
