@@ -1,10 +1,41 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { Redirect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityTimeline,
+  AttachMenu,
+  BigMic,
+  ChangeSummary,
+  Checklist,
+  ChipGroup,
+  Composer,
+  ControlRow,
+  CountStepper,
+  FileCard,
+  FilingTray,
+  FoodItemRow,
+  HabitRow,
+  InsightCard,
+  IntroCarousel,
+  LifeReply,
+  ListRow,
+  MetricTile,
+  MiniBars,
+  NewTag,
+  RangeBar,
+  RecordRow,
+  Ridge,
+  RowGroup,
+  Segmented,
+  Slider,
+  StageBar,
+  Toggle,
+  ToolTile,
+  Transcript,
+  UserBubble,
+  Waveform,
   Button,
   Callout,
   CapsuleMeter,
@@ -254,6 +285,8 @@ function Column({ look, style }: { look: Look; style?: object }) {
         </View>
       </Section>
 
+      <MoreComponents look={look} />
+
       <Section title="sheet · dock (solid, no glass §43)">
         <Button label="Open draft sheet" variant="secondary" onPress={() => sheet.current?.open()} />
         <View style={{ height: 96 }}>
@@ -278,5 +311,152 @@ function Column({ look, style }: { look: Look; style?: object }) {
         </View>
       </Sheet>
     </View>
+  );
+}
+
+
+const HOUSE = (n: number) =>
+  n === 1 ? 'Living alone: you may get 25% off council tax.' : n === 2 ? '2 people: check Marriage Allowance (up to £252 a year).' : n < 16 ? `${n} people: the single-person discount no longer applies.` : '16+ people: life will ask a few questions about your living setup.';
+const WORDS = 'So I\'m 27, I live in London with two flatmates and I\'ve gone self-employed. I think I overpaid tax last year.'.split(' ').map((w) => ({
+  text: w,
+  area: (/27,|London/.test(w) ? 'you' : /flatmates/.test(w) ? 'home' : /self-employed/.test(w) ? 'work' : /overpaid|tax/.test(w) ? 'money' : undefined) as 'you' | 'home' | 'work' | 'money' | undefined,
+}));
+
+/** The 27 v9 components added after the first gallery: instruments, controls, lists, body, talk and growth. */
+function MoreComponents({ look }: { look: Look }) {
+  const t = useTokens();
+  const [people, setPeople] = useState(1);
+  const [beds, setBeds] = useState(2);
+  const [grams, setGrams] = useState(120);
+  const [income, setIncome] = useState(2410);
+  const [tog, setTog] = useState(true);
+  const [seg, setSeg] = useState<'week' | 'month'>('week');
+  const [chip, setChip] = useState<string | null>('yes');
+  const [gates, setGates] = useState([true, false, false]);
+  const [today, setToday] = useState<boolean | undefined>(undefined);
+  const [removed, setRemoved] = useState<number[]>([]);
+  const [live, setLive] = useState(false);
+  const [shown, setShown] = useState(0);
+  const [msg, setMsg] = useState('');
+  const [attach, setAttach] = useState(false);
+  const [level, setLevel] = useState<1 | 2 | 3 | 4>(1);
+  const [intro, setIntro] = useState(false);
+  useEffect(() => {
+    if (!live) return;
+    const id = setInterval(() => setShown((n) => (n >= WORDS.length ? (setLive(false), n) : n + 1)), 220);
+    return () => clearInterval(id);
+  }, [live]);
+  const counts = WORDS.slice(0, shown).reduce<Record<string, number>>((a, w) => (w.area ? { ...a, [w.area]: (a[w.area] ?? 0) + 1 } : a), {});
+  return (
+    <>
+      <Section title="count instrument (SPEC §6.1)">
+        <CountStepper value={people} onChange={setPeople} min={1} question="How many people live with you?" consequence={HOUSE} />
+        <CountStepper value={beds} onChange={setBeds} min={1} max={6} glyph="doors" question="How many bedrooms do you need?" consequence={(n) => `${n}-bed in London: roughly £${(n * 140 + 180).toLocaleString('en-GB')}k`} />
+      </Section>
+
+      <Section title="controls">
+        <Slider value={income} min={0} max={5000} step={10} onChange={setIncome} accessibilityLabel="Coming in" />
+        <Callout tone="ink2">{`Coming in: £${income.toLocaleString('en-GB')}`}</Callout>
+        <ControlRow label="Sounds" sub="Soft UI sounds">
+          <Toggle value={tog} onChange={setTog} accessibilityLabel="Sounds" />
+        </ControlRow>
+        <Segmented options={[{ value: 'week', label: '4 weeks' }, { value: 'month', label: '3 months' }]} value={seg} onChange={setSeg} />
+        <ChipGroup options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'unsure', label: 'Not sure' }]} value={chip} onChange={setChip} />
+      </Section>
+
+      <Section title="lists">
+        <Checklist header="To reach level 2" count={`${gates.filter(Boolean).length} of 3`} items={[{ label: 'Save your 30-day cash plan', done: gates[0] }, { label: "Review this year's tax", done: gates[1] }, { label: 'Book your heart referral', done: gates[2] }]} onToggle={(i) => setGates((g) => g.map((v, j) => (j === i ? !v : v)))} />
+        <RowGroup header="Connected">
+          {[
+            <ListRow key="a" icon="heart-outline" title="Apple Health" sub="Sleep, heart, workouts, food" right={<StatusPill kind="done" label="On" />} />,
+            <ListRow key="b" icon="pulse-outline" title="WHOOP" sub="Recovery, strain, sleep" chevron onPress={() => {}} />,
+            <ListRow key="c" area="money" title="Pictures" sub="Mixed cast · follows your mood" chevron onPress={() => {}} />,
+          ]}
+        </RowGroup>
+        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+          <NewTag level={2} />
+        </View>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <ToolTile title="30-day cash plan" icon="wallet-outline" onPress={() => {}} />
+          <ToolTile title="Rent vs buy" icon="home-outline" locked level={3} onPress={() => {}} />
+        </View>
+        <InsightCard area="money" source="From your talk · 12 Nov" value="£840" text="You're likely owed a tax rebate for 2024/25 work expenses." />
+        <RowGroup>
+          {[
+            <RecordRow key="1" area="you" badge="27" label="Age 27, London" destination="You" removed={removed.includes(1)} onToggleRemove={() => setRemoved((r) => (r.includes(1) ? r.filter((x) => x !== 1) : [...r, 1]))} />,
+            <RecordRow key="2" area="health" badge="!" label="Heart referral, 11 weeks" destination="New mission · urgent" removed={removed.includes(2)} onToggleRemove={() => setRemoved((r) => (r.includes(2) ? r.filter((x) => x !== 2) : [...r, 2]))} />,
+          ]}
+        </RowGroup>
+        <ChangeSummary>2 new missions, 1 of them urgent. life knows you 64% → 81%.</ChangeSummary>
+      </Section>
+
+      <Section title="body">
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <MetricTile label="Readiness" value="72" unit="/100" meaning="Above your baseline" onPress={() => {}}>
+            <Ticks count={20} filled={15} />
+          </MetricTile>
+          <MetricTile label="Sleep" value="7h 10m" meaning="Need 8h 05m" onPress={() => {}}>
+            <Ticks count={20} filled={18} />
+          </MetricTile>
+        </View>
+        <RangeBar value={72} />
+        <StageBar start="23:20" end="06:45" segments={[{ stage: 'awake', minutes: 8 }, { stage: 'light', minutes: 70 }, { stage: 'deep', minutes: 50 }, { stage: 'rem', minutes: 35 }, { stage: 'light', minutes: 90 }, { stage: 'rem', minutes: 45 }, { stage: 'deep', minutes: 30 }, { stage: 'light', minutes: 60 }, { stage: 'rem', minutes: 30 }, { stage: 'awake', minutes: 12 }]} />
+        <MiniBars values={[6.5, 7.8, 5.9, 7.2, 6.8, 8.1, 7.2]} max={9} guide={8.1} color={(v) => (v >= 7.5 ? t.ink : t.surface3)} label="Sleep, last 7 nights" />
+        <HabitRow name="Water before coffee" cue="After the kettle boils, I will drink a glass of water, in the kitchen." last14={[true, true, true, true, false, true, true, true, true, true, true, true, true, today]} meta="Day 41 · feels automatic 4/5" source="from Apple Health" onToggleToday={() => setToday((d) => !d)} />
+        <Card>
+          <FoodItemRow name="Salmon" grams={grams} defaultGrams={120} kcalPer100={206} onChange={setGrams} />
+        </Card>
+      </Section>
+
+      <Section title="talk">
+        <View style={{ height: 160, borderRadius: 20, backgroundColor: t.surface, overflow: 'hidden' }}>
+          <Transcript words={WORDS} revealed={shown} />
+        </View>
+        <Waveform active={live} />
+        <FilingTray counts={counts} />
+        <View style={{ alignItems: 'center' }}>
+          <BigMic
+            live={live}
+            onPress={() => {
+              if (!live && shown >= WORDS.length) setShown(0);
+              setLive((l) => !l);
+            }}
+          />
+        </View>
+        <UserBubble text="Should I go limited company or stay a sole trader?" />
+        <LifeReply segments={[{ text: 'At your ', tone: 'quiet' }, { text: '£48k ' }, { text: 'profit the two come out within about ', tone: 'quiet' }, { text: '£100 a year.' }]} chips={['What about at £60k?', 'Save this']} onChip={() => {}} />
+        <FileCard prompt="Save to Work as a decision to revisit if profit passes £60k?" savedText="Saved to Work. life will bring it back if your profit passes £60k." onSave={() => {}} />
+        <Composer value={msg} onChangeText={setMsg} onSend={() => setMsg('')} onAttach={() => setAttach(true)} />
+        <AttachMenu
+          visible={attach}
+          onClose={() => setAttach(false)}
+          onPick={() => {}}
+          options={[
+            { key: 'letter', title: 'Scan a letter', sub: 'HMRC, council, NHS: life reads it', icon: 'document-text-outline' },
+            { key: 'camera', title: 'Camera', icon: 'camera-outline' },
+            { key: 'photos', title: 'Photos', icon: 'images-outline' },
+            { key: 'files', title: 'Files', icon: 'folder-outline' },
+          ]}
+        />
+      </Section>
+
+      <Section title="growth">
+        <Ridge level={level} />
+        <Button label={level < 4 ? 'Climb a level' : 'Back to level 1'} variant="secondary" onPress={() => setLevel((l) => (l < 4 ? ((l + 1) as 1 | 2 | 3 | 4) : 1))} />
+        <Button label="Play the level-up tour" variant="secondary" onPress={() => setIntro(true)} />
+        {intro ? (
+          <View style={{ height: 640, borderRadius: 28, overflow: 'hidden' }}>
+            <IntroCarousel
+              onDone={() => setIntro(false)}
+              pages={[
+                { image: storyImage(look === 'places' ? 'places' : 'mix', 'driven'), tag: 'Level 2 unlocked', title: "You're on stable ground", body: 'Your cash plan is saved and nothing is overdue.' },
+                { image: storyImage(look === 'places' ? 'places' : 'mix', 'calm'), tag: 'New: Body', title: 'Sleep, readiness and fuel', body: 'Connect your watch or ring and Today plans around how you slept.' },
+                { image: storyImage(look === 'places' ? 'places' : 'mix', 'home'), tag: 'On your path', title: 'Closer to your Aim', body: 'Your deposit is 24% of the way there.' },
+              ]}
+            />
+          </View>
+        ) : null}
+      </Section>
+    </>
   );
 }

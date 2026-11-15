@@ -29,7 +29,14 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 
 ## Current state (already done)
 
-- `src/design/`: tokens (v4 Inter, dark-first), Text, Press, feedback (haptics + 4 sounds), 21 components, PulseField, ImageTreatment/storyImage.
+- `src/design/`: tokens (v4 Inter, dark-first, no glass), Text, Press, feedback (haptics + 4 sounds) and **every component v9 uses**. Assemble screens from these and don't rebuild them:
+  - Base: Card, Button, StatusPill, MetricRow, PromptBanner, ChoiceCard, Ticks, CapsuleMeter, StageStepper, ActivityTimeline, WeekStrip, TwoTone, PeekStack, MoneyFigure, RollingNumeral, Countdown, LedgerRow, NudgeCard, DottedOrb, Dock, Sheet
+  - Instruments and controls: **CountStepper** (SPEC §6.1), PulseField / PulseCheckIn, Slider, Toggle, Segmented, ChipGroup, ControlRow
+  - Lists: ListRow, RowGroup, Checklist, NewTag, ToolTile, InsightCard, RecordRow, ChangeSummary
+  - Body: MetricTile, RangeBar, StageBar, MiniBars, HabitRow, FoodItemRow
+  - Talk and chat: Transcript, Waveform, BigMic, FilingTray, UserBubble, LifeReply, FileCard, Composer, AttachMenu
+  - Growth and imagery: Ridge, IntroCarousel, ImageTreatment, PhotoChip, storyImage
+  - All of them are live in the `/design` gallery, and they build for iOS and Android.
 - `src/app/design.tsx`: the dev-only gallery at `/design`. Use it to check components.
 - `assets/images/scenes/`: 29 photos. `assets/sounds/`: 4 WAVs.
 - The existing `(tabs)` screens and `src/sheets/*` are **old** and get replaced phase by phase.

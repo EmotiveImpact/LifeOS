@@ -14,3 +14,7 @@ export * from './components/Story';
 export * from './components/Chrome';
 export * from './components/Pulse';
 export * from './components/Imagery';
+export * from './components/Controls';
+export * from './components/Lists';
+export * from './components/Talk';
+export * from './components/Growth';
