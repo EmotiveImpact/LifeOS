@@ -1,7 +1,8 @@
 # life — Build Plan (v1)
 
 > **Who does what:** Antigravity builds each phase. **Claude reviews** at every 🛑 gate before the next phase starts.
-> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v11.html`** (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
+> **Code references:** `IMPLEMENTATION_REFERENCES.md`: which open-source repos and exact files to study per feature, and what each licence allows. **Read the relevant section before building a feature.**
+> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v12.html`** (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
 > **The app:** `apps/mobile` (Expo SDK 58, expo-router, Reanimated 4, Gesture Handler). Logic: `packages/core` (don't change its logic; strings only).
 
 ---
@@ -80,7 +81,7 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 - Nudge: local notification (max 1/day, quiet hours) → nudge screen with inline steps. Permission is asked only after the first nudge-worthy find.
 🛑 **Gate 4**
 
-## Phase 4b — Body: devices, sleep, readiness, load (SPEC §2.1, §3.1–3.4, §3.7)
+## Phase 4b — Body: devices, sleep, readiness, load (SPEC §2.1, §3.1–3.4, §3.7, §3.8 · refs: Atria (MIT, port logic), react-native-healthkit, react-native-health-connect, ble-plx)
 - HealthKit (`@kingstinct/react-native-healthkit`) + Health Connect (`react-native-health-connect`); WHOOP + Oura OAuth via edge functions. Normalise into `HealthSample` → `DailyHealth`.
 - Screens: Body home, Readiness (14-day calibration, drivers), Sleep (need, debt, consistency, target bedtime), Load, Trends, Devices.
 - `planToday()` uses readiness, sleep debt and load (SPEC §1.1), with "Why am I seeing this?" on each decision.
@@ -89,11 +90,11 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 - **v11 functions (SPEC §3.8):** metric detail with honesty badges, How scores work, Body signals, Stress, Breathe, Journal + insights, Live workout (BLE Heart Rate Profile via `react-native-ble-plx`), auto-detected workouts, Sleep planner, Customise Today, Body coach. **Never connect to WHOOP straps over BLE.**
 🛑 **Gate 4b (includes a health-copy safety review)**
 
-## Phase 4c — Fuel: photo food logging (SPEC §3.5)
+## Phase 4c — Fuel: photo food logging (SPEC §3.5, §3.5b · refs: Cal-AI, openfoodfacts-js, vision-camera, whisper.rn)
 Camera → `ai.food()` → item + portion confirm/edit → CoFID / USDA / Open Food Facts → daily totals vs Mifflin-St Jeor targets; barcode scan; "hide numbers" mode; 18+ gate; low-intake safeguard + Beat signposting.
 🛑 **Gate 4c (includes safety review)**
 
-## Phase 4d — Habits (SPEC §3.6)
+## Phase 4d — Habits (SPEC §3.6 · refs: Loop habit strength (ideas only, GPL))
 Tiny version + implementation intention ("After… I will… at…"), max 3 new habits, never-miss-twice rescue, auto-complete from data, automaticity check-ins every 2 weeks → graduation; ~66-day median timeline copy (remove all "14 days" claims).
 🛑 **Gate 4d**
 
@@ -125,6 +126,10 @@ Motion pass (§42 on every screen), Reduce Motion, Dynamic Type 1.3×, VoiceOver
 🛑 **Gate 10: final review against DESIGN.md §12 checklist.**
 
 ---
+
+## Phase 11 — Next level (SPEC §11)
+Calendar awareness, Experiments, Recovery forecast, Cycle-aware readiness, Fitness age first; then Watch app, on-device AI, memory, approved actions, MCP, open-wearables, CGM, shared life.
+🛑 **Gate 11**
 
 ## Later (not v1)
 Real AI model behind `ai.ts` (the interface ships in 1b) · Aggregator for long-tail devices (Terra/Junction/ROOK) · Open Banking / NHS / HMRC connections · VisionKit OCR · Live Activities + widgets · **"Pictures that look like you"** (§41, behind the `picturesLikeMe` flag, after full image coverage and user testing) · other countries · Commune-style shared households.

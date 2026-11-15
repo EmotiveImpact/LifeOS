@@ -117,6 +117,14 @@ Naming: **our own names** (Readiness, Load, Fuel). Never use WHOOP's or Oura's t
 4. Targets: BMR via **Mifflin-St Jeor** × activity (from Load) ± goal; protein 1.2–1.6 g/kg for active adults; fibre 30g (UK guidance).
 5. **Safety (non-negotiable):** a "hide calories, show balance" mode; no red numbers, no streak-shaming; minimum target floors; if intake < 1,200 kcal for 7+ days or the user's language suggests distress → gentle check-in + signpost to **Beat** (UK eating-disorder charity). Not available to under-18s.
 
+### 3.5b Fuel upgrades from Cal-AI (v12)
+Ideas from [ovishkh/Cal-AI](https://github.com/ovishkh/Cal-AI) (MIT), rebuilt our way:
+- **Meal result** after confirm: name, kcal, protein/carbs/fat/fibre, a **meal score (0–10)** for how well it fits *your* targets (not a moral judgement), and 1–2 short tips. Hidden in "Hide numbers" mode.
+- **What can I cook?** Photo of the fridge or cupboard (or say it) → 3 recipes that fit today's remaining targets, with a dietary filter (**Halal**, Vegetarian, Vegan, High-protein, Keto, Dairy-free, plus allergies).
+- **Week of meals + shopping list:** a 7-day plan from preferences and budget, with a shopping list grouped by aisle. One tap logs a planned meal.
+- **Say it:** "I had a chicken wrap and a latte" → items to confirm (whisper.rn on device).
+- Safety rules from §3.5 still apply (adults only, no shaming, low-intake safeguard).
+
 ### 3.6 Habits — the tracker
 Grounded in research, built to *stick*:
 - **Tiny first** (Fogg, *Tiny Habits*, B = MAP): every habit starts as a 2-minute version.
@@ -151,7 +159,7 @@ Taken as **ideas** from open-source WHOOP companions (NOOP, OpenStrap Edge, Atri
 | **Customise Today** | `body/customise` | prefs | up to 4 body numbers on Today |
 | **Body coach** | `body/coach` | DailyHealth | Ask grounded in your data; cites the numbers it used |
 
-**Licences:** OpenStrap Edge is **AGPL-3.0** (don't copy code); NOOP declares no licence (don't copy code); Atria is **MIT** (code reusable with attribution, mainly a Swift reference). NeuroKit2 (MIT, Python) is for validating algorithms offline against recorded data. The 7 open-hardware projects (HealthyPi, ZSWatch, etc.) are parked: a possible future life wearable, separate from the app.
+**Licences (verified):** OpenStrap Edge is **AGPL-3.0** (ideas only); **NOOP is PolyForm Noncommercial** (no commercial use of its code at all, so look but don't copy); Atria is **MIT** (port its logic with attribution). Exact files: `IMPLEMENTATION_REFERENCES.md`. NeuroKit2 (MIT, Python) is for validating algorithms offline against recorded data. The 7 open-hardware projects (HealthyPi, ZSWatch, etc.) are parked: a possible future life wearable, separate from the app.
 
 ---
 
@@ -297,3 +305,30 @@ type LearningRecord = { ideaId; readAt; teachBack?: { text; covered: string[]; m
 
 ## 10. What this adds to the build (see BUILD_PLAN.md)
 New phases: **Platform** (backend, auth, SQLite, sync, dev builds), **Body** (devices, readiness, sleep, load, trends), **Fuel** (photo food log), **Habits**, **Teach it back**. Health & safety reviews are part of their gates.
+
+
+---
+
+## 11. Emerging and missing — what takes life to the next level
+
+Found by comparing life with the strongest open-source projects (see `IMPLEMENTATION_REFERENCES.md`) and what's emerging in 2026. Ordered by impact.
+
+| # | Feature | Why it matters | Build with |
+|---|---|---|---|
+| 1 | **Calendar awareness** (missing!) | Nudges promise "you've got 20 free minutes", which needs the calendar. Also lighter Todays on busy days | `expo-calendar` (read-only, opt-in) |
+| 2 | **Experiments (n-of-1)** | "Try no caffeine after 12 for 14 days": life measures the effect on *your* sleep and readiness and tells you if it worked. Turns advice into personal evidence | Journal + correlation; NOOP's `DoseResponseEngine` idea |
+| 3 | **Recovery forecast** | "If you're in bed by 22:45, tomorrow's readiness should be about 68." Makes tonight's choice visible | Readiness model + sleep plan; NOOP `RecoveryForecast` idea |
+| 4 | **Cycle-aware readiness** | Half of users: hormonal cycles shift HRV, temperature and RHR. Baselines and guidance should respect the phase (opt-in, private) | HealthKit cycle tracking; NOOP `CyclePhaseEngine` idea |
+| 5 | **Fitness age / VO₂ max** | One motivating number that improves with training | HealthKit VO₂max; NOOP `FitnessAgeEngine` idea |
+| 6 | **Watch companion** | Breathe, live workout and today's move on the wrist (Apple Watch + Wear OS) | `@bacons/apple-targets` watch target; NOOP watch views idea |
+| 7 | **On-device AI** | Talk transcription and basic extraction stay on the phone: private, fast, works offline | `whisper.rn`, `llama.rn` |
+| 8 | **Long-term memory** | life remembers context across months ("you said rent goes up in March") with sources and delete | FiledRecord + mem0 patterns |
+| 9 | **"Do it for me", with approval** | Agentic actions: life pre-fills the form, drafts the email, opens the cancel page. You approve every step; nothing is sent automatically | AI service + deep links; approval gate in UI |
+| 10 | **Your data in your AI** | Let people ask ChatGPT or Claude about their own life data through a local, permissioned connection | MCP server pattern (NOOP `NoopLocalAccess` idea) |
+| 11 | **Unified wearables, self-hosted** | Garmin, Polar, Suunto and more without paying an aggregator per user | `open-wearables` (MIT) |
+| 12 | **Metabolic (CGM)** | Consumer glucose sensors (via HealthKit) + Fuel = how meals affect *you* | HealthKit blood glucose |
+| 13 | **Habit strength score** | Forgiving progress (Loop's approach): misses lower it a little, they don't reset it | Our own EMA (Loop is GPL: ideas only) |
+| 14 | **Hydration, sedentary and heart-rate recovery** | Small daily signals people actually act on | HealthKit + simple rules |
+| 15 | **Shared life (Commune-style)** | Households share bills, chores, goals; partners share a Chief Aim | Supabase shared spaces (later) |
+
+v12 board shows #1–#5 and the Fuel upgrades as screens.

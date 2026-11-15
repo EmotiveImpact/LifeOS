@@ -3,9 +3,10 @@ You are building **life**, an Expo app in `apps/mobile`. Claude designed it and 
 **Read these first, in this order:**
 1. `BUILD_PLAN.md`: the phases, tasks, acceptance criteria and 🛑 review gates. **This is your job list.**
 2. `SPEC.md`: **how everything works**: the Life Engine, health (devices, readiness, sleep, food, habits), learning (Feynman + spaced recall), the behaviour of every component and screen, the data model, and blind spots with decisions.
-3. `DESIGN.md`: the rules. Every section is numbered (§). Later sections override earlier ones; the key ones are §25–§28 (look), §29 + §32 (screens), §40 (Pulse = dot field), §42 (motion), §43 (no glass or blur), §44 (generic imagery for v1).
-4. The visual target: **`design-board/life-design-board-v11.html`, every screen (89): WHOOP-style health for any wearable, levels, and the component library.** It supersedes v1–v10 wherever they differ. v8 is still the reference for motion demos.
-5. `apps/mobile/src/design/`: the design system that already exists, and `/design`, the live component gallery.
+3. `IMPLEMENTATION_REFERENCES.md`: the open-source repos and **exact files** to learn from for each feature, with licence rules (🟢 use, 🟡 ideas only, 🔴 don't touch). **Never copy 🟡 or 🔴 code.**
+4. `DESIGN.md`: the rules. Every section is numbered (§). Later sections override earlier ones; the key ones are §25–§28 (look), §29 + §32 (screens), §40 (Pulse = dot field), §42 (motion), §43 (no glass or blur), §44 (generic imagery for v1).
+5. The visual target: **`design-board/life-design-board-v12.html`, every screen (98): WHOOP-style health for any wearable, smarter food, next-level features, levels and the component library.** It supersedes v1–v11 wherever they differ. v8 is still the reference for motion demos.
+6. `apps/mobile/src/design/`: the design system that already exists, and `/design`, the live component gallery.
 
 **How to work:**
 - Do **one phase at a time**, on its own branch, exactly as BUILD_PLAN.md describes. Create each phase branch from `design-system-handoff` (or from the previous approved phase).
