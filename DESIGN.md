@@ -723,7 +723,7 @@ Reduce Motion: springs become 160ms fades, drift and particles stop, and shared 
 
 ## 45. v14 refinements (final)
 - **No borders on buttons.** (Superseded by §47: no borders anywhere.)
-- **The orb evolves** (MOTION.md §3.2, `LifeOrb`): ring → sphere → core → done. Ring everywhere by default; sphere only for real work over a second; core only for voice; never decorative.
+- **The orb evolves** (superseded by §47: the original ring, 3D only while thinking).
 - **Imagery for Learn and moments** is the diverse daylight cast (people mid-moment: understanding, deciding, moving in), never a colour-field still life. The plant-on-blue `c-growth` frame is retired.
 - **Chat is back** as the Talk button's tap action: a clean thread, the Island growing into a card with the sphere orb while life checks things, two-tone replies with live cards inside, suggestion chips. Hold the button to talk.
 - **The board is organised by navigation** (tab → area → screen), and every screen states how it opens and where from. Build routes from that, not from feature names.
@@ -739,5 +739,5 @@ Reduce Motion: springs become 160ms fades, drift and particles stop, and shared 
 - Never two bars on one screen. The board applies this rule to every screen automatically from its "opens from" type.
 
 ## 47. v16 (final): the globe, and borders on trial
-- **LifeOrb v2.** The ring *is* the equator of a globe of dots, seen from straight above. Working: the view tilts to 24° and the other latitude rings fade in, so it becomes a globe turning in 3D, with near dots bigger and brighter and the back half faint. Voice: a soft wave travels across the dots with the voice level. **The glowing ember core is gone.** Done: dots gather, then it tilts back to the ring. Under 40pt it's always the ring. (`Orb.tsx`, board screen "The orb, evolving".)
+- **LifeOrb v5:** the original ring, 3D only while thinking. The mark is 10 dots flowing round the circle clockwise, one lap every 12 s, each brighter than the last; that flow never changes. **Thinking** (only while life works something out, over 1 s): the same ring leans back 52° and its lean slowly swings round (16 s), like a plate spinning; dots keep flowing. **Voice**: the flat ring, dots pulsing one after another. **Done**: lies flat again. No core, no globe of dots. A two-ring version exists for comparison (`rings={2}`); one ring is the default. (`Orb.tsx`, board screen "The orb, evolving".)
 - **No borders, ever** (decided by the owner, 15 Nov 2026). No outlines on cards, list groups, icon tiles, avatars, inputs, segmented controls, image cards, the Pulse field, the Talk tray, bubbles, composer or the dock. Surfaces separate by fill alone (`surface` on `canvas`, `surface-2` inside). The only lines left are the dividers between rows inside a list, and state indicators (the current step ring, today's ring, a radio's ring).

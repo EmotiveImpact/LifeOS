@@ -1277,38 +1277,45 @@ function S14(ch,key,title,desc,feat,lv,html,init){NEW14.push(key);S(ch,key,title
 
 /* ---------- THE ORB, evolving: ring → sphere → core → done (LifeOrb in Orb.tsx) ---------- */
 var ORBS=[];
-/* LifeOrb v2 (v16): the ring IS the sphere's equator, seen from above.
-   ring   → only the 12 equator dots, viewed straight down the pole: the everyday mark.
-   sphere → the view tilts to 24°, the other latitude rings fade in: a globe of dots turning.
-   voice  → the globe stays, and a soft wave travels across the dots with the voice. No core.
-   done   → dots gather to the centre, then the globe tilts back into the ring. */
-function orbPoints(){var P=[],lats=[-72,-54,-36,-18,0,18,36,54,72];lats.forEach(function(la){var r=Math.cos(la*Math.PI/180),n=la===0?24:Math.max(6,Math.round(24*r));for(var k=0;k<n;k++){var lo=k/n*Math.PI*2+(la/18%2?Math.PI/n:0);P.push({x:Math.cos(lo)*r,y:Math.sin(la*Math.PI/180),z:Math.sin(lo)*r,eq:la===0,k:k,la:la,lo:lo})}});return P}
-var ORB_PTS=orbPoints();
-function mountOrb(el,size,state){if(state==='core')state='voice';var c=document.createElement('canvas'),d=Math.min(2,window.devicePixelRatio||1);c.width=c.height=size*d;c.style.width=c.style.height=size+'px';c.style.display='block';el.innerHTML='';el.appendChild(c);var x=c.getContext('2d');x.scale(d,d);
- var o={state:state||'ring',m:state&&state!=='ring'?1:0,v:state==='voice'?1:0,g:0,spin:0,t:0,vis:true,ink:el.dataset.ink||''},R=size/2*.84,dot=Math.max(1.4,size/44),doneAt=0;
- o.set=function(s){if(s==='core')s='voice';o.state=s;if(s==='done')doneAt=performance.now()};
- function frame(now){requestAnimationFrame(frame);if(!o.vis)return;if(o.state==='done'&&now-doneAt>850)o.state='ring';
-  var tm=o.state==='ring'?0:1,tg=o.state==='done'?1:0;o.m+=(tm-o.m)*.06;o.v+=((o.state==='voice'?1:0)-o.v)*.06;o.g+=(tg-o.g)*.12;o.spin+=o.state==='ring'?.0087:.012;o.t+=.016;
+/* LifeOrb v5: the original ring, in 3D.
+   The original: 10 dots on a circle, each brighter than the last, travelling ALONG the circle clockwise,
+   one lap every 12 s. In 3D nothing about that changes: the same ring leans back 52° and its lean slowly
+   swings round (one sweep every 16 s), like a plate spinning on a table, so it reads as a sphere being
+   traced. Near dots are a little bigger and brighter. `rings: 2` adds a second ring crossing it.
+   It only goes 3D while life is THINKING (state 'sphere'). Everything else is the flat original:
+   voice → the flat ring, with the original pulse running along it.  done → it lies flat again. */
+var ORB_N=10;
+function mountOrb(el,size,state,rings){if(state==='core')state='voice';rings=rings||1;var c=document.createElement('canvas'),d=Math.min(2,window.devicePixelRatio||1);c.width=c.height=size*d;c.style.width=c.style.height=size+'px';c.style.display='block';el.innerHTML='';el.appendChild(c);var x=c.getContext('2d');x.scale(d,d);
+ var dot=Math.max(2.6,size/12),R=size/2-Math.max(2,size/14)-dot/2,o={state:state||'ring',m:state&&state!=='ring'?1:0,v:state==='voice'?1:0,spin:0,sweep:0,t:0,vis:true,ink:el.dataset.ink||''},doneAt=0,last=0;
+ o.setRings=function(n){o.rings=n};o.set=function(s){if(s==='core')s='voice';o.state=s;if(s==='done')doneAt=performance.now()};
+ function frame(now){requestAnimationFrame(frame);var dt=last?Math.min(50,now-last):16;last=now;if(!o.vis)return;
+  if(o.state==='done'&&now-doneAt>300)o.state='ring';
+  o.m+=((o.state==='sphere'?1:0)-o.m)*.045;o.v+=((o.state==='voice'?1:0)-o.v)*.08;
+  o.spin+=dt/12000*Math.PI*2;o.sweep+=dt/16000*Math.PI*2*o.m;o.t+=dt/1000;
   var ink=o.ink||getComputedStyle(el).color;x.clearRect(0,0,size,size);x.fillStyle=ink;
-  var tilt=(90-66*o.m)*Math.PI/180,ct=Math.cos(tilt),st=Math.sin(tilt),cs=Math.cos(o.spin),sn=Math.sin(o.spin),L=[];
-  for(var i=0;i<ORB_PTS.length;i++){var p=ORB_PTS[i];
-   // voice: a wave travels across the globe, pushing dots gently outwards
-   var w=o.v*(.07*Math.sin(p.la/18*1.3+p.lo*2-o.t*5)*(.6+.4*Math.sin(o.t*1.7)));var rr=(1+w)*(1-.5*o.g);
-   var x1=(p.x*cs+p.z*sn)*rr,z1=(-p.x*sn+p.z*cs)*rr,y1=p.y*rr;
-   var y2=y1*ct-z1*st,z2=y1*st+z1*ct,pr=3/(3-z2),depth=(z2/rr+1)/2;
-   var ringA=p.eq&&p.k%2===0?.35+.65*((p.k/2+Math.floor(o.spin/(Math.PI*2)*12)%12+12)%12)/12:0;
-   var sphA=.05+.95*Math.pow(depth,2.2);var a=p.eq&&p.k%2===0?ringA*(1-o.m)+sphA*o.m:sphA*Math.pow(o.m,1.5);
-   L.push([z2,size/2+x1*R*pr,size/2+y2*R*pr,a*(1+.25*o.v*Math.max(0,w*8)),(p.eq&&p.k%2===0?1.75*(1-o.m):0)+(.45+.85*depth)*o.m])}
-  L.sort(function(a,b){return a[0]-b[0]});L.forEach(function(q){if(q[3]<.02)return;x.globalAlpha=Math.min(1,q[3]);x.beginPath();x.arc(q[1],q[2],dot*q[4],0,7);x.fill()});x.globalAlpha=1}
+  var m=o.m,ease=m*m*(3-2*m),L=[];
+  for(var ri=0;ri<(o.rings||rings);ri++){var show=ri===0?1:Math.pow(m,1.3);if(show<.01)continue;
+   var beta=52*ease*Math.PI/180,cb=Math.cos(beta),sb=Math.sin(beta),phi=o.sweep+ri*Math.PI/2,cp=Math.cos(phi),sp=Math.sin(phi);
+   for(var k=0;k<ORB_N;k++){var a=k/ORB_N*Math.PI*2+o.spin+ri*Math.PI;
+    var cx=Math.cos(a),cy=Math.sin(a)*cb,z=Math.sin(a)*sb;           // the ring, leaning back
+    var X=cx*cp-cy*sp,Y=cx*sp+cy*cp;                                    // the lean swings round
+    var persp=3.4/(3.4-z),depth=(1+z)/2;                               // z>0 is nearer
+    var tail=.3+.7*(k/ORB_N),ph=((o.t/1.2-k*.1)%1+1)%1,think=.25+.75*(.5-.5*Math.cos(ph*Math.PI*2));
+    var alpha=(tail*(1-o.v)+think*o.v)*(1-m*.55*(1-depth))*show;
+    L.push([depth,size/2+X*R*persp,size/2+Y*R*persp,alpha,1-m*(1-(.78+.34*depth))])}}
+  L.sort(function(a,b){return a[0]-b[0]});L.forEach(function(q){if(q[3]<.02)return;x.globalAlpha=Math.min(1,q[3]);x.beginPath();x.arc(q[1],q[2],dot/2*q[4],0,7);x.fill()});x.globalAlpha=1}
  requestAnimationFrame(frame);
  if('IntersectionObserver' in window){new IntersectionObserver(function(es){o.vis=es[0].isIntersecting}).observe(el)}
  ORBS.push(o);return o}
 
 
-S14('system','orb','The orb, evolving','The life mark is a ring of dots, and most of the time that’s all it is. The ring is really the equator of a globe seen from above: when life does real work (over a second), the view tilts and the other rings of dots fade in, so it becomes a globe turning in 3D. When it listens or speaks, a soft wave travels across the dots with the voice. When it finishes, the dots gather, then settle back into the ring. Rare on purpose, so it stays special.','LifeOrb { state: ring | sphere | voice | done, level } · Orb.tsx · MOTION.md §3.2',0,
- glow('var(--ember-glow)')+STATUS+'<div class="pad col rel" style="gap:22px;padding-top:40px;align-items:center"><span class="t-callout c2" data-ol>Ring · the everyday mark</span><div data-o3 style="width:180px;height:180px;color:var(--text)"></div><div class="segm" style="width:100%" data-os><button class="on">Ring</button><button>Sphere</button><button>Voice</button><button>Done</button></div>'+
- '<div class="card col" style="gap:0;padding:2px 16px;width:100%">'+li('Ring','Everywhere: tab bar, headers, small sizes','<span class="t-callout c2">Default</span>')+li('Sphere','Building a plan or lesson, checking schemes','<span class="t-callout c2">Working</span>')+li('Voice','Talk, Tell it back, life speaking','<span class="t-callout c2">A wave</span>')+li('Done','Gathers, then back to the ring','<span class="t-callout c2">0.8s</span>')+'</div></div>',
- function(s){var o=mountOrb(s.querySelector('[data-o3]'),180,'ring'),L={Ring:'Ring · the everyday mark',Sphere:'Sphere · life is working',Voice:'Voice · listening and speaking',Done:'Done · gathers, then settles'},b=s.querySelectorAll('[data-os] button');b.forEach(function(x){x.addEventListener('click',function(){b.forEach(function(y){y.classList.toggle('on',y===x)});o.set(x.textContent.toLowerCase());s.querySelector('[data-ol]').textContent=L[x.textContent];sfx(x.textContent==='Done'?'complete':'tap');if(x.textContent==='Done')setTimeout(function(){b.forEach(function(y,k){y.classList.toggle('on',k===0)});s.querySelector('[data-ol]').textContent=L.Ring},900)})})});
+
+
+
+S14('system','orb','The orb, evolving','The life mark is a ring of 10 dots flowing round clockwise, one lap every 12 seconds. It only goes 3D while life is thinking: the same ring leans back and slowly wobbles, like a plate spinning, with the dots still flowing round exactly as before. Everything else is the flat original; while you talk, the dots pulse one after another. Switch between one ring and two rings below to compare.','LifeOrb { state: ring | sphere | voice | done, level } · Orb.tsx · MOTION.md §3.2',0,
+ glow('var(--ember-glow)')+STATUS+'<div class="pad col rel" style="gap:22px;padding-top:40px;align-items:center"><span class="t-callout c2" data-ol>Ring · the everyday mark</span><div data-o3 style="width:180px;height:180px;color:var(--text)"></div><div class="segm" style="width:100%" data-os><button class="on">Ring</button><button>Thinking</button><button>Voice</button><button>Done</button></div><div class="segm" style="width:100%" data-ov><button class="on">One ring</button><button>Two rings</button></div>'+
+ '<div class="card col" style="gap:0;padding:2px 16px;width:100%">'+li('Ring','Everywhere: tab bar, headers, small sizes','<span class="t-callout c2">Default</span>')+li('Thinking (3D)','Only while life is working something out','<span class="t-callout c2">Over 1s</span>')+li('Voice','The flat ring, pulsing as you talk','<span class="t-callout c2">A pulse</span>')+li('Done','Lies flat again','<span class="t-callout c2">0.8s</span>')+'</div></div>',
+ function(s){var o=mountOrb(s.querySelector('[data-o3]'),180,'ring'),L={Ring:'Ring · the everyday mark',Thinking:'Thinking · the same ring, in 3D',Voice:'Voice · the ring pulses with you',Done:'Done · lies flat again'},b=s.querySelectorAll('[data-os] button'),vb=s.querySelectorAll('[data-ov] button');vb.forEach(function(x,i){x.addEventListener('click',function(){vb.forEach(function(y){y.classList.toggle('on',y===x)});o.setRings(i+1);ORBS.forEach(function(q){q.setRings(i+1)});sfx('tap')})});b.forEach(function(x){x.addEventListener('click',function(){b.forEach(function(y){y.classList.toggle('on',y===x)});o.set({Ring:'ring',Thinking:'sphere',Voice:'voice',Done:'done'}[x.textContent]);s.querySelector('[data-ol]').textContent=L[x.textContent];sfx(x.textContent==='Done'?'complete':'tap');if(x.textContent==='Done')setTimeout(function(){b.forEach(function(y,k){y.classList.toggle('on',k===0)});s.querySelector('[data-ol]').textContent=L.Ring},900)})})});
 
 /* ---------- CHAT, restored (v2’s clean chat, in v4+ language) ---------- */
 var ISL='<div class="isl" data-isl><div class="isl-o" data-islo style="color:#F7F8F8"></div><span class="isl-t" data-islt>Checking London schemes and the NHS…</span></div>';
@@ -1625,7 +1632,7 @@ S15('states','support','Need support now','Always one tap away (You → Help), a
 
 S15('today','focus','Focus session','Start a focus block from Today or from a calendar gap: the orb turns as a sphere while you work, notifications stay quiet, and the Live Activity shows time left. Ending it logs the session to Work.','FocusSession · Live Activity · Focus filter / DND',0,
  glow('color-mix(in srgb,var(--a-work) 22%,transparent)')+STATUS+'<div class="pad row sb rel" style="padding-top:2px;min-height:44px"><span class="sq press">'+IC.close+'</span><span class="t-callout c2">Deep work</span><span class="t-mono c2">2 / 3</span></div><div class="col rel" style="align-items:center;gap:20px;padding-top:80px"><div data-fo style="width:170px;height:170px;color:var(--text)"></div><span class="t-display tnum" data-ft>38:12</span><span class="t-callout c2">Portfolio case study · notifications quiet</span></div><div class="pad col" style="position:absolute;left:0;right:0;bottom:34px;gap:6px"><button class="btn s press">Pause</button><button class="btn g press">End early</button></div>',
- function(s){mountOrb(s.querySelector('[data-fo]'),170,'sphere');var t=38*60+12,el=s.querySelector('[data-ft]');setInterval(function(){t=Math.max(0,t-1);el.textContent=Math.floor(t/60)+':'+String(t%60).padStart(2,'0')},1000)});
+ function(s){mountOrb(s.querySelector('[data-fo]'),170,'ring');var t=38*60+12,el=s.querySelector('[data-ft]');setInterval(function(){t=Math.max(0,t-1);el.textContent=Math.floor(t/60)+':'+String(t%60).padStart(2,'0')},1000)});
 
 S15('grow','yourbirthday','Your year','On your birthday, a quiet look back: what you cleared, what you learned, how you slept and moved, and how close you got to your Aim. Then one line about the year ahead.','Moments · year in review · LearningRecord + missions + health',0,
  band('people-birthday',380)+STATUS_IMG+'<div class="pad col rel on-img" style="gap:6px;padding-top:200px;text-shadow:0 1px 16px rgba(8,9,10,.45)"><span class="pchip">14 March · happy birthday</span><span class="t-title1">Your 27th year</span></div><div class="pad col rel" style="gap:12px;padding-top:30px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+[['41','missions cleared'],['£3,180','found or saved'],['26','ideas learned'],['+38%','closer to your Aim']].map(function(m){return '<div class="card col" style="gap:2px;padding:14px"><span class="t-title2 tnum">'+m[0]+'</span><span class="t-callout c2">'+m[1]+'</span></div>'}).join('')+'</div></div>');

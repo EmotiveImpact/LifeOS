@@ -22,7 +22,7 @@ Instructions for any coding agent working in this repo (Codex reads this file au
 - **No glass, no blur, no mesh gradients.** Solid surfaces only.
 - **No borders, ever** (DESIGN §47): no outlines on cards, tiles, avatars, inputs, buttons or chips. Surfaces separate by fill. Only list row dividers and state indicators (current step, today) draw lines.
 - **The top bar never moves** (DESIGN §46). Use `TopBar` (`root | push | sheet | flow`) *outside* the ScrollView; pick the kind from how the screen opens (the board shows it under every screen). Never two bars on one screen.
-- **The orb is `LifeOrb`** (`ring | sphere | voice | done`). Ring everywhere by default; sphere only for work longer than a second; voice only while listening or speaking.
+- **The orb is `LifeOrb`** (`ring | thinking | voice | done`). The flat original ring everywhere; it goes 3D (`thinking`) only while life is working something out for more than a second.
 - **Motion via springs from `tokens.motion`**, haptics and sounds only via `feedback.*`. Respect Reduce Motion (`useCalmMotion`).
 - **Both platforms, every phase.** iOS and Android must both bundle.
 - **Licences:** 🟢 MIT/Apache may be used with notices; 🟡 GPL/AGPL ideas only; 🔴 no licence or non-commercial, don't touch. The owner's own Feynman-voice-app code may be reused. **Never read a WHOOP strap over Bluetooth.**

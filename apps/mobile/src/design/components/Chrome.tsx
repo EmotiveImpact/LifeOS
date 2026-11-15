@@ -11,7 +11,7 @@ import { durations, floatShadow, radius, springs } from '../tokens';
 
 /* ───────────────────────── 21. DottedOrb ───────────────────────── */
 
-const DOTS = 12;
+const DOTS = 10; // matches the board's mark and LifeOrb
 
 /** DESIGN.md §6.21: the life symbol. Idle: slow 12s rotation. Thinking: dots pulse in sequence. */
 export function DottedOrb({ size = 56, state = 'idle', color }: { size?: number; state?: 'idle' | 'thinking'; color?: string }) {
