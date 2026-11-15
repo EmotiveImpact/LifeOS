@@ -469,11 +469,11 @@ function MoreComponents({ look }: { look: Look }) {
 function OrbDemo() {
   const [state, setState] = useState<OrbState>('ring');
   return (
-    <Section title="orb · ring → sphere → core → done">
+    <Section title="orb · ring → sphere → voice → done">
       <View style={{ alignItems: 'center', paddingVertical: 12 }}>
         <LifeOrb size={120} state={state} />
       </View>
-      <Segmented<OrbState> options={(['ring', 'sphere', 'core', 'done'] as const).map((v) => ({ value: v, label: v }))} value={state} onChange={setState} />
+      <Segmented<OrbState> options={(['ring', 'sphere', 'voice', 'done'] as const).map((v) => ({ value: v, label: v }))} value={state} onChange={setState} />
     </Section>
   );
 }

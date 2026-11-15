@@ -19,12 +19,13 @@
 | `DESIGN.md` | The look and the rules (§1–§44) | Everyone building screens |
 | `MOTION.md` | How every screen moves, state to state | Everyone building screens |
 | `IMPLEMENTATION_REFERENCES.md` | Which repos and files to learn from, and licence rules | Before each feature |
-| `design-board/life-design-board-v15.html` | **Every screen (188), organised by tab**, the component library and the to-do list | The visual target |
-| `ANTIGRAVITY_PROMPT.md` | The prompt to start Antigravity | You, once |
+| `design-board/life-design-board-v16.html` | **Every screen (188), organised by tab**, the component library and the to-do list | The visual target |
+| `AGENTS.md` | Rules and commands every builder reads first | Codex, Hydrogen, any builder |
+| `BUILD_PROMPT.md` | The prompt to paste, per phase | You |
 | `apps/mobile/src/design/` | The design system in code (tokens, 70+ components, feedback) | Every screen imports from here |
 | `packages/core` | The engine: every number in the app | Never hard-code a figure |
 
-**Who does what:** Antigravity builds each phase → Codex fills what's missing → Claude reviews at every gate, fixes, and does the visual polish (look, feel, sound, motion).
+**Who does what:** Codex (or Hydrogen / Antigravity) builds each phase from `BUILD_PROMPT.md` → Claude reviews at every gate, fixes, and does the visual polish (look, feel, sound, motion).
 
 ## 3. Stack decisions
 
@@ -137,4 +138,5 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Voice behind `voice.ts`: on-device first, Phonon for speech, cloud fallback.** |
 | 15 Nov 2026 | **Models chosen per job by evals; no lock-in. Today's plan is decided by rules + a bandit, not an LLM.** |
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
+| 15 Nov 2026 | **v16: orb v2 (globe, no core); borders off on the board with a toggle, owner to decide; AGENTS.md + BUILD_PROMPT.md for any builder.** |
 | 15 Nov 2026 | **v14: no borders on buttons (avatars and cards keep theirs); the orb evolves ring → sphere → core; chat restored; board organised by navigation; 188 screens.** |

@@ -10,148 +10,129 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { useCalmMotion, useTokens } from '../theme';
 import { motion } from '../tokens';
 
 /**
- * LifeOrb: the life symbol, evolving (MOTION.md §3.2, DESIGN.md §6.21).
+ * LifeOrb v2: the life mark, evolving (MOTION.md §3.2, DESIGN.md §47).
  *
- *  ring    The everyday mark: 12 dots on a circle, slow spin. Default everywhere.
- *  sphere  life is working (> 1s: building a plan or lesson, checking schemes). The ring lifts
- *          into a sphere of dots that turns in 3D; near dots are bigger and brighter.
- *  core    life is listening or speaking. The sphere keeps turning and an ember core glows
- *          in the centre, breathing with `level` (0–1, the voice level).
- *  done    The dots gather into a tight bright cluster, then the orb settles back to ring.
+ * The ring IS the equator of a globe of dots, seen from straight above.
+ *  ring    The everyday mark: the 12 equator dots, flat, slow spin.
+ *  sphere  life is working (> 1s). The view tilts to 24° and the other latitude rings fade in:
+ *          a globe of dots turning in 3D. Near dots bigger and brighter, the back half faint.
+ *  voice   Listening or speaking. The globe stays, and a soft wave travels across the dots,
+ *          driven by `level` (0–1). No glowing core.
+ *  done    The dots gather to the centre, then the globe tilts back into the ring.
  *
- * The evolution is rare on purpose: only real work or voice triggers it, so it stays special.
- * Same on iOS and Android (Reanimated UI-thread maths, no native 3D). Reduce Motion: no turning,
- * no morph; the state shows as a static ring, sphere or core.
+ * Under 40pt it only ever draws the ring (the globe needs room). Reduce Motion: no turning, no morph.
+ * Same on iOS and Android: plain Reanimated maths on the UI thread.
  */
-export type OrbState = 'ring' | 'sphere' | 'core' | 'done';
+export type OrbState = 'ring' | 'sphere' | 'voice' | 'done';
 
-const N = 42; // dots on the sphere; the first 12 also form the ring
-const RING = 12;
-const TILT = 0.38; // radians the sphere leans towards you
-const FOCAL = 2.6; // perspective strength (bigger = flatter)
+type Pt = { x: number; y: number; z: number; ring: boolean; ringIndex: number; la: number; lo: number };
 
-/** Evenly spread points on a unit sphere (Fibonacci lattice). */
-const SPHERE = Array.from({ length: N }, (_, i) => {
-  const y = 1 - (2 * (i + 0.5)) / N;
-  const rr = Math.sqrt(1 - y * y);
-  const th = i * Math.PI * (3 - Math.sqrt(5));
-  return { x: Math.cos(th) * rr, y, z: Math.sin(th) * rr };
-});
+/** Latitude rings of dots; the equator has 24, every other one doubles as the 12-dot ring. */
+const POINTS: Pt[] = (() => {
+  const out: Pt[] = [];
+  for (const la of [-72, -54, -36, -18, 0, 18, 36, 54, 72]) {
+    const r = Math.cos((la * Math.PI) / 180);
+    const n = la === 0 ? 24 : Math.max(6, Math.round(24 * r));
+    for (let k = 0; k < n; k++) {
+      const lo = (k / n) * Math.PI * 2 + ((la / 18) % 2 ? Math.PI / n : 0);
+      out.push({ x: Math.cos(lo) * r, y: Math.sin((la * Math.PI) / 180), z: Math.sin(lo) * r, ring: la === 0 && k % 2 === 0, ringIndex: k / 2, la, lo });
+    }
+  }
+  return out;
+})();
+const RING_ONLY = POINTS.filter((p) => p.ring);
 
 export function LifeOrb({ size = 56, state = 'ring', level, color }: { size?: number; state?: OrbState; level?: SharedValue<number>; color?: string }) {
   const t = useTokens();
   const calm = useCalmMotion();
-  const spin = useSharedValue(0); // radians, ring spin and sphere turn
-  const morph = useSharedValue(state === 'ring' ? 0 : 1); // 0 ring → 1 sphere
-  const core = useSharedValue(state === 'core' ? 1 : 0);
+  const small = size < 40;
+  const spin = useSharedValue(0);
+  const morph = useSharedValue(state === 'ring' || small ? 0 : 1);
+  const voice = useSharedValue(state === 'voice' ? 1 : 0);
   const gather = useSharedValue(0);
+  const clock = useSharedValue(0);
 
   useEffect(() => {
     if (calm) {
       cancelAnimation(spin);
+      cancelAnimation(clock);
     } else {
-      const fast = state === 'sphere' || state === 'core';
-      spin.value = withRepeat(withTiming(spin.value + Math.PI * 2, { duration: fast ? 5200 : 12000, easing: Easing.linear }), -1, false);
+      const perTurn = state === 'ring' || small ? 12000 : 8700;
+      spin.value = withRepeat(withTiming(spin.value + Math.PI * 2, { duration: perTurn, easing: Easing.linear }), -1, false);
+      clock.value = withRepeat(withTiming(clock.value + 1000, { duration: 1000 * 1000, easing: Easing.linear }), -1, false);
     }
-    const to = (v: SharedValue<number>, n: number) => {
-      v.value = calm ? n : withSpring(n, motion.smooth);
+    const to = (v: SharedValue<number>, n: number, cfg: { duration: number; dampingRatio: number } = motion.smooth) => {
+      v.value = calm ? n : withSpring(n, cfg);
     };
-    to(morph, state === 'ring' ? 0 : 1);
-    to(core, state === 'core' ? 1 : 0);
+    to(morph, state === 'ring' || small ? 0 : 1);
+    to(voice, state === 'voice' ? 1 : 0);
     if (state === 'done') {
-      gather.value = calm ? 0 : withSpring(1, motion.bouncy);
+      to(gather, 1, motion.bouncy);
       const id = setTimeout(() => {
-        gather.value = withSpring(0, motion.smooth);
-        morph.value = withSpring(0, motion.smooth);
-      }, 700);
+        to(gather, 0);
+        to(morph, 0);
+      }, 850);
       return () => clearTimeout(id);
     }
-    gather.value = withSpring(0, motion.snappy);
-  }, [state, calm, spin, morph, core, gather]);
+    to(gather, 0, motion.snappy);
+  }, [state, calm, small, spin, morph, voice, gather, clock]);
 
-  const dot = Math.max(2.6, size / 13);
-  const R = size / 2 - dot;
+  const dot = Math.max(1.4, size / 44);
+  const R = (size / 2) * 0.84;
   const ink = color ?? t.ink;
+  const pts = small ? RING_ONLY : POINTS;
 
   return (
     <View style={{ width: size, height: size }} accessibilityRole="image" accessibilityLabel={label(state)}>
-      <CoreGlow size={size} core={core} level={level} ember={t.ember} />
-      {SPHERE.map((p, i) => (
-        <OrbDot key={i} i={i} p={p} R={R} size={size} dot={dot} color={ink} spin={spin} morph={morph} gather={gather} core={core} />
+      {pts.map((p, i) => (
+        <OrbDot key={i} p={p} R={R} size={size} dot={dot} color={ink} spin={spin} morph={morph} voice={voice} gather={gather} clock={clock} />
       ))}
     </View>
   );
 }
 
 function label(s: OrbState) {
-  return s === 'sphere' ? 'life is working' : s === 'core' ? 'life is listening' : s === 'done' ? 'Done' : 'life';
+  return s === 'sphere' ? 'life is working' : s === 'voice' ? 'life is listening' : s === 'done' ? 'Done' : 'life';
 }
 
-function OrbDot({ i, p, R, size, dot, color, spin, morph, gather, core }: {
-  i: number; p: { x: number; y: number; z: number }; R: number; size: number; dot: number; color: string;
-  spin: SharedValue<number>; morph: SharedValue<number>; gather: SharedValue<number>; core: SharedValue<number>;
+function OrbDot({ p, R, size, dot, color, spin, morph, voice, gather, clock }: {
+  p: Pt; R: number; size: number; dot: number; color: string;
+  spin: SharedValue<number>; morph: SharedValue<number>; voice: SharedValue<number>; gather: SharedValue<number>; clock: SharedValue<number>;
 }) {
-  const inRing = i < RING;
   const style = useAnimatedStyle(() => {
-    // Ring position (flat, spinning).
-    const a = (i / RING) * Math.PI * 2 + spin.value;
-    const rx = inRing ? Math.cos(a) * R : 0;
-    const ry = inRing ? Math.sin(a) * R : 0;
-    const ringOpacity = inRing ? 0.35 + 0.65 * (i / RING) : 0;
-    // Sphere position: turn around Y, lean around X, then project.
-    const c = Math.cos(spin.value), s = Math.sin(spin.value);
-    const x1 = p.x * c + p.z * s;
-    const z1 = -p.x * s + p.z * c;
-    const ct = Math.cos(TILT), st = Math.sin(TILT);
-    const y2 = p.y * ct - z1 * st;
-    const z2 = p.y * st + z1 * ct;
-    const persp = FOCAL / (FOCAL - z2);
-    const shrink = 1 - 0.55 * gather.value;
-    const sx = x1 * R * 0.92 * persp * shrink;
-    const sy = y2 * R * 0.92 * persp * shrink;
-    const depth = (z2 + 1) / 2; // 0 back → 1 front
     const m = morph.value;
-    const behindCore = depth < 0.5 ? 1 - 0.5 * core.value : 1; // dots behind the core fade a little
+    const tSec = clock.value;
+    // Voice: a wave travels across the globe, nudging dots outwards.
+    const w = voice.value * 0.07 * Math.sin((p.la / 18) * 1.3 + p.lo * 2 - tSec * 5) * (0.6 + 0.4 * Math.sin(tSec * 1.7));
+    const rr = (1 + w) * (1 - 0.5 * gather.value);
+    const c = Math.cos(spin.value), s = Math.sin(spin.value);
+    const x1 = (p.x * c + p.z * s) * rr;
+    const z1 = (-p.x * s + p.z * c) * rr;
+    const y1 = p.y * rr;
+    // Tilt: 90° (looking down the pole, the equator is a flat ring) → 24° (a globe).
+    const tilt = ((90 - 66 * m) * Math.PI) / 180;
+    const ct = Math.cos(tilt), st = Math.sin(tilt);
+    const y2 = y1 * ct - z1 * st;
+    const z2 = y1 * st + z1 * ct;
+    const persp = 3 / (3 - z2);
+    const depth = (z2 / Math.max(rr, 0.01) + 1) / 2;
+    const sphereA = 0.05 + 0.95 * Math.pow(depth, 2.2);
+    const ringA = p.ring ? 0.35 + 0.65 * (p.ringIndex / 12) : 0;
+    const opacity = p.ring ? ringA * (1 - m) + sphereA * m : sphereA * Math.pow(m, 1.5);
+    const scale = (p.ring ? 1.75 * (1 - m) : 0) + (0.45 + 0.85 * depth) * m;
     return {
-      zIndex: depth < 0.5 ? 0 : 2, // core sits at 1: inside the sphere
-      opacity: (ringOpacity * (1 - m) + (0.18 + 0.82 * depth) * m) * behindCore,
-      transform: [
-        { translateX: rx * (1 - m) + sx * m },
-        { translateY: ry * (1 - m) + sy * m },
-        { scale: ((1 - m) + (0.55 + 0.75 * depth) * m) * (1 - 0.22 * core.value) },
-      ],
+      zIndex: Math.round(depth * 10),
+      opacity,
+      transform: [{ translateX: x1 * R * persp }, { translateY: y2 * R * persp }, { scale: Math.max(0.01, scale) }],
     };
   });
   return (
     <Animated.View
-      style={[{ position: 'absolute', left: size / 2 - dot / 2, top: size / 2 - dot / 2, width: dot, height: dot, borderRadius: dot / 2, backgroundColor: color }, style]}
+      style={[{ position: 'absolute', left: size / 2 - dot, top: size / 2 - dot, width: dot * 2, height: dot * 2, borderRadius: dot, backgroundColor: color }, style]}
     />
-  );
-}
-
-/** The ember core: a soft solid sphere (radial fill, no blur or glass), breathing with the voice level. */
-function CoreGlow({ size, core, level, ember }: { size: number; core: SharedValue<number>; level?: SharedValue<number>; ember: string }) {
-  const style = useAnimatedStyle(() => {
-    const l = level ? level.value : 0;
-    return { zIndex: 1, opacity: core.value, transform: [{ scale: (0.26 + 0.2 * core.value) * (1 + 0.16 * l) }] };
-  });
-  return (
-    <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: size, height: size }, style]}>
-      <Svg width={size} height={size}>
-        <Defs>
-          <RadialGradient id="lifeCore" cx="42%" cy="38%" r="60%">
-            <Stop offset="0" stopColor="#FFE3D6" stopOpacity="1" />
-            <Stop offset="0.45" stopColor={ember} stopOpacity="1" />
-            <Stop offset="1" stopColor={ember} stopOpacity="0" />
-          </RadialGradient>
-        </Defs>
-        <Circle cx={size / 2} cy={size / 2} r={size / 2} fill="url(#lifeCore)" />
-      </Svg>
-    </Animated.View>
   );
 }

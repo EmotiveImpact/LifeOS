@@ -737,3 +737,7 @@ Reduce Motion: springs become 160ms fades, drift and particles stop, and shared 
   - **Full-screen flow**: close · progress · step count (onboarding, lessons, tests, focus).
   - **Over a photo**: the push bar with its buttons on solid dark discs; still fixed.
 - Never two bars on one screen. The board applies this rule to every screen automatically from its "opens from" type.
+
+## 47. v16 (final): the globe, and borders on trial
+- **LifeOrb v2.** The ring *is* the equator of a globe of dots, seen from straight above. Working: the view tilts to 24° and the other latitude rings fade in, so it becomes a globe turning in 3D, with near dots bigger and brighter and the back half faint. Voice: a soft wave travels across the dots with the voice level. **The glowing ember core is gone.** Done: dots gather, then it tilts back to the ring. Under 40pt it's always the ring. (`Orb.tsx`, board screen "The orb, evolving".)
+- **Borders on trial.** The board now shows every screen with **no borders at all** (cards, icon tiles, avatars, inputs), and a **Borders** toggle in its top controls brings the hairlines back to compare. The owner decides; until then the code keeps card and avatar hairlines as they are, and buttons and chips have none (§45).
