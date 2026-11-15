@@ -727,3 +727,13 @@ Reduce Motion: springs become 160ms fades, drift and particles stop, and shared 
 - **Imagery for Learn and moments** is the diverse daylight cast (people mid-moment: understanding, deciding, moving in), never a colour-field still life. The plant-on-blue `c-growth` frame is retired.
 - **Chat is back** as the Talk button's tap action: a clean thread, the Island growing into a card with the sphere orb while life checks things, two-tone replies with live cards inside, suggestion chips. Hold the button to talk.
 - **The board is organised by navigation** (tab → area → screen), and every screen states how it opens and where from. Build routes from that, not from feature names.
+
+## 46. The top bar (final): it never moves
+- **The header is fixed.** Same place and same height on every screen of its kind. Only the content scrolls underneath. No collapsing large titles, no titles fading in, no bar sliding away, no hairline appearing on scroll. (`TopBar.tsx`, sits outside the ScrollView.)
+- **Which bar is decided by how the screen opened:**
+  - **Root** (Today, Plan, You): eyebrow + large title on the left, at most two icon buttons on the right. Today: search, From life (bell). Plan: add. You: your avatar, settings.
+  - **Push**: back · centred title · **one** smart action or nothing. Edit on a person or profile, ⓘ on any score, + on a list, Share on a recap, ⋯ only for objects with several actions (mission, bill, chat, document).
+  - **Sheet**: grabber, title on the left, close (or one text action like Done) on the right.
+  - **Full-screen flow**: close · progress · step count (onboarding, lessons, tests, focus).
+  - **Over a photo**: the push bar with its buttons on solid dark discs; still fixed.
+- Never two bars on one screen. The board applies this rule to every screen automatically from its "opens from" type.

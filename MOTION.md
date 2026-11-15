@@ -32,6 +32,8 @@ Reanimated usage: `withSpring(v, motion.smooth)`; entering animations: `FadeIn.s
 
 ## 3. The building blocks
 
+> **The top bar never moves** (DESIGN §46). Navigation transitions move the content, never the header of the screen you're on; scroll never changes the header.
+
 ### 3.1 Navigation
 
 | From → to | Motion | Feedback |

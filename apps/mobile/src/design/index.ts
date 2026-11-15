@@ -19,3 +19,4 @@ export * from './components/Controls';
 export * from './components/Lists';
 export * from './components/Talk';
 export * from './components/Growth';
+export * from './components/TopBar';

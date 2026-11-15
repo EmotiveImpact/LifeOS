@@ -6,7 +6,7 @@ You are building **life**, an Expo app in `apps/mobile`. Claude designed it and 
 2. `SPEC.md`: **how everything works**: the Life Engine, health (devices, readiness, sleep, food, habits), learning (Feynman + spaced recall), the behaviour of every component and screen, the data model, and blind spots with decisions.
 3. `IMPLEMENTATION_REFERENCES.md`: the open-source repos and **exact files** to learn from for each feature, with licence rules (🟢 use, 🟡 ideas only, 🔴 don't touch). **Never copy 🟡 or 🔴 code.**
 4. `DESIGN.md`: the rules. Every section is numbered (§). Later sections override earlier ones; the key ones are §25–§28 (look), §29 + §32 (screens), §40 (Pulse = dot field), §42 (motion), §43 (no glass or blur), §44 (generic imagery for v1).
-5. The visual target: **`design-board/life-design-board-v14.html`, every screen (171), organised the way the app is navigated, each saying how it opens (tab, push, sheet, full screen) and from where: Chat, Teach me lessons, WHOOP-style health for any wearable, smarter food, every next-level feature, levels and the component library.** It supersedes v1–v13 wherever they differ.
+5. The visual target: **`design-board/life-design-board-v15.html`, every screen (188), organised the way the app is navigated, each saying how it opens (tab, push, sheet, full screen) and from where: Chat, Teach me lessons, WHOOP-style health for any wearable, smarter food, every next-level feature, levels and the component library.** It supersedes v1–v13 wherever they differ.
 5b. `MOTION.md`: how every screen moves from state to state. The board's "Play the whole lesson" screen shows the transitions working.
 6. `apps/mobile/src/design/`: the design system that already exists, and `/design`, the live component gallery.
 

@@ -3,7 +3,7 @@
 > **Start with `MASTER_PLAN.md`** (order, stack, decisions). **Motion:** `MOTION.md` (every screen, state to state).
 > **Who does what:** Antigravity builds each phase. **Claude reviews** at every 🛑 gate before the next phase starts.
 > **Code references:** `IMPLEMENTATION_REFERENCES.md`: which open-source repos and exact files to study per feature, and what each licence allows. **Read the relevant section before building a feature.**
-> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v14.html`** (171 screens, organised by tab, each with how it opens) (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
+> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v15.html`** (188 screens, organised by tab, each with how it opens) (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
 > **The app:** `apps/mobile` (Expo SDK 58, expo-router, Reanimated 4, Gesture Handler). Logic: `packages/core` (don't change its logic; strings only).
 
 ---
