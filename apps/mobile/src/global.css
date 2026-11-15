@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@import "uniwind";
+
+@import "heroui-native/styles";
+
+@source "../node_modules/heroui-native/lib";
+
+@theme {
+  --font-sans: "System";
+}
+
+/* Override light background/surface with calm editorial stone palette matching life Phone OS */
+@layer theme {
+  :root {
+    @variant light {
+      --background: #F6F5F1;
+      --foreground: #141417;
+      --surface: #FFFFFF;
+      --surface-secondary: #EFECE6;
+      --surface-tertiary: #E7E3DC;
+      --muted: #6C6B73;
+      --accent: #141417;
+      --accent-foreground: #FFFFFF;
+    }
+
+    @variant dark {
+      --background: #101013;
+      --foreground: #F4F3EE;
+      --surface: #1A1A1F;
+      --surface-secondary: #222229;
+      --surface-tertiary: #2C2C35;
+      --muted: #9A98A0;
+      --accent: #F4F3EE;
+      --accent-foreground: #101013;
+    }
+  }
+}

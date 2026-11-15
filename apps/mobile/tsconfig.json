@@ -1,0 +1,28 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/assets/*": ["./assets/*"],
+      "@life/core": ["../../packages/core/src/index.ts"],
+      "@life/core/engine": ["../../packages/core/src/data/lifeosEngine.ts"],
+      "@life/core/types": ["../../packages/core/src/types/lifeos.ts"],
+      "@life/core/finance": ["../../packages/core/src/data/finance.ts"],
+      "@life/core/health": ["../../packages/core/src/data/health.ts"],
+      "@life/core/housing": ["../../packages/core/src/data/housing.ts"],
+      "@life/core/growth": ["../../packages/core/src/data/growth.ts"],
+      "@life/core/onboarding": ["../../packages/core/src/data/onboarding.ts"],
+      "@life/core/gambits": ["../../packages/core/src/data/gambits.ts"],
+      "@life/core/weeklyRecap": ["../../packages/core/src/data/weeklyRecap.ts"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../../packages/core/src/**/*.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "uniwind-env.d.ts"
+  ]
+}

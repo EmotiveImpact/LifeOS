@@ -1,0 +1,680 @@
+<title>life Design Language</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: page header → horizontal rail of five real-size phone screens → system sheets (colour, type, signatures, motion+sound). Tokens mirror DESIGN.md §3–§5. */
+:root{
+  --canvas:#F6F5F1; --surface:#FFFFFF; --surface-2:#EFECE6; --surface-3:#E7E3DC;
+  --ink:#141417; --ink-2:#5E5D65; --ink-quiet:#8A8890;
+  --ember:#E8553A; --ember-text:#C8391E; --ember-tint:rgba(232,85,58,.12);
+  --gain:#0B7A5A; --gain-tint:rgba(11,122,90,.10);
+  --paper:#F4F3EE; --scrim:rgba(14,14,17,.55);
+  --float-shadow:0 12px 32px rgba(20,20,23,.12);
+  --bezel:#1d1d21; --bezel-edge:#3a3a40;
+  --tint-admin:rgba(141,154,163,.22); --tint-health:rgba(110,95,85,.20); --tint-growth:rgba(255,74,28,.16); --tint-money:rgba(11,42,38,.14);
+  --serif:'Instrument Serif','New York',Georgia,serif;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono','SF Mono',Menlo,monospace;
+  --page-bg:#E9E7E1;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --canvas:#0E0E11; --surface:#18181D; --surface-2:#222228; --surface-3:#2C2C34;
+  --ink:#F4F3EE; --ink-2:#A9A7B0; --ink-quiet:#75737C;
+  --ember:#FF6A3D; --ember-text:#FF6A3D; --ember-tint:rgba(255,106,61,.16);
+  --gain:#2FD39F; --gain-tint:rgba(47,211,159,.14);
+  --float-shadow:0 12px 32px rgba(0,0,0,.5);
+  --tint-admin:rgba(141,154,163,.16); --tint-health:rgba(160,135,118,.18); --tint-growth:rgba(255,74,28,.18); --tint-money:rgba(47,211,159,.10);
+  --page-bg:#060608; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --canvas:#0E0E11; --surface:#18181D; --surface-2:#222228; --surface-3:#2C2C34;
+  --ink:#F4F3EE; --ink-2:#A9A7B0; --ink-quiet:#75737C;
+  --ember:#FF6A3D; --ember-text:#FF6A3D; --ember-tint:rgba(255,106,61,.16);
+  --gain:#2FD39F; --gain-tint:rgba(47,211,159,.14);
+  --float-shadow:0 12px 32px rgba(0,0,0,.5);
+  --tint-admin:rgba(141,154,163,.16); --tint-health:rgba(160,135,118,.18); --tint-growth:rgba(255,74,28,.18); --tint-money:rgba(47,211,159,.10);
+  --page-bg:#060608; color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{background:var(--page-bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;margin:0}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+.wrap{padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1480px;margin:0 auto;display:flex;flex-direction:column;gap:48px}
+
+/* page header */
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px}
+.brand{display:flex;flex-direction:column;gap:10px;min-width:0}
+.wordmark{font-family:var(--serif);font-size:64px;line-height:.9;letter-spacing:-1.5px}
+.wordmark small{font-family:var(--sans);font-size:15px;letter-spacing:0;color:var(--ink-2);margin-left:10px;font-weight:500}
+.lede{font-size:22px;line-height:30px;font-weight:500;letter-spacing:-.3px;max-width:640px;margin:0;text-wrap:balance}
+.q{color:var(--ink-quiet)}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:40px;padding:0 16px;border-radius:999px;background:var(--surface);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:8px;transition:transform .15s}
+.chip:active{transform:scale(.97)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--canvas)}
+
+/* rail of phones */
+.rail{display:flex;gap:40px;overflow-x:auto;padding:8px 4px 28px;scroll-snap-type:x mandatory}
+.rail::-webkit-scrollbar{height:6px}.rail::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:3px}
+.shot{display:flex;flex-direction:column;gap:14px;scroll-snap-align:start;flex:0 0 auto}
+.shot-cap{display:flex;flex-direction:column;gap:2px;padding-left:6px}
+.shot-cap b{font-size:15px;font-weight:600}
+.shot-cap span{font-size:13px;color:var(--ink-2)}
+.phone{width:375px;height:780px;border-radius:56px;padding:11px;background:var(--bezel);box-shadow:0 0 0 1.5px var(--bezel-edge),0 30px 60px rgba(0,0,0,.18);position:relative;flex:0 0 auto}
+.screen{width:100%;height:100%;border-radius:45px;overflow:hidden;position:relative;background:var(--canvas);color:var(--ink)}
+.scroll{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:120px}
+.scroll::-webkit-scrollbar{display:none}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:35px;border-radius:20px;background:#000;z-index:20}
+.status{height:54px;display:flex;justify-content:space-between;align-items:center;padding:6px 30px 0 34px;font-size:15px;font-weight:600;position:relative;z-index:5}
+.status i{display:inline-flex;gap:5px;align-items:center}
+.status svg{width:17px;height:12px}
+.status.on-atmos{color:var(--paper)}
+.pad{padding:0 20px}
+.stack-v{display:flex;flex-direction:column;gap:12px}
+
+/* type */
+.numeral-xl{font-family:var(--serif);font-size:64px;line-height:64px;letter-spacing:-1.5px;font-weight:400}
+.numeral-l{font-family:var(--serif);font-size:40px;line-height:44px;letter-spacing:-.8px}
+.title-serif{font-family:var(--serif);font-size:30px;line-height:34px;letter-spacing:-.4px}
+.statement{font-size:28px;line-height:34px;letter-spacing:-.6px;font-weight:500;text-wrap:pretty}
+.headline{font-size:22px;line-height:28px;letter-spacing:-.4px;font-weight:600}
+.title{font-size:17px;line-height:22px;letter-spacing:-.2px;font-weight:600}
+.body{font-size:15px;line-height:22px}
+.callout{font-size:13px;line-height:18px;font-weight:500}
+.mono{font-family:var(--mono);font-size:13px;line-height:16px}
+.unit{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-2);vertical-align:top;margin-left:2px;letter-spacing:0}
+.ink2{color:var(--ink-2)}
+.inline-av{display:inline-flex;width:24px;height:24px;border-radius:50%;vertical-align:-3px;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--paper);margin-right:3px}
+
+/* components */
+.card{background:var(--surface);border-radius:28px;padding:20px}
+.tile{background:var(--surface-2);border-radius:20px;padding:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.pill.live{background:var(--ember-tint);color:var(--ember-text)}
+.pill.done{background:var(--gain-tint);color:var(--gain)}
+.pill.on-atmos{background:rgba(244,243,238,.18);color:var(--paper);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.press{transition:transform .18s cubic-bezier(.2,.9,.3,1.2)}
+.press:active{transform:scale(.97)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;height:56px;border-radius:999px;background:var(--ink);color:var(--canvas);font-size:16px;font-weight:600}
+.btn.paper{background:var(--paper);color:#141417}
+.circle-btn{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(244,243,238,.16);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--paper)}
+.circle-btn svg{width:18px;height:18px}
+
+/* dock */
+.dock{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:6px;border-radius:999px;background:color-mix(in srgb,var(--surface) 78%,transparent);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);box-shadow:var(--float-shadow);z-index:15}
+.dock button{height:48px;min-width:48px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--ink-2);font-size:11px;font-weight:600;padding:0 12px;transition:background .25s,color .25s}
+.dock button.on{background:var(--ink);color:var(--canvas);padding:0 16px}
+.dock svg{width:20px;height:20px}
+.dock .lbl{display:none}.dock .on .lbl{display:inline}
+
+/* ticks */
+.ticks{display:flex;align-items:flex-end;gap:4px;height:28px}
+.ticks i{width:2px;height:20px;border-radius:2px 2px 0 0;background:var(--surface-3);transition:height .2s,background .2s}
+.ticks i.f{background:var(--ink)}
+.ticks i.a{background:var(--ember);height:32px}
+.ticks.atmos i{background:rgba(244,243,238,.22)}.ticks.atmos i.f{background:rgba(244,243,238,.75)}
+
+/* capsule meter */
+.meter{height:30px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.meter b{display:block;height:100%;border-radius:999px;background:var(--ink)}
+
+/* week strip */
+.week{display:flex;justify-content:space-between;align-items:stretch}
+.day{width:42px;padding:8px 0 6px;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:background .2s,color .2s}
+.day .wd{font-size:11px;font-weight:600;color:var(--ink-2)}
+.day .dn{font-size:17px;font-weight:600;line-height:20px}
+.day .dots{display:flex;gap:3px;height:4px}
+.day .dots i{width:4px;height:4px;border-radius:50%;background:var(--ink-quiet)}
+.day .dots i.e{background:var(--ember)}
+.day.sel{background:var(--ink);color:var(--canvas)}.day.sel .wd{color:var(--canvas);opacity:.7}.day.sel .dots i{background:var(--canvas);opacity:.7}
+.day.anchor .dn{box-shadow:0 0 0 1.5px var(--ember);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;margin:-3px 0}
+
+/* peek stack */
+.peek{position:relative;transition:height .35s}
+.peek .pc{position:absolute;left:0;right:0;border-radius:24px;padding:16px 18px;transition:transform .45s cubic-bezier(.2,.9,.25,1.05),box-shadow .3s,opacity .3s;cursor:pointer;background:var(--surface)}
+.peek .pc .head{display:flex;align-items:center;gap:10px;height:28px}
+.peek .pc .av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--paper);flex:0 0 auto}
+.peek .pc .who{font-size:15px;font-weight:600}
+.peek .pc .sub{font-size:13px;color:var(--ink-2);margin-left:auto}
+.peek .pc .msg{margin-top:12px;font-size:17px;line-height:23px;font-weight:500;letter-spacing:-.2px}
+.peek .pc.front{box-shadow:var(--float-shadow)}
+
+/* stepper */
+.stepper{display:grid;grid-template-columns:1fr 1fr 1fr;position:relative}
+.stepper .line{position:absolute;top:13px;left:14px;right:14px;height:3px;border-radius:2px;background:var(--surface-3)}
+.stepper .line b{display:block;height:100%;background:var(--ink);border-radius:2px;transition:width .5s cubic-bezier(.2,.9,.3,1)}
+.st{display:flex;flex-direction:column;gap:6px;position:relative;z-index:1}
+.st:nth-child(3){align-items:center;text-align:center}.st:nth-child(4){align-items:flex-end;text-align:right}
+.node{width:28px;height:28px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;color:var(--canvas);transition:background .3s}
+.node svg{width:14px;height:14px;opacity:0}
+.st.done .node{background:var(--ink)}.st.done .node svg{opacity:1}
+.st.cur .node{background:var(--canvas);box-shadow:0 0 0 3px var(--ember)}
+.st.cur .node::after{content:"";position:absolute;width:28px;height:28px;border-radius:50%;box-shadow:0 0 0 3px var(--ember);animation:halo 1.8s ease-out infinite}
+@keyframes halo{from{transform:scale(1);opacity:.7}to{transform:scale(1.9);opacity:0}}
+.st .lb{font-size:13px;font-weight:600}.st .ts{font-family:var(--mono);font-size:13px;color:var(--ink-2)}
+
+/* timeline */
+.tl{display:flex;flex-direction:column}
+.tl .row{display:grid;grid-template-columns:72px 20px 1fr;gap:10px;padding-bottom:16px;position:relative}
+.tl .row::before{content:"";position:absolute;left:91px;top:20px;bottom:0;border-left:1.5px dotted var(--ink-quiet)}
+.tl .row:last-child::before{display:none}
+.tl .t{font-family:var(--mono);font-size:13px;line-height:18px}.tl .t span{display:block;color:var(--ink-2)}
+.tl .ck{width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--canvas);display:flex;align-items:center;justify-content:center}
+.tl .ck svg{width:11px;height:11px}
+
+/* nudge */
+.nudge{border-radius:24px;padding:16px 18px;display:flex;gap:14px;align-items:flex-end;background:var(--surface);min-height:120px}
+.nudge .txt{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.nudge.hero{background:linear-gradient(150deg,#5B3B8C 0%,#C2457A 45%,#F0612D 100%);color:var(--paper);min-height:170px}
+.nudge.hero .mono{color:rgba(244,243,238,.75)}
+.nudge .media{width:76px;height:76px;border-radius:14px;flex:0 0 auto}
+
+/* dotted orb */
+.orb{width:56px;height:56px;position:relative;flex:0 0 auto}
+.orb i{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:var(--ink)}
+.orb.spin{animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ledger */
+.lrow{display:flex;align-items:center;gap:14px;padding:10px 0}
+.lic{width:44px;height:44px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.lic.in{background:var(--gain-tint);color:var(--gain)}
+.lic svg{width:18px;height:18px}
+.lname{font-size:17px;font-weight:600;flex:1;min-width:0}
+.lamt{text-align:right;font-variant-numeric:tabular-nums}
+.lamt b{font-size:17px;font-weight:600;display:block}.lamt b .dec{color:var(--ink-quiet)}
+.lamt b.in{color:var(--gain)}
+.lamt span{font-size:13px;color:var(--ink-2)}
+.ghead{font-size:13px;font-weight:500;color:var(--ink-2);padding-top:12px}
+
+/* prompt banner */
+.prompt{border-radius:24px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;position:relative;background:linear-gradient(120deg,rgba(255,74,28,.30),rgba(120,30,20,.18)),var(--surface)}
+.prompt.crim{background:linear-gradient(120deg,rgba(170,30,40,.30),rgba(80,10,20,.18)),var(--surface)}
+.prompt .lab{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--ink-2)}
+.prompt .heart{position:absolute;top:12px;right:12px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--ink-2)}
+.prompt .heart svg{width:20px;height:20px}
+.prompt .heart.on{color:var(--ember)}.prompt .heart.on path{fill:currentColor}
+
+/* checklist rows */
+.todo{display:flex;align-items:center;gap:14px;padding:12px 0}
+.todo + .todo{box-shadow:0 -1px 0 var(--surface-3)}
+.box{width:24px;height:24px;border-radius:50%;background:var(--surface-2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--canvas);transition:background .25s}
+.box svg{width:12px;height:12px;opacity:0;transition:opacity .2s}
+.todo.done .box{background:var(--ink)}.todo.done .box svg{opacity:1}
+.todo .tt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.todo.done .tt .title{text-decoration:line-through;color:var(--ink-quiet)}
+.todo .when{text-align:right;display:flex;flex-direction:column;gap:2px}
+.cd{font-size:13px;font-weight:500;color:var(--ink-2)}.cd.soon{color:var(--ember-text)}
+
+/* toggles */
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:12px}
+.set-row + .set-row{box-shadow:0 -1px 0 var(--surface-3)}
+.tog{width:51px;height:31px;border-radius:999px;background:var(--surface-3);position:relative;transition:background .25s;flex:0 0 auto}
+.tog::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .3s cubic-bezier(.2,.9,.3,1.2)}
+.tog[aria-checked="true"]{background:var(--ink)}.tog[aria-checked="true"]::after{transform:translateX(20px)}
+
+/* atmospheres */
+.atmos{position:absolute;left:0;right:0;top:0;pointer-events:none}
+.atmos.admin{height:360px;background:radial-gradient(120% 80% at 70% 0%,#A9B4BB 0%,transparent 60%),linear-gradient(180deg,#6F7D86 0%,#8D9AA3 40%,#B6ADA2 72%,var(--canvas) 100%)}
+.atmos.money{height:430px;background:radial-gradient(90% 70% at 50% 18%,#15514A 0%,transparent 70%),linear-gradient(180deg,#0B2A26 0%,#0A1F1C 70%,#0E0E11 100%)}
+.atmos.health{height:100%;background:linear-gradient(180deg,#6E5F55 0%,#3D332E 38%,#1A1716 70%,#121010 100%)}
+.atmos.growth{height:300px;background:radial-gradient(80% 60% at 30% 0%,#FF6A3D 0%,transparent 70%),linear-gradient(180deg,#B8330F 0%,#5A1708 45%,var(--canvas) 100%)}
+.atmos.admin::after,.atmos.growth::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,14,17,.28),transparent 40%)}
+.on-atmos-text{color:var(--paper)}
+
+/* money sheet */
+.sheet{background:var(--surface);border-radius:36px 36px 0 0;padding:10px 20px 20px;position:relative;margin-top:24px;min-height:420px}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--surface-3);margin:0 auto 14px}
+.scrub{position:relative;padding-top:44px;cursor:ew-resize;touch-action:none;user-select:none}
+.scrub .datepill{position:absolute;top:0;transform:translateX(-50%);height:32px;padding:0 14px;border-radius:999px;display:flex;align-items:center;font-size:13px;font-weight:500;color:var(--paper);background:rgba(244,243,238,.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);white-space:nowrap;transition:left .12s}
+.scrub .ticks{justify-content:space-between;gap:0;height:40px}
+.scrub .ticks i{height:12px}
+.scrub .ticks i.mid{height:18px}
+.scrub .ticks i.a{height:40px;width:8px;border-radius:4px;background:var(--paper)}
+
+/* system section */
+.sys{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.panel{background:var(--canvas);border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel h2{font-family:var(--serif);font-weight:400;font-size:30px;line-height:34px;margin:0;letter-spacing:-.4px}
+.panel p{margin:0}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+.swatch{display:flex;flex-direction:column;gap:6px}
+.swatch .c{height:56px;border-radius:14px;box-shadow:inset 0 0 0 1px rgba(127,127,127,.12)}
+.swatch b{font-size:13px;font-weight:600}.swatch span{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.atm-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.atm{height:96px;border-radius:18px;padding:12px;display:flex;align-items:flex-end;color:var(--paper);font-size:13px;font-weight:600}
+.spec{display:flex;flex-direction:column;gap:14px}
+.spec .r{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:baseline}
+.spec .r .k{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.snd{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.snd button{background:var(--surface);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:4px;text-align:left;transition:transform .15s}
+.snd button:active{transform:scale(.97)}
+.snd button b{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.snd button span{font-size:13px;color:var(--ink-2)}
+.snd svg{width:16px;height:16px}
+.hap{width:100%;border-collapse:collapse;font-size:13px}
+.hap td{padding:8px 0;vertical-align:top}.hap td:first-child{color:var(--ink-2);padding-right:12px}
+.hap tr + tr td{box-shadow:0 -1px 0 var(--surface-3)}
+.foot{font-size:13px;color:var(--ink-2);text-align:center}
+.mini-demos{display:flex;flex-direction:column;gap:20px}
+.mini-demos .lab{font-size:13px;font-weight:500;color:var(--ink-2);margin-bottom:8px}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:520px){.wordmark{font-size:52px}.lede{font-size:19px;line-height:26px}.phone{transform:scale(.9);transform-origin:top left;margin-right:-38px;margin-bottom:-78px}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="wordmark">life<small>Design language v1</small></div>
+      <p class="lede"><span class="q">Calm, certain, alive.</span> Five screens built only from the system in DESIGN.md. <span class="q">Everything here is tappable —</span> try the stacks, the stepper, the scrubber and the sounds.</p>
+    </div>
+    <div class="controls">
+      <button class="chip" id="themeBtn" aria-pressed="false">Dark mode</button>
+      <button class="chip" id="soundBtn" aria-pressed="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+        Sound on</button>
+    </div>
+  </header>
+
+  <!-- ============ PHONE RAIL ============ -->
+  <section class="rail" aria-label="Screens">
+
+    <!-- 1. TODAY -->
+    <div class="shot">
+      <div class="phone"><div class="screen">
+        <div class="island"></div>
+        <div class="scroll">
+          <div class="status"><span>9:41</span><i>●●●</i></div>
+          <div class="pad stack-v" style="gap:20px;padding-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div style="display:flex;align-items:center;gap:8px"><span class="title-serif" style="font-size:44px;line-height:44px">Mon</span><span style="width:12px;height:12px;border-radius:50%;background:var(--ember);margin-top:6px"></span></div>
+              <div class="callout ink2" style="text-align:right">16 November<br>2026</div>
+            </div>
+            <p class="statement" style="margin:0"><span class="q">Good morning, Ada. Nothing urgent —</span> your <span class="inline-av" style="background:#6F7D86">H</span>HMRC rebate <span class="q">is waiting on</span> one form <span class="q">and</span> <span class="inline-av" style="background:#8A6A58">G</span>2 GP slots <span class="q">opened this week.</span></p>
+            <div style="display:flex;gap:16px" class="callout ink2">
+              <span>⏱ Takes 18 min today</span><span style="color:var(--gain)">£2,340 found</span>
+            </div>
+            <div class="peek" id="peek1" data-gap="54"></div>
+          </div>
+          <div class="pad" style="margin-top:28px">
+            <div class="week" id="week1"></div>
+          </div>
+          <div class="pad" style="margin-top:18px">
+            <div class="card" style="padding:4px 20px">
+              <div class="todo press" data-todo><div class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg></div><div class="tt"><span class="title">Send P87 form to HMRC</span><span class="callout ink2">Takes 6 min</span></div><div class="when"><span class="callout">10:30</span><span class="cd soon">in 1h 15m</span></div></div>
+              <div class="todo press" data-todo><div class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg></div><div class="tt"><span class="title">Book GP blood test</span><span class="callout ink2">Guy's · 2 slots left</span></div><div class="when"><span class="callout">14:00</span><span class="cd soon">in 4h 45m</span></div></div>
+              <div class="todo press" data-todo><div class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg></div><div class="tt"><span class="title">Move £180 to buffer</span><span class="callout ink2">Payday sweep</span></div><div class="when"><span class="callout">Fri</span><span class="cd">in 4 days</span></div></div>
+            </div>
+          </div>
+        </div>
+        <nav class="dock" data-dock></nav>
+      </div></div>
+      <div class="shot-cap"><b>Today</b><span>Two-tone brief · peek stack · week strip · countdowns</span></div>
+    </div>
+
+    <!-- 2. PLAN -->
+    <div class="shot">
+      <div class="phone"><div class="screen">
+        <div class="island"></div>
+        <div class="scroll">
+          <div class="status"><span>9:41</span><i>●●●</i></div>
+          <div class="pad stack-v" style="padding-top:12px;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="title-serif">Plan</span>
+              <span class="pill">◷ November</span>
+            </div>
+            <div class="card stack-v" style="gap:10px;padding:22px">
+              <span class="callout ink2">Your monthly gambit</span>
+              <p class="statement" style="margin:0;font-size:26px;line-height:32px"><span class="q">I want to</span> claim every £ I'm owed <span class="q">and</span> build a 3-month buffer <span class="q">so</span> money stops running my week.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+              <div class="tile"><div class="callout ink2">This week</div><div class="title" style="margin-top:4px">3 / 5 done</div></div>
+              <div class="tile"><div class="callout ink2">Value found</div><div class="title" style="margin-top:4px;color:var(--gain)">£2,340</div></div>
+              <div class="tile"><div class="callout ink2">On time</div><div class="title" style="margin-top:4px">92%</div></div>
+            </div>
+            <div class="prompt">
+              <span class="lab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Inspiration</span>
+              <span class="title" style="padding-right:36px">The two-minute admin rule</span>
+              <span class="callout ink2">If a form takes under two minutes, do it now.</span>
+              <button class="heart" data-heart aria-label="Save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button>
+            </div>
+            <div class="title" style="margin-top:12px">Missions</div>
+            <div class="card stack-v press" style="gap:14px;background:linear-gradient(0deg,var(--tint-admin),var(--tint-admin)),var(--surface)">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span class="title">HMRC tax rebate</span><span class="pill live">Submitted</span></div>
+              <div class="ticks" style="height:20px" data-ticks="24" data-fill="14"></div>
+              <div style="display:flex;justify-content:space-between" class="callout ink2"><span>Est. £840</span><span class="cd soon">Decision in 6 days</span></div>
+            </div>
+            <div class="card stack-v press" style="gap:14px;background:linear-gradient(0deg,var(--tint-health),var(--tint-health)),var(--surface)">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span class="title">Hospital referral</span><span class="pill">Started</span></div>
+              <div class="ticks" style="height:20px" data-ticks="24" data-fill="6"></div>
+              <div style="display:flex;justify-content:space-between" class="callout ink2"><span>Cardiology · Guy's</span><span class="cd">Expires in 9 days</span></div>
+            </div>
+            <div class="card stack-v press" style="gap:14px;background:linear-gradient(0deg,var(--tint-growth),var(--tint-growth)),var(--surface)">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span class="title">Start Up Loan</span><span class="pill done">Cleared</span></div>
+              <div class="ticks" style="height:20px" data-ticks="24" data-fill="24"></div>
+              <div style="display:flex;justify-content:space-between" class="callout ink2"><span>£12,000 at 6%</span><span class="cd">Paid 2 Nov</span></div>
+            </div>
+          </div>
+        </div>
+        <nav class="dock" data-dock data-on="1"></nav>
+      </div></div>
+      <div class="shot-cap"><b>Plan</b><span>Monthly gambit · metric row · prompt banner · missions</span></div>
+    </div>
+
+    <!-- 3. MISSION DETAIL -->
+    <div class="shot">
+      <div class="phone"><div class="screen">
+        <div class="island"></div>
+        <div class="atmos admin"></div>
+        <div class="scroll">
+          <div class="status on-atmos"><span>9:41</span><i>●●●</i></div>
+          <div class="pad" style="display:flex;justify-content:space-between;padding-top:4px;position:relative">
+            <button class="circle-btn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <button class="circle-btn" aria-label="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+          </div>
+          <div class="pad stack-v on-atmos-text" style="position:relative;margin-top:92px;gap:10px">
+            <span class="pill on-atmos" id="m-pill" style="align-self:flex-start">● In progress</span>
+            <span class="numeral-l" style="font-size:44px;line-height:46px">HMRC tax rebate</span>
+            <span class="callout" style="opacity:.85">Est. £840 back · Takes 12 min in total</span>
+          </div>
+          <div class="pad stack-v" style="position:relative;margin-top:28px;gap:12px">
+            <div class="card stack-v" style="gap:18px">
+              <div class="stepper" id="stepper">
+                <div class="line"><b style="width:50%"></b></div>
+                <div class="st done"><div class="node"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7.5 6 10l5-6"/></svg></div><span class="lb">Started</span><span class="ts">12 Nov</span></div>
+                <div class="st cur"><div class="node"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7.5 6 10l5-6"/></svg></div><span class="lb">Submitted</span><span class="ts">Today</span></div>
+                <div class="st"><div class="node"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7.5 6 10l5-6"/></svg></div><span class="lb">Cleared</span><span class="ts">~22 Nov</span></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between" class="tile">
+                <div><div class="callout ink2">Reference</div><div class="mono" style="margin-top:3px">P800-7Q2-K41</div></div>
+                <button class="pill press" id="copyRef">Copy</button>
+              </div>
+            </div>
+            <div class="title" style="margin-top:10px">What to do</div>
+            <div style="display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px">
+              <div class="tile" style="flex:0 0 150px;background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:10px"><span class="pill" style="align-self:flex-start">1 · 3 min</span><span class="body">Sign in to your Government Gateway</span></div>
+              <div class="tile" style="flex:0 0 150px;background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:10px"><span class="pill" style="align-self:flex-start">2 · 5 min</span><span class="body">Check the P800 matches your payslips</span></div>
+              <div class="tile" style="flex:0 0 150px;background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:10px"><span class="pill" style="align-self:flex-start">3 · 4 min</span><span class="body">Claim by bank transfer, not cheque</span></div>
+            </div>
+            <div class="card stack-v" style="gap:10px;margin-top:4px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span class="title">Draft message</span><button class="pill press" id="copyDraft">Copy draft</button></div>
+              <p class="body ink2" style="margin:0">Hello, I'm following up on my P800 calculation (ref P800-7Q2-K41) and would like the refund paid by bank transfer…</p>
+            </div>
+            <div class="title" style="margin-top:10px">Activity</div>
+            <div class="tl">
+              <div class="row"><div class="t">09:30<span>Today</span></div><div class="ck"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 6.5 5 9l5-6"/></svg></div><div class="body">Form P87 submitted through your Gateway.</div></div>
+              <div class="row"><div class="t">16:12<span>12 Nov</span></div><div class="ck"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 6.5 5 9l5-6"/></svg></div><div class="body">life spotted £840 of unclaimed work expenses.</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:linear-gradient(0deg,var(--canvas) 70%,transparent);z-index:6">
+          <button class="btn press" id="advance">Mark as cleared</button>
+        </div>
+      </div></div>
+      <div class="shot-cap"><b>Mission detail</b><span>Admin atmosphere · stepper · draft · timeline</span></div>
+    </div>
+
+    <!-- 4. MONEY -->
+    <div class="shot">
+      <div class="phone"><div class="screen">
+        <div class="island"></div>
+        <div class="atmos money"></div>
+        <div class="scroll">
+          <div class="status on-atmos"><span>9:41</span><i>●●●</i></div>
+          <div class="pad" style="display:flex;justify-content:space-between;position:relative;padding-top:4px">
+            <button class="circle-btn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <button class="circle-btn" id="eye" aria-label="Hide balance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div style="position:relative;text-align:center;margin-top:26px;color:var(--paper)" class="stack-v">
+            <span class="callout" id="delta" style="color:#2FD39F">▲ 12.4% <span style="color:rgba(244,243,238,.6)">· +£260.20 this month</span></span>
+            <span class="numeral-xl" id="bal" style="font-size:68px;line-height:70px">£2,340<span style="color:rgba(244,243,238,.45)">.50</span></span>
+            <span class="callout" style="color:rgba(244,243,238,.6)">Buffer · 1.4 months of costs</span>
+          </div>
+          <div class="pad" style="position:relative;margin-top:22px">
+            <div class="scrub" id="scrub"><span class="datepill" id="datepill">Mon · 16 Nov</span><div class="ticks atmos" id="scrubTicks"></div></div>
+          </div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span class="headline">Cashflow</span><span class="pill">All accounts</span></div>
+            <div class="ghead">Today</div>
+            <div class="lrow"><div class="lic in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 7 7 17M7 9v8h8"/></svg></div><div class="lname">HMRC rebate</div><div class="lamt"><b class="in">+£840<span class="dec">.00</span></b><span>Claimed by life</span></div></div>
+            <div class="lrow"><div class="lic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg></div><div class="lname">Rent</div><div class="lamt"><b>£1,150<span class="dec">.00</span></b><span>Standing order</span></div></div>
+            <div class="lrow"><div class="lic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></div><div class="lname">Moved to buffer</div><div class="lamt"><b>£180<span class="dec">.00</span></b><span>Payday sweep</span></div></div>
+            <div class="ghead">Yesterday</div>
+            <div class="lrow"><div class="lic in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 7 7 17M7 9v8h8"/></svg></div><div class="lname">Salary</div><div class="lamt"><b class="in">+£2,410<span class="dec">.66</span></b><span>Acme Ltd</span></div></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="shot-cap"><b>Money</b><span>Emerald atmosphere · scrubbable ticks · privacy eye · ledger</span></div>
+    </div>
+
+    <!-- 5. YOU / CHECK IN -->
+    <div class="shot">
+      <div class="phone"><div class="screen" style="background:#121010">
+        <div class="island"></div>
+        <div class="atmos health"></div>
+        <div class="scroll" style="color:var(--paper)">
+          <div class="status on-atmos"><span>9:41</span><i>●●●</i></div>
+          <div class="pad stack-v" style="position:relative;padding-top:12px;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span class="title-serif">Check in</span><span class="callout" style="opacity:.7">Week 46</span></div>
+            <div style="background:rgba(244,243,238,.08);border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:20px">
+              <div style="display:grid;grid-template-columns:96px 1fr;gap:16px;align-items:center">
+                <div><div class="callout" style="opacity:.75">life score</div><div class="numeral-l" style="font-size:46px;line-height:48px"><span id="scoreNum">72</span><span class="unit" style="color:rgba(244,243,238,.6)">/100</span></div></div>
+                <div class="stack-v" style="gap:8px"><div class="meter" style="background:rgba(244,243,238,.14)"><b id="scoreBar" style="width:72%;background:var(--paper)"></b></div><span class="callout" style="opacity:.75">Your money admin is looking good</span></div>
+              </div>
+              <div style="display:grid;grid-template-columns:96px 1fr;gap:16px;align-items:center">
+                <div><div class="callout" style="opacity:.75">Day streak</div><div class="numeral-l" style="font-size:46px;line-height:48px">4<span class="unit" style="color:rgba(244,243,238,.6)">/30</span></div></div>
+                <div class="stack-v" style="gap:8px"><div class="ticks atmos" data-ticks="30" data-fill="4" style="gap:3px;justify-content:space-between"></div><span class="callout" style="opacity:.75">Most see it stick after 14 days</span></div>
+              </div>
+            </div>
+            <div class="callout" style="opacity:.75;margin-top:8px">Your weeks</div>
+            <div class="peek" id="peek2" data-gap="40"></div>
+            <div style="background:rgba(244,243,238,.08);border-radius:28px;padding:4px 20px;margin-top:8px">
+              <div class="set-row" style="box-shadow:none"><span class="title" style="font-weight:500">Sounds</span><button class="tog" role="switch" aria-checked="true" id="tog-sound" aria-label="Sounds"></button></div>
+              <div class="set-row" style="box-shadow:0 -1px 0 rgba(244,243,238,.1)"><span class="title" style="font-weight:500">Haptics</span><button class="tog" role="switch" aria-checked="true" aria-label="Haptics" data-tog></button></div>
+              <div class="set-row" style="box-shadow:0 -1px 0 rgba(244,243,238,.1)"><span class="title" style="font-weight:500">Hide balances</span><button class="tog" role="switch" aria-checked="false" aria-label="Hide balances" id="tog-hide"></button></div>
+            </div>
+          </div>
+        </div>
+        <nav class="dock" data-dock data-on="3" style="background:rgba(40,36,34,.7)"></nav>
+      </div></div>
+      <div class="shot-cap"><b>You · Check in</b><span>Bronze atmosphere · serif numerals · ticks · weekly recap</span></div>
+    </div>
+  </section>
+
+  <!-- ============ SYSTEM ============ -->
+  <section class="sys" aria-label="System">
+    <div class="panel">
+      <h2>Colour</h2>
+      <p class="body ink2">Quiet surfaces, one signal, one money colour. Feeling comes from atmospheres, never from the chrome.</p>
+      <div class="sw" id="swatches"></div>
+      <div class="callout ink2">Atmospheres, one per screen</div>
+      <div class="atm-row">
+        <div class="atm" style="background:linear-gradient(180deg,#0B2A26,#0E0E11)">Money &amp; Work</div>
+        <div class="atm" style="background:linear-gradient(180deg,#6E5F55,#1A1716)">Health</div>
+        <div class="atm" style="background:linear-gradient(180deg,#6F7D86,#B6ADA2)">Admin &amp; Gov</div>
+        <div class="atm" style="background:linear-gradient(180deg,#FF4A1C,#120806)">Growth</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Type</h2>
+      <div class="spec">
+        <div class="r"><span class="k">numeral-xl</span><span class="numeral-xl" style="font-size:56px;line-height:56px">£2,340<span class="q">.50</span></span></div>
+        <div class="r"><span class="k">title-serif</span><span class="title-serif">Check in</span></div>
+        <div class="r"><span class="k">statement</span><span class="statement" style="font-size:24px;line-height:30px"><span class="q">Nothing urgent —</span> one form <span class="q">left.</span></span></div>
+        <div class="r"><span class="k">headline</span><span class="headline">HMRC tax rebate</span></div>
+        <div class="r"><span class="k">title</span><span class="title">Book GP blood test</span></div>
+        <div class="r"><span class="k">body</span><span class="body">Claim by bank transfer, not cheque.</span></div>
+        <div class="r"><span class="k">callout · 13</span><span class="callout ink2">Takes 6 min · the smallest size</span></div>
+        <div class="r"><span class="k">mono</span><span class="mono">08:30 · 16.11 · P800-7Q2-K41</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Signatures</h2>
+      <div class="mini-demos">
+        <div><div class="lab">Dotted orb · Ask tab and thinking state</div><div style="display:flex;gap:20px;align-items:center"><div class="orb spin" data-orb></div><div class="nudge" style="flex:1;min-height:0;align-items:center;background:var(--surface)"><div class="txt"><span class="mono ink2">10:33 · 16.11</span><span class="title">Open a window for ten minutes</span></div></div></div></div>
+        <div><div class="lab">Nudge card · hero</div><div class="nudge hero"><div class="txt"><span class="mono">18:40 · 16.11</span><span class="headline" style="font-size:20px;line-height:25px">Three ways to switch off after a long admin day</span></div></div></div>
+        <div><div class="lab">Tick meter · tap to fill</div><div class="ticks" id="tapTicks" data-ticks="30" data-fill="12" style="cursor:pointer;gap:5px"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Sound &amp; touch</h2>
+      <p class="body ink2">Four soft sounds, always paired with a haptic, silent when the phone is on silent.</p>
+      <div class="snd">
+        <button data-snd="tap"><b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>tap</b><span>Primary button · 60ms felt tock</span></button>
+        <button data-snd="complete"><b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>complete</b><span>Task done · rising fifth</span></button>
+        <button data-snd="cleared"><b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>cleared</b><span>Mission cleared · arpeggio + glass</span></button>
+        <button data-snd="brief"><b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>brief</b><span>Morning brief · airy swell</span></button>
+      </div>
+      <table class="hap">
+        <tr><td>Selection</td><td>Tab, chip, week day, tick scrub</td></tr>
+        <tr><td>Light impact</td><td>Open a card or mission</td></tr>
+        <tr><td>Medium impact</td><td>Sheet snaps</td></tr>
+        <tr><td>Success</td><td>Task completed, stage advanced</td></tr>
+        <tr><td>Warning</td><td>Deadline under 24h first appears</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <p class="foot">Source of truth: DESIGN.md at the LifeOS repo root. If this board and DESIGN.md disagree, DESIGN.md wins.</p>
+</div>
+
+<script>
+(function(){
+  /* ---------- theme ---------- */
+  var root=document.documentElement, themeBtn=document.getElementById('themeBtn');
+  function isDark(){var t=root.getAttribute('data-theme');if(t)return t==='dark';return matchMedia('(prefers-color-scheme: dark)').matches}
+  function syncThemeBtn(){themeBtn.textContent=isDark()?'Light mode':'Dark mode'}
+  themeBtn.addEventListener('click',function(){root.setAttribute('data-theme',isDark()?'light':'dark');syncThemeBtn();renderSwatches();sfx('tap')});
+  syncThemeBtn();
+
+  /* ---------- sound (Web Audio synthesis of DESIGN.md §9) ---------- */
+  var soundOn=true, ctx=null;
+  var soundBtn=document.getElementById('soundBtn'), togSound=document.getElementById('tog-sound');
+  function setSound(v){soundOn=v;soundBtn.setAttribute('aria-pressed',v);soundBtn.lastChild.textContent=v?' Sound on':' Sound off';togSound.setAttribute('aria-checked',v)}
+  soundBtn.addEventListener('click',function(){setSound(!soundOn);if(soundOn)sfx('tap')});
+  togSound.addEventListener('click',function(){setSound(!soundOn);if(soundOn)sfx('tap')});
+  function ac(){if(!ctx){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C()}if(ctx.state==='suspended')ctx.resume();return ctx}
+  function note(c,f,t,dur,vol,type){
+    var o=c.createOscillator(),g=c.createGain();o.type=type||'sine';o.frequency.value=f;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+0.005);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+0.05);
+  }
+  function marimba(c,f,t,vol){note(c,f,t,0.45,vol,'sine');note(c,f*4,t,0.08,vol*0.25,'sine');note(c,f*2,t,0.2,vol*0.12,'triangle')}
+  function sfx(name){
+    if(!soundOn)return;var c=ac();if(!c)return;var t=c.currentTime+0.01;
+    if(name==='tap'){note(c,190,t,0.06,0.22,'triangle');note(c,95,t,0.05,0.12,'sine')}
+    else if(name==='complete'){marimba(c,523.25,t,0.18);marimba(c,783.99,t+0.11,0.16)}
+    else if(name==='cleared'){marimba(c,523.25,t,0.15);marimba(c,659.25,t+0.09,0.14);marimba(c,783.99,t+0.18,0.14);note(c,2093,t+0.26,0.6,0.03,'sine');note(c,3136,t+0.3,0.5,0.018,'sine')}
+    else if(name==='brief'){[261.63,392,659.25].forEach(function(f,i){var o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1400;o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.05-i*0.01,t+0.5);g.gain.exponentialRampToValueAtTime(0.0001,t+1.5);o.connect(lp);lp.connect(g);g.connect(c.destination);o.start(t);o.stop(t+1.6)})}
+  }
+  document.querySelectorAll('[data-snd]').forEach(function(b){b.addEventListener('click',function(){var w=soundOn;if(!w)setSound(true);sfx(b.dataset.snd)})});
+  document.querySelectorAll('.btn,.pill.press').forEach(function(b){b.addEventListener('pointerdown',function(){if(b.id!=='advance')sfx('tap')})});
+
+  /* ---------- ticks ---------- */
+  function buildTicks(el){var n=+el.dataset.ticks,f=+el.dataset.fill;el.innerHTML='';for(var i=0;i<n;i++){var t=document.createElement('i');if(i<f-1)t.className='f';else if(i===f-1)t.className=(f===n?'f':'a');el.appendChild(t)}}
+  document.querySelectorAll('[data-ticks]').forEach(buildTicks);
+  var tap=document.getElementById('tapTicks');
+  tap.addEventListener('click',function(){var f=+tap.dataset.fill;tap.dataset.fill=f>=30?1:f+1;buildTicks(tap);sfx(+tap.dataset.fill===30?'complete':'tap')});
+
+  /* ---------- dock ---------- */
+  var icons={
+    today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    plan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>',
+    ask:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="4" r="1.6"/><circle cx="17.7" cy="6.3" r="1.6"/><circle cx="20" cy="12" r="1.6"/><circle cx="17.7" cy="17.7" r="1.6"/><circle cx="12" cy="20" r="1.6"/><circle cx="6.3" cy="17.7" r="1.6"/><circle cx="4" cy="12" r="1.6"/><circle cx="6.3" cy="6.3" r="1.6"/></svg>',
+    you:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>'};
+  var tabs=[['today','Today'],['plan','Plan'],['ask','Ask'],['you','You']];
+  document.querySelectorAll('[data-dock]').forEach(function(d){
+    var on=+(d.dataset.on||0);
+    tabs.forEach(function(tb,i){var b=document.createElement('button');b.setAttribute('aria-label',tb[1]);b.innerHTML=icons[tb[0]]+'<span class="lbl">'+tb[1]+'</span>';if(i===on)b.className='on';
+      b.addEventListener('click',function(){d.querySelectorAll('button').forEach(function(x){x.className=''});b.className='on';sfx('tap')});d.appendChild(b)});
+    if(d.closest('.screen').style.background){d.querySelectorAll('button').forEach(function(b){b.style.color=b.className?'':'rgba(244,243,238,.7)'})}
+  });
+
+  /* ---------- week strip ---------- */
+  var week=document.getElementById('week1');
+  var days=[['M',16,[1,1]],['T',17,[1]],['W',18,[]],['T',19,[1,1,1]],['F',20,[1]],['S',21,[]],['S',22,[]]];
+  days.forEach(function(d,i){var b=document.createElement('button');b.className='day'+(i===0?' sel':'')+(i===5?' anchor':'');
+    b.innerHTML='<span class="wd">'+d[0]+'</span><span class="dn">'+d[1]+'</span><span class="dots">'+d[2].map(function(_,j){return '<i'+(i===0&&j===0?' class="e"':'')+'></i>'}).join('')+'</span>';
+    b.addEventListener('click',function(){week.querySelectorAll('.day').forEach(function(x){x.classList.remove('sel')});b.classList.add('sel');sfx('tap')});week.appendChild(b)});
+
+  /* ---------- peek stacks ---------- */
+  function peek(el,cards){
+    var order=cards.map(function(_,i){return i}), gap=+el.dataset.gap;
+    var nodes=cards.map(function(c){var d=document.createElement('div');d.className='pc';d.setAttribute('role','button');d.setAttribute('tabindex','0');d.style.background=c.bg;d.innerHTML=c.html;el.appendChild(d);return d});
+    function layout(){var n=order.length;order.forEach(function(ci,pos){var node=nodes[ci];var back=n-1-pos;
+      node.style.transform='translateY('+(pos*gap)+'px) scale('+(1-back*0.04)+')';node.style.zIndex=pos+1;node.classList.toggle('front',pos===n-1);node.style.opacity=back>2?0:1});
+      var front=nodes[order[n-1]];el.style.height=((n-1)*gap+front.offsetHeight)+'px'}
+    nodes.forEach(function(node,ci){function go(){var pos=order.indexOf(ci);if(pos===order.length-1)return;order.splice(pos,1);order.push(ci);layout();sfx('tap')}
+      node.addEventListener('click',go);node.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})});
+    layout();window.addEventListener('resize',layout);if(document.fonts)document.fonts.ready.then(layout);
+  }
+  peek(document.getElementById('peek1'),[
+    {bg:'linear-gradient(0deg,var(--tint-growth),var(--tint-growth)),var(--surface)',html:'<div class="head"><span class="av" style="background:#B8330F">SL</span><span class="who">Start Up Loans</span><span class="sub">Yesterday</span></div><div class="msg">Your mentor session is confirmed for Friday at 17:00.</div>'},
+    {bg:'linear-gradient(0deg,var(--tint-health),var(--tint-health)),var(--surface)',html:'<div class="head"><span class="av" style="background:#8A6A58">G</span><span class="who">GP surgery</span><span class="sub">2 slots</span></div><div class="msg">Two blood-test slots opened on Thursday morning.</div>'},
+    {bg:'linear-gradient(0deg,var(--tint-admin),var(--tint-admin)),var(--surface)',html:'<div class="head"><span class="av" style="background:#6F7D86">H</span><span class="who">HMRC</span><span class="sub">£840</span></div><div class="msg">One form left before your rebate can be paid.</div>'}
+  ]);
+  var wk='background:rgba(244,243,238,.10);color:#F4F3EE';
+  peek(document.getElementById('peek2'),[
+    {bg:'rgba(70,60,54,.96)',html:'<div class="head" style="color:#F4F3EE"><span class="who">Week 44</span><span class="sub" style="color:rgba(244,243,238,.6)">27 Oct – 2 Nov</span></div><div class="msg" style="color:#F4F3EE"><span style="color:rgba(244,243,238,.55)">You cleared</span> 1 ↑ <span style="color:rgba(244,243,238,.55)">mission.</span></div>'},
+    {bg:'rgba(84,72,64,.97)',html:'<div class="head" style="color:#F4F3EE"><span class="who">Week 45</span><span class="sub" style="color:rgba(244,243,238,.6)">3 – 9 Nov</span></div><div class="msg" style="color:#F4F3EE"><span style="color:rgba(244,243,238,.55)">You found</span> £840 ↑ <span style="color:rgba(244,243,238,.55)">and slept</span> 7.1h <span style="color:rgba(244,243,238,.55)">a night.</span></div>'},
+    {bg:'rgba(98,85,76,.98)',html:'<div class="head" style="color:#F4F3EE"><span class="who">This week</span><span class="sub" style="color:rgba(244,243,238,.6)">10 – 16 Nov</span></div><div class="msg" style="color:#F4F3EE;font-size:20px;line-height:26px"><span style="color:rgba(244,243,238,.55)">You cleared</span> 3 ↑ <span style="color:rgba(244,243,238,.55)">missions and moved</span> £180 ↑ <span style="color:rgba(244,243,238,.55)">to your buffer.</span></div>'}
+  ]);
+
+  /* ---------- todos ---------- */
+  document.querySelectorAll('[data-todo]').forEach(function(r){r.addEventListener('click',function(){r.classList.toggle('done');if(r.classList.contains('done'))sfx('complete')})});
+  document.querySelectorAll('[data-heart]').forEach(function(h){h.addEventListener('click',function(){h.classList.toggle('on');sfx('tap')})});
+  document.querySelectorAll('[data-tog]').forEach(function(t){t.addEventListener('click',function(){t.setAttribute('aria-checked',t.getAttribute('aria-checked')!=='true');sfx('tap')})});
+
+  /* ---------- stepper ---------- */
+  var stage=1, adv=document.getElementById('advance'), sts=document.querySelectorAll('#stepper .st'), bar=document.querySelector('#stepper .line b'), mp=document.getElementById('m-pill');
+  adv.addEventListener('click',function(){
+    if(stage===1){stage=2;sts[1].className='st done';sts[2].className='st done';sts[2].querySelector('.ts').textContent='Today';bar.style.width='100%';
+      mp.textContent='✓ Cleared · £840 paid';adv.textContent='Start over';sfx('cleared');bump()}
+    else{stage=1;sts[1].className='st cur';sts[2].className='st';sts[2].querySelector('.ts').textContent='~22 Nov';bar.style.width='50%';mp.textContent='● In progress';adv.textContent='Mark as cleared';sfx('tap')}
+  });
+  function copyText(btn,txt){var done=function(){var o=btn.textContent;btn.textContent='Copied';setTimeout(function(){btn.textContent=o},1400)};
+    try{navigator.clipboard.writeText(txt).then(done,done)}catch(e){done()}}
+  document.getElementById('copyRef').addEventListener('click',function(){copyText(this,'P800-7Q2-K41')});
+  document.getElementById('copyDraft').addEventListener('click',function(){copyText(this,"Hello, I'm following up on my P800 calculation (ref P800-7Q2-K41) and would like the refund paid by bank transfer.")});
+
+  /* ---------- score roll ---------- */
+  var scoreEl=document.getElementById('scoreNum'), scoreBar=document.getElementById('scoreBar'), score=72;
+  function bump(){var from=score,to=Math.min(100,score+6),t0=performance.now();score=to;scoreBar.style.transition='width .6s cubic-bezier(.2,.9,.3,1)';scoreBar.style.width=to+'%';
+    (function f(now){var p=Math.min(1,(now-t0)/600),e=1-Math.pow(1-p,3);scoreEl.textContent=Math.round(from+(to-from)*e);if(p<1)requestAnimationFrame(f)})(t0)}
+
+  /* ---------- money scrubber + privacy ---------- */
+  var st=document.getElementById('scrubTicks'),N=41,active=40,hidden=false;
+  var vals=[];for(var i=0;i<N;i++){vals.push(1420+i*22+Math.round(Math.sin(i*.7)*60)+ (i>36?(i-36)*40:0))}vals[N-1]=2340.5;
+  var dnames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  for(var k=0;k<N;k++){var ti=document.createElement('i');if(k%5===0)ti.className='mid';st.appendChild(ti)}
+  var bal=document.getElementById('bal'),dp=document.getElementById('datepill'),scrub=document.getElementById('scrub');
+  function fmt(v){var w=Math.floor(v),d=Math.round((v-w)*100);return '£'+w.toLocaleString('en-GB')+'<span style="color:rgba(244,243,238,.45)">.'+(d<10?'0':'')+d+'</span>'}
+  function renderScrub(){var ts=st.children;for(var j=0;j<N;j++){ts[j].classList.toggle('a',j===active)}
+    var x=ts[active].offsetLeft+ts[active].offsetWidth/2;dp.style.left=Math.max(52,Math.min(st.offsetWidth-52,x))+'px';
+    var date=new Date(2026,9,7+active);dp.textContent=(active===N-1?'Today':dnames[(date.getDay()+6)%7])+' · '+date.getDate()+' '+date.toLocaleString('en-GB',{month:'short'});
+    bal.innerHTML=hidden?'£••••':fmt(vals[active])}
+  function pick(e){var r=st.getBoundingClientRect();var p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));var n=Math.round(p*(N-1));if(n!==active){active=n;renderScrub();if(soundOn){var c=ac();if(c)note(c,1800,c.currentTime,0.012,0.04,'sine')}}}
+  var dragging=false;scrub.addEventListener('pointerdown',function(e){dragging=true;scrub.setPointerCapture(e.pointerId);pick(e)});
+  scrub.addEventListener('pointermove',function(e){if(dragging)pick(e)});scrub.addEventListener('pointerup',function(){dragging=false});
+  function setHidden(v){hidden=v;document.getElementById('tog-hide').setAttribute('aria-checked',v);renderScrub()}
+  document.getElementById('eye').addEventListener('click',function(){setHidden(!hidden);sfx('tap')});
+  document.getElementById('tog-hide').addEventListener('click',function(){setHidden(!hidden);sfx('tap')});
+  renderScrub();if(document.fonts)document.fonts.ready.then(renderScrub);
+
+  /* ---------- dotted orbs ---------- */
+  document.querySelectorAll('[data-orb]').forEach(function(o){for(var i=0;i<12;i++){var d=document.createElement('i');var a=i/12*Math.PI*2;d.style.transform='translate('+(Math.cos(a)*22)+'px,'+(Math.sin(a)*22)+'px)';d.style.opacity=.35+.65*(i/12);o.appendChild(d)}});
+
+  /* ---------- swatches ---------- */
+  function renderSwatches(){var cs=getComputedStyle(root),el=document.getElementById('swatches');
+    var list=[['canvas','Screen'],['surface','Cards'],['surface-2','Tiles'],['surface-3','Tracks'],['ink','Text'],['ink-2','Body'],['ink-quiet','Quiet half'],['ember','Signal'],['gain','Money in']];
+    el.innerHTML=list.map(function(s){var v=cs.getPropertyValue('--'+s[0]).trim();return '<div class="swatch"><div class="c" style="background:var(--'+s[0]+')"></div><b>'+s[1]+'</b><span>'+s[0]+' '+v+'</span></div>'}).join('')}
+  renderSwatches();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){syncThemeBtn();renderSwatches()});
+})();
+</script>
