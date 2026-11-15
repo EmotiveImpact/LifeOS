@@ -373,5 +373,5 @@ const styles = StyleSheet.create({
   tool: { flex: 1, minHeight: 112, borderRadius: 16, padding: 14, gap: 20, borderWidth: StyleSheet.hairlineWidth * 2 },
   card: { borderRadius: radius.lg, padding: 16, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: 'transparent' },
   badge: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  small: { height: 30, paddingHorizontal: 10, borderRadius: 9, justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth * 2 },
+  small: { height: 30, paddingHorizontal: 10, borderRadius: 9, justifyContent: 'center' },
 });

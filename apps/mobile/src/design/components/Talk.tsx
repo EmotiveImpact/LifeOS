@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   tray: { marginHorizontal: 14, borderRadius: 20, padding: 14, borderWidth: StyleSheet.hairlineWidth * 2 },
   tile: { width: '32%', flexGrow: 1, borderRadius: 11, paddingVertical: 9, paddingHorizontal: 10, gap: 3, overflow: 'hidden' },
   bubble: { alignSelf: 'flex-end', maxWidth: '82%', borderRadius: 16, paddingVertical: 11, paddingHorizontal: 14, borderWidth: StyleSheet.hairlineWidth * 2 },
-  chip: { height: 36, paddingHorizontal: 14, borderRadius: radius.sm, justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth * 2 },
+  chip: { height: 36, paddingHorizontal: 14, borderRadius: radius.sm, justifyContent: 'center' },
   file: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.lg, padding: 14, borderWidth: StyleSheet.hairlineWidth * 2 },
   composer: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, borderRadius: 16, paddingHorizontal: 6, borderWidth: StyleSheet.hairlineWidth * 2 },
   cIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },

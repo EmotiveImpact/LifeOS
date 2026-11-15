@@ -720,3 +720,10 @@ Reduce Motion: springs become 160ms fades, drift and particles stop, and shared 
 - **v1 ships without "pictures that look like you", but with a diverse mixed cast.** Default `pictures.look = 'mix'`: each story moment shows a different person, so people of every race and gender appear across the app (`storyImage('mix', moment)`). 'places' stays available as an option. The per-look architecture (`Look`, `SCENES`) stays for v2.
 - The "Who should appear in your pictures?" question (§41) stays behind a `picturesLikeMe` feature flag, **off**, until: every frame is generated for full coverage (≥6 skin tones × 3 presentations × 2 age bands), each image is checked by a human for awkward or stereotyped poses, and it has been tested with real users.
 - **Never ask for race or ethnicity.** If enabled later, ask about appearance only (§41).
+
+## 45. v14 refinements (final)
+- **No borders on buttons.** Secondary buttons, square icon buttons, chips and plain tags are solid `surface-2` with no hairline. Cards, list groups, icon tiles and **avatars keep their hairline or ring**, because there the edge does a job (separating stacked surfaces, framing a face).
+- **The orb evolves** (MOTION.md §3.2, `LifeOrb`): ring → sphere → core → done. Ring everywhere by default; sphere only for real work over a second; core only for voice; never decorative.
+- **Imagery for Learn and moments** is the diverse daylight cast (people mid-moment: understanding, deciding, moving in), never a colour-field still life. The plant-on-blue `c-growth` frame is retired.
+- **Chat is back** as the Talk button's tap action: a clean thread, the Island growing into a card with the sphere orb while life checks things, two-tone replies with live cards inside, suggestion chips. Hold the button to talk.
+- **The board is organised by navigation** (tab → area → screen), and every screen states how it opens and where from. Build routes from that, not from feature names.

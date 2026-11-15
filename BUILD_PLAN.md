@@ -3,7 +3,7 @@
 > **Start with `MASTER_PLAN.md`** (order, stack, decisions). **Motion:** `MOTION.md` (every screen, state to state).
 > **Who does what:** Antigravity builds each phase. **Claude reviews** at every 🛑 gate before the next phase starts.
 > **Code references:** `IMPLEMENTATION_REFERENCES.md`: which open-source repos and exact files to study per feature, and what each licence allows. **Read the relevant section before building a feature.**
-> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v13.html`** (119 screens) (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
+> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v14.html`** (171 screens, organised by tab, each with how it opens) (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
 > **The app:** `apps/mobile` (Expo SDK 58, expo-router, Reanimated 4, Gesture Handler). Logic: `packages/core` (don't change its logic; strings only).
 
 ---
@@ -121,7 +121,7 @@ Library, Lens (THINKER_ATEAM + Napoleon Hill), Idea in 60 seconds (3 cards → a
 🛑 **Gate 8**
 
 ## Phase 8b — Teach me (SPEC §4.4 · MASTER_PLAN §3.5 · refs: your Feynman-voice-app `apps/api/src/lesson.ts`, `policy.ts`, `review.ts`, `apps/mobile/src/teach/*`, `ui/motion.ts`)
-The lesson engine (`ai.lesson`, `ai.analyse`, `ai.showMe`), the `TeachMeButton` (appears for any term not yet in the user's LearningRecord, and in Talk when they sound unsure), and the 11 Teach me screens on the v13 board: offer → lesson ready → bites with pictures → guess first → puzzle → recap → tell it back → how you did → You've got it → What you've learned, plus the playable flow as the motion reference. Life's tokens only (drop the Feynman app's glass and colours). Every lesson ends by returning to the action that needed it.
+The lesson engine (`ai.lesson`, `ai.analyse`, `ai.showMe`), the `TeachMeButton` (appears for any term not yet in the user's LearningRecord, and in Talk when they sound unsure), and the 10 Teach me screens on the v14 board: offer → lesson ready → bites with pictures → guess first → puzzle → recap → tell it back → how you did → You've got it → What you've learned, plus the playable flow as the motion reference. Life's tokens only (drop the Feynman app's glass and colours). Every lesson ends by returning to the action that needed it.
 🛑 **Gate 8b**
 
 ## Phase 9 — Grow + account (#30–34) + levels (SPEC §5 decision: Your levels, Routines, Bigger decisions, Area pages, Missions history, "Why am I seeing this?")
@@ -135,7 +135,7 @@ Motion pass (**every transition in MOTION.md**, §42), Reduce Motion, Dynamic Ty
 ---
 
 ## Phase 11 — Next level (SPEC §11)
-Calendar awareness, Experiments, Recovery forecast, Cycle-aware readiness, Fitness age first; then Watch companion, Private mode (on-device AI), What life remembers, Do it for me (approval required), Your data in your AI (MCP, read-only), One picture from all your devices, Glucose, Habit strength, Water/sitting/recovery, Shared life. All on the v13 board.
+Calendar awareness, Experiments, Recovery forecast, Cycle-aware readiness, Fitness age first; then Watch companion, Private mode (on-device AI), What life remembers, Do it for me (approval required), Your data in your AI (MCP, read-only), One picture from all your devices, Glucose, Habit strength, Water/sitting/recovery, Shared life. All on the v14 board.
 🛑 **Gate 11**
 
 ## Phase 12 — Beta

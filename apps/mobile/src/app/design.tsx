@@ -44,6 +44,8 @@ import {
   Countdown,
   Dock,
   DottedOrb,
+  LifeOrb,
+  type OrbState,
   ImageTreatment,
   LedgerRow,
   MetricRow,
@@ -285,6 +287,8 @@ function Column({ look, style }: { look: Look; style?: object }) {
         </View>
       </Section>
 
+      <OrbDemo />
+
       <MoreComponents look={look} />
 
       <Section title="sheet · dock (solid, no glass §43)">
@@ -458,5 +462,18 @@ function MoreComponents({ look }: { look: Look }) {
         ) : null}
       </Section>
     </>
+  );
+}
+
+/** The evolving orb (MOTION.md §3.2): tap a state to watch it morph. */
+function OrbDemo() {
+  const [state, setState] = useState<OrbState>('ring');
+  return (
+    <Section title="orb · ring → sphere → core → done">
+      <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+        <LifeOrb size={120} state={state} />
+      </View>
+      <Segmented<OrbState> options={(['ring', 'sphere', 'core', 'done'] as const).map((v) => ({ value: v, label: v }))} value={state} onChange={setState} />
+    </Section>
   );
 }

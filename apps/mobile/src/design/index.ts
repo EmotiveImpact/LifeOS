@@ -12,6 +12,7 @@ export * from './components/Surfaces';
 export * from './components/Progress';
 export * from './components/Story';
 export * from './components/Chrome';
+export * from './components/Orb';
 export * from './components/Pulse';
 export * from './components/Imagery';
 export * from './components/Controls';

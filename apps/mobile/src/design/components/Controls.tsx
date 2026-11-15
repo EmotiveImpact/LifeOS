@@ -264,9 +264,9 @@ export function ControlRow({ label, sub, children }: { label: string; sub?: stri
 
 const styles = StyleSheet.create({
   glyphs: { minHeight: 84, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 4, flexWrap: 'wrap' },
-  round: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth * 2 },
+  round: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   thumb: { position: 'absolute', top: 5, width: 22, height: 22, borderRadius: 7, backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 3 },
   seg: { flexDirection: 'row', padding: 3, borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth * 2 },
   segItem: { flex: 1, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  chip: { height: 38, paddingHorizontal: 14, borderRadius: radius.sm, justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth * 2 },
+  chip: { height: 38, paddingHorizontal: 14, borderRadius: radius.sm, justifyContent: 'center' },
 });

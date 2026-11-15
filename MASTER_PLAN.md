@@ -1,7 +1,7 @@
 # life — Master Plan
 
 > **The plan above all the other plans.** Start here. It says what life is, where every decision lives, which tech we're using and why, and the order everything happens in, from design to launch.
-> Last updated 15 Nov 2026 (design v13).
+> Last updated 15 Nov 2026 (design v14).
 
 ---
 
@@ -19,7 +19,7 @@
 | `DESIGN.md` | The look and the rules (§1–§44) | Everyone building screens |
 | `MOTION.md` | How every screen moves, state to state | Everyone building screens |
 | `IMPLEMENTATION_REFERENCES.md` | Which repos and files to learn from, and licence rules | Before each feature |
-| `design-board/life-design-board-v13.html` | **Every screen (119)**, the component library and the to-do list | The visual target |
+| `design-board/life-design-board-v14.html` | **Every screen (171), organised by tab**, the component library and the to-do list | The visual target |
 | `ANTIGRAVITY_PROMPT.md` | The prompt to start Antigravity | You, once |
 | `apps/mobile/src/design/` | The design system in code (tokens, 70+ components, feedback) | Every screen imports from here |
 | `packages/core` | The engine: every number in the app | Never hard-code a figure |
@@ -86,7 +86,7 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 
 | # | Phase | Ends with |
 |---|---|---|
-| 0 | **Design** (done: board v13, DESIGN, SPEC, MOTION, references, design system in code) | This plan |
+| 0 | **Design** (done: board v14, DESIGN, SPEC, MOTION, references, design system in code) | This plan |
 | 1 | Foundations: shell, tabs, store, every route | Gate 1 |
 | 1b | **Platform: EAS dev builds, Neon + API + auth, local-first SQLite, `ai.ts` + `voice.ts` interfaces, eval harness** | Gate 1b |
 | 2 | The core: Today, Plan, You | Gate 2 |
@@ -112,7 +112,7 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 
 ## 5. Every gate checks the same things
 1. Typecheck + iOS and Android bundles pass (Claude re-runs them).
-2. Screens match the v13 board and DESIGN.md, light and dark.
+2. Screens match the v14 board and DESIGN.md, light and dark.
 3. Motion matches MOTION.md, with Reduce Motion on and off.
 4. No hard-coded numbers; records filed correctly; nothing 🟡/🔴 copied.
 5. Copy is plain, specific and within the accuracy rules.
@@ -137,3 +137,4 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Voice behind `voice.ts`: on-device first, Phonon for speech, cloud fallback.** |
 | 15 Nov 2026 | **Models chosen per job by evals; no lock-in. Today's plan is decided by rules + a bandit, not an LLM.** |
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
+| 15 Nov 2026 | **v14: no borders on buttons (avatars and cards keep theirs); the orb evolves ring → sphere → core; chat restored; board organised by navigation; 171 screens.** |

@@ -54,7 +54,7 @@ Reanimated usage: `withSpring(v, motion.smooth)`; entering animations: `FadeIn.s
 | Checklist / HabitRow | todo → done | Box fills (bouncy), text greys and strikes through left to right (240 ms), row stays put. `complete`. |
 | NudgeCard | idle → dragging → done / dismissed | Follows the finger; past 40% it commits with velocity; done collapses the height with smooth. `complete` or `snap`. |
 | RollingNumeral / MoneyFigure | old → new value | Digits roll for 600 ms, decimals quieter. Reduce Motion: swap instantly. |
-| DottedOrb | idle · listening · thinking · speaking · done | Idle: slow rotation (8 s/turn). Listening: dots follow the voice level. Thinking: dots chase round (1.2 s/turn). Speaking: dots pulse with the words. Done: dots gather into a tick, then scatter back. |
+| LifeOrb (`Orb.tsx`) | ring · sphere · core · done | **Ring**: the everyday mark, 12 dots, 12 s/turn. **Sphere**: when life works for more than a second, the ring lifts (smooth) into 42 dots on a sphere turning in 3D (5.2 s/turn, 22° lean); near dots bigger and brighter. **Core**: when listening or speaking, an ember core glows *inside* the sphere (dots behind it dim) and breathes with the voice level. **Done**: dots gather (bouncy), then settle back to the ring. Rare on purpose. Reduce Motion: static state, no turning. `DottedOrb` stays for tiny sizes. |
 | FilingTray | item arrives | Phrase lifts out of the transcript and flies to its row (smooth), row count rolls. `file`. |
 | Card (complete) | open → cleared | Gain-green tint washes in from the left, then the card collapses. `cleared` sound. |
 | Toast / banner | in → out | Drops 8 px from the top with smooth, leaves after 3 s by fading up. |
