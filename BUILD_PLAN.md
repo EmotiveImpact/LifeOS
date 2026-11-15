@@ -1,7 +1,7 @@
 # life — Build Plan (v1)
 
 > **Who does what:** Antigravity builds each phase. **Claude reviews** at every 🛑 gate before the next phase starts.
-> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v10.html`** (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
+> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v11.html`** (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
 > **The app:** `apps/mobile` (Expo SDK 58, expo-router, Reanimated 4, Gesture Handler). Logic: `packages/core` (don't change its logic; strings only).
 
 ---
@@ -86,6 +86,7 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 - `planToday()` uses readiness, sleep debt and load (SPEC §1.1), with "Why am I seeing this?" on each decision.
 - Safety escalation for repeated low moods (§3.7).
 **Acceptance:** real data from at least one iPhone + one Android device; scores match hand-calculated test fixtures; unit tests for readiness, sleep need and debt.
+- **v11 functions (SPEC §3.8):** metric detail with honesty badges, How scores work, Body signals, Stress, Breathe, Journal + insights, Live workout (BLE Heart Rate Profile via `react-native-ble-plx`), auto-detected workouts, Sleep planner, Customise Today, Body coach. **Never connect to WHOOP straps over BLE.**
 🛑 **Gate 4b (includes a health-copy safety review)**
 
 ## Phase 4c — Fuel: photo food logging (SPEC §3.5)
@@ -115,7 +116,7 @@ L1: 30-day cash plan, Tax & NI. L2: Money (ledger, scrubber, hide balances), Sub
 Library, Lens (THINKER_ATEAM + Napoleon Hill), Idea in 60 seconds (3 cards → action → files an insight), **Teach it back (Feynman loop with `ai.grade`, SPEC §4.2)**, Ask through a lens, Recall (**FSRS** scheduling), Ideas into action. **Never quote, never impersonate.**
 🛑 **Gate 8**
 
-## Phase 9 — Grow + account (#30–34)
+## Phase 9 — Grow + account (#30–34) + levels (SPEC §5 decision: Your levels, Routines, Bigger decisions, Area pages, Missions history, "Why am I seeing this?")
 Weekly recap (PeekStack), Vantage point (ridge + gates), Level up (IntroCarousel, once per level, `feedback.cleared`), life+ (never blocks level 1), Settings (appearance, sound, haptics, hide balances, nudges, pictures: follow mood / glimpses, connected services, what life knows, export, delete).
 🛑 **Gate 9**
 

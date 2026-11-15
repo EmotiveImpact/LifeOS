@@ -132,6 +132,27 @@ Grounded in research, built to *stick*:
 - Repeated drained/anxious Pulses (5 of 7 days) or crisis language in Talk → a calm check-in + signposts: **NHS 111**, **Samaritans 116 123** (UK, free, 24/7), "talk to your GP". Never diagnose; never only an app response.
 - Lab results: explain + "ask your GP" (already in §31 accuracy rules).
 
+
+### 3.8 WHOOP-style functions, for any wearable (v11)
+Taken as **ideas** from open-source WHOOP companions (NOOP, OpenStrap Edge, Atria) and rebuilt in life's design language. **life never connects to a WHOOP strap directly over Bluetooth**: that relies on reverse engineering and breaks WHOOP's Terms of Service. WHOOP users connect through the official WHOOP API (§2.1); everyone else uses Apple Health, Health Connect, Oura, or a standard Bluetooth heart-rate strap.
+
+| Function | Screen | Data | Method |
+|---|---|---|---|
+| Metric detail (every metric) | HRV and others | any | value, personal normal range (shaded), 30-day trend, journal drivers, source, honesty badge |
+| **Honesty badges** | everywhere | — | *Validated* (checked against a reference device) · *Personal baseline* · *Estimate*. Badges upgrade as each score passes validation (Atria's approach) |
+| **How scores work** | `body/math` | — | every formula + citation (HRV: Task Force 1996; zones: Karvonen %HRR; load: Edwards TRIMP); no black boxes (NOOP's "transparent math") |
+| **Body signals** | `body/signals` | skin temp, respiration, RHR, SpO₂ | deviation from personal baseline; ≥2 drifting together → gentle "take it easy" + NHS 111. Wellness only |
+| **Stress (0–3)** | `body/stress` | HR, HRV, motion | HR above resting + lower HRV while still; labelled Estimate; offers Breathe |
+| **Breathe** | `body/breathe` | live HR optional | resonance breathing ~6 breaths/min, 2 min; shows HR change |
+| **Journal + insights** | `body/journal`, `body/insights` | user tags | evening tags → per-tag difference in next-day readiness, min 8 samples, "tends to" |
+| **Live workout** | `body/workout` | Apple Watch / Wear OS / **Bluetooth Heart Rate Profile (0x180D)** straps | live HR, zone, load vs today's target. Library: `react-native-ble-plx` (MIT) |
+| **Auto-detected workouts** | `body/detected` | HR + accelerometer | ask once; confirm, change type, or dismiss |
+| **Sleep planner** | `body/sleepplan` | sleep need + debt | wake time + goal (Full recovery / Enough / Minimum) → bedtime incl. sleep latency |
+| **Customise Today** | `body/customise` | prefs | up to 4 body numbers on Today |
+| **Body coach** | `body/coach` | DailyHealth | Ask grounded in your data; cites the numbers it used |
+
+**Licences:** OpenStrap Edge is **AGPL-3.0** (don't copy code); NOOP declares no licence (don't copy code); Atria is **MIT** (code reusable with attribution, mainly a Swift reference). NeuroKit2 (MIT, Python) is for validating algorithms offline against recorded data. The 7 open-hardware projects (HealthyPi, ZSWatch, etc.) are parked: a possible future life wearable, separate from the app.
+
 ---
 
 ## 4. Learning — teach so it sticks
@@ -164,6 +185,13 @@ After an idea's 3 cards: "Explain the barbell to a friend in 2–3 sentences." �
 Users can always **open any tool early** from Plan ("Unlock early" with a one-line warning). Levels guide; they don't lock people out of their own data.
 
 ---
+
+**Decision (v11): one life level, not one per area.**
+- The engine's 4 levels (`computeLifeLevelState`): **1 Stabilize · 2 Set your routines · 3 Build momentum · 4 Expand your options**. Use these exact names everywhere.
+- **Seasons:** after level 4, a new season starts and the new normal becomes level 1 again (`advanceOperatingRule` keeps routines running), so there's always a next vantage point.
+- **Chapters (`computeGameChapter`) are folded in**: the user's destination is the *theme* of the climb ("Climbing toward: your first home"), not a second ladder.
+- **Areas get progress, not levels**: each life area page shows how strong it is (ticks), plus its missions, routines and tools. Only one thing in the app is called a "level".
+- Screens: Your levels (`grow/levels`), Routines (`routines`), Bigger decisions (`grow/decisions`), Area pages (`area/[id]`), Vantage point, Level up.
 
 ## 6. Behaviour spec — components
 
@@ -262,6 +290,7 @@ type LearningRecord = { ideaId; readAt; teachBack?: { text; covered: string[]; m
 | 9.22 | **Representation** | Stereotyped or awkward images | Diverse cast now (§44); human review of every person image before it ships |
 | 9.23 | **Monetisation fit** | Paywall blocks core value | Level 1 free forever; life+ = devices, AI-heavy features (food photos, teach-back), advanced health |
 | 9.24 | **Support & trust** | No help path | In-app "Report a problem" with logs (opt-in); a "How life works" help section |
+| 9.26 | **Reverse-engineered wearables** | WHOOP ToS breach, App Review rejection, legal risk | Never read WHOOP straps over BLE. Official WHOOP API + HealthKit/Health Connect + standard BLE heart-rate straps only. Take ideas, not AGPL/unlicensed code |
 | 9.25 | **Disk space on the dev Mac** | Builds fail | Free ≥ 30 GB before Phase 1 (EAS dev builds + Android tooling are large) |
 
 ---
