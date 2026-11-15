@@ -174,6 +174,13 @@ Taken as **ideas** from open-source WHOOP companions (NOOP, OpenStrap Edge, Atri
 ### 4.2 The Feynman screen ("Teach it back")
 After an idea's 3 cards: "Explain the barbell to a friend in 2–3 sentences." → `ai.grade(explanation, idea)` returns `{ covered: [...], missing: [...], misconception?: string }` → shows the gaps as highlighted chips → "Re-read this bit" → retry → "You've got it" files a `learning` record and schedules recall.
 
+### 4.4 Teach me (lessons on demand)
+From the Feynman-voice-app (the owner's own code), rewritten in life's language. See MASTER_PLAN §3.5 and the v13 board chapter "Teach me".
+- **Trigger:** a `TeachMeButton` appears next to any term life shows that isn't in the user's `LearningRecord` (glossary terms are tagged in copy), and Talk offers "Want a two-minute lesson first?" when the user sounds unsure.
+- **Build:** `ai.lesson({ topic, idea, said?, level })` → `{ idea, bites[2–3]: { title, text, picture { kind: flow|compare|cycle|layers|parts|none, labels }, caption, puzzle { kind: true_false|choose|fill_gap|order|match, prompt, options, answer, why } }, recap, explainBack }`. Uses the user's own numbers from the engine; cached per topic + level.
+- **Flow:** bites (one asks for a guess before the reveal) → recap → tell it back (life asks why / what if, never explains) → `ai.analyse` (strengths quoted in their words, then gaps, the shakiest first) → optional `ai.showMe(gap)` then "now tell me in your own words" → You've got it → FSRS recall booked → back to the action that started it.
+- **Never:** punish a wrong answer, show red, or count learning that leads nowhere as progress.
+
 ### 4.3 Personalisation ("deep learning", used responsibly)
 - **LLM** (via backend) for language: talk extraction, Q&A with engine numbers, food photos, teach-back grading, drafts. Structured JSON outputs only, validated by schema; money/health answers grounded in engine data, never free-form numbers.
 - **Statistical models on device** for health baselines (rolling means/SD), correlations, and readiness: explainable and private.
@@ -263,7 +270,7 @@ type HealthSample = { id; type: 'sleep'|'hr'|'hrv'|'rhr'|'resp'|'steps'|'workout
 type DailyHealth = { date; sleep?: { inBed; asleep; stages?; bedtime; wake; performance; need; debt }; readiness?: { score; drivers }; load?: { score; zones }; fuel?: { kcal; protein; fibre; waterMl; targets } };
 type Habit = { id; name; tinyVersion; cue: string; place?: string; schedule: 'daily'|{ days: number[] }; autoFrom?: { type; threshold }; createdAt; status: 'active'|'graduated'|'paused'; log: { date; done: boolean; source: 'manual'|'auto' }[]; automaticity: { date; score: 1|2|3|4|5 }[] };
 type FoodEntry = { id; at; photoUri?; items: { name; dbId; grams; kcal; protein; carbs; fat; fibre; confidence }[]; confirmed: boolean };
-type LearningRecord = { ideaId; readAt; teachBack?: { text; covered: string[]; missing: string[] }; fsrs: { due; stability; difficulty }; applied?: { recordId; result } };
+type LearningRecord = { ideaId; source: 'library'|'teachme'; topic?: string; level?: 'simple'|'standard'|'deep'; origin?: { screen; recordId? }; readAt; guess?: { correct: boolean }; puzzles?: { kind; correct: boolean }[]; teachBack?: { text; covered: string[]; missing: string[] }; fsrs: { due; stability; difficulty }; applied?: { recordId; result } };
 // plus existing: FiledRecord (DESIGN §20), ChiefAim (§37), pulseLog, pictures prefs
 ```
 **Storage:** on device (SQLite via `expo-sqlite`) as the source of truth; encrypted backup/sync to the backend (§9.2). Health data is **never** put in iCloud and never used for ads.
@@ -275,7 +282,7 @@ type LearningRecord = { ideaId; readAt; teachBack?: { text; covered: string[]; m
 | # | Blind spot | Risk | Decision |
 |---|---|---|---|
 | 9.1 | **Everything-app overload** | Users bounce in week 1 | One move at a time, level-gated (§0, §5); usability-test onboarding with 5 people before beta |
-| 9.2 | **No backend yet** | No accounts, sync, AI, OAuth for WHOOP/Oura | Supabase (Postgres + auth + edge functions): Sign in with Apple/Google; row-level security; AI and OAuth via edge functions; client never holds API keys |
+| 9.2 | **No backend yet** | No accounts, sync, AI, OAuth for WHOOP/Oura | **Neon** (serverless Postgres, a branch per phase) + our own TypeScript API + Better Auth (or Neon's auth): Sign in with Apple/Google/email; row-level security as a second lock; AI and OAuth in the API; client never holds API keys (MASTER_PLAN §3.1) |
 | 9.3 | **Health data law** | UK GDPR special-category data; Apple/Google health policies | Explicit consent per data type; DPIA before beta; privacy policy in plain words; health data never in iCloud, never for ads; export + delete everything |
 | 9.4 | **Device breadth vs effort** | Garmin needs partner approval; many APIs | v1: HealthKit + Health Connect (covers most wearables via the phone) + WHOOP + Oura direct. v2: an aggregator for the long tail |
 | 9.5 | **Medical-device creep** | Readiness/lab advice → MHRA scope | Wellness framing, no diagnosis, referral language; legal review of health copy before launch |
@@ -329,6 +336,6 @@ Found by comparing life with the strongest open-source projects (see `IMPLEMENTA
 | 12 | **Metabolic (CGM)** | Consumer glucose sensors (via HealthKit) + Fuel = how meals affect *you* | HealthKit blood glucose |
 | 13 | **Habit strength score** | Forgiving progress (Loop's approach): misses lower it a little, they don't reset it | Our own EMA (Loop is GPL: ideas only) |
 | 14 | **Hydration, sedentary and heart-rate recovery** | Small daily signals people actually act on | HealthKit + simple rules |
-| 15 | **Shared life (Commune-style)** | Households share bills, chores, goals; partners share a Chief Aim | Supabase shared spaces (later) |
+| 15 | **Shared life (Commune-style)** | Households share bills, chores, goals; partners share a Chief Aim | Shared spaces in Postgres with per-member scopes (later) |
 
 v12 board shows #1–#5 and the Fuel upgrades as screens.

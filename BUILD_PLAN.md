@@ -1,8 +1,9 @@
 # life — Build Plan (v1)
 
+> **Start with `MASTER_PLAN.md`** (order, stack, decisions). **Motion:** `MOTION.md` (every screen, state to state).
 > **Who does what:** Antigravity builds each phase. **Claude reviews** at every 🛑 gate before the next phase starts.
 > **Code references:** `IMPLEMENTATION_REFERENCES.md`: which open-source repos and exact files to study per feature, and what each licence allows. **Read the relevant section before building a feature.**
-> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v12.html`** (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
+> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v13.html`** (119 screens) (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
 > **The app:** `apps/mobile` (Expo SDK 58, expo-router, Reanimated 4, Gesture Handler). Logic: `packages/core` (don't change its logic; strings only).
 
 ---
@@ -55,7 +56,9 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 
 ## Phase 1b — Platform (SPEC §7, §8, §9.2–9.3)
 - **EAS dev builds** for iOS + Android (HealthKit/Health Connect need them; Expo Go is no longer enough).
-- **Supabase**: Sign in with Apple + Google, row-level security, edge functions for AI and OAuth (WHOOP/Oura). No API keys in the app.
+- **Neon** (MASTER_PLAN §3.1): Postgres with a branch per phase, our own TypeScript serverless API, **Better Auth** (or Neon's auth) for Sign in with Apple + Google + email, row-level security as a second lock, object storage for photos. AI and OAuth (WHOOP/Oura) run in the API. No API keys in the app.
+- `src/services/voice.ts` interface (speech to text, text to speech, live) with on-device first (whisper.rn / Phonon) and a cloud fallback (MASTER_PLAN §3.2).
+- `tools/evals/`: the eval harness that picks a model per AI job (MASTER_PLAN §3.3).
 - **Local-first storage** with `expo-sqlite` (the source of truth) + queued sync; migrate the AsyncStorage store.
 - `src/services/ai.ts` interface (talk, ask, extract, food, grade) with schema-validated JSON, plus a stub implementation.
 - Consent screens per data type; privacy policy page; "What life knows" export/delete wired to the DB.
@@ -117,19 +120,30 @@ L1: 30-day cash plan, Tax & NI. L2: Money (ledger, scrubber, hide balances), Sub
 Library, Lens (THINKER_ATEAM + Napoleon Hill), Idea in 60 seconds (3 cards → action → files an insight), **Teach it back (Feynman loop with `ai.grade`, SPEC §4.2)**, Ask through a lens, Recall (**FSRS** scheduling), Ideas into action. **Never quote, never impersonate.**
 🛑 **Gate 8**
 
+## Phase 8b — Teach me (SPEC §4.4 · MASTER_PLAN §3.5 · refs: your Feynman-voice-app `apps/api/src/lesson.ts`, `policy.ts`, `review.ts`, `apps/mobile/src/teach/*`, `ui/motion.ts`)
+The lesson engine (`ai.lesson`, `ai.analyse`, `ai.showMe`), the `TeachMeButton` (appears for any term not yet in the user's LearningRecord, and in Talk when they sound unsure), and the 11 Teach me screens on the v13 board: offer → lesson ready → bites with pictures → guess first → puzzle → recap → tell it back → how you did → You've got it → What you've learned, plus the playable flow as the motion reference. Life's tokens only (drop the Feynman app's glass and colours). Every lesson ends by returning to the action that needed it.
+🛑 **Gate 8b**
+
 ## Phase 9 — Grow + account (#30–34) + levels (SPEC §5 decision: Your levels, Routines, Bigger decisions, Area pages, Missions history, "Why am I seeing this?")
 Weekly recap (PeekStack), Vantage point (ridge + gates), Level up (IntroCarousel, once per level, `feedback.cleared`), life+ (never blocks level 1), Settings (appearance, sound, haptics, hide balances, nudges, pictures: follow mood / glimpses, connected services, what life knows, export, delete).
 🛑 **Gate 9**
 
 ## Phase 10 — Polish and ship-readiness
-Motion pass (§42 on every screen), Reduce Motion, Dynamic Type 1.3×, VoiceOver labels, empty/error/offline states, an Android pass (back gesture, edge-to-edge, ripple-free presses), performance (lists virtualised, images sized).
+Motion pass (**every transition in MOTION.md**, §42), Reduce Motion, Dynamic Type 1.3×, VoiceOver labels, empty/error/offline states, an Android pass (back gesture, edge-to-edge, ripple-free presses), performance (lists virtualised, images sized).
 🛑 **Gate 10: final review against DESIGN.md §12 checklist.**
 
 ---
 
 ## Phase 11 — Next level (SPEC §11)
-Calendar awareness, Experiments, Recovery forecast, Cycle-aware readiness, Fitness age first; then Watch app, on-device AI, memory, approved actions, MCP, open-wearables, CGM, shared life.
+Calendar awareness, Experiments, Recovery forecast, Cycle-aware readiness, Fitness age first; then Watch companion, Private mode (on-device AI), What life remembers, Do it for me (approval required), Your data in your AI (MCP, read-only), One picture from all your devices, Glucose, Habit strength, Water/sitting/recovery, Shared life. All on the v13 board.
 🛑 **Gate 11**
+
+## Phase 12 — Beta
+TestFlight + Play internal testing with 20–50 people; crash reporting; privacy-preserving analytics (north star: moves completed per week); fix list.
+🛑 **Beta review**
+
+## Phase 13 — Launch
+Store listings and screenshots from the board, privacy labels, health and money review notes, support page.
 
 ## Later (not v1)
 Real AI model behind `ai.ts` (the interface ships in 1b) · Aggregator for long-tail devices (Terra/Junction/ROOK) · Open Banking / NHS / HMRC connections · VisionKit OCR · Live Activities + widgets · **"Pictures that look like you"** (§41, behind the `picturesLikeMe` flag, after full image coverage and user testing) · other countries · Commune-style shared households.

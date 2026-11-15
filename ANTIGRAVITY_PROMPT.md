@@ -1,11 +1,13 @@
 You are building **life**, an Expo app in `apps/mobile`. Claude designed it and will review your work at each gate.
 
 **Read these first, in this order:**
+0. `MASTER_PLAN.md`: the order of everything, the stack (Neon, voice, AI models) and the decisions log.
 1. `BUILD_PLAN.md`: the phases, tasks, acceptance criteria and 🛑 review gates. **This is your job list.**
 2. `SPEC.md`: **how everything works**: the Life Engine, health (devices, readiness, sleep, food, habits), learning (Feynman + spaced recall), the behaviour of every component and screen, the data model, and blind spots with decisions.
 3. `IMPLEMENTATION_REFERENCES.md`: the open-source repos and **exact files** to learn from for each feature, with licence rules (🟢 use, 🟡 ideas only, 🔴 don't touch). **Never copy 🟡 or 🔴 code.**
 4. `DESIGN.md`: the rules. Every section is numbered (§). Later sections override earlier ones; the key ones are §25–§28 (look), §29 + §32 (screens), §40 (Pulse = dot field), §42 (motion), §43 (no glass or blur), §44 (generic imagery for v1).
-5. The visual target: **`design-board/life-design-board-v12.html`, every screen (98): WHOOP-style health for any wearable, smarter food, next-level features, levels and the component library.** It supersedes v1–v11 wherever they differ. v8 is still the reference for motion demos.
+5. The visual target: **`design-board/life-design-board-v13.html`, every screen (119): Teach me lessons, WHOOP-style health for any wearable, smarter food, every next-level feature, levels and the component library.** It supersedes v1–v12 wherever they differ.
+5b. `MOTION.md`: how every screen moves from state to state. The board's "Play the whole lesson" screen shows the transitions working.
 6. `apps/mobile/src/design/`: the design system that already exists, and `/design`, the live component gallery.
 
 **How to work:**

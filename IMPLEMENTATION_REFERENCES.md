@@ -28,7 +28,8 @@
 | On-device LLM (option) | [mybigday/llama.rn](https://github.com/mybigday/llama.rn) | MIT | Small private model for extraction and coach drafts when offline |
 | On-device AI (option) | [software-mansion/react-native-executorch](https://github.com/software-mansion/react-native-executorch) | ⚠️ check (not detected) | Alternative to llama.rn; confirm the licence before use |
 | Local-first DB | [Nozbe/WatermelonDB](https://github.com/Nozbe/WatermelonDB) | MIT | Alternative to expo-sqlite for large health time series |
-| Sync to Supabase | [powersync-ja/powersync-js](https://github.com/powersync-ja/powersync-js) | Apache-2.0 | Local-first SQLite ↔ Supabase Postgres sync (SPEC §7) |
+| Sync to Postgres (Neon) | [powersync-ja/powersync-js](https://github.com/powersync-ja/powersync-js) | Apache-2.0 | Only if our own push/pull sync gets hard: local-first SQLite ↔ Postgres (MASTER_PLAN §3.1) |
+| Auth | [better-auth/better-auth](https://github.com/better-auth/better-auth) | MIT | Sign in with Apple, Google, email in our API, with Neon Postgres |
 | Wearable aggregator (self-hosted) | [the-momentum/open-wearables](https://github.com/the-momentum/open-wearables) | MIT | One API for many wearables (Garmin, Polar, Suunto…) without paying Terra; evaluate for Phase 4b v2 |
 | AI memory | [mem0ai/mem0](https://github.com/mem0ai/mem0) | Apache-2.0 | Patterns for long-term personal memory; map to FiledRecord (DESIGN §20) |
 | App framework | [expo/expo](https://github.com/expo/expo) | MIT | Examples for config plugins, EAS builds, background tasks |
@@ -85,7 +86,20 @@ Our version adds: the confirm/edit step, UK CoFID / Open Food Facts lookups, per
 | Finance app | [maybe-finance/maybe](https://github.com/maybe-finance/maybe) | 🟡 AGPL-3.0 | Ideas only: net-worth timeline, account grouping |
 | Device companion UX | [Freeyourgadget/Gadgetbridge](https://codeberg.org/Freeyourgadget/Gadgetbridge) | 🟡 AGPL-3.0 | Ideas only: pairing flows, user-controlled data |
 
-## 5. How to use this in the build
+## 5. Teach me — your own Feynman app ✅ (your code: copy freely)
+[EmotiveImpact/Feynman-voice-app](https://github.com/EmotiveImpact/Feynman-voice-app). The owner has OK'd reuse. Rewrite in life's tokens and naming; drop its glass and colours.
+
+| life feature | Files |
+|---|---|
+| Lesson builder (bites, pictures, puzzles, levels, caching, model fallback) | `apps/api/src/lesson.ts` |
+| Curious-friend teaching moves, "Teach me" offer line | `apps/api/src/policy.ts`, `docs/conversation-engine.md` |
+| Strengths + gaps analysis, "Show me" | `apps/api/src/review.ts`, `docs/behavioural-design.md` |
+| Lesson film, guess-before-reveal | `apps/mobile/src/teach/TeachMode.tsx`, `teach/Picture.tsx`, `teach/Puzzle.tsx`, `teach/Slider.tsx` |
+| Drawn pictures | `apps/mobile/src/scene/SceneView.tsx`, `scene/draw.ts`, `scene/things.ts` |
+| Motion springs (now `motion` in tokens.ts) | `apps/mobile/src/ui/motion.ts` |
+| On-device speech (Phonon) and voice providers | the Phonon Expo module and the voice services in `apps/api` |
+
+## 6. How to use this in the build
 - Each BUILD_PLAN phase lists the references it needs. Antigravity reads the files above **before** implementing that feature.
 - Ported logic lives in `packages/core/src/health/*` with a header comment naming the source repo, file and licence.
 - Maintain `THIRD_PARTY_NOTICES.md` for every 🟢 item used.

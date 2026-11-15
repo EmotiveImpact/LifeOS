@@ -129,3 +129,18 @@ export const springs = {
 } as const;
 
 export const durations = { quick: 160, item: 240, stagger: 40, roll: 600, wordStagger: 30 } as const;
+
+/**
+ * Duration-based springs (MOTION.md §2). Same feel on iOS and Android via Reanimated 4.
+ * Use these for new work; `springs` above stays for existing components.
+ * Adapted from the Feynman app's ui/motion.ts.
+ */
+export const motion = {
+  smooth: { duration: 550, dampingRatio: 0.85 },
+  snappy: { duration: 350, dampingRatio: 0.9 },
+  bouncy: { duration: 600, dampingRatio: 0.7 },
+  /** riseIn: opacity 0→1, translateY 14→0, scale 0.98→1 over 420ms. */
+  rise: { duration: 420, fromY: 14, fromScale: 0.98 },
+  /** Gap between items that enter one after another. */
+  stagger: 60,
+} as const;
