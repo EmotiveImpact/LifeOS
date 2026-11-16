@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import { Image, Linking, Modal, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { Button, CalendarDay, Card, Checklist, ChipGroup, ControlRow, FocusTimer, ImageTreatment, InsightCard, LifeOrb, ListRow, MetricRow, NotificationPreview, PhotoChip, Press, PulseCheckIn, SearchField, StatusPill, Text, Ticks, Toggle, TopBar, TwoTone, WeekStrip, feedback, radius, space, storyImage, useTokens, type Mood } from '@/design';
+import { Button, CalendarDay, Card, CapsuleMeter, Checklist, ChipGroup, ControlRow, FocusTimer, ImageTreatment, InsightCard, LifeOrb, ListRow, MetricRow, NotificationPreview, PhotoChip, Press, PulseCheckIn, SearchField, StatusPill, Text, Ticks, Toggle, TopBar, TwoTone, WeekStrip, feedback, radius, space, storyImage, useTokens, type Mood } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useDockVisibility } from '@/navigation/DockVisibility';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
-import { money, moodLines, seed } from '@/state/seed';
+import { money, moodLines, seed, seedTaxClaim } from '@/state/seed';
 import { Heading, Input, LocalNotice, Rows, Screen, Section, layout } from './Screen';
 import { IllnessCard } from './HealthDetails';
 import { ParentStateContent } from './States';
@@ -15,7 +15,7 @@ export function TodayScreen({ screen }: { screen: ScreenKey }) {
   const t = useTokens(), nav = useNavigation(), { data, set, flag, choose, draft, engine } = useSeed(), hideDock = useDockVisibility();
   const [mood, setMood] = useState<Mood | null>(null), [day, setDay] = useState(new Date(2026, 10, 16)), [searching, setSearching] = useState(false), [query, setQuery] = useState(''), [running, setRunning] = useState(false);
   const prevY = useRef(0), params = useLocalSearchParams<{ state?: string; nudge?: string }>();
-  const taskValue = engine.tasks.find(v => v.id === 'uk-hmrc-tax-code')?.estimatedValueAmount;
+  const taskValue = seedTaxClaim.refund;
   const questionIndex = Number(data.choices['today-question-index'] ?? 0);
   const questions = [
     { intro: 'Are you registered for ', focus: 'Self Assessment?', choices: ['Yes', 'No', 'Not sure'], why: 'Helps life find deadlines and reliefs you might be missing.' },
@@ -24,7 +24,7 @@ export function TodayScreen({ screen }: { screen: ScreenKey }) {
   ];
   const selectAnswer = (answer: string) => {
     const q = questions[questionIndex];
-    set({ records: [...data.records, { id: `question-${questionIndex}`, kind: 'answer', area: questionIndex === 0 ? 'work' : questionIndex === 1 ? 'money' : 'health', label: `${q.intro}${q.focus} ${answer}`, source: { type: 'question', at: new Date().toISOString() }, status: 'confirmed' }], profile: { ...data.profile, answeredQuestionIds: [...data.profile.answeredQuestionIds, `today-${questionIndex}`] } });
+    set({ records: [...data.records, { id: `question-${questionIndex}`, kind: 'answer', area: questionIndex === 0 ? 'work' : questionIndex === 1 ? 'money' : 'health', label: `${q.intro}${q.focus} ${answer}`, source: { type: 'question', at: new Date().toISOString() }, status: 'confirmed' }], knowledge: { ...data.knowledge, overall: Math.min(96, data.knowledge.overall + 5), recordCount: data.knowledge.recordCount + 1, areas: { ...data.knowledge.areas, [questionIndex === 0 ? 'work' : questionIndex === 1 ? 'money' : 'health']: Math.min(98, data.knowledge.areas[questionIndex === 0 ? 'work' : questionIndex === 1 ? 'money' : 'health'] + 5) } }, profile: { ...data.profile, answeredQuestionIds: [...data.profile.answeredQuestionIds, `today-${questionIndex}`] } });
     choose('today-question-index', String(questionIndex + 1)); feedback.file();
   };
   if (screen === 'today' && (params.state === 'emptytoday' || params.state === 'loadingtoday')) return <Screen screen={screen} title="Today"><ParentStateContent kind={params.state} /></Screen>;
@@ -34,7 +34,7 @@ export function TodayScreen({ screen }: { screen: ScreenKey }) {
     <TwoTone segments={[{ text: 'Nothing urgent — ', tone: 'quiet' }, { text: 'your rebate ' }, { text: 'needs ', tone: 'quiet' }, { text: 'one form ' }, { text: 'and your ', tone: 'quiet' }, { text: 'referral ' }, { text: 'expires in ', tone: 'quiet' }, { text: '9 days.' }]} />
     {data.pulseLog.length ? <MoodCard /> : <Button variant="secondary" label="How are you arriving?" onPress={() => nav.go('pulse')} />}
     <Card padding={space.sm} onPress={() => nav.go('body')}><View style={{ flexDirection: 'row' }}>{[{ label: 'Readiness', value: String(seed.health.readiness) }, { label: 'Sleep', value: '7h 10m' }, { label: 'Load', value: String(seed.health.load) }, { label: 'Fuel', value: seed.fuel.eaten.toLocaleString('en-GB') }].filter(v => data.flags[`hide-${v.label}`] !== true).map(v => <View key={v.label} style={{ flex: 1, alignItems: 'center', gap: space.xxs, paddingVertical: space.xxs }}><Text variant="callout" tone="ink2" numberOfLines={1}>{v.label}</Text><Text variant="title" numberOfLines={1}>{v.value}</Text></View>)}</View></Card>
-    <View style={layout.row}><Text variant="callout" tone="ink2">life knows you</Text><View style={{ height: 4, flex: 1, borderRadius: 2, backgroundColor: t.surface3 }}><View style={{ height: 4, width: `${Math.round(engine.areas.reduce((sum, a) => sum + a.progressPct, 0) / engine.areas.length)}%`, borderRadius: 2, backgroundColor: t.ink }} /></View><Text variant="callout">{`${Math.round(engine.areas.reduce((sum, a) => sum + a.progressPct, 0) / engine.areas.length)}%`}</Text></View>
+    <View style={layout.row}><Text variant="callout" tone="ink2">life knows you</Text><CapsuleMeter size="thin" value={data.knowledge.overall / 100} style={{ flex: 1 }} /><Text variant="callout">{`${data.knowledge.overall}%`}</Text></View>
     <Section title="life is asking" meta={questionIndex < questions.length ? `${questionIndex + 1} of ${questions.length}` : 'Done'}><Card style={{ gap: space.md }}>{questionIndex < questions.length ? <><TwoTone size="headline" segments={[{ text: questions[questionIndex].intro, tone: 'quiet' }, { text: questions[questionIndex].focus }]} /><ChipGroup options={questions[questionIndex].choices.map(v => ({ value: v, label: v }))} value={null} onChange={selectAnswer} /><Text variant="callout" tone="ink2">{questions[questionIndex].why}</Text></> : <Text variant="body">That’s everything for today. Talk to life any time to add more.</Text>}</Card></Section>
     <Section title="Things to know" meta="See all" onPress={() => nav.go('ttk')}><Press haptic="open" onPress={() => nav.go('ttk')}><InsightCard area="money" source="From your talk · 12 Nov" value={taskValue ? money(taskValue) : 'Tax code'} text="Your tax record is worth checking. One form gets it moving." /></Press></Section>
     <Checklist header={`To reach level ${Math.min(4, engine.level.currentLevel + 1)}`} items={engine.level.toAdvance.slice(0, 3).map(v => ({ label: v.label, done: v.done }))} onToggle={i => nav.go(i === 0 ? 'cashplan' : i === 1 ? 'taxcheck' : 'mission')} />
@@ -42,7 +42,7 @@ export function TodayScreen({ screen }: { screen: ScreenKey }) {
     <Section title="Worth doing today"><MissionPreview title="HMRC tax rebate" status="One form left" sub={taskValue ? `Est. ${money(taskValue)} · takes 6 min` : 'Check your code · takes 6 min'} filled={16} /><MissionPreview title="Hospital referral" status="Started" sub="Cardiology · Guy’s · expires in 9 days" filled={7} id="nhs-outpatient-referral" /></Section>
     {data.flags['lighter-day'] ? <IllnessCard /> : null}
     <BirthdayCard />
-    <Rows rows={[{ title: 'Your routines', to: 'routines' }, { title: 'Today’s shape', to: 'calendar' }, { title: 'Morning brief', to: 'morningbrief' }, { title: 'Close the day', to: 'evening' }, { title: 'Focus session', to: 'focus' }, { title: 'Your body this week', to: 'healthdigest' }, { title: 'Customise Today', to: 'customise' }]} />
+    <Rows rows={[{ title: 'Your routines', to: 'routines' }, { title: 'Today’s shape', to: 'calendar' }, { title: 'Morning brief', to: 'morningbrief' }, { title: 'Checking in', to: 'checkin' }, { title: 'Close the day', to: 'evening' }, { title: 'Focus session', to: 'focus' }, { title: 'Your body this week', to: 'healthdigest' }, { title: 'Customise Today', to: 'customise' }]} />
     <Modal visible={params.nudge === '1' && !data.flags['nudge-snoozed'] && !data.flags['nudge-dismissed']} transparent animationType="fade" onRequestClose={() => nav.replace('today')}><View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: t.scrim }}><Press accessibilityLabel="Close nudge" onPress={() => nav.replace('today')} style={{ flex: 1 }} /><View style={{ backgroundColor: t.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingBottom: space.xl }}><TopBar kind="sheet" title="From life" onClose={() => nav.replace('today')} /><View style={{ paddingHorizontal: space.gutter }}><NudgeContent /></View></View></View></Modal>
     <Modal visible={searching} animationType="fade" onRequestClose={() => setSearching(false)}><SearchOverlay query={query} setQuery={setQuery} onClose={() => setSearching(false)} /></Modal>
   </Screen>;

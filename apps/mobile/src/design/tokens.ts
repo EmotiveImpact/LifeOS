@@ -105,6 +105,8 @@ export const type = {
   statement: { fontFamily: fonts.sansMedium, fontSize: 24, lineHeight: 31, letterSpacing: -0.53 },
   headline: { fontFamily: fonts.sansSemibold, fontSize: 20, lineHeight: 26, letterSpacing: -0.4 },
   title: { fontFamily: fonts.sansSemibold, fontSize: 16, lineHeight: 21, letterSpacing: -0.22 },
+  button: { fontFamily: fonts.sansSemibold, fontSize: 15, lineHeight: 22, letterSpacing: -0.18 },
+  buttonCompact: { fontFamily: fonts.sansSemibold, fontSize: 14, lineHeight: 20, letterSpacing: -0.12 },
   body: { fontFamily: fonts.sans, fontSize: 15, lineHeight: 22, letterSpacing: -0.12 },
   callout: { fontFamily: fonts.sansMedium, fontSize: 13, lineHeight: 18, letterSpacing: -0.04 },
   mono: { fontFamily: fonts.mono, fontSize: 12.5, lineHeight: 16, letterSpacing: 0 },
@@ -117,7 +119,9 @@ export type TypeStyle = keyof typeof type;
 export const space = { xxs: 4, xs: 8, sm: 12, md: 16, lg: 20, xl: 24, xxl: 32, xxxl: 48, gutter: 20, cardPad: 20, cardGap: 12, section: 32 } as const;
 
 /** v4: tighter, more precise. Buttons are 14pt slabs; pills only for tags/chips. */
-export const radius = { xs: 7, sm: 10, md: 12, lg: 20, xl: 28, button: 14, full: 999 } as const;
+export const radius = { xs: 7, sm: 10, md: 12, lg: 20, xl: 28, button: 14, score: 16, chart: 8, full: 999 } as const;
+
+export const componentSize = { progressCapsule: 30, progressBar: 6, progressThin: 4, lightField: 440, button: 50, moneyAccount: 140, cameraShutter: 74, cameraModes: 205, cameraBottom: 34, mealConfirmPhoto: 150, mealResultPhoto: 190, mealScore: 56 } as const;
 
 export const touch = { min: 44 } as const;
 

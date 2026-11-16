@@ -1,33 +1,22 @@
 {
-  "review": "Track A local rendered fidelity pass",
-  "viewport": {
-    "width": 393,
-    "height": 852
+  "review": "Track A local UI implementation and board-content follow-through",
+  "viewport": { "width": 393, "height": 852 },
+  "historicalWholeRouteCoverage": {
+    "sourceCommit": "f29859c",
+    "routes": 196,
+    "dark": { "rendered": 196, "runtimeErrors": 0, "horizontalOverflows": 0, "rootWidths": [393], "surfaces": ["#08090A", "#141517"] },
+    "light": { "rendered": 196, "runtimeErrors": 0, "horizontalOverflows": 0, "rootWidths": [393], "surfaces": ["#F7F7F8", "#FFFFFF"] },
+    "limit": "Runtime/layout coverage, not by itself a claim of matching every phone’s copy or composition."
   },
-  "routes": 196,
-  "dark": {
-    "rendered": 196,
-    "runtimeErrors": 0,
-    "horizontalOverflows": 0,
-    "rootWidths": [
-      393
-    ],
-    "surfaces": [
-      "#08090A",
-      "#141517"
-    ]
-  },
-  "light": {
-    "rendered": 196,
-    "runtimeErrors": 0,
-    "horizontalOverflows": 0,
-    "rootWidths": [
-      393
-    ],
-    "surfaces": [
-      "#F7F7F8",
-      "#FFFFFF"
-    ]
+  "finalContentReview": {
+    "file": "review/BOARD_PARITY.json",
+    "routesPerTheme": 29,
+    "themes": ["dark", "light"],
+    "additionalState": "New habit: full three-slot and reference two-slot states",
+    "missingListedFields": 0,
+    "horizontalPageOverflowsAfterFix": 0,
+    "capturedJavaScriptRuntimeErrors": 0,
+    "browserPolicyMessages": "Synthetic presses produced navigator.vibrate user-activation warnings; no JavaScript crash was captured."
   },
   "drawingKit": {
     "devices": 30,
@@ -37,25 +26,30 @@
     "drawingWarnings": 0,
     "drawingErrors": 0,
     "renderer": "Skia 2.14.0",
-    "wasm": "localhost/canvaskit.wasm"
+    "wasm": "localhost/canvaskit.wasm",
+    "scope": "Previously verified renderer unchanged by the final content patch."
+  },
+  "finalSource": {
+    "srcFiles": 280,
+    "srcTreeSha256": "2de1c8ad5065175312b514e9294124f6331d0e7505a67ccde85faacc6f9da617",
+    "fingerprintMethod": "SHA256 over sorted repo-relative apps/mobile/src file names, NUL separator and file contents",
+    "typecheck": "npx tsc --noEmit -p . → exit 0",
+    "diffCheck": "git diff --check → exit 0",
+    "coreChanges": 0
   },
   "exports": {
-    "sourceCommit": "f29859c",
-    "ios": { "modules": 3143, "hermesBundleMB": 7.7, "exitCode": 0, "output": "/tmp/life-track-a-final-ios-a9961c98" },
-    "android": { "modules": 3142, "hermesBundleMB": 7.7, "exitCode": 0, "output": "/tmp/life-track-a-final-android-a9961c98" }
+    "source": "finalSource fingerprint above; no application source changes after these exports",
+    "ios": { "modules": 3143, "hermesBundleMB": 7.7, "bundle": "entry-8f22440a03bbdd337c6e8e2b18a03ee8.hbc", "exitCode": 0, "output": "/tmp/life-track-a-reviewed-ios-1794819121" },
+    "android": { "modules": 3142, "hermesBundleMB": 7.8, "bundle": "entry-a112baa3792d78ca5fc57dd20f5d1356.hbc", "exitCode": 0, "output": "/tmp/life-track-a-reviewed-android-1794819121" },
+    "limit": "Hermes exports, not signed store builds."
   },
   "nativePlatformStubs": {
-    "widgets": "Native widget and Live Activity registration remains a local snapshot stub.",
-    "sharecard": "Local share preview; native image-share target remains stubbed.",
-    "watch": "Local watch layout; watchOS and Wear OS targets remain stubbed.",
-    "lockpush": "Local notification layouts; native delivery remains stubbed.",
-    "androidwidget": "Local Android widget layout; native widget registration remains stubbed.",
-    "siri": "Local shortcut response layout; Siri and Assistant registration remain stubbed."
+    "widgets": "UI preview; native widget and Live Activity registration remains Track B.",
+    "sharecard": "UI preview; native image-share target remains Track B.",
+    "watch": "UI preview; watchOS and Wear OS targets remain Track B.",
+    "lockpush": "UI preview; native delivery remains Track B.",
+    "androidwidget": "UI preview; native widget registration remains Track B.",
+    "siri": "UI preview; Siri and Assistant registration remains Track B."
   },
-  "limits": [
-    "No unit or end-to-end tests",
-    "No screenshot jobs",
-    "No native FPS benchmark",
-    "No real integrations"
-  ]
+  "limits": ["No unit or end-to-end tests", "No screenshot jobs", "No native FPS/full accessibility benchmark", "No real integrations", "Fresh reviewer assessed patch correctness, not all 221 visual/native states"]
 }

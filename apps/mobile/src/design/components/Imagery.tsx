@@ -94,7 +94,7 @@ function StoryPhoto({ source }: { source: ImageSourcePropType }) {
     return () => { cancelAnimation(scale); cancelAnimation(opacity); };
   }, [calm, source, scale, opacity]);
   const animated = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
-  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.surface2 }]}><Animated.Image source={source} resizeMode="cover" accessibilityIgnoresInvertColors onLoad={() => { opacity.value = calm ? 1 : withSpring(1, motion.imageFade); }} style={[StyleSheet.absoluteFill, animated]} /></View>;
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.surface2, overflow: 'hidden' }]}><Animated.Image source={source} resizeMode="cover" accessibilityIgnoresInvertColors onLoad={() => { opacity.value = calm ? 1 : withSpring(1, motion.imageFade); }} style={[StyleSheet.absoluteFill, animated]} /></View>;
 }
 
 /** A solid chip for text over photos (no glass, §43). */

@@ -250,17 +250,15 @@ export type MoneyFigureProps = {
   onToggleHidden?: () => void;
   onAtmosphere?: boolean;
   align?: 'left' | 'center';
+  decimals?: 0 | 2;
 };
 
 /** DESIGN.md §6.17: display whole part, quiet decimals, delta pill, and a privacy eye. */
-export function MoneyFigure({ value, currency = '£', size = 'xl', delta, hidden, onToggleHidden, onAtmosphere: onAtmos, align = 'center' }: MoneyFigureProps) {
+export function MoneyFigure({ value, currency = '£', size = 'xl', delta, hidden, onToggleHidden, onAtmosphere: onAtmos, align = 'center', decimals = 2 }: MoneyFigureProps) {
   const t = useTokens();
   const v = useRollingNumber(value);
-  const whole = Math.floor(Math.abs(v)).toLocaleString('en-GB');
-  const dec = Math.round((Math.abs(v) % 1) * 100)
-    .toString()
-    .padStart(2, '0')
-    .slice(0, 2);
+  const [digits, dec = '00'] = Math.abs(v).toFixed(decimals).split('.');
+  const whole = Number(digits).toLocaleString('en-GB');
   const tone: Tone = onAtmos ? 'paper' : 'ink';
   const quiet = onAtmos ? onAtmosphere.quiet : t.inkQuiet;
   const up = (delta?.pct ?? delta?.abs ?? 0) >= 0;
@@ -272,7 +270,7 @@ export function MoneyFigure({ value, currency = '£', size = 'xl', delta, hidden
           {up ? '▲' : '▼'} {delta.pct !== undefined ? `${Math.abs(delta.pct).toFixed(1)}%` : ''}
           {delta.abs !== undefined ? (
             <Text variant="callout" tone={onAtmos ? 'paper2' : 'ink2'}>
-              {'  '}
+              {delta.pct !== undefined ? ' · ' : ' '}
               {up ? '+' : '−'}
               {currency}
               {Math.abs(delta.abs).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -291,9 +289,7 @@ export function MoneyFigure({ value, currency = '£', size = 'xl', delta, hidden
                 {value < 0 ? '−' : ''}
                 {currency}
                 {whole}
-                <Text variant={size === 'xl' ? 'numeralXl' : 'numeralL'} style={{ color: quiet }}>
-                  .{dec}
-                </Text>
+                {decimals === 2 ? <Text variant={size === 'xl' ? 'numeralXl' : 'numeralL'} style={{ color: quiet }}>.{dec}</Text> : null}
               </>
             )}
           </Text>

@@ -26,13 +26,7 @@
     {
       "name": "board",
       "runtimeExecutable": "python3",
-      "runtimeArgs": [
-        "-m",
-        "http.server",
-        "5181",
-        "--directory",
-        "/Users/augustusedem/LifeOS/design-board"
-      ],
+      "runtimeArgs": ["/Users/augustusedem/LifeOS/apps/mobile/scripts/serve-board.py"],
       "port": 5181
     }
   ]

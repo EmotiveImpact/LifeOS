@@ -14,7 +14,7 @@ import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Body, Callout, Mono, Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
-import { durations, onAtmosphere, radius, springs } from '../tokens';
+import { durations, componentSize, onAtmosphere, radius, springs } from '../tokens';
 
 /* ───────────────────────── 5. Ticks ───────────────────────── */
 
@@ -121,7 +121,7 @@ export function Ticks({ count, filled = 0, variant = 'streak', activeIndex, onSc
 
 /* ───────────────────────── 6. CapsuleMeter ───────────────────────── */
 
-export function CapsuleMeter({ value, caption, onAtmosphere: onAtmos, style }: { value: number; caption?: string; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
+export function CapsuleMeter({ value, caption, onAtmosphere: onAtmos, size = 'capsule', color, style }: { value: number; caption?: string; onAtmosphere?: boolean; size?: 'capsule' | 'bar' | 'thin'; color?: string; style?: StyleProp<ViewStyle> }) {
   const t = useTokens();
   const calm = useCalmMotion();
   const [w, setW] = useState(0);
@@ -133,8 +133,8 @@ export function CapsuleMeter({ value, caption, onAtmosphere: onAtmos, style }: {
   const anim = useAnimatedStyle(() => ({ width: fill.value }));
   return (
     <View style={[{ gap: 8 }, style]} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: Math.round(value * 100) }}>
-      <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ height: 30, borderRadius: radius.full, backgroundColor: onAtmos ? onAtmosphere.tickEmpty : t.surface3, overflow: 'hidden' }}>
-        <Animated.View style={[{ height: '100%', borderRadius: radius.full, backgroundColor: onAtmos ? onAtmosphere.text : t.ink }, anim]} />
+      <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ height: size === 'thin' ? componentSize.progressThin : size === 'bar' ? componentSize.progressBar : componentSize.progressCapsule, borderRadius: radius.full, backgroundColor: onAtmos ? onAtmosphere.tickEmpty : t.surface3, overflow: 'hidden' }}>
+        <Animated.View style={[{ height: '100%', borderRadius: radius.full, backgroundColor: color ?? (onAtmos ? onAtmosphere.text : t.ink) }, anim]} />
       </View>
       {caption ? <Callout tone={onAtmos ? 'paper2' : 'ink2'}>{caption}</Callout> : null}
     </View>

@@ -1,17 +1,21 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { Image, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Press } from '../Press';
 import { Callout, Text, Title, type Tone } from '../Text';
 import { useTokens } from '../theme';
-import { atmospheres, cardShadow, onAtmosphere, radius, space, type Domain } from '../tokens';
+import Svg, { Circle, Defs, Mask, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { fieldMood, type FieldSignal } from '../lightFields';
+import { areaColors, atmospheres, cardShadow, componentSize, onAtmosphere, palette, radius, space, touch, type Domain } from '../tokens';
 
 /* ───────────────────────── 1. Atmosphere ───────────────────────── */
 
 export type AtmosphereProps = {
   domain?: Domain;
-  /** A photo instead of (or on top of) the domain gradient. */
+  signal?: FieldSignal;
+  opacity?: number;
+  /** A photo instead of the light field. */
   image?: ImageSourcePropType;
   /** Height in points. Default: 42% of the screen. */
   height?: number;
@@ -22,28 +26,24 @@ export type AtmosphereProps = {
  * DESIGN.md §6.1: photo or domain gradient across the top of a hero screen, dissolving into `canvas`.
  * Place it first inside the screen container; it sits behind content (absolute, no touches).
  */
-export function Atmosphere({ domain = 'calm', image, height, style }: AtmosphereProps) {
-  const t = useTokens();
+export function Atmosphere({ domain = 'calm', signal, opacity, image, height, style }: AtmosphereProps) {
+  const t = useTokens(), id = useId().replace(/:/g, '');
   const { height: winH } = useWindowDimensions();
-  const h = height ?? Math.round(winH * 0.42);
-  const stops = atmospheres[domain].stops;
-  return (
-    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { height: h, bottom: undefined }, style]}>
-      {image ? (
-        <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" />
-      ) : (
-        <LinearGradient colors={[stops[0], stops[1], stops[2]]} locations={[0, 0.45, 0.8]} style={StyleSheet.absoluteFill} />
-      )}
-      {/* Top scrim keeps the status bar and title readable (≥ 4.5:1 for paper text). */}
-      <LinearGradient colors={['rgba(14,14,17,0.35)', 'rgba(14,14,17,0)']} locations={[0, 0.4]} style={StyleSheet.absoluteFill} />
-      {/* Bottom fade into the paper. */}
-      <LinearGradient
-        colors={[hexA(t.canvas, 0), hexA(t.canvas, 1)]}
-        locations={[0.55, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-    </View>
-  );
+  const h = height ?? (image ? Math.round(winH * .42) : componentSize.lightField);
+  const area = signal ?? ({ money: 'money', health: 'health', admin: 'you', growth: 'ember', calm: 'work' } as const)[domain];
+  const color = area === 'ember' ? t.ember : area === 'mood' ? fieldMood : areaColors[t.scheme][area];
+  const alpha = opacity ?? (area === 'ember' ? t.scheme === 'dark' ? .28 : .18 : .22);
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { height: h, bottom: undefined }, style]}>
+    {image ? <><Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" /><LinearGradient colors={['rgba(14,14,17,0.35)', 'rgba(14,14,17,0)']} locations={[0, .4]} style={StyleSheet.absoluteFill} /><LinearGradient colors={[hexA(t.canvas, 0), hexA(t.canvas, 1)]} locations={[.55, 1]} style={StyleSheet.absoluteFill} /></> : <Svg width="100%" height={h}>
+      <Defs>
+        <RadialGradient id={`field-${id}`} cx="50%" cy="-5%" rx="70%" ry="55%"><Stop offset="0" stopColor={color} stopOpacity={alpha} /><Stop offset=".7" stopColor={color} stopOpacity={0} /></RadialGradient>
+        <RadialGradient id={`field-mask-${id}`} cx="50%" cy="0%" rx="60%" ry="50%"><Stop offset="0" stopColor={palette.dark.paper} stopOpacity={1} /><Stop offset="1" stopColor={palette.dark.paper} stopOpacity={0} /></RadialGradient>
+        <Pattern id={`field-dots-${id}`} patternUnits="userSpaceOnUse" width={14} height={14}><Circle cx={7} cy={7} r={1} fill={t.ink} opacity={.1} /></Pattern>
+        <Mask id={`field-clip-${id}`} maskType="alpha"><Rect width="100%" height={h} fill={`url(#field-mask-${id})`} /></Mask>
+      </Defs>
+      <Rect width="100%" height={h} fill={`url(#field-${id})`} /><Rect width="100%" height={h} fill={`url(#field-dots-${id})`} opacity={.5} mask={`url(#field-clip-${id})`} />
+    </Svg>}
+  </View>;
 }
 
 function hexA(hex: string, a: number): string {
@@ -126,11 +126,12 @@ export type ButtonProps = {
   onAtmosphere?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
   disabled?: boolean;
+  compact?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
 /** DESIGN.md §6.13: one primary per screen. Verb + object labels ("Book appointment"). */
-export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAtmos, icon, disabled, style }: ButtonProps) {
+export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAtmos, icon, disabled, compact = false, style }: ButtonProps) {
   const t = useTokens();
   if (variant === 'link') {
     return (
@@ -151,10 +152,10 @@ export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAt
       disabled={disabled}
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
-      style={[styles.button, { backgroundColor: bg, opacity: disabled ? 0.4 : 1, height: primary ? 50 : 46 }, style]}
+      style={[styles.button, { backgroundColor: bg, opacity: disabled ? 0.4 : 1, height: compact ? touch.min : componentSize.button }, style]}
     >
       {icon ? <Ionicons name={icon} size={18} color={fg} /> : null}
-      <Text variant="title" style={{ color: fg, fontSize: primary ? 16 : 15 }}>
+      <Text variant={compact ? 'buttonCompact' : 'button'} style={{ color: fg }}>
         {label}
       </Text>
     </Press>

@@ -5,7 +5,7 @@ import Animated, { useAnimatedProps, useSharedValue, withSpring } from 'react-na
 import { Text } from '../Text';
 import { Press } from '../Press';
 import { useCalmMotion, useTokens } from '../theme';
-import { areaColors, cardShadow, motion, radius, space } from '../tokens';
+import { areaColors, cardShadow, componentSize, motion, radius, space } from '../tokens';
 import { RollingNumeral } from './Story';
 
 const ACircle = Animated.createAnimatedComponent(Circle);
@@ -34,7 +34,7 @@ export function MacroBars({ items }: { items: BarDatum[] }) {
 }
 export function ScoreBadge({ value, max = 10 }: { value: number; max?: number }) {
   const t = useTokens();
-  return <View style={{ width: 72, height: 72, borderRadius: radius.lg, backgroundColor: t.gainTint, alignItems: 'center', justifyContent: 'center' }}><Text variant="numeralL" tone="gain">{Math.round(value)}</Text><Text variant="callout" tone="ink2">{`of ${max}`}</Text></View>;
+  return <View style={{ width: componentSize.mealScore, height: componentSize.mealScore, borderRadius: radius.score, backgroundColor: t.gainTint, alignItems: 'center', justifyContent: 'center' }}><Text variant="headline" tone="gain">{Math.round(value)}</Text><Text variant="callout" tone="gain">{`/${max}`}</Text></View>;
 }
 /** One time axis, one series, with directly inspectable readings. No dual scales. */
 export function TrendLine({ values, labels, height = 96, band, color, unit = '', label = 'Trend', min, max }: { values: number[]; labels?: string[]; height?: number; band?: [number, number]; color?: string; unit?: string; label?: string; min?: number; max?: number }) {

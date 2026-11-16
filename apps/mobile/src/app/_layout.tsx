@@ -7,7 +7,6 @@ import { HeroUINativeProvider } from 'heroui-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SheetProvider, useLifeFonts, useTokens } from '@/design';
 import { SeedProvider, useSeed } from '@/state/SeedProvider';
-import { LifeProvider } from '@/state/useLifeStore';
 import '../global.css';
 
 void SplashScreen.preventAutoHideAsync();
@@ -22,5 +21,5 @@ function AppShell() {
   </Stack><StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} /></>;
 }
 export default function RootLayout() {
-  return <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider><HeroUINativeProvider><LifeProvider><SeedProvider><SheetProvider><AppShell /></SheetProvider></SeedProvider></LifeProvider></HeroUINativeProvider></SafeAreaProvider></GestureHandlerRootView>;
+  return <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider><HeroUINativeProvider><SeedProvider><SheetProvider><AppShell /></SheetProvider></SeedProvider></HeroUINativeProvider></SafeAreaProvider></GestureHandlerRootView>;
 }

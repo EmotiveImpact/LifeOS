@@ -201,7 +201,7 @@ export function FileCard({ prompt, savedText, onSave }: { prompt: string; savedT
 
 /* ───────────────────────── Composer ───────────────────────── */
 
-export function Composer({ value, onChangeText, onSend, onAttach, placeholder = 'Message' }: { value: string; onChangeText: (v: string) => void; onSend: () => void; onAttach?: () => void; placeholder?: string }) {
+export function Composer({ value, onChangeText, onSend, onTalk, onAttach, placeholder = 'Message' }: { value: string; onChangeText: (v: string) => void; onSend: () => void; onTalk?: () => void; onAttach?: () => void; placeholder?: string }) {
   const t = useTokens();
   const empty = value.trim().length === 0;
   return (
@@ -221,7 +221,7 @@ export function Composer({ value, onChangeText, onSend, onAttach, placeholder = 
         returnKeyType="send"
         accessibilityLabel={placeholder}
       />
-      <Press haptic="primary" onPress={onSend} disabled={empty} accessibilityLabel={empty ? 'Talk' : 'Send'} style={[styles.cIcon, { backgroundColor: t.ink, borderRadius: 12 }]}>
+      <Press haptic="primary" onPress={() => empty ? onTalk?.() : onSend()} disabled={empty && !onTalk} accessibilityLabel={empty ? 'Talk' : 'Send'} style={[styles.cIcon, { backgroundColor: t.ink, borderRadius: 12 }]}>
         <Ionicons name={empty ? 'mic' : 'arrow-up'} size={19} color={t.canvas} />
       </Press>
     </View>

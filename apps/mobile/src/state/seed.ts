@@ -1,17 +1,24 @@
 import { computeHealthTargets, computeIncomeBreakdown, computeLifeAreaProgress, computeLifeLevelState, computeLifeScore, DEFAULT_HEALTH_SNAPSHOT, DEFAULT_PROFILE, getEligibleTasks, TASK_CATALOG } from '@life/core/engine';
 import { compareUKBusinessStructures } from '@life/core/finance';
 import { compareRentAndBuy, type RentBuyInputs } from '@life/core/housing';
-import type { UserProfile } from '@life/core/types';
+import type { SubscriptionItem, UserProfile } from '@life/core/types';
 import type { Area } from '@/design/tokens';
 
 /** Local-only Track A fixtures. Observations are sample readings, not calculated scores.
- * Tax, take-home, life level, understanding, task values and health targets use core.
+ * Tax, take-home, life level, task values and health targets use core.
  * New health/Fuel algorithms remain seeded previews until Track B (core is unchanged). */
 export const SEED_DATE = '2026-11-16';
+export const seedSubscriptions: SubscriptionItem[] = [
+  { id: 'adobe', name: 'Adobe Creative Cloud', monthlyCost: 56.98, category: 'Software', essential: true, cancelled: false },
+  { id: 'netflix', name: 'Netflix', monthlyCost: 12.99, category: 'Media', essential: false, cancelled: false },
+  { id: 'gym', name: 'Gym Group', monthlyCost: 18.99, category: 'Fitness', essential: false, cancelled: false },
+  { id: 'icloud', name: 'iCloud+ 200GB', monthlyCost: 2.99, category: 'Software', essential: true, cancelled: false },
+];
+export const seedSubscriptionDetails: Record<string, string> = { adobe: 'Renews in 4 days', netflix: 'Not used in 74 days', gym: 'Not used in 61 days', icloud: 'Renews 2 Dec' };
 export const seedProfile: UserProfile = {
   ...DEFAULT_PROFILE, name: 'Ama', age: 27, workStatus: 'sole-trader', annualIncome: 48000,
-  isBusinessOwner: true, destination: 'buy-home', householdSize: 3,
-  monthlyPensionPct: 0, employerMatchPct: 0, habitStreakDays: 4,
+  isBusinessOwner: true, destination: 'buy-home', householdSize: 1,
+  monthlyPensionPct: 5, employerMatchPct: 3, habitStreakDays: 4, subscriptions: seedSubscriptions,
   health: { ...DEFAULT_HEALTH_SNAPSHOT, weightKg: 74.2, trainingDays: 4, waterMlToday: 1400, sleepHoursAvg: 7 + 10 / 60 },
 };
 export const seedPulseLog = ['calm', 'calm', 'driven', 'peaceful', 'restless', 'drained', 'calm', 'calm', 'driven', 'peaceful', 'anxious', 'calm', 'peaceful', 'calm'].map((moodId, i) => ({ at: new Date(Date.UTC(2026, 10, i + 3, 8)).toISOString(), moodId, x: .5, y: .5 }));
@@ -24,13 +31,42 @@ export const moodLines: Record<string, [string, string]> = {
   peaceful: ['A soft, steady day.', 'Health and home come first.'],
 };
 export const money = (n: number, decimals = 0) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n);
+export const moneyCompact = (value: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', notation: 'compact', maximumFractionDigits: 1 }).format(value).replace('K', 'k').replace('M', 'm');
 export function engineSnapshot(profile = seedProfile, completed: string[] = []) {
   const tasks = getEligibleTasks(profile, completed);
   return { tasks, income: computeIncomeBreakdown(profile), level: computeLifeLevelState(profile, tasks, completed), score: computeLifeScore(profile, completed), areas: computeLifeAreaProgress(profile, tasks, completed), targets: computeHealthTargets(profile.health ?? DEFAULT_HEALTH_SNAPSHOT), structures: compareUKBusinessStructures(profile) };
 }
+const payslipProfile: UserProfile = { ...seedProfile, annualIncome: 30000, workStatus: 'employed', isBusinessOwner: false, monthlyPensionPct: 0, employerMatchPct: 0, taxSettings: {}, taxCode: '1257L' };
+export const seedPayslip = computeIncomeBreakdown(payslipProfile);
+// Whole-pound picture labels must still add up after presentation rounding.
+export const seedPayslipPicture = { pay: Math.round(seedPayslip.grossMonthly), free: Math.floor((seedPayslip.uk?.personalAllowance ?? 0) / 12), taxed: Math.round(seedPayslip.grossMonthly) - Math.floor((seedPayslip.uk?.personalAllowance ?? 0) / 12) };
+const codedPay = computeIncomeBreakdown({ ...payslipProfile, taxCode: '961L' });
+const workExpenses = 1240;
+const afterExpenseClaim = computeIncomeBreakdown({ ...payslipProfile, annualIncome: payslipProfile.annualIncome - workExpenses });
+export const seedTaxClaim = {
+  workExpenses,
+  expenseRelief: Math.round(seedPayslip.incomeTaxAnnual - afterExpenseClaim.incomeTaxAnnual),
+  refund: Math.round(Math.max(0, (codedPay.uk?.estimatedWithholdingAnnual ?? codedPay.incomeTaxAnnual) - afterExpenseClaim.incomeTaxAnnual)),
+  reference: 'P800-7Q2-K41',
+  note: 'Illustrative annual PAYE/expense scenario, calculated by the existing engine; not a live HMRC record.',
+};
 export type FiledRecord = { id: string; kind: 'fact' | 'insight' | 'mission' | 'decision' | 'goal' | 'answer'; area: Area; label: string; value?: string | number; profilePatch?: Partial<UserProfile>; taskId?: string; source: { type: 'talk' | 'chat' | 'question' | 'document' | 'record'; at: string; excerpt?: string }; status: 'proposed' | 'confirmed' | 'removed' };
 export type ChiefAim = { what: string; when: string; give: string; plan: string; createdAt: string; history: string[]; readLog: string[] };
-export const seedAim: ChiefAim = { what: 'Own a two-bed flat', when: 'June 2029', give: 'Save every payday and grow my design work', plan: 'Claim what I’m owed, then build my deposit', createdAt: SEED_DATE, history: [], readLog: [] };
+export const seedAim: ChiefAim = { what: 'own a two-bed flat in South London', when: 'June 2029', give: 'save £800 a month and grow my design rate by 20%', plan: 'lifetime ISA first, then a mortgage in principle by 2028', createdAt: SEED_DATE, history: [], readLog: Array.from({ length: 21 }, (_, i) => `${new Date(Date.UTC(2026, 9, 27 + i)).toISOString().slice(0, 10)}-morning`) };
+/** Paged UI-repository metadata from the board. Facts coverage is a Track A
+ * fixture, not the core’s area-readiness metric or a claimed live calculation. */
+export const seedKnowledge = { overall: 64, recordCount: 214, areas: { you: 70, home: 55, work: 40, money: 75, health: 45, goal: 30 } as Record<Area, number> };
+export const knowledgeLabels: Record<Area, string> = { you: 'You', home: 'Home', work: 'Work', money: 'Money', health: 'Health', goal: 'Goals' };
+export const seedKnownRecords: FiledRecord[] = [
+  { id: 'age', kind: 'fact', area: 'you', label: 'Age 27, London', value: 27, source: { type: 'talk', at: '2026-11-12', excerpt: 'From your talk · 12 Nov' }, status: 'confirmed' },
+  { id: 'home', kind: 'fact', area: 'home', label: 'Lives alone', value: 1, source: { type: 'talk', at: '2026-11-12', excerpt: 'From your talk · 12 Nov' }, status: 'confirmed' },
+  { id: 'work', kind: 'fact', area: 'work', label: 'Self-employed designer', source: { type: 'talk', at: '2026-11-12', excerpt: 'From your talk · 12 Nov' }, status: 'confirmed' },
+  { id: 'rent', kind: 'fact', area: 'money', label: `Rent ${money(1150)} a month`, value: 1150, source: { type: 'talk', at: '2026-11-12', excerpt: 'From your talk · 12 Nov' }, status: 'confirmed' },
+  { id: 'referral', kind: 'fact', area: 'health', label: 'Heart referral, 11 weeks', source: { type: 'record', at: SEED_DATE, excerpt: 'From your NHS record' }, status: 'confirmed' },
+  { id: 'buffer-known', kind: 'goal', area: 'money', label: `Buffer target ${money(1820 * 3)}`, value: 1820 * 3, source: { type: 'record', at: SEED_DATE, excerpt: 'From an idea you read' }, status: 'confirmed' },
+  { id: 'aim', kind: 'goal', area: 'goal', label: 'Own a two-bed flat by June 2029', source: { type: 'record', at: SEED_DATE, excerpt: 'Your Chief Aim' }, status: 'confirmed' },
+  { id: 'sleep-known', kind: 'fact', area: 'health', label: 'Average sleep 6h 58m', source: { type: 'record', at: SEED_DATE, excerpt: 'From Apple Health' }, status: 'confirmed' },
+];
 export const seedRecords: FiledRecord[] = [
   { id: 'age', kind: 'fact', area: 'you', label: 'Age 27, London', value: 27, source: { type: 'talk', at: SEED_DATE }, status: 'proposed' },
   { id: 'home', kind: 'fact', area: 'home', label: 'Lives with 2 flatmates', value: 3, profilePatch: { householdSize: 3 }, source: { type: 'talk', at: SEED_DATE }, status: 'proposed' },
@@ -40,15 +76,28 @@ export const seedRecords: FiledRecord[] = [
   { id: 'aim', kind: 'goal', area: 'goal', label: 'Buy a first home', source: { type: 'talk', at: SEED_DATE }, status: 'proposed' },
   { id: 'rent', kind: 'fact', area: 'money', label: `Rent ${money(1150)} a month`, value: 1150, source: { type: 'talk', at: SEED_DATE }, status: 'proposed' },
 ];
-export const seedPeople = [
-  { id: 'kofi', name: 'Kofi', relation: 'Brother', date: '20 November', days: 4, note: 'Loves cooking. Last year: a good chef’s knife.' },
-  { id: 'mum', name: 'Mum', relation: 'Family', date: '8 December', days: 22, note: 'Call on Sundays.' },
-  { id: 'sarah', name: 'Sarah', relation: 'Friend', date: '12 January', days: 57, note: 'Met at work.' },
+export type SeedPerson = { id: string; name: string; relation: string; date: string; days: number; note: string; summary?: string; shortDate?: string };
+export const seedPeople: SeedPerson[] = [
+  { id: 'kofi', name: 'Kofi', relation: 'Brother', date: '18 November', days: 4, note: 'Running vest · “his old one’s falling apart”', summary: 'Birthday Saturday · turning 31', shortDate: 'Sat' },
+  { id: 'efua', name: 'Grandma Efua', relation: 'Grandma', date: '14 December', days: 30, note: 'Call every two weeks.', summary: 'Called 2 weeks ago' },
+  { id: 'priya', name: 'Priya', relation: 'Friend', date: '2 December', days: 18, note: '', summary: 'Birthday 2 Dec', shortDate: '2 Dec' },
+  { id: 'sam', name: 'Sam', relation: 'Partner', date: '9 January', days: 56, note: '', summary: 'Anniversary 9 Jan', shortDate: '9 Jan' },
+  { id: 'tom', name: 'Tom', relation: 'Friend', date: '', days: 0, note: '', summary: 'Haven’t spoken in 6 weeks' },
+  { id: 'mum', name: 'Mum', relation: 'Family', date: '29 November', days: 15, note: 'Call on Sundays.' },
+  { id: 'daniel', name: 'Daniel Okafor', relation: 'Friend', date: '30 April', days: 167, note: '' },
+  { id: 'hannah', name: 'Hannah Lee', relation: 'Friend', date: '', days: 0, note: '' },
+  { id: 'sarah', name: 'Sarah', relation: 'Friend', date: '12 January', days: 59, note: 'Met at work.' },
+  { id: 'ama-sister', name: 'Ama', relation: 'Sister', date: '3 March', days: 109, note: 'Birthday plans · from Talk.' },
+  { id: 'kwame', name: 'Grandpa Kwame', relation: 'Grandpa', date: '14 December', days: 0, note: 'Remembered quietly · no reminder.' },
+  { id: 'noa', name: 'Noa', relation: 'Friend', date: '', days: 0, note: '' },
 ];
 export const seedDocuments = [
-  { id: 'passport', name: 'Passport', expires: '8 June 2028', actFrom: 'December 2027', reference: '•••• 4821' },
-  { id: 'insurance', name: 'Car insurance', expires: '12 December 2026', actFrom: '21 November 2026', reference: 'POL-48210' },
-  { id: 'mot', name: 'MOT', expires: '18 March 2027', actFrom: '18 February 2027', reference: 'Saved from your document' },
+  { id: 'insurance', name: 'Car insurance', expires: '14 February 2027', actFrom: '24 January 2027', reference: 'POL-48210', summary: 'Renews 14 Feb · compare from 24 Jan', status: 'Act now' },
+  { id: 'mot', name: 'Car MOT', expires: '12 January 2027', actFrom: '12 December 2026', reference: 'Saved from your document', summary: 'Due 12 Jan', status: '' },
+  { id: 'passport', name: 'Passport', expires: '12 August 2027', actFrom: 'February 2027', reference: '•••• 4821', summary: 'Expires Aug 2027', status: '' },
+  { id: 'railcard', name: 'Railcard', expires: '3 March 2027', actFrom: 'February 2027', reference: 'Saved from your document', summary: 'Expires 3 Mar', status: '' },
+  { id: 'licence', name: 'Driving licence photo', expires: '2031', actFrom: '2030', reference: 'Saved from your document', summary: 'Expires 2031', status: 'Sorted' },
+  { id: 'tv', name: 'TV Licence', expires: 'October 2027', actFrom: 'September 2027', reference: 'Saved from your document', summary: 'Paid to Oct 2027', status: 'Sorted' },
 ];
 export type MealItem = { name: string; grams: number; kcal: number; protein: number; carbs: number; fat: number; fibre: number; confidence: number };
 export const seedMeal: MealItem[] = [
@@ -58,6 +107,8 @@ export const seedMeal: MealItem[] = [
   { name: 'Edamame', grams: 40, kcal: 48, protein: 5, carbs: 4, fat: 2, fibre: 2, confidence: .9 },
   { name: 'Egg', grams: 50, kcal: 72, protein: 7, carbs: 0, fat: 5, fibre: 0, confidence: .9 },
 ];
+export type SeedHabit = { id: string; name: string; cue: string; last14: (boolean | undefined)[]; day?: number; automaticity?: number; source?: string; shortCue?: string };
+export const seedHabitStrength = { name: 'Morning walk', strength: 71, beforeMiss: 73, day: 38, typicalDays: 66 };
 export const seed = {
   membership: { annual: 48, monthly: 6, annualRenewal: 59.99 },
   date: SEED_DATE,
@@ -68,14 +119,34 @@ export const seed = {
     zones: [{ name: 'Zone 5', range: '176–190', minutes: 8 }, { name: 'Zone 4', range: '162–175', minutes: 22 }, { name: 'Zone 3', range: '148–161', minutes: 41 }, { name: 'Zone 2', range: '134–147', minutes: 164 }, { name: 'Zone 1', range: '120–133', minutes: 58 }],
     stages: [{ stage: 'light' as const, minutes: 65 }, { stage: 'deep' as const, minutes: 90 }, { stage: 'rem' as const, minutes: 44 }, { stage: 'awake' as const, minutes: 10 }, { stage: 'light' as const, minutes: 153 }, { stage: 'rem' as const, minutes: 68 }],
   },
-  fuel: { kcal: 2300, targetWeight: 70, pace: .5, protein: 140, carbs: 260, fat: 75, fibre: 30, eaten: 1060, burned: 600, mealFit: 8.4, macros: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Carbs', value: 150, max: 260, unit: 'g' }, { label: 'Fat', value: 48, max: 75, unit: 'g' }],
+  fuel: { kcal: 2300, targetWeight: 70, pace: .5, protein: 140, carbs: 260, fat: 75, fibre: 30, eaten: 1060, burned: 600, mealFit: 8.4, loggedMealTotals: { kcal: 705, protein: 49, carbs: 62, fat: 28, fibre: 9 }, macros: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Carbs', value: 150, max: 260, unit: 'g' }, { label: 'Fat', value: 48, max: 75, unit: 'g' }],
     savedMeals: [{ name: 'Usual breakfast', detail: 'Yoghurt, berries, oats', kcal: 420 }, { name: 'Salmon rice bowl', detail: 'From Itsu', kcal: 705 }, { name: 'Chicken wrap', detail: 'Homemade', kcal: 560 }, { name: 'Protein shake', detail: 'Whey + oat milk', kcal: 240 }],
-    nutrients: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Fibre', value: 18, max: 30, unit: 'g' }, { label: 'Sugar', value: 42, max: 90, unit: 'g' }, { label: 'Salt', value: 3.2, max: 6, unit: 'g' }, { label: 'Saturated fat', value: 14, max: 20, unit: 'g' }, { label: 'Iron', value: 10, max: 14.8, unit: 'mg' }, { label: 'Calcium', value: 580, max: 700, unit: 'mg' }, { label: 'Vitamin D', value: 6, max: 10, unit: 'µg' }],
+    nutrients: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Fibre', value: 21, max: 30, unit: 'g' }, { label: 'Sugar', value: 48, max: 90, unit: 'g' }, { label: 'Salt', value: 4.1, max: 6, unit: 'g' }, { label: 'Saturated fat', value: 14, max: 20, unit: 'g' }, { label: 'Iron', value: 9.2, max: 14.8, unit: 'mg' }, { label: 'Calcium', value: 820, max: 700, unit: 'mg' }, { label: 'Vitamin D', value: 3, max: 10, unit: 'µg' }],
   },
-  finance: { rent: 1150, councilTaxAnnual: 1812, balance: 12847.5, deposit: 12000, depositGoal: 50000, income: 48000, savingsMonthly: 350, insuranceRenewal: 612, insuranceQuote: 488, bufferMonths: 3, essentials: 1800, expenses: [{ name: 'Rent', amount: 1150 }, { name: 'Bills', amount: 220 }, { name: 'Food', amount: 280 }, { name: 'Travel', amount: 150 }], transactions: [{ name: 'Salary', detail: 'Monzo · today', amount: 2500 }, { name: 'Itsu', detail: 'Lunch · today', amount: -12.5 }, { name: 'TfL', detail: 'Travel · today', amount: -6.8 }, { name: 'Spotify', detail: 'Subscription · yesterday', amount: -10.99 }], },
-  habits: [{ id: 'walk', name: 'Morning walk', cue: 'After my first coffee, I will walk for 2 minutes, outside.', last14: [true, true, true, false, true, true, true, true, true, true, true, true, false, false] }, { id: 'water', name: 'A glass of water', cue: 'After the kettle boils, I will drink a glass of water, in the kitchen.', last14: [true, true, false, true, true, true, true, true, true, true, true, false, true, true] }, { id: 'bed', name: 'Wind down', cue: 'After brushing my teeth, I will put my phone away, in the bedroom.', last14: [true, false, true, true, true, true, false, true, true, true, true, true, true, true] }],
+  finance: {
+    rent: 1150, councilTaxAnnual: 1812, councilTaxMonthly: 148, balance: 2340.5, deposit: 11760, depositGoal: 49000,
+    income: 48000, structureProfit: 50000, accountantFees: 1000, savingsMonthly: 800, bufferSavingMonthly: 180,
+    insuranceRenewal: 612, insuranceQuote: 488, bufferMonths: 3, essentials: 1820,
+    cashplan: { comingIn: 2410, essentialBills: 1820, taxSetAside: 300 },
+    niRecord: { years: 9, targetYears: 35, gapYear: '2021/22', indicativeCost: 900, indicativeAnnualPension: 340 },
+    balanceChange: { pct: 12.4, amount: 260.2 },
+    accounts: [{ name: 'Everyday', amount: 612.4 }, { name: 'Bills pot', amount: 1148.1 }, { name: 'Buffer', amount: 580 }],
+    expenses: [{ name: 'Rent', amount: 1150 }, { name: 'Bills', amount: 240 }, { name: 'Food', amount: 280 }, { name: 'Travel', amount: 150 }],
+    transactions: [{ name: 'Salary · Acme Ltd', detail: 'Income', amount: 2410.66 }, { name: 'Rent', detail: 'Standing order', amount: -1150 }, { name: 'Moved to buffer', detail: 'Payday sweep', amount: -180 }, { name: 'Adobe Creative Cloud', detail: 'Subscription', amount: -56.98 }],
+    payment: { name: 'Tesco', detail: '14 Nov, 18:22', amount: -42.17 },
+    budget: [{ name: 'Rent', spent: 950, limit: 950 }, { name: 'Groceries', spent: 186, limit: 240 }, { name: 'Going out', spent: 142, limit: 150 }, { name: 'Transport', spent: 48, limit: 120 }, { name: 'Tax pot', spent: 680, limit: 680 }],
+    netWorth: [{ name: 'Savings and ISA', amount: 12400 }, { name: 'Pension', amount: 14880 }, { name: 'Student loan', amount: -3800 }],
+    netWorthGain: 6120,
+    balanceHistory: Array.from({ length: 41 }, (_, i) => i === 40 ? 2340.5 : 1420 + i * 22 + Math.round(Math.sin(i * .7) * 60) + (i > 36 ? (i - 36) * 40 : 0)),
+    shared: { deposit: 14200, target: 30000, yours: 8600, sam: 5600 },
+  },
+  habits: [
+    { id: 'water', name: 'Water before coffee', cue: 'After the kettle boils, I will drink a glass of water, in the kitchen.', shortCue: 'After the kettle boils · from Apple Health', day: 41, automaticity: 4, source: 'from Apple Health', last14: [true, true, true, false, true, true, true, true, true, true, true, true, true, true] },
+    { id: 'daylight', name: '10 minutes of daylight', cue: 'After breakfast, I will step outside for 10 minutes.', shortCue: 'After breakfast · outside', day: 23, last14: [true, true, true, false, true, true, true, true, false, true, true, true, true, true] },
+    { id: 'bed', name: 'In bed by 22:50', cue: 'After brushing my teeth, I will put my phone on the charger in the kitchen.', shortCue: 'After brushing teeth', day: 12, last14: [true, true, false, true, true, true, true, true, true, true, true, true, false, false] },
+  ] as SeedHabit[],
   lesson: { topic: 'Tax codes', title: 'What your tax code really means', bites: ['A code, not a tax rate', 'How it works each payday', 'What to check on your payslip'], recap: ['Your tax code tells your employer how much pay is tax-free.', 'The number usually means your allowance, divided by ten.', 'Check your code against your payslip and HMRC record.'], explainBack: 'Explain your tax code to a friend in two sentences.' },
 };
-export const rentBuyInputs: RentBuyInputs = { price: 350000, deposit: 35000, availableCash: 45000, emergencyBuffer: 6000, purchaseCosts: 4000, saleCostsPct: 2, rentMonthly: seed.finance.rent, ownerCostsMonthly: 250, mortgageRatePct: 4.5, termYears: 30, years: 5, homeGrowthPct: 2, rentGrowthPct: 3, investmentReturnPct: 5 };
+export const rentBuyInputs: RentBuyInputs = { price: 425000, deposit: 42500, availableCash: seed.finance.balance, emergencyBuffer: 6000, purchaseCosts: 6500, saleCostsPct: 2, rentMonthly: seed.finance.rent, ownerCostsMonthly: 250, mortgageRatePct: 4.5, termYears: 30, years: 10, homeGrowthPct: 3, rentGrowthPct: 4, investmentReturnPct: 5 };
 export const seedHousing = compareRentAndBuy(rentBuyInputs);
 export const rebateTask = TASK_CATALOG.find(t => /rebate|P87|overpaid/i.test(t.title + t.shortTitle)) ?? TASK_CATALOG[0];

@@ -3,6 +3,7 @@
  * Spec: DESIGN.md at the repo root. Live gallery: the /design route (dev builds only).
  */
 export * from './tokens';
+export * from './lightFields';
 export * from './theme';
 export * from './fonts';
 export * from './feedback';
@@ -23,3 +24,4 @@ export * from './components/TopBar';
 export * from './components/Charts';
 export * from './components/Instruments';
 export * from './components/Learning';
+export * from './components/CameraViewport';
