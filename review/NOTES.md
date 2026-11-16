@@ -11,3 +11,5 @@
 - Tab 1: chapter typecheck passed. [~]: 13 board entries built, including inline search, nudge and birthday cards; sample health/calendar data, no remote integrations. Final visual pass pending.
 
 - Talk and file: chapter typecheck passed. [~]: 8 routes built; Talk/transcription, scanning and chat use explicit local samples/engine replies. Confirm/remove/undo and edit/save are local; no AI or upload. Final visual pass pending.
+
+- Tab 2: chapter typecheck passed. [~]: 10 routes built, Do it for me skipped; mission stages/checks, copy/edit/mail drafts and local completion are wired. Engine amounts replace illustrative board claims where core has no matching rebate calculation. Final visual pass pending.

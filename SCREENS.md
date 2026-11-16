@@ -61,17 +61,17 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `plan` | Plan | Tab | tab bar | `/(tabs)/plan` |
-| [ ] | `mission` | Mission | Push | any mission | `/plan/mission` |
-| [ ] | `draft` | Draft message | Sheet | a mission step | `/(sheets)/draft` · formSheet |
-| [ ] | `ttk` | Things to know | Push | Plan → Things to know | `/plan/ttk` |
-| [ ] | `history` | Missions history | Push | Missions → Cleared | `/plan/history` |
+| [~] | `plan` | Plan | Tab | tab bar | `/(tabs)/plan` |
+| [~] | `mission` | Mission | Push | any mission | `/plan/mission` |
+| [~] | `draft` | Draft message | Sheet | a mission step | `/(sheets)/draft` · formSheet |
+| [~] | `ttk` | Things to know | Push | Plan → Things to know | `/plan/ttk` |
+| [~] | `history` | Missions history | Push | Missions → Cleared | `/plan/history` |
 | ⏸ | `doitforme` | **Parked, don't build.** Do it for me | Sheet | “Do it for me” on a step or bill | `/(sheets)/doitforme` · formSheet |
-| [ ] | `missions` | All missions | Push | Plan → Missions | `/plan/missions` |
-| [ ] | `newgoal` | Add something | Sheet | + on Plan | `/(sheets)/newgoal` · formSheet |
-| [ ] | `areahome` | Area: Home | Push | Plan → Home | `/plan/areahome` |
-| [ ] | `areahealth` | Area: Health | Push | Plan → Health | `/plan/areahealth` |
-| [ ] | `areawork` | Area: Work | Push | Plan → Work | `/plan/areawork` |
+| [~] | `missions` | All missions | Push | Plan → Missions | `/plan/missions` |
+| [~] | `newgoal` | Add something | Sheet | + on Plan | `/(sheets)/newgoal` · formSheet |
+| [~] | `areahome` | Area: Home | Push | Plan → Home | `/plan/areahome` |
+| [~] | `areahealth` | Area: Health | Push | Plan → Health | `/plan/areahealth` |
+| [~] | `areawork` | Area: Work | Push | Plan → Work | `/plan/areawork` |
 
 ## Your Chief Aim (4)
 
