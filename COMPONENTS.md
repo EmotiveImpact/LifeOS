@@ -4,8 +4,8 @@
 
 ## Status at a glance (16 Nov 2026)
 - **Components in code: 62** (all exported from `@/design`, all typecheck, both platforms bundle).
-- **Components the board uses that aren't in code yet: 34** (below).
-- **Screens built as real app screens: 0 of 207.** The app still has the old placeholder tabs and the `/design` gallery. Every board screen is Codex's work, phase by phase (BUILD_PLAN.md).
+- **Components the board uses that aren't in code yet: 42** (below).
+- **Screens built as real app screens: 0 of 221.** The app still has the old placeholder tabs and the `/design` gallery. Every board screen is Codex's work, phase by phase (BUILD_PLAN.md).
 
 ## In code ✅
 Surfaces and type: `Text`, `Title`, `TitleSerif`, `Headline`, `Statement`, `Body`, `Callout`, `Mono`, `Unit`, `Numeral`, `Press`, `Card` (no border, `cardShadow`), `Button`, `StatusPill`, `MetricRow`, `PromptBanner`, `ChoiceCard`, `Atmosphere`
@@ -52,4 +52,12 @@ Mood and imagery: `PulseField`, `PulseCheckIn`, `MOODS`, `ImageTreatment`, `Phot
 | `FocusTimer` | Big countdown with the orb | focus | 8c |
 | `WatchFace` | Watch companion layout (watchOS / Wear OS targets) | watch | 11 |
 | `NotificationPreview` | How a push looks, for the notifications settings | lockpush, notifs | 9 |
+| `NutrientBar` | Nutrient against its reference intake, calm (no red), optional note | nutrients | 4c |
+| `LabelScanOverlay` | Camera overlay that highlights the label row being read | labelscan | 4c |
+| `WeightLogger` | Big stepper + trend + on-track tag | weighin | 4c |
+| `ProjectionChart` | Line from today to goal date with both ends labelled | fuelplan | 4c |
+| `WeekBars` | Seven day bars with a target band | weekbudget | 4c |
+| `EatingWindow` | First-to-last meal per day on one time axis, late meals in ember | mealtiming | 4c |
+| `ShareBar` | One bar split into shares with labels (food quality) | foodquality | 4c |
+| `ModelCard` | An on-device model: name, size, what it does | aimodels | 11 |
 | `StatTile` | Small number + label tile (eaten, burned, water; your year) | fuelhome, yourbirthday | 4c |

@@ -2,7 +2,7 @@
 
 > Generated from board v17 (`design-board/life-design-board-v17.html`). **This is the build checklist.** One row per board screen: build it, match the board, tick it. Nothing outside this list gets built; nothing on it gets redesigned.
 > Open the board, find the screen by its key (each phone has id `s-<key>`), and match it: layout, copy, spacing, imagery, motion.
-**207 screens.** Routes use expo-router; sheets use `presentation: 'formSheet'`, full-screen flows `fullScreenModal`. States are not routes: they're how their parent screen looks in that state.
+**221 screens.** Routes use expo-router; sheets use `presentation: 'formSheet'`, full-screen flows `fullScreenModal`. States are not routes: they're how their parent screen looks in that state.
 
 Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the board in light and dark
 
@@ -161,7 +161,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [ ] | `loadtrend` | Training load trend | Push | Load → Trend | `/plan/body/loadtrend` |
 | [ ] | `healthdigest` | Your body this week | Push | Sunday, on Today | `/plan/body/healthdigest` |
 
-## Plan · Body · Fuel (15)
+## Plan · Body · Fuel (28)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
@@ -180,6 +180,19 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [ ] | `savedmeals` | Saved meals | Push | Fuel → Saved | `/plan/body/fuel/savedmeals` |
 | [ ] | `fuelprogress` | Food and weight, over time | Push | Fuel → Progress | `/plan/body/fuel/fuelprogress` |
 | [ ] | `exerciseadd` | Exercise, added back | Push | Fuel → Settings | `/plan/body/fuel/exerciseadd` |
+| [ ] | `fuelplan` | Your plan is ready | Full screen | end of food setup | `/(flows)/fuelplan` · fullScreenModal |
+| [ ] | `weighin` | Log your weight | Sheet | Fuel → Weight or Today | `/(sheets)/weighin` · formSheet |
+| [ ] | `labelscan` | Scan a nutrition label | Full screen | Snap → Label | `/(flows)/labelscan` · fullScreenModal |
+| [ ] | `menuscan` | What should I order? | Push | Snap → Menu | `/plan/body/fuel/menuscan` |
+| [ ] | `fixwords` | Fix it in your own words | Sheet | a logged meal → Fix | `/(sheets)/fixwords` · formSheet |
+| [ ] | `nutrients` | Everything you ate today | Push | Fuel → Nutrients | `/plan/body/fuel/nutrients` |
+| [ ] | `describeexercise` | Describe a workout | Sheet | Fuel or Load → + Activity | `/(sheets)/describeexercise` · formSheet |
+| [ ] | `weekbudget` | Your week, not just today | Push | Fuel → Week | `/plan/body/fuel/weekbudget` |
+| [ ] | `mealtiming` | Meals and your sleep | Push | Fuel → Insights | `/plan/body/fuel/mealtiming` |
+| [ ] | `foodquality` | Food quality | Push | Fuel → Insights | `/plan/body/fuel/foodquality` |
+| [ ] | `alcohol` | Alcohol | Push | Fuel → Alcohol | `/plan/body/fuel/alcohol` |
+| [ ] | `quicklog` | Log in two taps | Sheet | + on Fuel | `/(sheets)/quicklog` · formSheet |
+| [ ] | `importfood` | Bring your history | Push | Fuel → Settings → Import | `/plan/body/fuel/importfood` |
 
 ## Plan · Body · Habits (3)
 
@@ -256,7 +269,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [ ] | `birthdaynudge` | A birthday, on Today | Card | Today, 4 days before | component on Today / anywhere |
 | [ ] | `dates` | Important dates | Push | People → Dates | `/you/people/dates` |
 
-## You · Settings and account (13)
+## You · Settings and account (14)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
@@ -273,6 +286,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [ ] | `plussuccess` | Welcome to life+ | Full screen | after subscribing | `/(flows)/plussuccess` · fullScreenModal |
 | [ ] | `help` | Help | Push | Settings | `/you/settings/help` |
 | [ ] | `legal` | About life | Push | Settings | `/you/settings/legal` |
+| [ ] | `aimodels` | What stays on your phone | Push | Private mode → What downloads | `/you/settings/aimodels` |
 
 ## Grow (4)
 

@@ -50,7 +50,7 @@ Behind one interface, `src/services/voice.ts`, so we can swap providers without 
 | Job | First choice | Fallback | Notes |
 |---|---|---|---|
 | Speech to text | On-device: whisper.rn (MIT), or the phone's own speech recogniser | A cloud transcription model via our API | On-device = private and free; cloud for long or noisy audio |
-| Text to speech (life speaking) | **Phonon**, your own on-device module (from the Feynman app) | A cloud voice (e.g. Cartesia, which your Feynman app already supports) | Phonon is iOS today; Android needs the fallback or a port |
+| Text to speech (life speaking) | **Phonon** (PhononTTS, on device, free; voice "Maeve", British) via your Feynman app's Expo module (copied to `vendor/fenny/voice/modules/phonon`) | **Kitten TTS Nano 0.8** (int8, ~24 MB, on device) on Android and anywhere Phonon isn't available; a cloud voice only as a last resort | Same setup as your Feynman app (`vendor/fenny/voice/`) |
 | Live back-and-forth (Tell it back, Coach) | A realtime voice model via our API (e.g. Gemini Live, already wired in your Feynman app) | Turn-based: speech to text → model → speech | Turn-based ships first; realtime is an upgrade |
 
 ### 3.3 AI models: model-agnostic, chosen per job by tests
@@ -69,6 +69,15 @@ Behind one interface, `src/services/voice.ts`, so we can swap providers without 
 **On Google's latest model:** I can't confirm which release you mean from here, so I won't make claims about it. Gemini models have historically been strong at **vision, long documents and live voice**, which makes them good candidates for meal photos, letter scanning and Tell it back. Put it through the evals; don't lock in.
 
 **Rules that never change, whatever the model:** numbers come from `packages/core`, never from the model. Outputs are schema-checked JSON. Money is guidance, not advice; health is wellness, not diagnosis. No training on user data without opt-in.
+
+### 3.3b What "Keep AI on this phone" downloads (board: "What stays on your phone")
+| Job | First choice (no download) | Download if the phone has no built-in AI | Size |
+|---|---|---|---|
+| Speech to text | iOS 26 on-device speech / Android on-device recogniser | Whisper via whisper.rn (base or small, quantised) | ~60–190 MB |
+| Voice out | Phonon (iPhone) | Kitten TTS Nano | ~24 MB |
+| Filing, short drafts, tips | Apple's on-device foundation model (iOS 26, Apple Intelligence phones); Gemini Nano (supported Android) | A small open model, e.g. Qwen3 1.7B 4-bit (Apache-2.0), via llama.rn | ~1.1 GB |
+| Memory search | — | A small embedding model (MIT/Apache) | ~30–90 MB |
+Photo reading and new lessons stay in the cloud and ask first. Pick the exact open models with `tools/evals` at Phase 11; newer small models appear every few months, so treat the names above as a starting point, not a commitment, and prefer Apache-2.0 / MIT licences.
 
 ### 3.4 A "decision model": yes, but in the right place
 Two different things get called decision models, and life uses both carefully:
@@ -143,6 +152,7 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Voice behind `voice.ts`: on-device first, Phonon for speech, cloud fallback.** |
 | 15 Nov 2026 | **Models chosen per job by evals; no lock-in. Today's plan is decided by rules + a bandit, not an LLM.** |
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
+| 16 Nov 2026 | **Fuel brought to Cal AI level (13 screens). Voice: Phonon on iPhone, Kitten TTS Nano elsewhere. On-device AI: built-in OS models first, small open models as the fallback download.** |
 | 16 Nov 2026 | **Build UI-first: Track A builds every screen with seed data and light checks; Track B makes it real and adds tests.** |
 | 16 Nov 2026 | **v17: orb is one family of the ring's dots (thinking, working, searching, listening, done); no dividers, card shadows; Fenny teaching language + drawing kit; body numbers; health features from the repos; Cal AI counters; SYSTEM_DESIGN.md.** |
 | 15 Nov 2026 | **v16: orb v2 (globe, no core); no borders anywhere (owner's decision); AGENTS.md + BUILD_PROMPT.md for any builder.** |

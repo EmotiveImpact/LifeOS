@@ -32,7 +32,7 @@
 | [Shopify/react-native-skia](https://github.com/Shopify/react-native-skia/tree/20ecc57a203b) | MIT | main | `20ecc57a203b` | 2026-11-15 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |
 
 ## Copied folders
-- `vendor/fenny/` — Feynman-voice-app at `fc32865ed16f` (docs, api, scene, teach, ui). Owner’s code.
+- `vendor/fenny/` — Feynman-voice-app at `fc32865ed16f` (docs, api, scene, teach, ui, voice: the Phonon Expo module and the Kitten TTS package). Owner’s code.
 - `vendor/atria/` — Atria at `8fedbbdfb6a2`: 18 Swift files + `docs/METRIC_VALIDATION_PLAN.md` + `LICENSE` (MIT) and `LICENSE-APACHE`.
 - `vendor/calai/` — Cal-AI at `76f306269406`: nutrition model, prompt, card, chart, screen, `LICENSE` (MIT).
 
