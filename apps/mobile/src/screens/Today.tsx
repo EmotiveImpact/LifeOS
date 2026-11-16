@@ -9,6 +9,7 @@ import { useSeed } from '@/state/SeedProvider';
 import { money, seed } from '@/state/seed';
 import { Heading, Input, LocalNotice, Rows, Screen, Section, layout } from './Screen';
 import { IllnessCard } from './HealthDetails';
+import { ParentStateContent } from './States';
 
 export function TodayScreen({ screen }: { screen: ScreenKey }) {
   const t = useTokens(), nav = useNavigation(), { data, set, flag, choose, draft, engine } = useSeed(), hideDock = useDockVisibility();
@@ -26,6 +27,7 @@ export function TodayScreen({ screen }: { screen: ScreenKey }) {
     set({ records: [...data.records, { id: `question-${questionIndex}`, kind: 'answer', area: questionIndex === 0 ? 'work' : questionIndex === 1 ? 'money' : 'health', label: `${q.intro}${q.focus} ${answer}`, source: { type: 'question', at: new Date().toISOString() }, status: 'confirmed' }], profile: { ...data.profile, answeredQuestionIds: [...data.profile.answeredQuestionIds, `today-${questionIndex}`] } });
     choose('today-question-index', String(questionIndex + 1)); feedback.file();
   };
+  if (screen === 'today' && (params.state === 'emptytoday' || params.state === 'loadingtoday')) return <Screen screen={screen} title="Today"><ParentStateContent kind={params.state} /></Screen>;
   if (screen === 'today') return <Screen screen={screen} title={`Good morning, ${data.profile.name}`} eyebrow="Monday, 16 Nov" actions={[{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: () => setSearching(true) }, { kind: 'icon', icon: 'notifications-outline', label: 'From life', badge: !data.flags['inbox-read'], onPress: () => nav.go('inbox') }]} onScroll={y => { hideDock(y > prevY.current && y > 80); prevY.current = y; }} onPull={() => setSearching(true)}>
     {data.aim ? <Card onPress={() => nav.go('aim')} style={layout.row}><Image source={storyImage(data.prefs.look, 'home')} style={{ width: 46, height: 46, borderRadius: 12 }} /><View style={{ flex: 1, gap: space.xxs }}><Text variant="callout" tone="ink2">{`Your Aim · ${Math.round(seed.finance.deposit / seed.finance.depositGoal * 100)}% there`}</Text><Text variant="body" numberOfLines={1}>{`${data.aim.what} by ${data.aim.when}`}</Text></View></Card> : null}
     <View style={layout.between}><StatusPill label={`Level ${engine.level.currentLevel}`} /><Button variant="link" label="Your levels" onPress={() => nav.go('levels')} /></View>

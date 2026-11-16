@@ -301,18 +301,18 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `emptytoday` | Today, on day one | State | Today on day one | state of its parent screen |
-| [ ] | `offline` | Offline and errors | State | no connection | state of its parent screen |
-| [ ] | `loadingtoday` | Today, loading | State | Today while loading | state of its parent screen |
-| [ ] | `emptyplan` | Plan, on day one | State | Plan on day one | state of its parent screen |
-| [ ] | `emptybody` | Body, with no device | State | Body with no device | state of its parent screen |
-| [ ] | `connectfail` | A device stopped syncing | State | Body when a device stops syncing | state of its parent screen |
-| [ ] | `support` | Need support now | Push | You → Help, or offered when needed | `/states/support` |
-| [ ] | `permdenied` | A permission you said no to | State | a declined permission | state of its parent screen |
-| [ ] | `syncissue` | Two phones disagree | Sheet | two devices disagree | `/(sheets)/syncissue` · formSheet |
-| [ ] | `aidown` | life’s AI is having a moment | State | AI unavailable | state of its parent screen |
-| [ ] | `forceupdate` | Update needed | Full screen | old version | `/(flows)/forceupdate` · fullScreenModal |
-| [ ] | `signedout` | Welcome back | State | after sign-out or new phone | state of its parent screen |
+| [~] | `emptytoday` | Today, on day one | State | Today on day one | state of its parent screen |
+| [~] | `offline` | Offline and errors | State | no connection | state of its parent screen |
+| [~] | `loadingtoday` | Today, loading | State | Today while loading | state of its parent screen |
+| [~] | `emptyplan` | Plan, on day one | State | Plan on day one | state of its parent screen |
+| [~] | `emptybody` | Body, with no device | State | Body with no device | state of its parent screen |
+| [~] | `connectfail` | A device stopped syncing | State | Body when a device stops syncing | state of its parent screen |
+| [~] | `support` | Need support now | Push | You → Help, or offered when needed | `/states/support` |
+| [~] | `permdenied` | A permission you said no to | State | a declined permission | state of its parent screen |
+| [~] | `syncissue` | Two phones disagree | Sheet | two devices disagree | `/(sheets)/syncissue` · formSheet |
+| [~] | `aidown` | life’s AI is having a moment | State | AI unavailable | state of its parent screen |
+| [~] | `forceupdate` | Update needed | Full screen | old version | `/(flows)/forceupdate` · fullScreenModal |
+| [~] | `signedout` | Welcome back | State | after sign-out or new phone | state of its parent screen |
 
 ## Outside the app (6)
 

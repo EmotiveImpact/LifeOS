@@ -41,3 +41,5 @@
 - You · Settings: chapter typecheck passed. [~]: 14 routes built; appearance/sounds/haptics/privacy controls persist, data export opens the OS share sheet, typed DELETE resets only local seed data. Billing/auth/MCP/model downloads/notifications are explicit previews. Parked automation removed from membership copy; nudge cap stays one/day. Final visual pass pending.
 
 - Grow: chapter typecheck passed. [~]: 4 routes built: core weekly recap PeekStack, vantage/gates, paged level-up and birthday recap. Yearly history is illustrative seed content; earned triggers remain Track B. Final visual pass pending.
+
+- States: chapter typecheck passed. [~]: 12 entries implemented: nine parent states selected via state query on their existing routes, plus Support, sync conflict and update-required routes. Real network/permission/sync/update detection remains Track B; no extra state routes invented. Final visual pass pending.
