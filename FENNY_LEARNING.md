@@ -43,13 +43,18 @@ From the header of `scene/draw.ts`, adapted:
 **208 drawn objects** (`scene/things.ts`), all made from the same few marks (line `l`, circle `c`, arc `a`, dot `d`, soft box `b`, path `p`, closed path `z`, dashed `q`): people and the body, Earth and space, science, money and society, technology, time and ideas, transport, living things and metaphors (iceberg, dominoes, snowball, ladder, bridge, door…).
 **Scenes are data:** the lesson writer (`api/scene.ts`) returns a scene JSON per bite, the app checks it and draws it; anything an older app can't draw falls back to the simple picture.
 
-## 5. Where it shows up in life
+## 5. Two sizes of lesson (decided 16 Nov 2026)
+- **Quick lesson (default): the standard Teach me.** 2–3 bites, simple pictures (parts, flow, compare), one guess, one puzzle per bite, recap, tell it back. About two minutes. This stays exactly as designed on the board (Teach me chapter).
+- **Bigger lesson: the Fenny version.** For when someone wants to go deeper: the **Deep** level, a **"Go deeper"** button at the end of a quick lesson, and Learn's longer ideas. Uses the full Drawing Kit (30 devices, 208 things, clean or hand-drawn), the narrated film with the slider, more bites and the full tell-it-back conversation.
+- The Fenny kit **does not replace** the quick lesson's pictures; it's the richer layer on top.
+
+## 6. Where it shows up in life
 - **Teach me** (every term life shows that you don't know yet; Talk when you sound unsure). Ends with "You've got it" and a booked recall.
 - **Learn ideas** (lens cards get a drawing per card).
 - **Explainers anywhere a number needs a why**: "How scores work", tax, compound interest, sleep debt — a drawn scene instead of a paragraph.
 - **Tell it back** results and **Show me** use the same pictures.
 
-## 6. Build notes (for Codex)
+## 7. Build notes (for Codex)
 - Port `vendor/fenny/scene/*` into `apps/mobile/src/learn/scene/` (Skia: add `@shopify/react-native-skia`). Replace `SIL/BLUE/LAB/PANEL` with life tokens (`ink`, `ember`, `ink2`, `surface2`). Keep the maths, marks and device code.
 - Port `api/lesson.ts`, `api/scene.ts`, `api/review.ts`, `api/policy.ts` into life's API (`apps/api/src/learn/`), behind `ai.ts` tiers (Strong tier for lessons and analysis).
 - Port `teach/Puzzle.tsx`, `teach/Slider.tsx`, `teach/TeachMode.tsx` as life components (`LessonPuzzle`, `LessonSlider`, `LessonFilm`) using `@/design` tokens; no glass.

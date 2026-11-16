@@ -346,6 +346,10 @@ textarea.aimt{width:100%;min-height:84px;resize:none;background:var(--surface-2)
 .screen .card,.screen .tray,.screen .t-card{box-shadow:0 1px 2px rgba(0,0,0,.22),0 10px 28px -10px rgba(0,0,0,.45)!important}
 :root[data-theme="light"] .screen .card,:root[data-theme="light"] .screen .tray,:root[data-theme="light"] .screen .t-card{box-shadow:0 1px 2px rgba(13,14,16,.05),0 10px 28px -12px rgba(13,14,16,.14)!important}
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .screen .card,:root:not([data-theme="dark"]) .screen .tray{box-shadow:0 1px 2px rgba(13,14,16,.05),0 10px 28px -12px rgba(13,14,16,.14)!important}}
+
+.tb-grab.onimg{position:absolute;left:50%;top:58px;transform:translateX(-50%);background:rgba(247,248,248,.55);z-index:6}
+
+#s-plus .on-img,#s-morningbrief .on-img{text-shadow:0 1px 2px rgba(8,9,10,.35),0 2px 22px rgba(8,9,10,.7)}
 </style>
 
 <div class="wrap">
@@ -1294,19 +1298,21 @@ var ORBS=[];
    listening  your ring slows to a stop, goes evenly bright and moves out and in with your voice.
    done       the dots gather into the centre with a springy overshoot, then open back out into the ring. */
 var LO_N=30,LO_TW=(function(){var P=[],s=11;function r(){s=(s*9301+49297)%233280;return s/233280}for(var i=0;i<LO_N;i++){var u=r()*2-1,th=r()*Math.PI*2,rr=.35+.65*Math.cbrt(r()),q=Math.sqrt(1-u*u);P.push([Math.cos(th)*q*rr,u*rr,Math.sin(th)*q*rr,r()*6.28,1.4+r()*2])}return P})();
+var LO_SPH=(function(){var P=[];for(var i=0;i<30;i++){var y=1-2*(i+.5)/30,r=Math.sqrt(1-y*y),th=i*Math.PI*(3-Math.sqrt(5));P.push([Math.cos(th)*r,y,Math.sin(th)*r,i*1.37])}return P})();
 var LO_S10=(function(){var P=[];for(var i=0;i<10;i++){var y=1-2*(i+.5)/10,r=Math.sqrt(1-y*y),th=i*Math.PI*(3-Math.sqrt(5));P.push([Math.cos(th)*r,y,Math.sin(th)*r])}return P})();
+var LO_S10N=LO_S10.map(function(a,i){return LO_S10.map(function(b,j){return [j,a[0]*b[0]+a[1]*b[1]+a[2]*b[2]]}).filter(function(x){return x[0]!==i}).sort(function(p,q){return q[1]-p[1]}).slice(0,3).map(function(x){return x[0]})});
 var ORB_N=10;
 function mountOrb(el,size,state){var c=document.createElement('canvas'),d=Math.min(2,window.devicePixelRatio||1);c.width=c.height=size*d;c.style.width=c.style.height=size+'px';c.style.display='block';el.innerHTML='';el.appendChild(c);var x=c.getContext('2d');x.scale(d,d);
  function norm(s){return s==='sphere'||s==='core'?'thinking':s==='voice'?'listening':(s||'ring')}
  var dot=Math.max(2.6,size/12),R=size/2-Math.max(2,size/14)-dot/2,cx=size/2,cy=size/2,last=0;
- var o={state:norm(state),prev:null,switchAt:-1e9,frozen:null,spin:0,w1:0,w2:0,w3:0,t:0,lv:0,g:0,gv:0,doneAt:-1e9,vis:true,ink:el.dataset.ink||'',cur:[]};
+ var o={sHead:0,sTrail:[],sAt:0,edges:{},state:norm(state),prev:null,switchAt:-1e9,frozen:null,spin:0,w1:0,w2:0,w3:0,t:0,lv:0,g:0,gv:0,doneAt:-1e9,vis:true,ink:el.dataset.ink||'',cur:[]};
  function rot(p,a,tl){var ca=Math.cos(a),sa=Math.sin(a),x1=p[0]*ca+p[2]*sa,z1=-p[0]*sa+p[2]*ca,ct=Math.cos(tl),st=Math.sin(tl);return [x1,p[1]*ct-z1*st,p[1]*st+z1*ct]}
  // where dot k wants to be in a state: [x, y, depth 0..1, alpha, size]
  function at(st,k){var t=o.t,i=k%10,tail=.3+.7*(i/10),a=i/10*Math.PI*2+o.spin;
   if(st==='ring'||st==='done'){return [Math.cos(a)*R,Math.sin(a)*R,.5,k<10?tail:0,1]}
-  if(st==='thinking'){var p=LO_TW[k],q=rot(p,t*.32,.25),pr=3.2/(3.2-q[2]),dp=(q[2]+1)/2,tw=.5+.5*Math.sin(t*p[4]+p[3]);return [q[0]*R*pr,q[1]*R*pr,dp,(.18+.82*dp)*(.25+.75*tw),.62+.42*dp]}
+  if(st==='thinking'){var p=LO_SPH[k],q=rot(p,t*.42,.32),pr=3.2/(3.2-q[2]),dp=(q[2]+1)/2,tw=.5+.5*Math.sin(t*2.2+p[3]);return [q[0]*R*.96*pr,q[1]*R*.96*pr,dp,(.1+.9*Math.pow(dp,1.5))*(.82+.18*tw),.5+.62*dp]}
   if(st==='working'){if(k<10)return [Math.cos(a+o.w1)*R,Math.sin(a+o.w1)*R,.5,tail,1];if(k<17){var j=k-10,b=j/7*Math.PI*2+o.w2;return [Math.cos(b)*R*.6,Math.sin(b)*R*.6,.5,.3+.7*(j/7),.82]}if(k<21){var j=k-17,b=j/4*Math.PI*2+o.w3;return [Math.cos(b)*R*.27,Math.sin(b)*R*.27,.5,.3+.7*(j/4),.66]}return [Math.cos(a)*R,Math.sin(a)*R,.5,0,1]}
-  if(st==='searching'){if(k>=10)return [Math.cos(a)*R,Math.sin(a)*R,.5,0,1];var q=rot(LO_S10[k],t*.42,.35),pr=3.2/(3.2-q[2]),dp=(q[2]+1)/2,head=(t/.5)%10,dd=((head-k)%10+10)%10,hop=dd<1?1:dd<4?.75-(dd-1)*.15:.28;return [q[0]*R*pr,q[1]*R*pr,dp,hop*(.45+.55*dp),.78+.34*dp]}
+  if(st==='searching'){if(k>=10)return [Math.cos(a)*R,Math.sin(a)*R,.5,0,1];var q=rot(LO_S10[k],t*.3,.35),pr=3.2/(3.2-q[2]),dp=(q[2]+1)/2,ti=o.sTrail.indexOf(k),hop=k===o.sHead?1:ti>=0?.8-ti*.14:.3;return [q[0]*R*pr,q[1]*R*pr,dp,hop*(.45+.55*dp),(.78+.34*dp)*(k===o.sHead?1.15:1)]}
   if(st==='listening'){if(k>=10)return [Math.cos(a)*R,Math.sin(a)*R,.5,0,1];var rip=.5+.5*Math.sin(t*6-i*.9),push=o.lv*(.35+.65*rip),rr=R*(1+.24*push);return [Math.cos(a)*rr,Math.sin(a)*rr,.5,.78+.22*push,1+.35*push]}
   return [0,0,.5,0,1]}
  o.set=function(s){s=norm(s);if(s===o.state&&s!=='done')return;o.frozen=o.cur.map(function(v){return v.slice()});o.prev=o.state;o.state=s;o.switchAt=performance.now();if(s==='done')o.doneAt=o.switchAt};
@@ -1318,10 +1324,14 @@ function mountOrb(el,size,state){var c=document.createElement('canvas'),d=Math.m
   var env=.25+.75*Math.pow(Math.abs(Math.sin(o.t*1.7)*Math.sin(o.t*.61+.9)),.6);o.lv+=((lis?env:0)-o.lv)*.2;
   if(o.state==='done'&&now-o.doneAt>1000){o.state='ring'}
   var gt=now-o.doneAt<450?1:0;o.gv+=(gt-o.g)*.16;o.gv*=.74;o.g+=o.gv;var gR=1-.62*Math.max(-.2,o.g),gg=Math.min(1,Math.max(0,o.g));
+  if(o.state==='searching'&&o.t-o.sAt>.55){o.sAt=o.t;var nb=LO_S10N[o.sHead].filter(function(j){return o.sTrail.indexOf(j)<0});if(!nb.length)nb=LO_S10N[o.sHead];var nx=nb[Math.floor((o.t*7.31)%nb.length)];var key=Math.min(o.sHead,nx)+'-'+Math.max(o.sHead,nx);o.edges[key]={a:o.sHead,b:nx,born:o.t};o.sTrail.unshift(o.sHead);o.sTrail=o.sTrail.slice(0,3);o.sHead=nx}
+  if(o.state!=='searching'&&Object.keys(o.edges).length&&now-o.switchAt>700){o.edges={};o.sTrail=[]}
   var ink=o.ink||getComputedStyle(el).color;x.clearRect(0,0,size,size);x.fillStyle=ink;var L=[];
   for(var k=0;k<LO_N;k++){var to=at(o.state,k),u=Math.min(1,Math.max(0,(now-o.switchAt-(k%10)*38-(k>=10?120:0))/720)),e=ease(u),v;
    if(e>=1||!o.frozen||!o.frozen[k]){v=to}else{var fr=o.frozen[k];v=[fr[0]+(to[0]-fr[0])*e,fr[1]+(to[1]-fr[1])*e,fr[2]+(to[2]-fr[2])*e,fr[3]+(to[3]-fr[3])*e,fr[4]+(to[4]-fr[4])*e]}
    o.cur[k]=v;var al=v[3]*(1-gg)+(k<10?.95*gg:0);L.push([v[2],cx+v[0]*gR,cy+v[1]*gR,al,v[4]*(1+.2*gg)])}
+  // searching: each hop draws a line from node to node (pen-tip draw-on), connections build into a network
+  var sb=o.state==='searching'?Math.min(1,(now-o.switchAt)/900):Math.max(0,1-(now-o.switchAt)/450);if(sb>0){x.strokeStyle=ink;x.lineWidth=Math.max(1,dot/3.6);x.lineCap='round';for(var ek in o.edges){var E=o.edges[ek],A=o.cur[E.a],B=o.cur[E.b];if(!A||!B)continue;var age=o.t-E.born,pg=Math.min(1,age/.35),fade=age<1.2?.85:Math.max(.34,.85-(age-1.2)*.35);var ax=cx+A[0]*gR,ay=cy+A[1]*gR,bx=cx+B[0]*gR,by=cy+B[1]*gR;x.globalAlpha=fade*sb*(.5+.5*(A[2]+B[2])/2);x.beginPath();x.moveTo(ax,ay);x.lineTo(ax+(bx-ax)*pg,ay+(by-ay)*pg);x.stroke()}}
   L.sort(function(a,b){return a[0]-b[0]});L.forEach(function(q){if(q[3]<.02)return;x.globalAlpha=Math.min(1,q[3]);x.beginPath();x.arc(q[1],q[2],dot/2*q[4],0,7);x.fill()});x.globalAlpha=1}
  for(var k=0;k<LO_N;k++)o.cur[k]=at(o.state,k);
  requestAnimationFrame(frame);
@@ -1336,7 +1346,7 @@ function mountOrb(el,size,state){var c=document.createElement('canvas'),d=Math.m
 S14('system','orb','The orb, evolving','The life mark is a ring of 10 dots flowing round clockwise, one lap every 12 seconds. It only goes 3D while life is thinking: the same ring leans back and wobbles like a plate spinning, its speed ramping up and easing off so at full speed it sweeps out a sphere, with the dots still flowing round. When it’s done, the dots gather into the centre and spring back out. Everything else is the flat original; while you talk, the dots pulse one after another. Switch between one ring and two rings below to compare.','LifeOrb { state: ring | sphere | voice | done, level } · Orb.tsx · MOTION.md §3.2',0,
  glow('var(--ember-glow)')+STATUS+'<div class="pad col rel" style="gap:22px;padding-top:40px;align-items:center"><span class="t-callout c2" data-ol>Ring · the everyday mark</span><div data-o3 style="width:180px;height:180px;color:var(--text)"></div><div class="segm" style="width:100%" data-os><button class="on">Ring</button><button>Thinking</button><button>Voice</button><button>Done</button></div>'+
  '<div class="card col" style="gap:0;padding:2px 16px;width:100%">'+li('Ring','Everywhere: tab bar, headers, small sizes','<span class="t-callout c2">Default</span>')+li('Thinking (3D)','Only while life is working something out','<span class="t-callout c2">Over 1s</span>')+li('Voice','The flat ring, pulsing as you talk','<span class="t-callout c2">A pulse</span>')+li('Done','Dots gather in, then open back out','<span class="t-callout c2">1s</span>')+'</div></div>',
- function(s){var o=mountOrb(s.querySelector('[data-o3]'),180,'ring'),L={Ring:'Ring · the everyday mark',Thinking:'Thinking · your dots, twinkling in a sphere',Voice:'Listening · your ring moves with you',Done:'Done · gathers in, then opens out'},b=s.querySelectorAll('[data-os] button');b.forEach(function(x){x.addEventListener('click',function(){b.forEach(function(y){y.classList.toggle('on',y===x)});o.set({Ring:'ring',Thinking:'thinking',Voice:'listening',Done:'done'}[x.textContent]);s.querySelector('[data-ol]').textContent=L[x.textContent];sfx(x.textContent==='Done'?'complete':'tap');if(x.textContent==='Done')setTimeout(function(){b.forEach(function(y,k){y.classList.toggle('on',k===0)});s.querySelector('[data-ol]').textContent=L.Ring},1100)})})});
+ function(s){var o=mountOrb(s.querySelector('[data-o3]'),180,'ring'),L={Ring:'Ring · the everyday mark',Thinking:'Thinking · your dots, a clear sphere',Voice:'Listening · your ring moves with you',Done:'Done · gathers in, then opens out'},b=s.querySelectorAll('[data-os] button');b.forEach(function(x){x.addEventListener('click',function(){b.forEach(function(y){y.classList.toggle('on',y===x)});o.set({Ring:'ring',Thinking:'thinking',Voice:'listening',Done:'done'}[x.textContent]);s.querySelector('[data-ol]').textContent=L[x.textContent];sfx(x.textContent==='Done'?'complete':'tap');if(x.textContent==='Done')setTimeout(function(){b.forEach(function(y,k){y.classList.toggle('on',k===0)});s.querySelector('[data-ol]').textContent=L.Ring},1100)})})});
 
 /* ---------- CHAT, restored (v2’s clean chat, in v4+ language) ---------- */
 var ISL='<div class="isl" data-isl><div class="isl-o" data-islo style="color:#F7F8F8"></div><span class="isl-t" data-islt>Checking London schemes and the NHS…</span></div>';
@@ -1563,6 +1573,13 @@ function fixTopBar(sc,scr){
    pinHeader(scr,bar);return}
  if(type!=='Push'&&type!=='Sheet'&&type!=='Full screen')return;
  var bar=null;scr.querySelectorAll('div.pad.row.sb').forEach(function(d){if(!bar&&/min-height:\s*44px/.test(d.getAttribute('style')||''))bar=d});
+ if(type==='Sheet'&&scr.querySelector('.sheet .grab, .sheet.col .grab')){ /* already drawn as a bottom sheet over a dimmed screen: keep its own grab handle, add no header */
+   var sh=scr.querySelector('.sheet');if(sh&&!sh.querySelector('[aria-label="Close"]')){var hd=sh.querySelector('.grab');var cl=document.createElement('button');cl.className='sq press';cl.setAttribute('aria-label','Close');cl.style.cssText='position:absolute;right:16px;top:14px;width:32px;height:32px';cl.innerHTML=IC.close;sh.appendChild(cl)}return}
+ if(type==='Sheet'&&isImg){ /* a sheet over a photo: no white header; a light grab handle and the close disc, both on the image */
+   var own=bar;if(!own){scr.querySelectorAll('div.pad.row.sb').forEach(function(d){if(!own&&d.querySelector('.sq'))own=d})}
+   var gh=document.createElement('i');gh.className='tb-grab onimg';var st0=scr.querySelector('.status');(st0||scr.firstChild).insertAdjacentElement('afterend',gh);
+   if(!own){var nb0=document.createElement('div');nb0.className='pad row sb rel';nb0.innerHTML='<span></span><button class="sq press" aria-label="Close" style="background:rgba(13,14,16,.55);color:#F7F8F8">'+IC.close+'</button>';gh.insertAdjacentElement('afterend',nb0)}
+   return}
  var hasFlowProgress=bar&&bar.querySelector('.t-mono')&&type==='Full screen';
  if(hasFlowProgress){bar.classList.add('tb','flow');var l=bar.querySelector('.sq');if(l)l.innerHTML=IC.close;return}
  if(type==='Full screen'&&!bar)return; // immersive screens (camera, lesson film, moments) keep their own chrome
@@ -1739,7 +1756,7 @@ function mountOrbMode(el,size,mode,opts){opts=opts||{};var c=document.createElem
  if('IntersectionObserver' in window){new IntersectionObserver(function(es){o.vis=es[0].isIntersecting}).observe(el)}
  return o}
 
-var OMODES=[['thinking','Thinking','Your dots scatter through a turning sphere and twinkle.'],['working','Working','Your circle speeds up; smaller rings of the same dots turn inside, like clockwork.'],['searching','Searching','Your 10 dots spread over a turning sphere; a bright head hops from dot to dot.'],['listening','Listening','Your ring stops and pays attention, moving out and in with your voice.']];
+var OMODES=[['thinking','Thinking','Your dots form a clear sphere, turning, the near side brighter.'],['working','Working','Your circle speeds up; smaller rings of the same dots turn inside, like clockwork.'],['searching','Searching','Your dots spread over a sphere; each hop draws a line to the next, building a web of connections.'],['listening','Listening','Your ring stops and pays attention, moving out and in with your voice.']];
 S16('system','orbnext','Orb states, next','One family: every state is made of the same dots as your ring, and every change is the dots travelling one after another, so any 3D state collapses straight back into your spinning circle. Tap a card to play ring → state → done.','LifeOrb states: ring · thinking · working · searching · listening · done',0,
  STATUS+'<div class="pad col" style="gap:12px;padding-top:6px"><span class="t-title2">Orb states, next</span><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+OMODES.map(function(md){return '<button class="card col press" data-om="'+md[0]+'" style="gap:8px;align-items:center;padding:14px 10px;text-align:center"><div data-omc style="width:120px;height:120px;color:var(--text)"></div><span class="t-body" style="font-weight:600">'+md[1]+'</span><span class="t-callout c2" style="font-size:12px;line-height:16px">'+md[2]+'</span></button>'}).join('')+'</div>'+
  '<div class="card col" style="gap:10px"><span class="t-callout c2">At real sizes</span><div class="row" style="gap:18px;justify-content:space-between">'+OMODES.map(function(md){return '<div class="col" style="gap:6px;align-items:center"><div data-oms="'+md[0]+'" style="width:40px;height:40px;color:var(--text)"></div><div data-omt="'+md[0]+'" style="width:22px;height:22px;color:var(--text)"></div></div>'}).join('')+'</div></div></div>',
@@ -1802,10 +1819,10 @@ function ringSvg(size,stroke,parts){var r=(size-stroke)/2,C=2*Math.PI*r,off=0;re
 function rng(lo,hi,val,marks,band){var pc=function(v){return Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100))};return '<div style="position:relative;height:30px"><div style="position:absolute;left:0;right:0;top:10px;height:8px;border-radius:4px;background:var(--surface-2)"></div>'+(band?'<div style="position:absolute;left:'+pc(band[0])+'%;width:'+(pc(band[1])-pc(band[0]))+'%;top:10px;height:8px;border-radius:4px;background:color-mix(in srgb,var(--gain) 45%,transparent)"></div>':'')+'<i style="position:absolute;left:calc('+pc(val)+'% - 7px);top:7px;width:14px;height:14px;border-radius:50%;background:var(--text);box-shadow:0 0 0 3px var(--bg)"></i></div><div class="row sb t-mono c2" style="font-size:11px">'+marks.map(function(m){return '<span>'+m+'</span>'}).join('')+'</div>'}
 
 /* Learn: Fenny's picture language */
-S16('learn','drawkit','Pictures that teach','Every lesson picture comes from one drawing kit (from your Feynman app): one idea per picture, one line weight, one lit thing (ember is the thing that changes), lines that draw themselves on, then rest. 30 devices and 208 drawn objects. Choose clean lines or hand-drawn: the same picture with a slight marker wobble.','Fenny Drawing Kit · vendor/fenny/scene (draw.ts, things.ts, types.ts) · Skia',0,
+S16('learn','drawkit','Pictures that teach','For the bigger lessons (Deep, Go deeper, longer Learn ideas); the quick Teach me keeps its simple pictures. One drawing kit from your Feynman app: one idea per picture, one line weight, one lit thing (ember is the thing that changes), lines that draw themselves on, then rest. 30 devices and 208 drawn objects. Choose clean lines or hand-drawn: the same picture with a slight marker wobble.','Fenny Drawing Kit · vendor/fenny/scene (draw.ts, things.ts, types.ts) · Skia',0,
  '<div class="scroll">'+STATUS+'<div class="pad col" style="gap:12px;padding-top:4px"><span class="t-title1">Pictures that teach</span>'+kitSwitch()+Object.keys(KIT_DEV).map(function(k){return '<div class="col" style="gap:6px"><div class="row sb"><span class="t-body" style="font-weight:600">'+KIT_DEV[k][0]+'</span><span class="t-callout c2">'+KIT_DEV[k][1]+'</span></div>'+kitPanel(k)+'</div>'}).join('')+'<span class="t-callout cq" style="padding-bottom:30px">Also in the kit: graph, balance, stairs, spectrum, pair, tree, test, threshold, units, crowd, grid, wave, mirror, stack, radial, cutaway, sankey, fan, spiral, zoom, brace and map.</span></div></div>',
  function(s){kitInit(s)});
-S16('teach','bitedrawn','A bite, drawn live','The Teach me bite with a real drawing: as each sentence is read, the next part of the picture draws itself on, and the lit box is the thing the sentence is about. Replay to watch it build; switch to hand-drawn in Settings.','TeachMode film · SceneView (flow device) · narration beats',0,
+S16('teach','bitedrawn','A bite, drawn live','In a bigger lesson, the bite gets a real drawing: as each sentence is read, the next part of the picture draws itself on, and the lit box is the thing the sentence is about. Replay to watch it build; switch to hand-drawn in Settings.','TeachMode film · SceneView (flow device) · narration beats',0,
  lessonTop(2,3,'Tax codes')+'<div class="pad col" style="gap:14px;padding-top:20px"><span class="t-title2">How it works each payday</span><div class="press" data-kitre>'+kitPanel('flow')+'</div>'+kitSwitch()+'<div class="t-statement" style="font-size:19px;line-height:26px"><span class="q">Each month your employer takes off</span> one twelfth <span class="q">of your tax-free amount, then</span> taxes the rest<span class="q">.</span></div></div><div class="pad" style="position:absolute;left:0;right:0;bottom:34px"><button class="btn press" data-jump="predict">Next</button></div>',
  function(s){kitInit(s);var k=KIT.list[KIT.list.length-1];s.querySelector('[data-kitre]').addEventListener('click',function(){k.t=0;sfx('tap')})});
 
