@@ -292,10 +292,10 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `recap` | Weekly recap | Full screen | Sunday, on Today | `/(flows)/moments/recap` · fullScreenModal |
-| [ ] | `vantage` | Vantage point | Full screen | when earned | `/(flows)/moments/vantage` · fullScreenModal |
-| [ ] | `levelup` | Level up | Full screen | when earned | `/(flows)/moments/levelup` · fullScreenModal |
-| [ ] | `yourbirthday` | Your year | Full screen | your birthday, on Today | `/(flows)/moments/yourbirthday` · fullScreenModal |
+| [~] | `recap` | Weekly recap | Full screen | Sunday, on Today | `/(flows)/moments/recap` · fullScreenModal |
+| [~] | `vantage` | Vantage point | Full screen | when earned | `/(flows)/moments/vantage` · fullScreenModal |
+| [~] | `levelup` | Level up | Full screen | when earned | `/(flows)/moments/levelup` · fullScreenModal |
+| [~] | `yourbirthday` | Your year | Full screen | your birthday, on Today | `/(flows)/moments/yourbirthday` · fullScreenModal |
 
 ## States (12)
 

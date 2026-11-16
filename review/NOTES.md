@@ -39,3 +39,5 @@
 - You · People: chapter typecheck passed. [~]: 5 entries built: people, person edit/checklist, selected-only sample contacts, dates and inline birthday nudge. Memorial has no countdown/reminder. Real contacts, notifications and sending remain Track B. Final visual pass pending.
 
 - You · Settings: chapter typecheck passed. [~]: 14 routes built; appearance/sounds/haptics/privacy controls persist, data export opens the OS share sheet, typed DELETE resets only local seed data. Billing/auth/MCP/model downloads/notifications are explicit previews. Parked automation removed from membership copy; nudge cap stays one/day. Final visual pass pending.
+
+- Grow: chapter typecheck passed. [~]: 4 routes built: core weekly recap PeekStack, vantage/gates, paged level-up and birthday recap. Yearly history is illustrative seed content; earned triggers remain Track B. Final visual pass pending.
