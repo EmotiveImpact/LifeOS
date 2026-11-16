@@ -252,12 +252,12 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `tests` | Know yourself | Push | You → Know yourself | `/you/self/tests` |
-| [ ] | `testq` | One statement at a time | Full screen | Know yourself → a test | `/(flows)/testq` · fullScreenModal |
-| [ ] | `bigfive` | Your personality | Push | end of the personality test | `/you/self/bigfive` |
-| [ ] | `chronotype` | Your body clock | Push | Know yourself | `/you/self/chronotype` |
-| [ ] | `values` | What matters most | Push | Know yourself | `/you/self/values` |
-| [ ] | `measures` | Your body numbers | Push | You → Body numbers | `/you/self/measures` |
+| [~] | `tests` | Know yourself | Push | You → Know yourself | `/you/self/tests` |
+| [~] | `testq` | One statement at a time | Full screen | Know yourself → a test | `/(flows)/testq` · fullScreenModal |
+| [~] | `bigfive` | Your personality | Push | end of the personality test | `/you/self/bigfive` |
+| [~] | `chronotype` | Your body clock | Push | Know yourself | `/you/self/chronotype` |
+| [~] | `values` | What matters most | Push | Know yourself | `/you/self/values` |
+| [~] | `measures` | Your body numbers | Push | You → Body numbers | `/you/self/measures` |
 
 ## You · People and dates (5)
 

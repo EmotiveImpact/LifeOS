@@ -33,3 +33,5 @@
 - Teach me: chapter typecheck passed. [~]: 11 entries covered: nine lesson routes, contextual offer component and reference-only playable flow. Quick/deep lesson path, guess, puzzle, retell and feedback operate locally. Full AI analysis, narration and Skia film are Track B. Final visual pass pending.
 
 - Tab 3: chapter typecheck passed. [~]: 10 routes built. Core score/levels/areas, household, local records and memory edit/forget/undo, details and shared preview are wired. Memory retrieval, experiments and multi-account sharing remain Track B. Final visual pass pending.
+
+- You · Know yourself: chapter typecheck passed. [~]: 6 routes built with 50 public-domain IPIP statements, local answers, values ordering and editable body measures. Personality/chronotype interpretations are explicitly sample results until Track B scoring. Final visual pass pending.
