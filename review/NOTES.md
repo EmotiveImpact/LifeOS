@@ -17,3 +17,5 @@
 - Your Chief Aim: chapter typecheck passed. [~]: 4 routes built; four-step editor, statement/history, read ritual and gambit are persisted locally. Glimpse uses sample earned progress. Final visual pass pending.
 
 - Plan · Money: chapter typecheck passed. [~]: 8 routes built; ledger/privacy, subscription review, categories, budget controls and bank selection operate locally. Banking/cancellation are clearly previews. Final visual pass pending.
+
+- Plan · Documents: chapter typecheck passed. [~]: 3 routes built with seeded documents, renewal timing and persistent checklist. File storage/scanning and online renewals are local previews. Final visual pass pending.

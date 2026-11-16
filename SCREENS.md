@@ -99,9 +99,9 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `vault` | Documents and renewals | Push | Plan → Documents | `/plan/documents/vault` |
-| [ ] | `docdetail` | Passport | Push | Documents → a document | `/plan/documents/docdetail` |
-| [ ] | `renewal` | Renewal: car insurance | Push | Documents or Today, when it’s time | `/plan/documents/renewal` |
+| [~] | `vault` | Documents and renewals | Push | Plan → Documents | `/plan/documents/vault` |
+| [~] | `docdetail` | Passport | Push | Documents → a document | `/plan/documents/docdetail` |
+| [~] | `renewal` | Renewal: car insurance | Push | Documents or Today, when it’s time | `/plan/documents/renewal` |
 
 ## The toolkit (13)
 
