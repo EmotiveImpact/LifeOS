@@ -1283,17 +1283,23 @@ var ORBS=[];
    swings round (one sweep every 16 s), like a plate spinning on a table, so it reads as a sphere being
    traced. Near dots are a little bigger and brighter. `rings: 2` adds a second ring crossing it.
    It only goes 3D while life is THINKING (state 'sphere'). Everything else is the flat original:
-   voice → the flat ring, with the original pulse running along it.  done → it lies flat again. */
+   Thinking also breathes: the spin ramps up and eases off in waves, and at full speed the wobbling
+   ring sweeps out a sphere.  voice → the flat ring, with the original pulse running along it.
+   done → the dots gather into the centre with a springy overshoot, then open back out into the ring. */
 var ORB_N=10;
 function mountOrb(el,size,state,rings){if(state==='core')state='voice';rings=rings||1;var c=document.createElement('canvas'),d=Math.min(2,window.devicePixelRatio||1);c.width=c.height=size*d;c.style.width=c.style.height=size+'px';c.style.display='block';el.innerHTML='';el.appendChild(c);var x=c.getContext('2d');x.scale(d,d);
- var dot=Math.max(2.6,size/12),R=size/2-Math.max(2,size/14)-dot/2,o={state:state||'ring',m:state&&state!=='ring'?1:0,v:state==='voice'?1:0,spin:0,sweep:0,t:0,vis:true,ink:el.dataset.ink||''},doneAt=0,last=0;
+ var dot=Math.max(2.6,size/12),R=size/2-Math.max(2,size/14)-dot/2,o={state:state||'ring',m:state==='sphere'?1:0,v:state==='voice'?1:0,g:0,gv:0,spin:0,sweep:0,t:0,vis:true,ink:el.dataset.ink||''},doneAt=0,last=0;
  o.setRings=function(n){o.rings=n};o.set=function(s){if(s==='core')s='voice';o.state=s;if(s==='done')doneAt=performance.now()};
  function frame(now){requestAnimationFrame(frame);var dt=last?Math.min(50,now-last):16;last=now;if(!o.vis)return;
-  if(o.state==='done'&&now-doneAt>300)o.state='ring';
+  if(o.state==='done'&&now-doneAt>1000)o.state='ring';
   o.m+=((o.state==='sphere'?1:0)-o.m)*.045;o.v+=((o.state==='voice'?1:0)-o.v)*.08;
-  o.spin+=dt/12000*Math.PI*2;o.sweep+=dt/16000*Math.PI*2*o.m;o.t+=dt/1000;
+  // done: the dots gather into the centre with a springy overshoot, then open back out into the ring
+  var gt=o.state==='done'&&now-doneAt<450?1:0;o.gv+=(gt-o.g)*.16;o.gv*=.74;o.g+=o.gv;
+  // thinking: the spin ramps up and eases off in waves; at full speed the wobbling ring sweeps out a sphere
+  var ramp=1+2.2*o.m*Math.pow(.5-.5*Math.cos(o.t*Math.PI*2/2.6),1.6);
+  o.spin+=dt/12000*Math.PI*2*ramp;o.sweep+=dt/16000*Math.PI*2*o.m*(.5+ramp);o.t+=dt/1000;
   var ink=o.ink||getComputedStyle(el).color;x.clearRect(0,0,size,size);x.fillStyle=ink;
-  var m=o.m,ease=m*m*(3-2*m),L=[];
+  var m=o.m,ease=m*m*(3-2*m),L=[],gR=1-.62*Math.max(-.2,o.g);
   for(var ri=0;ri<(o.rings||rings);ri++){var show=ri===0?1:Math.pow(m,1.3);if(show<.01)continue;
    var beta=52*ease*Math.PI/180,cb=Math.cos(beta),sb=Math.sin(beta),phi=o.sweep+ri*Math.PI/2,cp=Math.cos(phi),sp=Math.sin(phi);
    for(var k=0;k<ORB_N;k++){var a=k/ORB_N*Math.PI*2+o.spin+ri*Math.PI;
@@ -1302,7 +1308,8 @@ function mountOrb(el,size,state,rings){if(state==='core')state='voice';rings=rin
     var persp=3.4/(3.4-z),depth=(1+z)/2;                               // z>0 is nearer
     var tail=.3+.7*(k/ORB_N),ph=((o.t/1.2-k*.1)%1+1)%1,think=.25+.75*(.5-.5*Math.cos(ph*Math.PI*2));
     var alpha=(tail*(1-o.v)+think*o.v)*(1-m*.55*(1-depth))*show;
-    L.push([depth,size/2+X*R*persp,size/2+Y*R*persp,alpha,1-m*(1-(.78+.34*depth))])}}
+    var gg=Math.min(1,Math.max(0,o.g));alpha=alpha*(1-gg)+.95*gg*show;
+    L.push([depth,size/2+X*R*persp*gR,size/2+Y*R*persp*gR,alpha,(1-m*(1-(.78+.34*depth)))*(1+.2*gg)])}}
   L.sort(function(a,b){return a[0]-b[0]});L.forEach(function(q){if(q[3]<.02)return;x.globalAlpha=Math.min(1,q[3]);x.beginPath();x.arc(q[1],q[2],dot/2*q[4],0,7);x.fill()});x.globalAlpha=1}
  requestAnimationFrame(frame);
  if('IntersectionObserver' in window){new IntersectionObserver(function(es){o.vis=es[0].isIntersecting}).observe(el)}
@@ -1312,10 +1319,10 @@ function mountOrb(el,size,state,rings){if(state==='core')state='voice';rings=rin
 
 
 
-S14('system','orb','The orb, evolving','The life mark is a ring of 10 dots flowing round clockwise, one lap every 12 seconds. It only goes 3D while life is thinking: the same ring leans back and slowly wobbles, like a plate spinning, with the dots still flowing round exactly as before. Everything else is the flat original; while you talk, the dots pulse one after another. Switch between one ring and two rings below to compare.','LifeOrb { state: ring | sphere | voice | done, level } · Orb.tsx · MOTION.md §3.2',0,
+S14('system','orb','The orb, evolving','The life mark is a ring of 10 dots flowing round clockwise, one lap every 12 seconds. It only goes 3D while life is thinking: the same ring leans back and wobbles like a plate spinning, its speed ramping up and easing off so at full speed it sweeps out a sphere, with the dots still flowing round. When it’s done, the dots gather into the centre and spring back out. Everything else is the flat original; while you talk, the dots pulse one after another. Switch between one ring and two rings below to compare.','LifeOrb { state: ring | sphere | voice | done, level } · Orb.tsx · MOTION.md §3.2',0,
  glow('var(--ember-glow)')+STATUS+'<div class="pad col rel" style="gap:22px;padding-top:40px;align-items:center"><span class="t-callout c2" data-ol>Ring · the everyday mark</span><div data-o3 style="width:180px;height:180px;color:var(--text)"></div><div class="segm" style="width:100%" data-os><button class="on">Ring</button><button>Thinking</button><button>Voice</button><button>Done</button></div><div class="segm" style="width:100%" data-ov><button class="on">One ring</button><button>Two rings</button></div>'+
- '<div class="card col" style="gap:0;padding:2px 16px;width:100%">'+li('Ring','Everywhere: tab bar, headers, small sizes','<span class="t-callout c2">Default</span>')+li('Thinking (3D)','Only while life is working something out','<span class="t-callout c2">Over 1s</span>')+li('Voice','The flat ring, pulsing as you talk','<span class="t-callout c2">A pulse</span>')+li('Done','Lies flat again','<span class="t-callout c2">0.8s</span>')+'</div></div>',
- function(s){var o=mountOrb(s.querySelector('[data-o3]'),180,'ring'),L={Ring:'Ring · the everyday mark',Thinking:'Thinking · the same ring, in 3D',Voice:'Voice · the ring pulses with you',Done:'Done · lies flat again'},b=s.querySelectorAll('[data-os] button'),vb=s.querySelectorAll('[data-ov] button');vb.forEach(function(x,i){x.addEventListener('click',function(){vb.forEach(function(y){y.classList.toggle('on',y===x)});o.setRings(i+1);ORBS.forEach(function(q){q.setRings(i+1)});sfx('tap')})});b.forEach(function(x){x.addEventListener('click',function(){b.forEach(function(y){y.classList.toggle('on',y===x)});o.set({Ring:'ring',Thinking:'sphere',Voice:'voice',Done:'done'}[x.textContent]);s.querySelector('[data-ol]').textContent=L[x.textContent];sfx(x.textContent==='Done'?'complete':'tap');if(x.textContent==='Done')setTimeout(function(){b.forEach(function(y,k){y.classList.toggle('on',k===0)});s.querySelector('[data-ol]').textContent=L.Ring},900)})})});
+ '<div class="card col" style="gap:0;padding:2px 16px;width:100%">'+li('Ring','Everywhere: tab bar, headers, small sizes','<span class="t-callout c2">Default</span>')+li('Thinking (3D)','Only while life is working something out','<span class="t-callout c2">Over 1s</span>')+li('Voice','The flat ring, pulsing as you talk','<span class="t-callout c2">A pulse</span>')+li('Done','Dots gather in, then open back out','<span class="t-callout c2">1s</span>')+'</div></div>',
+ function(s){var o=mountOrb(s.querySelector('[data-o3]'),180,'ring'),L={Ring:'Ring · the everyday mark',Thinking:'Thinking · the same ring, in 3D',Voice:'Voice · the ring pulses with you',Done:'Done · gathers in, then opens out'},b=s.querySelectorAll('[data-os] button'),vb=s.querySelectorAll('[data-ov] button');vb.forEach(function(x,i){x.addEventListener('click',function(){vb.forEach(function(y){y.classList.toggle('on',y===x)});o.setRings(i+1);ORBS.forEach(function(q){q.setRings(i+1)});sfx('tap')})});b.forEach(function(x){x.addEventListener('click',function(){b.forEach(function(y){y.classList.toggle('on',y===x)});o.set({Ring:'ring',Thinking:'sphere',Voice:'voice',Done:'done'}[x.textContent]);s.querySelector('[data-ol]').textContent=L[x.textContent];sfx(x.textContent==='Done'?'complete':'tap');if(x.textContent==='Done')setTimeout(function(){b.forEach(function(y,k){y.classList.toggle('on',k===0)});s.querySelector('[data-ol]').textContent=L.Ring},1100)})})});
 
 /* ---------- CHAT, restored (v2’s clean chat, in v4+ language) ---------- */
 var ISL='<div class="isl" data-isl><div class="isl-o" data-islo style="color:#F7F8F8"></div><span class="isl-t" data-islt>Checking London schemes and the NHS…</span></div>';
