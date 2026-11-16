@@ -19,7 +19,8 @@ Your job is to build ALL of it, faithfully, looking and feeling premium. You are
       mountOrb), each shown in the /design gallery.
    b. Create the seed store (apps/mobile/src/state/seed.ts) with the board's sample people, numbers and
       copy; real figures come from packages/core.
-   c. Build every screen in SCREENS.md, chapter by chapter in order, wiring each route exactly as listed.
+   c. Build every screen in SCREENS.md (221; skip rows marked ⏸ parked), chapter by chapter in order,
+      wiring each route exactly as listed.
       Match the board in light and dark. Tick the row ([x] or [~] with a one-line note).
    d. After each chapter: npx tsc --noEmit -p . must be green. Commit "screens: <chapter>".
 5. Do NOT: write tests, run screenshot jobs, build the backend, call real APIs, add features or screens,
