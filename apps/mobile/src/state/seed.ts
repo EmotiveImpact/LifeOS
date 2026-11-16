@@ -50,6 +50,7 @@ export const seedMeal: MealItem[] = [
   { name: 'Egg', grams: 50, kcal: 72, protein: 7, carbs: 0, fat: 5, fibre: 0, confidence: .9 },
 ];
 export const seed = {
+  membership: { annual: 48, monthly: 6, annualRenewal: 59.99 },
   date: SEED_DATE,
   body: { heightCm: 172, weightKg: 74.2, waistCm: 84, bodyFatPct: 22, sexAtBirth: 'Female', activity: 'Active', bp: '118 / 76', bmi: 25.1, waistRatio: .49, rhr: 54, vo2: 44 },
   health: { readiness: 72, sleepMinutes: 430, sleepNeed: 480, sleepDebt: 130, load: 6.2, loadTarget: [11, 14] as [number, number], hrv: 62, hrvBaseline: 54, rhr: 54, resp: 14.6, stress: 1.4, regularity: 78, fitnessAge: 25, loadRatio: 1.12, steps: 8240, waterMl: 1400, forecast: 68,

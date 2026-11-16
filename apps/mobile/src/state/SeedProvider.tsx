@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Uniwind } from 'uniwind';
 import { setFeedbackPrefs } from '@/design/feedback';
@@ -26,9 +27,10 @@ type SeedContextValue = { data: SeedData; hydrated: boolean; set: (patch: Partia
 const Context = createContext<SeedContextValue | null>(null);
 const KEY = 'life_track_a_v17';
 export function SeedProvider({ children }: { children: ReactNode }) {
+  const systemScheme = useColorScheme();
   const [data, setData] = useState(initial), [hydrated, setHydrated] = useState(false);
   useEffect(() => { let active = true; AsyncStorage.getItem(KEY).then(raw => { if (!active) return; if (raw) { try { const saved = JSON.parse(raw); setData({ ...initial, ...saved, prefs: { ...initial.prefs, ...saved.prefs } }); } catch { /* Keep the safe local fixtures. */ } } }).finally(() => { if (active) setHydrated(true); }); return () => { active = false; }; }, []);
-  useEffect(() => { Uniwind.setTheme(data.prefs.dark ? 'dark' : 'light'); setFeedbackPrefs({ sound: data.prefs.sounds, haptics: data.prefs.haptics }); if (hydrated) AsyncStorage.setItem(KEY, JSON.stringify(data)).catch(() => {}); }, [data, hydrated]);
+  useEffect(() => { Uniwind.setTheme((data.choices.appearance === 'System' ? systemScheme === 'dark' : data.prefs.dark) ? 'dark' : 'light'); setFeedbackPrefs({ sound: data.prefs.sounds, haptics: data.prefs.haptics }); if (hydrated) AsyncStorage.setItem(KEY, JSON.stringify(data)).catch(() => {}); }, [data, hydrated, systemScheme]);
   const engine = useMemo(() => engineSnapshot(data.profile, data.completed), [data.profile, data.completed]);
   const value: SeedContextValue = {
     data, hydrated, engine, set: patch => setData(d => ({ ...d, ...patch })),

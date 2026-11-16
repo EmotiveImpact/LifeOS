@@ -19,7 +19,7 @@ function AppShell() {
     <Stack.Screen name="(tabs)" />
     <Stack.Screen name="(sheets)" options={{ presentation: 'formSheet', sheetAllowedDetents: [.55, .92], sheetGrabberVisible: false, contentStyle: { backgroundColor: t.surface } }} />
     <Stack.Screen name="(flows)" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-  </Stack><StatusBar style={data.prefs.dark ? 'light' : 'dark'} /></>;
+  </Stack><StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} /></>;
 }
 export default function RootLayout() {
   return <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider><HeroUINativeProvider><LifeProvider><SeedProvider><SheetProvider><AppShell /></SheetProvider></SeedProvider></LifeProvider></HeroUINativeProvider></SafeAreaProvider></GestureHandlerRootView>;

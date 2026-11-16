@@ -273,20 +273,20 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `plus` | life+ | Sheet | a locked feature or Settings | `/(sheets)/plus` · formSheet |
-| [ ] | `settings` | Settings | Push | You → Settings | `/you/settings/settings` |
-| [ ] | `notifs` | Notifications | Push | Settings | `/you/settings/notifs` |
-| [ ] | `ondevice` | Private mode: AI on your phone | Push | Settings → Private mode | `/you/settings/ondevice` |
-| [ ] | `yourai` | Your data in your AI | Push | Settings → Your AI | `/you/settings/yourai` |
-| [ ] | `appearance` | Look, sound and feel | Push | Settings | `/you/settings/appearance` |
-| [ ] | `services` | Connected services | Push | Settings | `/you/settings/services` |
-| [ ] | `privacy` | Your data | Push | Settings | `/you/settings/privacy` |
-| [ ] | `deleteacct` | Delete your account | Push | Your data | `/you/settings/deleteacct` |
-| [ ] | `subscription` | Your life+ | Push | Settings → life+ | `/you/settings/subscription` |
-| [ ] | `plussuccess` | Welcome to life+ | Full screen | after subscribing | `/(flows)/plussuccess` · fullScreenModal |
-| [ ] | `help` | Help | Push | Settings | `/you/settings/help` |
-| [ ] | `legal` | About life | Push | Settings | `/you/settings/legal` |
-| [ ] | `aimodels` | What stays on your phone | Push | Private mode → What downloads | `/you/settings/aimodels` |
+| [~] | `plus` | life+ | Sheet | a locked feature or Settings | `/(sheets)/plus` · formSheet |
+| [~] | `settings` | Settings | Push | You → Settings | `/you/settings/settings` |
+| [~] | `notifs` | Notifications | Push | Settings | `/you/settings/notifs` |
+| [~] | `ondevice` | Private mode: AI on your phone | Push | Settings → Private mode | `/you/settings/ondevice` |
+| [~] | `yourai` | Your data in your AI | Push | Settings → Your AI | `/you/settings/yourai` |
+| [~] | `appearance` | Look, sound and feel | Push | Settings | `/you/settings/appearance` |
+| [~] | `services` | Connected services | Push | Settings | `/you/settings/services` |
+| [~] | `privacy` | Your data | Push | Settings | `/you/settings/privacy` |
+| [~] | `deleteacct` | Delete your account | Push | Your data | `/you/settings/deleteacct` |
+| [~] | `subscription` | Your life+ | Push | Settings → life+ | `/you/settings/subscription` |
+| [~] | `plussuccess` | Welcome to life+ | Full screen | after subscribing | `/(flows)/plussuccess` · fullScreenModal |
+| [~] | `help` | Help | Push | Settings | `/you/settings/help` |
+| [~] | `legal` | About life | Push | Settings | `/you/settings/legal` |
+| [~] | `aimodels` | What stays on your phone | Push | Private mode → What downloads | `/you/settings/aimodels` |
 
 ## Grow (4)
 
