@@ -198,9 +198,9 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `habits` | Habits | Push | Body → Habits | `/plan/body/habits/habits` |
-| [ ] | `habitnew` | New habit | Sheet | Habits → + | `/(sheets)/habitnew` · formSheet |
-| [ ] | `strength` | Habit strength | Push | a habit | `/plan/body/habits/strength` |
+| [~] | `habits` | Habits | Push | Body → Habits | `/plan/body/habits/habits` |
+| [~] | `habitnew` | New habit | Sheet | Habits → + | `/(sheets)/habitnew` · formSheet |
+| [~] | `strength` | Habit strength | Push | a habit | `/plan/body/habits/strength` |
 
 ## Learn from the best (10)
 
