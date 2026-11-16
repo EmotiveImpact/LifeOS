@@ -237,16 +237,16 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `you` | You | Tab | tab bar | `/(tabs)/you` |
-| [ ] | `household` | Household | Sheet | your details → lives with | `/(sheets)/household` · formSheet |
-| [ ] | `mood` | Mood over time | Push | You → Mood | `/you/mood` |
-| [ ] | `children` | Children | Sheet | your details | `/(sheets)/children` · formSheet |
-| [ ] | `knows` | What life knows | Push | You → What life knows | `/you/knows` |
-| [ ] | `levels` | Your levels | Push | You → Levels | `/you/levels` |
-| [ ] | `experiment` | Experiment: caffeine | Push | You → Experiments | `/you/experiment` |
-| [ ] | `memory` | What life remembers | Push | You → What life remembers | `/you/memory` |
-| [ ] | `shared` | Shared life | Push | You → Shared | `/you/shared` |
-| [ ] | `profile` | Your details | Push | You → your details | `/you/profile` |
+| [~] | `you` | You | Tab | tab bar | `/(tabs)/you` |
+| [~] | `household` | Household | Sheet | your details → lives with | `/(sheets)/household` · formSheet |
+| [~] | `mood` | Mood over time | Push | You → Mood | `/you/mood` |
+| [~] | `children` | Children | Sheet | your details | `/(sheets)/children` · formSheet |
+| [~] | `knows` | What life knows | Push | You → What life knows | `/you/knows` |
+| [~] | `levels` | Your levels | Push | You → Levels | `/you/levels` |
+| [~] | `experiment` | Experiment: caffeine | Push | You → Experiments | `/you/experiment` |
+| [~] | `memory` | What life remembers | Push | You → What life remembers | `/you/memory` |
+| [~] | `shared` | Shared life | Push | You → Shared | `/you/shared` |
+| [~] | `profile` | Your details | Push | You → your details | `/you/profile` |
 
 ## You · Know yourself (6)
 

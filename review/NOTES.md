@@ -31,3 +31,5 @@
 - Learn from: chapter typecheck passed. [~]: 10 routes built; library, lens, paged ideas, teach-back, recall, results and drawing examples are linked. Lesson/recall progress is local; full Fenny kit and FSRS are Track B. Final visual pass pending.
 
 - Teach me: chapter typecheck passed. [~]: 11 entries covered: nine lesson routes, contextual offer component and reference-only playable flow. Quick/deep lesson path, guess, puzzle, retell and feedback operate locally. Full AI analysis, narration and Skia film are Track B. Final visual pass pending.
+
+- Tab 3: chapter typecheck passed. [~]: 10 routes built. Core score/levels/areas, household, local records and memory edit/forget/undo, details and shared preview are wired. Memory retrieval, experiments and multi-account sharing remain Track B. Final visual pass pending.
