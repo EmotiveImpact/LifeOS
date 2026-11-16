@@ -20,3 +20,6 @@ export * from './components/Lists';
 export * from './components/Talk';
 export * from './components/Growth';
 export * from './components/TopBar';
+export * from './components/Charts';
+export * from './components/Instruments';
+export * from './components/Learning';

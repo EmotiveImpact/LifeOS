@@ -1,124 +1,107 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useFrameCallback,
-  useSharedValue,
-  withSequence,
-  withSpring,
-  type SharedValue,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedProps, useAnimatedStyle, useFrameCallback, useSharedValue, type SharedValue } from 'react-native-reanimated';
+import Svg, { Line } from 'react-native-svg';
 import { useCalmMotion, useTokens } from '../theme';
-import { motion } from '../tokens';
 
-/**
- * LifeOrb v5: the original ring, which goes 3D only while life is thinking (DESIGN.md §47, MOTION.md §3.2).
- *
- * The mark: 10 dots on a circle, each brighter than the last (a tail), travelling ALONG the circle
- * clockwise, one lap every 12 s. That flow never changes, in any state.
- *  ring      The everyday mark. Also used while idle.
- *  thinking  Only while life is working something out (> 1 s). The same ring leans back 52° and its lean
- *            swings round like a plate spinning; dots keep flowing round. The speed breathes: it ramps up
- *            to about 3× and eases off every 2.6 s, so at full speed the wobbling ring sweeps out a sphere.
- *            Near dots a little bigger and brighter. `rings={2}` adds a second ring crossing it.
- *  voice     The flat ring; the dots pulse one after another (1.2 s cycle, 0.1 s apart).
- *  done      The dots gather into the centre with a springy overshoot, then open back out into the ring.
- * Reduce Motion: no flow, no wobble; the state shows as a still ring or a still tilted ring.
- */
-export type OrbState = 'ring' | 'thinking' | 'voice' | 'done';
-
-const N = 10;
-const LAP_MS = 12000;
-const SWEEP_MS = 16000;
-const RAMP_S = 2.6;
-const LEAN = (52 * Math.PI) / 180;
-
-export function LifeOrb({ size = 56, state = 'ring', rings = 1, color }: { size?: number; state?: OrbState; rings?: 1 | 2; color?: string }) {
-  const t = useTokens();
-  const calm = useCalmMotion();
-  const spin = useSharedValue(0);
-  const sweep = useSharedValue(0);
-  const clock = useSharedValue(0);
-  const tilt = useSharedValue(state === 'thinking' ? 1 : 0);
-  const voice = useSharedValue(state === 'voice' ? 1 : 0);
-  const gather = useSharedValue(0);
-
-  // One clock drives the flow, so the thinking speed can ramp up and ease off smoothly.
-  const frame = useFrameCallback((f) => {
-    const dt = Math.min(50, f.timeSincePreviousFrame ?? 16);
-    const t = clock.value;
-    const ramp = 1 + 2.2 * tilt.value * Math.pow(0.5 - 0.5 * Math.cos((t * Math.PI * 2) / RAMP_S), 1.6);
-    spin.value += (dt / LAP_MS) * Math.PI * 2 * ramp;
-    sweep.value += (dt / SWEEP_MS) * Math.PI * 2 * tilt.value * (0.5 + ramp);
-    clock.value = t + dt / 1000;
-  }, false);
-
-  useEffect(() => {
-    frame.setActive(!calm);
-  }, [calm, frame]);
-
-  useEffect(() => {
-    const target = state === 'thinking' ? 1 : 0;
-    tilt.value = calm ? target : withSpring(target, motion.smooth);
-    voice.value = calm ? (state === 'voice' ? 1 : 0) : withSpring(state === 'voice' ? 1 : 0, motion.snappy);
-    if (state === 'done' && !calm) {
-      gather.value = withSequence(withSpring(1, { duration: 450, dampingRatio: 0.55 }), withSpring(0, motion.bouncy));
-    }
-  }, [state, calm, tilt, voice, gather]);
-
-  const dot = Math.max(2.6, size / 12);
-  const R = size / 2 - Math.max(2, size / 14) - dot / 2;
-  const ink = color ?? t.ink;
-  const dots = [];
-  for (let ri = 0; ri < rings; ri++) for (let k = 0; k < N; k++) dots.push({ ri, k });
-
-  return (
-    <View style={{ width: size, height: size }} accessibilityRole="image" accessibilityLabel={state === 'thinking' ? 'life is thinking' : state === 'voice' ? 'life is listening' : 'life'}>
-      {dots.map(({ ri, k }) => (
-        <OrbDot key={`${ri}-${k}`} ri={ri} k={k} R={R} size={size} dot={dot} color={ink} spin={spin} sweep={sweep} clock={clock} tilt={tilt} voice={voice} gather={gather} />
-      ))}
-    </View>
-  );
+/** Port of board v17 mountOrb: the same thirty dots travel between every state.
+ * Original ring, Fibonacci sphere, clockwork, searching web, voice and spring gather.
+ * Geometry and animation run on Reanimated's UI thread; no JS animation timer. */
+export type OrbState = 'ring' | 'thinking' | 'working' | 'searching' | 'listening' | 'done' | 'voice';
+type Point = { x: number; y: number; z: number; alpha: number; scale: number };
+const STATES = ['ring', 'thinking', 'working', 'searching', 'listening', 'done'] as const;
+const sphere = (n: number) => Array.from({ length: n }, (_, i) => {
+  const y = 1 - 2 * (i + .5) / n, r = Math.sqrt(1 - y * y), a = i * Math.PI * (3 - Math.sqrt(5));
+  return [Math.cos(a) * r, y, Math.sin(a) * r];
+});
+const SPHERE = sphere(30), SEARCH = sphere(10);
+const NEIGHBOURS = SEARCH.map((a, i) => SEARCH.map((b, j) => ({ j, d: a.reduce((s, v, k) => s + v * b[k], 0) })).filter(v => v.j !== i).sort((a, b) => b.d - a.d).slice(0, 3).map(v => v.j));
+const PAIRS = Array.from({ length: 10 }, (_, a) => Array.from({ length: 9 - a }, (_, i) => [a, a + i + 1])).flat();
+const ALine = Animated.createAnimatedComponent(Line);
+function target(state: number, k: number, r: number, t: number, spin: number, voice: number, head: number, trail: number[]): Point {
+  'worklet';
+  const i = k % 10, a = i / 10 * Math.PI * 2 + spin, tail = .3 + .7 * i / 10;
+  const ring = { x: Math.cos(a) * r, y: Math.sin(a) * r, z: .5, alpha: k < 10 ? tail : 0, scale: 1 };
+  if (state === 0 || state === 5) return ring;
+  if (state === 2) {
+    if (k < 10) { const b = a + t / 12 * Math.PI * 2 * 1.2; return { ...ring, x: Math.cos(b) * r, y: Math.sin(b) * r }; }
+    if (k >= 21) return { ...ring, alpha: 0 };
+    const inner = k >= 17, j = k - (inner ? 17 : 10), n = inner ? 4 : 7;
+    const b = j / n * Math.PI * 2 + (inner ? t / 3.4 : -t / 5.2) * Math.PI * 2, rr = r * (inner ? .27 : .6);
+    return { x: Math.cos(b) * rr, y: Math.sin(b) * rr, z: .5, alpha: .3 + .7 * j / n, scale: inner ? .66 : .82 };
+  }
+  if (state === 4) {
+    const push = voice * (.35 + .65 * (.5 + .5 * Math.sin(t * 6 - i * .9))), rr = r * (1 + .24 * push);
+    return { x: Math.cos(a) * rr, y: Math.sin(a) * rr, z: .5, alpha: k < 10 ? .78 + .22 * push : 0, scale: 1 + .35 * push };
+  }
+  if (state === 3 && k >= 10) return { ...ring, alpha: 0 };
+  const p = state === 1 ? SPHERE[k] : SEARCH[k], angle = t * (state === 1 ? .42 : .3), tilt = state === 1 ? .32 : .35;
+  const x = p[0] * Math.cos(angle) + p[2] * Math.sin(angle), z1 = -p[0] * Math.sin(angle) + p[2] * Math.cos(angle);
+  const y = p[1] * Math.cos(tilt) - z1 * Math.sin(tilt), z = p[1] * Math.sin(tilt) + z1 * Math.cos(tilt), depth = (z + 1) / 2, pr = 3.2 / (3.2 - z);
+  const ti = trail.indexOf(k), hop = k === head ? 1 : ti >= 0 ? .8 - ti * .14 : .3;
+  return { x: x * r * pr * (state === 1 ? .96 : 1), y: y * r * pr * (state === 1 ? .96 : 1), z: depth,
+    alpha: state === 1 ? (.1 + .9 * Math.pow(depth, 1.5)) * (.82 + .18 * (.5 + .5 * Math.sin(t * 2.2 + k * 1.37))) : hop * (.45 + .55 * depth),
+    scale: state === 1 ? .5 + .62 * depth : (.78 + .34 * depth) * (k === head ? 1.15 : 1) };
 }
-
-function OrbDot({ ri, k, R, size, dot, color, spin, sweep, clock, tilt, voice, gather }: {
-  ri: number; k: number; R: number; size: number; dot: number; color: string;
-  spin: SharedValue<number>; sweep: SharedValue<number>; clock: SharedValue<number>; tilt: SharedValue<number>; voice: SharedValue<number>; gather: SharedValue<number>;
-}) {
-  const style = useAnimatedStyle(() => {
-    const m = tilt.value;
-    const e = m * m * (3 - 2 * m);
-    const show = ri === 0 ? 1 : Math.pow(m, 1.3);
-    // Travel along the ring: the original flow.
-    const a = (k / N) * Math.PI * 2 + spin.value + ri * Math.PI;
-    // Lean the ring back, then swing the lean round.
-    const beta = LEAN * e;
-    const cx = Math.cos(a);
-    const cy = Math.sin(a) * Math.cos(beta);
-    const z = Math.sin(a) * Math.sin(beta);
-    const phi = sweep.value + ri * (Math.PI / 2);
-    const X = cx * Math.cos(phi) - cy * Math.sin(phi);
-    const Y = cx * Math.sin(phi) + cy * Math.cos(phi);
-    const persp = 3.4 / (3.4 - z);
-    const depth = (1 + z) / 2;
-    // The tail, or the original one-after-another pulse while listening.
-    const tail = 0.3 + 0.7 * (k / N);
-    const ph = (((clock.value / 1.2 - k * 0.1) % 1) + 1) % 1;
-    const pulse = 0.25 + 0.75 * (0.5 - 0.5 * Math.cos(ph * Math.PI * 2));
-    const v = voice.value;
-    // Done: pull in towards the centre (with overshoot from the spring), brighten, then open back out.
-    const gR = 1 - 0.62 * Math.max(-0.2, gather.value);
-    const g = Math.min(1, Math.max(0, gather.value));
-    const base = (tail * (1 - v) + pulse * v) * (1 - m * 0.55 * (1 - depth)) * show;
-    return {
-      zIndex: Math.round(depth * 10),
-      opacity: base * (1 - g) + 0.95 * g * show,
-      transform: [{ translateX: X * R * persp * gR }, { translateY: Y * R * persp * gR }, { scale: (1 - m * (1 - (0.78 + 0.34 * depth))) * (1 + 0.2 * g) }],
-    };
+export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { size?: number; state?: OrbState; color?: string; rings?: 1 | 2 }) {
+  const tokens = useTokens(), calm = useCalmMotion(), ink = color ?? tokens.ink;
+  const dot = Math.max(2.6, size / 12), r = size / 2 - Math.max(2, size / 14) - dot / 2;
+  const mode = useSharedValue(STATES.indexOf(state === 'voice' ? 'listening' : state));
+  const points = useSharedValue<Point[]>(Array.from({ length: 30 }, (_, k) => target(mode.value, k, r, 0, 0, .5, 0, [])));
+  const frozen = useSharedValue(points.value), elapsed = useSharedValue(2000), time = useSharedValue(0), spin = useSharedValue(0);
+  const head = useSharedValue(0), trail = useSharedValue<number[]>([]), edges = useSharedValue<Record<string, number>>({});
+  const hopAt = useSharedValue(0), gather = useSharedValue(0), velocity = useSharedValue(0), voice = useSharedValue(0);
+  useEffect(() => {
+    frozen.value = points.value;
+    mode.value = STATES.indexOf(state === 'voice' ? 'listening' : state);
+    elapsed.value = calm ? 2000 : 0;
+    if (calm) points.value = Array.from({ length: 30 }, (_, k) => target(mode.value, k, r, 0, 0, .5, 0, []));
+  }, [state, calm, r, mode, elapsed, frozen, points]);
+  const frame = useFrameCallback(f => {
+    const dt = Math.min(50, f.timeSincePreviousFrame ?? 16), factor = dt / 16;
+    time.value += dt / 1000; elapsed.value += dt;
+    const t = time.value, m = mode.value;
+    spin.value += dt / 12000 * Math.PI * 2 * (m === 4 ? 1 - .85 * Math.min(1, elapsed.value / 700) : 1);
+    voice.value += ((m === 4 ? .25 + .75 * Math.pow(Math.abs(Math.sin(t * 1.7) * Math.sin(t * .61 + .9)), .6) : 0) - voice.value) * .2;
+    const goal = m === 5 && elapsed.value < 450 ? 1 : 0;
+    velocity.value = (velocity.value + (goal - gather.value) * .16 * factor) * Math.pow(.74, factor);
+    gather.value += velocity.value * factor;
+    if (m === 3 && t - hopAt.value > .55) {
+      hopAt.value = t;
+      let nb = NEIGHBOURS[head.value].filter(j => !trail.value.includes(j));
+      if (!nb.length) nb = NEIGHBOURS[head.value];
+      const nx = nb[Math.floor(t * 7.31) % nb.length];
+      edges.value = { ...edges.value, [`${Math.min(head.value, nx)}-${Math.max(head.value, nx)}`]: t };
+      trail.value = [head.value, ...trail.value].slice(0, 3); head.value = nx;
+    }
+    if (m !== 3 && elapsed.value > 700) { edges.value = {}; trail.value = []; }
+    const gr = 1 - .62 * Math.max(-.2, gather.value), gg = Math.min(1, Math.max(0, gather.value));
+    points.value = Array.from({ length: 30 }, (_, k) => {
+      const to = target(m, k, r, t, spin.value, voice.value, head.value, trail.value);
+      const u = Math.max(0, Math.min(1, (elapsed.value - k % 10 * 38 - (k >= 10 ? 120 : 0)) / 720));
+      const e = u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2, from = frozen.value[k] ?? to;
+      const p = { x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e, z: from.z + (to.z - from.z) * e,
+        alpha: from.alpha + (to.alpha - from.alpha) * e, scale: from.scale + (to.scale - from.scale) * e };
+      return { ...p, x: p.x * gr, y: p.y * gr, alpha: p.alpha * (1 - gg) + (k < 10 ? .95 * gg : 0), scale: p.scale * (1 + .2 * gg) };
+    });
+  }, false);
+  useEffect(() => { frame.setActive(!calm); return () => frame.setActive(false); }, [frame, calm]);
+  return <View style={{ width: size, height: size }} accessibilityRole="image" accessibilityLabel={state === 'ring' ? 'life' : `life is ${state === 'voice' ? 'listening' : state}`}>
+    <Svg width={size} height={size} style={{ position: 'absolute' }} pointerEvents="none">
+      {PAIRS.map(([a, b]) => <OrbEdge key={`${a}-${b}`} a={a} b={b} points={points} edges={edges} time={time} size={size} color={ink} dot={dot} />)}
+    </Svg>
+    {Array.from({ length: 30 }, (_, k) => <OrbDot key={k} k={k} points={points} size={size} dot={dot} color={ink} />)}
+  </View>;
+}
+function OrbDot({ k, points, size, dot, color }: { k: number; points: SharedValue<Point[]>; size: number; dot: number; color: string }) {
+  const style = useAnimatedStyle(() => { const p = points.value[k]; return { opacity: p.alpha, zIndex: Math.round(p.z * 10), transform: [{ translateX: p.x }, { translateY: p.y }, { scale: p.scale }] }; });
+  return <Animated.View style={[{ position: 'absolute', left: size / 2 - dot / 2, top: size / 2 - dot / 2, width: dot, height: dot, borderRadius: dot / 2, backgroundColor: color }, style]} />;
+}
+function OrbEdge({ a, b, points, edges, time, size, color, dot }: { a: number; b: number; points: SharedValue<Point[]>; edges: SharedValue<Record<string, number>>; time: SharedValue<number>; size: number; color: string; dot: number }) {
+  const props = useAnimatedProps(() => {
+    const born = edges.value[`${a}-${b}`], A = points.value[a], B = points.value[b], age = time.value - (born ?? 0), progress = Math.min(1, age / .35);
+    return { x1: size / 2 + A.x, y1: size / 2 + A.y, x2: size / 2 + A.x + (B.x - A.x) * progress, y2: size / 2 + A.y + (B.y - A.y) * progress,
+      opacity: born === undefined ? 0 : Math.max(.34, .85 - Math.max(0, age - 1.2) * .35) * (.5 + .5 * (A.z + B.z) / 2) };
   });
-  return (
-    <Animated.View
-      style={[{ position: 'absolute', left: size / 2 - dot / 2, top: size / 2 - dot / 2, width: dot, height: dot, borderRadius: dot / 2, backgroundColor: color }, style]}
-    />
-  );
+  return <ALine animatedProps={props} stroke={color} strokeWidth={Math.max(1, dot / 3.6)} strokeLinecap="round" />;
 }

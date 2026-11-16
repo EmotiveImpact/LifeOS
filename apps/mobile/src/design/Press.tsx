@@ -3,6 +3,7 @@ import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from '
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { feedback, type FeedbackKind } from './feedback';
 import { springs } from './tokens';
+import { useCalmMotion } from './theme';
 
 const APressable = Animated.createAnimatedComponent(Pressable);
 
@@ -20,6 +21,7 @@ export type PressProps = Omit<PressableProps, 'style' | 'children'> & {
  * fires the right haptic, and exposes a 44pt-friendly accessible button. No opacity flashes.
  */
 export function Press({ haptic = 'select', pressScale = 0.97, style, onPressIn, onPressOut, onPress, children, ...rest }: PressProps) {
+  const calm = useCalmMotion();
   const scale = useSharedValue(1);
   const anim = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
@@ -28,7 +30,7 @@ export function Press({ haptic = 'select', pressScale = 0.97, style, onPressIn, 
       accessibilityRole="button"
       {...rest}
       onPressIn={(e) => {
-        scale.value = withSpring(pressScale, springs.snappy);
+        scale.value = calm || rest.disabled ? 1 : withSpring(pressScale, springs.snappy);
         onPressIn?.(e);
       }}
       onPressOut={(e) => {

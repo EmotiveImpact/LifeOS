@@ -75,7 +75,7 @@ export function TopBar(props: TopBarProps) {
     <View style={[styles.bar, { backgroundColor: onImg ? 'transparent' : t.canvas }]}>
       <ActionButton onImage={onImg} action={{ kind: 'icon', icon: 'chevron-back', label: 'Back', onPress: props.onBack }} />
       <View pointerEvents="none" style={styles.centerAbs}>
-        {props.title ? <Text variant="title" numberOfLines={1} style={onImg ? { color: '#F7F8F8' } : undefined}>{props.title}</Text> : null}
+        {props.title ? <Text variant="title" numberOfLines={1} style={onImg ? { color: t.paper } : undefined}>{props.title}</Text> : null}
       </View>
       {props.action ? <ActionButton onImage={onImg} action={props.action} /> : <View style={styles.spacer} />}
     </View>
@@ -93,8 +93,8 @@ function ActionButton({ action, onImage }: { action: TopBarAction; onImage?: boo
   }
   return (
     <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label}
-      style={[styles.icon, { backgroundColor: onImage ? 'rgba(13,14,16,0.55)' : t.surface2 }]}>
-      <Ionicons name={action.icon} size={19} color={onImage ? '#F7F8F8' : t.ink2} />
+      style={[styles.icon, { backgroundColor: onImage ? t.canvas : t.surface2 }]}>
+      <Ionicons name={action.icon} size={19} color={onImage ? t.paper : t.ink2} />
       {action.badge ? <View style={[styles.badge, { backgroundColor: t.ember, borderColor: t.surface2 }]} /> : null}
     </Press>
   );

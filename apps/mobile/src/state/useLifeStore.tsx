@@ -134,7 +134,7 @@ export function hapticSuccess() {
 
 export const LifeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hydrated, setHydrated] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [activeSheet, setActiveSheet] = useState<NativeSheetId>(null);
@@ -160,7 +160,7 @@ export const LifeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const validCompleted = Array.isArray(parsedCompleted)
           ? parsedCompleted.filter((id) => TASK_CATALOG.some((t) => t.id === id))
           : [];
-        const isDark = savedTheme === 'dark';
+        const isDark = savedTheme !== 'light';
 
         setProfile(parsedProfile);
         setCompletedIds(validCompleted);

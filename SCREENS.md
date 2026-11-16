@@ -11,20 +11,20 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `welcome` | Welcome | Full screen | first launch | `/(flows)/onboarding/welcome` · fullScreenModal |
-| [ ] | `question` | One question at a time | Full screen | Welcome | `/(flows)/onboarding/question` · fullScreenModal |
-| [ ] | `tell` | Or just tell life | Full screen | Welcome → “Or just tell life” | `/(flows)/onboarding/tell` · fullScreenModal |
-| [ ] | `building` | Building your plan | Full screen | end of setup | `/(flows)/onboarding/building` · fullScreenModal |
-| [ ] | `where` | Where do you live? | Full screen | setup | `/(flows)/onboarding/where` · fullScreenModal |
-| [ ] | `signin` | Save your progress | Sheet | after the plan is built | `/(sheets)/signin` · formSheet |
-| [ ] | `healthprimer` | Before Apple Health asks | Full screen | setup or Body | `/(flows)/onboarding/healthprimer` · fullScreenModal |
-| [ ] | `notifprimer` | One nudge a day, at most | Full screen | setup | `/(flows)/onboarding/notifprimer` · fullScreenModal |
-| [ ] | `micprimer` | Before the mic asks | Full screen | first Talk | `/(flows)/onboarding/micprimer` · fullScreenModal |
-| [ ] | `camprimer` | Before the camera asks | Full screen | first snap or scan | `/(flows)/onboarding/camprimer` · fullScreenModal |
-| [ ] | `calprimer` | Before the calendar asks | Full screen | setup or Calendar-aware day | `/(flows)/onboarding/calprimer` · fullScreenModal |
-| [ ] | `devicesetup` | Connect what you wear | Full screen | setup | `/(flows)/onboarding/devicesetup` · fullScreenModal |
-| [ ] | `firstmove` | Your first move | Full screen | end of setup | `/(flows)/onboarding/firstmove` · fullScreenModal |
-| [ ] | `measuresetup` | Your body, in three numbers | Full screen | setup, after where you live | `/(flows)/onboarding/measuresetup` · fullScreenModal |
+| [~] | `welcome` | Welcome | Full screen | first launch | `/(flows)/onboarding/welcome` · fullScreenModal |
+| [~] | `question` | One question at a time | Full screen | Welcome | `/(flows)/onboarding/question` · fullScreenModal |
+| [~] | `tell` | Or just tell life | Full screen | Welcome → “Or just tell life” | `/(flows)/onboarding/tell` · fullScreenModal |
+| [~] | `building` | Building your plan | Full screen | end of setup | `/(flows)/onboarding/building` · fullScreenModal |
+| [~] | `where` | Where do you live? | Full screen | setup | `/(flows)/onboarding/where` · fullScreenModal |
+| [~] | `signin` | Save your progress | Sheet | after the plan is built | `/(sheets)/signin` · formSheet |
+| [~] | `healthprimer` | Before Apple Health asks | Full screen | setup or Body | `/(flows)/onboarding/healthprimer` · fullScreenModal |
+| [~] | `notifprimer` | One nudge a day, at most | Full screen | setup | `/(flows)/onboarding/notifprimer` · fullScreenModal |
+| [~] | `micprimer` | Before the mic asks | Full screen | first Talk | `/(flows)/onboarding/micprimer` · fullScreenModal |
+| [~] | `camprimer` | Before the camera asks | Full screen | first snap or scan | `/(flows)/onboarding/camprimer` · fullScreenModal |
+| [~] | `calprimer` | Before the calendar asks | Full screen | setup or Calendar-aware day | `/(flows)/onboarding/calprimer` · fullScreenModal |
+| [~] | `devicesetup` | Connect what you wear | Full screen | setup | `/(flows)/onboarding/devicesetup` · fullScreenModal |
+| [~] | `firstmove` | Your first move | Full screen | end of setup | `/(flows)/onboarding/firstmove` · fullScreenModal |
+| [~] | `measuresetup` | Your body, in three numbers | Full screen | setup, after where you live | `/(flows)/onboarding/measuresetup` · fullScreenModal |
 
 ## Tab 1 · Today (13)
 
