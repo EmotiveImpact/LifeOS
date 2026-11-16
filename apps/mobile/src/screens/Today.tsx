@@ -8,6 +8,7 @@ import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { money, seed } from '@/state/seed';
 import { Heading, Input, LocalNotice, Rows, Screen, Section, layout } from './Screen';
+import { IllnessCard } from './HealthDetails';
 
 export function TodayScreen({ screen }: { screen: ScreenKey }) {
   const t = useTokens(), nav = useNavigation(), { data, set, flag, choose, draft, engine } = useSeed(), hideDock = useDockVisibility();
@@ -37,6 +38,7 @@ export function TodayScreen({ screen }: { screen: ScreenKey }) {
     <Checklist header={`To reach level ${Math.min(4, engine.level.currentLevel + 1)}`} items={engine.level.toAdvance.slice(0, 3).map(v => ({ label: v.label, done: v.done }))} onToggle={i => nav.go(i === 0 ? 'cashplan' : i === 1 ? 'taxcheck' : 'mission')} />
     <Card onPress={() => nav.go('idea')} style={layout.row}><View style={{ flex: 1, gap: space.xxs }}><Text variant="callout" tone="ink2">Today’s idea · 60 sec · Taleb</Text><Text variant="title">The barbell, and your buffer</Text></View><LifeOrb size={28} /></Card>
     <Section title="Worth doing today"><MissionPreview title="HMRC tax rebate" status="One form left" sub={taskValue ? `Est. ${money(taskValue)} · takes 6 min` : 'Check your code · takes 6 min'} filled={16} /><MissionPreview title="Hospital referral" status="Started" sub="Cardiology · Guy’s · expires in 9 days" filled={7} id="nhs-outpatient-referral" /></Section>
+    {data.flags['lighter-day'] ? <IllnessCard /> : null}
     <BirthdayCard />
     <Rows rows={[{ title: 'Your routines', to: 'routines' }, { title: 'Today’s shape', to: 'calendar' }, { title: 'Morning brief', to: 'morningbrief' }, { title: 'Close the day', to: 'evening' }, { title: 'Focus session', to: 'focus' }, { title: 'Your body this week', to: 'healthdigest' }, { title: 'Customise Today', to: 'customise' }]} />
     <Modal visible={searching} animationType="fade" onRequestClose={() => setSearching(false)}><SearchOverlay query={query} setQuery={setQuery} onClose={() => setSearching(false)} /></Modal>

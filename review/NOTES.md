@@ -29,3 +29,5 @@
 - Plan · Body · Habits: chapter typecheck passed. [~]: 3 routes built with local checkoffs, tiny-habit setup, three-active limit, automaticity choices and history heatmap. Automatic data completion and EMA scoring await Track B. Final visual pass pending.
 
 - Learn from: chapter typecheck passed. [~]: 10 routes built; library, lens, paged ideas, teach-back, recall, results and drawing examples are linked. Lesson/recall progress is local; full Fenny kit and FSRS are Track B. Final visual pass pending.
+
+- Teach me: chapter typecheck passed. [~]: 11 entries covered: nine lesson routes, contextual offer component and reference-only playable flow. Quick/deep lesson path, guess, puzzle, retell and feedback operate locally. Full AI analysis, narration and Skia film are Track B. Final visual pass pending.

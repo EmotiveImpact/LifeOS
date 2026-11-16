@@ -221,17 +221,17 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `teachoffer` | Teach me, right where it’s needed | Button | anywhere a new term appears | component on Today / anywhere |
-| [ ] | `lessonready` | Your lesson, ready | Full screen | Teach me | `/(flows)/teach/lessonready` · fullScreenModal |
-| [ ] | `bite` | A bite: one idea, one picture | Full screen | lesson | `/(flows)/teach/bite` · fullScreenModal |
-| [ ] | `predict` | Guess first, then see | Full screen | lesson | `/(flows)/teach/predict` · fullScreenModal |
-| [ ] | `puzzle` | One quick puzzle | Full screen | lesson | `/(flows)/teach/puzzle` · fullScreenModal |
-| [ ] | `lessonrecap` | The whole idea, in three lines | Full screen | lesson | `/(flows)/teach/lessonrecap` · fullScreenModal |
-| [ ] | `tellback` | Tell it back to life | Full screen | lesson | `/(flows)/teach/tellback` · fullScreenModal |
-| [ ] | `gaps` | What you got, and the one gap | Full screen | after telling back | `/(flows)/teach/gaps` · fullScreenModal |
-| [ ] | `gotit` | You’ve got it | Full screen | end of lesson | `/(flows)/teach/gotit` · fullScreenModal |
-| [ ] | `teachplay` | Play the whole lesson | Prototype | the whole flow | reference only |
-| [ ] | `bitedrawn` | A bite, drawn live | Full screen | lesson | `/(flows)/teach/bitedrawn` · fullScreenModal |
+| [~] | `teachoffer` | Teach me, right where it’s needed | Button | anywhere a new term appears | component on Today / anywhere |
+| [~] | `lessonready` | Your lesson, ready | Full screen | Teach me | `/(flows)/teach/lessonready` · fullScreenModal |
+| [~] | `bite` | A bite: one idea, one picture | Full screen | lesson | `/(flows)/teach/bite` · fullScreenModal |
+| [~] | `predict` | Guess first, then see | Full screen | lesson | `/(flows)/teach/predict` · fullScreenModal |
+| [~] | `puzzle` | One quick puzzle | Full screen | lesson | `/(flows)/teach/puzzle` · fullScreenModal |
+| [~] | `lessonrecap` | The whole idea, in three lines | Full screen | lesson | `/(flows)/teach/lessonrecap` · fullScreenModal |
+| [~] | `tellback` | Tell it back to life | Full screen | lesson | `/(flows)/teach/tellback` · fullScreenModal |
+| [~] | `gaps` | What you got, and the one gap | Full screen | after telling back | `/(flows)/teach/gaps` · fullScreenModal |
+| [~] | `gotit` | You’ve got it | Full screen | end of lesson | `/(flows)/teach/gotit` · fullScreenModal |
+| [~] | `teachplay` | Play the whole lesson | Prototype | the whole flow | reference only |
+| [~] | `bitedrawn` | A bite, drawn live | Full screen | lesson | `/(flows)/teach/bitedrawn` · fullScreenModal |
 
 ## Tab 3 · You (10)
 
