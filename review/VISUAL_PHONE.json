@@ -1,0 +1,46 @@
+{
+  "scope": "Named remaining visual controls and local iPhone-build preparation",
+  "sourceSha256": "dbb5c2dd74619a88db7bbface4a2053a0dbe02300c998cf948363edf7983475c",
+  "visual": {
+    "metricDragObserved": "Readiness moved below Sleep; saved order and preview updated",
+    "memoryFilterObserved": "People shows Kofi only; known category metadata migrated and persisted",
+    "labObserved": "User-supplied 50\u2013125nmol/L bounds saved and displayed; missing intervals remain explicit; dark preview screenshot saved",
+    "webEntryFix": "Web preview skips native entering layouts to avoid stuck hidden content; native motion unchanged",
+    "fullNativeVisualApproval": false
+  },
+  "checks": {
+    "mobileTypecheck": 0,
+    "repositoryTests": 16,
+    "assertions": 109,
+    "failures": 0,
+    "diffCheck": 0
+  },
+  "nativePreparation": {
+    "expoDevClient": "58.0.20",
+    "prebuildExit": 0,
+    "podInstallExit": 0,
+    "pods": 127,
+    "SQLCipherCompileFlagsPresent": true,
+    "xcode": "16.2",
+    "userPhone": "iPhone, iOS18",
+    "detectedPhones": 0,
+    "freeDiskGB": 10.8,
+    "nativeBuildExit": 70,
+    "nativeBuildError": "Generic iOS destination ineligible: iOS18.2 platform support not installed",
+    "installedOnPhone": false,
+    "SQLCipherRuntimeVerified": false
+  },
+  "exports": {
+    "ios": {
+      "modules": 3306,
+      "exitCode": 0,
+      "output": "/tmp/life-visual-finish-ios-1794832822"
+    },
+    "android": {
+      "modules": 3305,
+      "exitCode": 0,
+      "output": "/tmp/life-visual-finish-android-1794832822"
+    }
+  },
+  "externalApplicationServicesStarted": false
+}

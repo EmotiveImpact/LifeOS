@@ -1,7 +1,7 @@
 import { computeHealthTargets, computeIncomeBreakdown, computeLifeAreaProgress, computeLifeLevelState, computeLifeScore, DEFAULT_HEALTH_SNAPSHOT, DEFAULT_PROFILE, getEligibleTasks, TASK_CATALOG } from '@life/core/engine';
 import { compareUKBusinessStructures } from '@life/core/finance';
 import { compareRentAndBuy, type RentBuyInputs } from '@life/core/housing';
-import type { SubscriptionItem, UserProfile } from '@life/core/types';
+import type { LabMarkerId, LabResult, SubscriptionItem, UserProfile } from '@life/core/types';
 import type { Area } from '@/design/tokens';
 
 /** Local-only Track A fixtures. Observations are sample readings, not calculated scores.
@@ -51,6 +51,9 @@ export const seedTaxClaim = {
   note: 'Illustrative annual PAYE/expense scenario, calculated by the existing engine; not a live HMRC record.',
 };
 export type FiledRecord = { id: string; kind: 'fact' | 'insight' | 'mission' | 'decision' | 'goal' | 'answer'; area: Area; label: string; value?: string | number; profilePatch?: Partial<UserProfile>; taskId?: string; source: { type: 'talk' | 'chat' | 'question' | 'document' | 'record'; at: string; excerpt?: string }; status: 'proposed' | 'confirmed' | 'removed' };
+export type MemoryCategory = 'Money' | 'Body' | 'People';
+export type MemoryEntry = { id: string; text: string; source: string; category?: MemoryCategory };
+export const seedMemoryCategories: Record<string, MemoryCategory> = { rent: 'Money', kofi: 'People', aim: 'Money' };
 export type ChiefAim = { what: string; when: string; give: string; plan: string; createdAt: string; history: string[]; readLog: string[] };
 export const seedAim: ChiefAim = { what: 'own a two-bed flat in South London', when: 'June 2029', give: 'save £800 a month and grow my design rate by 20%', plan: 'lifetime ISA first, then a mortgage in principle by 2028', createdAt: SEED_DATE, history: [], readLog: Array.from({ length: 21 }, (_, i) => `${new Date(Date.UTC(2026, 9, 27 + i)).toISOString().slice(0, 10)}-morning`) };
 /** Paged UI-repository metadata from the board. Facts coverage is a Track A
@@ -126,7 +129,8 @@ export const seedYearReview = {
   foundOrSaved: 3180,
   source: 'Illustrative archived year review from v17',
 };
-export const seedLabMarkerPositions = { 'bw-vitd': 18, 'bw-ferritin': 52, 'bw-hba1c': 40, 'bw-apob': 78 };
+export const seedLabResults: Partial<Record<LabMarkerId, LabResult>> = { 'bw-vitd': { value: 38, unit: 'nmol/L' }, 'bw-ferritin': { value: 64, unit: 'µg/L' }, 'bw-hba1c': { value: 36, unit: 'mmol/mol' }, 'bw-apob': { value: 1.1, unit: 'g/L' } };
+export const seedLabMarkerPositions: Partial<Record<LabMarkerId, number>> = { 'bw-vitd': 18, 'bw-ferritin': 52, 'bw-hba1c': 40, 'bw-apob': 78 };
 export const seed = {
   membership: { annual: 48, monthly: 6, annualRenewal: 59.99 },
   date: SEED_DATE,

@@ -22,7 +22,9 @@ export function Screen({ screen, title, eyebrow, children, footer, action, actio
   const params = useLocalSearchParams<{ state?: string }>();
   const field = screenLightFields[params.state ?? screen];
   const content = Children.toArray(children).filter(Boolean);
-  const body = content.map((child, i) => <Animated.View key={i} entering={calm ? FadeIn.duration(durations.quick) : FadeInDown.delay(Math.min(i, 5) * motion.stagger).springify().duration(motion.rise.duration).dampingRatio(.85)}>{child}</Animated.View>);
+  // Web is a visual-preview adapter. Reanimated entering layouts can remain
+  // visibility:hidden in backgrounded browser panes; native keeps its full motion.
+  const body = content.map((child, i) => <Animated.View key={i} entering={Platform.OS === 'web' ? undefined : calm ? FadeIn.duration(durations.quick) : FadeInDown.delay(Math.min(i, 5) * motion.stagger).springify().duration(motion.rise.duration).dampingRatio(.85)}>{child}</Animated.View>);
   return <SafeAreaView nativeID={`screen-${screen}`} edges={overlayChrome ? ['top'] : sheet ? ['bottom'] : ['top', 'bottom']} style={{ flex: 1, backgroundColor: sheet ? t.surface : t.canvas }}>
     <StatusBar style={image || overlayChrome || t.scheme === 'dark' ? 'light' : 'dark'} />
     {field ? <Atmosphere signal={field[0]} opacity={field[1]} /> : null}

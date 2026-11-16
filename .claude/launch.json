@@ -36,6 +36,12 @@
       "port": 8084
     },
     {
+      "name": "iphone-development",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/augustusedem/LifeOS/apps/mobile", "run", "start:dev-client"],
+      "port": 8085
+    },
+    {
       "name": "board",
       "runtimeExecutable": "python3",
       "runtimeArgs": ["/Users/augustusedem/LifeOS/apps/mobile/scripts/serve-board.py"],

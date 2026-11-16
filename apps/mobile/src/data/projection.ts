@@ -59,7 +59,7 @@ async function commit(store: LifeDataStore, raw: unknown, importing: boolean, so
       }
     }
     for (const [i, topic] of (Array.isArray(input.learned) ? input.learned : []).entries()) await entity('learning_record', typeof topic === 'string' ? topic : String(i), { topic: typeof topic === 'string' ? topic : String(dataObject(topic).topic ?? ''), source: { type: 'local' } });
-    for (const memory of array(input.memories)) await entity('memory', String(memory.id), { text: memory.text ?? null, source: memory.source ?? null, last_used: memory.lastUsed ?? null });
+    for (const memory of array(input.memories)) await entity('memory', String(memory.id), { text: memory.text ?? null, source: typeof memory.source === 'string' ? { label: memory.source, ...(memory.category ? { category: memory.category } : {}) } : { ...dataObject(memory.source), ...(memory.category ? { category: memory.category } : {}) }, last_used: memory.lastUsed ?? null });
     const completed = new Set(Array.isArray(input.completed) ? input.completed.map(String) : []);
     const steps = dataObject(input.missionSteps);
     const missionIds = new Set([...completed, ...Object.keys(steps).map(k => k.replace(/-\d+$/, ''))]);
@@ -114,7 +114,7 @@ export async function loadProjection<T>(store: LifeDataStore): Promise<T | null>
   const result = { ...ui, profile: p, weightKg: body?.weight_kg, heightCm: body?.height_cm, waistCm: body?.waist_cm,
     prefs: prefs ? { ...dataObject(prefs.fields), look: prefs.look, sounds: Boolean(prefs.sounds), haptics: Boolean(prefs.haptics), handDrawn: Boolean(prefs.hand_drawn), hideNumbers: Boolean(prefs.hide_numbers), notifications: prefs.notifications, privateMode: Boolean(prefs.private_mode) } : {},
     records: [...facts, ...array(ui.recordDrafts)], aim: aim ? dataObject(aim.fields).value : null, meals, habits, people,
-    learned: list('learning_record').map(r => r.topic), memories: list('memory').map(r => ({ id: originalId('memory', r.id), text: r.text, source: typeof r.source === 'string' ? r.source : JSON.stringify(r.source ?? {}) })),
+    learned: list('learning_record').map(r => r.topic), memories: list('memory').map(r => ({ id: originalId('memory', r.id), text: r.text, source: typeof r.source === 'string' ? r.source : typeof dataObject(r.source).label === 'string' ? dataObject(r.source).label : JSON.stringify(r.source ?? {}), category: dataObject(r.source).category })),
     completed: missions.filter(r => dataObject(r.fields).completed).map(r => dataObject(r.fields).taskId), missionSteps: steps,
   };
   delete (result as Record<string, unknown>).recordDrafts;

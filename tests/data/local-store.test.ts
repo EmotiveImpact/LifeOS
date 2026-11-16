@@ -33,7 +33,7 @@ const projection = () => ({
   aim: { what: 'A first home', when: '2029' }, meals: [{ id: 'meal-one', name: 'Oats', at: '08:00', items: [{ name: 'Oats', grams: 100, kcal: 380, protein: 12, carbs: 60, fat: 7, fibre: 10, confidence: 1 }] }],
   habits: [{ id: 'water', name: 'Water', cue: 'After the kettle', autoComplete: true, last14: Array(14).fill(true) }],
   people: [{ id: 'kwame', name: 'Grandpa Kwame', relation: 'Grandpa', date: '14 December', note: 'Remembered quietly' }],
-  learned: ['Tax codes'], memories: [{ id: 'memory-one', text: 'Your rent changes in March', source: 'Talk' }], completed: ['task-one'], missionSteps: { 'task-one-0': true },
+  learned: ['Tax codes'], memories: [{ id: 'memory-one', text: 'Your rent changes in March', source: 'Talk', category: 'Money' }], completed: ['task-one'], missionSteps: { 'task-one-0': true },
   flags: { preserved: true }, choices: { 'selected-meal': 'meal-one' }, drafts: { personal: 'Unsent text' }, pulseLog: [{ moodId: 'calm' }], onboardingDone: true,
 });
 afterEach(() => { for (const db of databases.splice(0)) db.close(); });
@@ -89,7 +89,7 @@ describe('local SQLite repositories', () => {
     expect(loaded.habits[0].autoComplete).toBe(true); expect(loaded.habits[0].last14).toEqual(Array(14).fill(true));
     expect(loaded.meals[0].id).toBe('meal-one'); expect(loaded.choices['selected-meal']).toBe('meal-one');
     expect(loaded.flags.preserved).toBe(true); expect(loaded.drafts.personal).toBe('Unsent text'); expect(loaded.proposals[0].label).toBe('Private pending fact');
-    expect(loaded.memories[0].id).toBe('memory-one'); expect(loaded.completed).toEqual(['task-one']); expect(loaded.missionSteps['task-one-0']).toBe(true);
+    expect(loaded.memories[0].id).toBe('memory-one'); expect(loaded.memories[0].category).toBe('Money'); expect(loaded.memories[0].source).toBe('Talk'); expect(loaded.completed).toEqual(['task-one']); expect(loaded.missionSteps['task-one-0']).toBe(true);
     const dates = await store.repos.important_date.list(); expect(dates[0].kind).toBe('memorial'); expect(dates[0].reminder).toBeNull();
     await store.commitProjection(loaded);
     expect((await store.loadProjection<any>()).memories).toHaveLength(1);

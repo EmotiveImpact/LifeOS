@@ -25,3 +25,5 @@ export * from './components/Charts';
 export * from './components/Instruments';
 export * from './components/Learning';
 export * from './components/CameraViewport';
+export * from './components/ReorderRow';
+export * from './components/LabRange';

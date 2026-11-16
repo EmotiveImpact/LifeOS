@@ -40,6 +40,7 @@ These packages are specified by `SYSTEM_DESIGN.md` §2. The Expo versions match 
 | `expo-sqlite` | `58.0.17` | MIT | `sha512-nzIS8doaxGYPBu+jJD1aa1wsF5vsafLEr3ji4wwR1MWd66KV3u4lKotJPylxJkP08DZWn2uUnTXyMw9t7BdGUA==` |
 | `expo-secure-store` | `58.0.3` | MIT | `sha512-RpubZfqJREEcwKbx3HFoWbtDd31t+yESMj7Ei5/mGQp5vViwUBzL4nUCZRLFyt+O690mT8We7dDtIUZeIk6LbQ==` |
 | `expo-crypto` | `58.0.8` | MIT | `sha512-yMSiMlallOweQ28oQ3BqJf6I/4ZoBggFNRg+PfjG1NbQWBWzGKmkPPUrd3yT0oPW4P+AYppg+Mw6xoAYddLUKA==` |
+| `expo-dev-client` | `58.0.20` | MIT | `sha512-Wp1q6KfvfwQN72M4lGW5KNnnZtRO3XdgcHstX33NlUE5cV3tw3LGHX6hgHu0xN19zKBK9Wb6yiN7JU7mGApMwQ==` |
 | `drizzle-orm` | `0.45.4` | Apache-2.0 | `sha512-NiM1YZpJ2UxyeE67DpDDZ+Tsw4YLX3trSlkNT7Tm9eKoUNb1LvaAaQzXgYQsWs+AQ9TUmmwMmBOCXuqqxUWKKQ==` |
 
 ## Copied folders

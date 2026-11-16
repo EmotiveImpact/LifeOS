@@ -1,5 +1,15 @@
 # Track A — review notes
 
+## Visual controls and iPhone build preparation
+- The three named visual gaps are implemented: native drag/accessibility reordering updates and persists Today’s metrics; memory filters use category metadata that round-trips through SQLite; lab graphics use supplied report intervals, explicitly labelled illustrative examples, or an unknown-interval state without inventing clinical cutoffs. Optional bounds/units are validated when entered.
+- `ReorderRow` and `LabRange` are exported in `@/design` and demonstrated in `/design`. Browser preview entry layouts no longer remain stuck hidden in backgrounded panes; iOS/Android spring/fade entry motion is unchanged.
+- Observed at 393×852: dragging Readiness below Sleep updated both saved order and preview; People memory filter showed only Kofi; a supplied 50–125 nmol/L interval persisted and displayed on Vitamin D; dark range graphics and metric handles rendered without horizontal overflow. Screenshot: `review/fidelity/lab-ranges.dark.jpg`. Review-origin data was backed up/restored; main app data untouched.
+- Mobile typecheck passed. Focused real-SQLite repository checks passed 16/16 with 109 assertions, including memory source/category round-trip. Latest JS exports passed: iOS3,306 modules at `/tmp/life-visual-finish-ios-1794832822`, Android3,305 modules at `/tmp/life-visual-finish-android-1794832822`, combined exit0. These do not establish a successful native Xcode compile.
+- Native preparation completed: SDK-pinned `expo-dev-client@58.0.20`, generated iOS workspace with SQLCipher enabled, CocoaPods installation (127 pods), `ios:device` and development-server scripts. Native folders are reproducible/generated and ignored, not a new branch.
+- Actual native compile FAILED before compilation with Xcode exit70: generic iOS destination was ineligible because Xcode reports iOS18.2 platform support not installed. Xcode16.2 is present and meets this RN package’s stated minimum16.1. No iPhone is currently detected, and disk free space is only about10.8GB. No large Apple platform download or unrelated file cleanup was attempted.
+- To test natively: free enough disk space for the Apple platform and build, install missing iOS18.2 support in Xcode, connect/unlock/trust the iPhone, enable Developer Mode, and select an Apple signing team. Then run the prepared local development server and `npm run ios:device`. No App Store release or external backend is needed. SQLCipher runtime verification remains blocked until that build can run.
+- UI-only testing is available in Safari on the same Wi-Fi via the Mac’s existing web preview. It does NOT test SQLCipher/native health/haptics.
+
 ## Parallel visual / local-data wave — first local slice implemented
 - Explicit user request to run both tracks in parallel overrides the earlier sequencing gate; existing `master` and no-external-services constraints remain.
 - Two disjoint visual workers corrected the owned screen compositions/navigation; main supplied shared image-height/progress/header APIs, vertical payday/equal-code pictures, flexible range bands and reference-specific health fixtures. This is progress, not full visual sign-off: the workers did not render every key in both themes.
@@ -7,7 +17,7 @@
 - Existing screen/store API now projects native SQLite data. Writes are serialized; migration removes the legacy plaintext copy only after read-back; deletion does not immediately autosave demo defaults. Web remains a separately labelled AsyncStorage preview adapter.
 - Verified locally: combined mobile typecheck and diff check passed; real in-memory SQLite repository suite 16/16 tests, 107 assertions passed. iOS export 3,304 modules at `/tmp/life-local-wave-ios-1794829428`; Android 3,303 modules at `/tmp/life-local-wave-android-1794829428`; combined exit 0. Web appearance change persisted and survived reload.
 - Native runtime limit: Xcode 16.2 is installed, but `simctl` lists no available devices. SQLCipher/key/migration code has NOT been exercised in a native development build. Do not treat JS exports or Bun SQLite checks as proof of native encryption.
-- Visual follow-through still required: complete dual-theme board comparison; Customise metric ordering; lab interval/range graphics; memory-category filtering. These are not represented as a completed visual approval.
+- The named ordering/range/filter gaps are addressed in the follow-through above. Full dual-theme/native visual approval still requires review on the actual app; these changes alone do not establish it.
 - No remote database, API/auth server, provider OAuth, real AI, billing, cloud build or deployment was started. This is the first local Track B foundation, not completed Track B or full Phase 1b acceptance.
 
 ## Follow-up UI wiring corrections
@@ -18,7 +28,7 @@
 
 ## Built
 - 220 unparked board entries: 196 exact app routes plus inline cards, overlays, parent states, gallery references and platform previews. `doitforme` remains parked without a route.
-- All 43 addition rows in `COMPONENTS.md` are exported through `@/design` and demonstrated in `/design`; the additional camera surface matches the board rather than using a story card.
+- All 45 addition rows in `COMPONENTS.md` are exported through `@/design` and demonstrated in `/design`; the additional camera surface matches the board rather than using a story card.
 - LifeOrb v6 and the full owner-authorised Fenny Skia port: 30 devices, 208 objects, clean/hand-drawn, build-in, changes and Reduce Motion. No imports from `vendor/`.
 - Local seed state, persistence, native push/sheet/flow navigation and first-use consent entry/return paths. Legacy placeholder tab URLs redirect to the specified Plan routes; only the seed provider drives the new app.
 - Existing core supplies tax, income, housing, life level/score and health-target calculations; `packages/core` is unchanged.

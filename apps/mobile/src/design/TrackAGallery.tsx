@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Atmosphere, BarcodeFrame, BreathPacer, Button, CalendarDay, CameraViewport, CapsuleMeter, ChatIsland, ChipGroup, DateRow, DocumentRow, EatingWindow, FocusTimer, GapCard, GuessReveal, HeatGrid, HonestyBadge, Hypnogram, LabelScanOverlay, LessonBar, LessonPicture, LessonPuzzle, LifeOrb, LikertScale, MacroBars, ModelCard, NotificationPreview, NutrientBar, PersonAvatar, ProgressRing, ProjectionChart, RangeBar, RecapList, RegularityChart, SceneView, ScoreBadge, SearchField, ShareBar, SheetOverImage, Skeleton, StatTile, TellBack, Text, TopBar, TraitBar, TrendLine, WatchFace, WeekBars, WeightLogger, ZoneBars, space, type OrbState } from '@/design';
+import { Atmosphere, BarcodeFrame, BreathPacer, Button, CalendarDay, CameraViewport, CapsuleMeter, ChatIsland, ChipGroup, DateRow, DocumentRow, EatingWindow, FocusTimer, GapCard, GuessReveal, HeatGrid, HonestyBadge, Hypnogram, LabelScanOverlay, LessonBar, LessonPicture, LessonPuzzle, LifeOrb, LabRange, LikertScale, MacroBars, ModelCard, NotificationPreview, NutrientBar, PersonAvatar, ProgressRing, ProjectionChart, RangeBar, RecapList, ReorderRow, RegularityChart, SceneView, ScoreBadge, SearchField, ShareBar, SheetOverImage, Skeleton, StatTile, TellBack, Text, TopBar, TraitBar, TrendLine, WatchFace, WeekBars, WeightLogger, ZoneBars, space, type OrbState } from '@/design';
 
 export function TrackAGallery() {
   const [search, setSearch] = useState(''), [weight, setWeight] = useState(74.2), [likert, setLikert] = useState<number | null>(null), [tell, setTell] = useState(''), [orb, setOrb] = useState<OrbState>('ring');
+  const [order, setOrder] = useState(['Readiness', 'Sleep', 'Load']);
   const values = [76.6, 76.1, 75.8, 75.5, 75, 74.8, 74.2];
   return <View style={{ gap: space.xxl }}>
     <Text variant="headline">Track A · v17 components</Text>
@@ -11,6 +12,8 @@ export function TrackAGallery() {
     <View style={{ gap: space.md }}><Text variant="title">LifeOrb v6 · every state</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.lg }}>{(['ring', 'thinking', 'working', 'searching', 'listening', 'done'] as const).map(state => <View key={state} style={{ alignItems: 'center', gap: space.xs }}><LifeOrb size={76} state={state} /><Text variant="callout">{state}</Text></View>)}</View></View>
     <View style={{ height: 180, overflow: 'hidden' }}><Atmosphere domain="money" height={180} /><View style={{ padding: space.gutter }}><Text variant="title">Light field · Money</Text><Text variant="callout" tone="ink2">One colour, 14pt dots, no blur or mesh</Text></View></View>
     <Text variant="title">Meter variants · capsule, bar, thin</Text><CapsuleMeter value={.64} /><CapsuleMeter size="bar" value={.64} /><CapsuleMeter size="thin" value={.64} />
+    <Text variant="title">Reordering · drag handles and accessible actions</Text>{order.map((label, index) => <ReorderRow key={label} label={label} index={index} count={order.length} onMove={(from, to) => setOrder(current => { const next = [...current]; const [item] = next.splice(from, 1); next.splice(to, 0, item); return next; })}><View style={{ paddingVertical: space.md }}><Text variant="body">{label}</Text></View></ReorderRow>)}
+    <Text variant="title">Lab ranges · supplied interval / unknown / illustrative</Text><LabRange value={38} unit="nmol/L" low={50} high={125} /><LabRange value={64} unit="µg/L" /><LabRange value={38} unit="nmol/L" previewPosition={18} />
     <Text variant="title">Camera viewport · full-frame feed surface</Text><View style={{ height: 300, overflow: 'hidden' }}><CameraViewport source={require('../../assets/images/scenes/food.jpg')} labels={[{ text: 'Salmon · ~120g', left: '50%', top: '46%' }]} /></View>
     <Button compact variant="secondary" label="Body action · compact secondary" />
     <Text variant="title">TopBar · fixed chrome</Text><TopBar kind="root" title="Today" eyebrow="Monday, 16 November" /><TopBar kind="push" title="Sleep" onBack={() => {}} /><TopBar kind="sheet" title="Pulse" onClose={() => {}} /><TopBar kind="flow" onClose={() => {}} step="2 / 3" center={<LessonBar current={1} />} />

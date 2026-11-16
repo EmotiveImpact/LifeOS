@@ -4,7 +4,7 @@
 
 ## Status at a glance (16 Nov 2026)
 - **Pre-existing components: 62** (all exported from `@/design`, all typecheck, both platforms bundle).
-- **Track A additions: all 43 rows below implemented and exported from `@/design`, with examples in `/design`.** LifeOrb is now v6. SceneView is the full owner-authorised Skia port: all 30 devices and 208 objects, clean or hand-drawn, with all-device gallery controls.
+- **Track A additions: all 45 rows below implemented and exported from `@/design`, with examples in `/design`.** LifeOrb is now v6. SceneView is the full owner-authorised Skia port: all 30 devices and 208 objects, clean or hand-drawn, with all-device gallery controls.
 - **Screens: all 220 unparked board entries have UI implementations or explicitly noted platform/state previews.** See `SCREENS.md` and `review/NOTES.md` for `[~]` limitations.
 
 ## In code ✅
@@ -21,6 +21,8 @@ Mood and imagery: `PulseField`, `PulseCheckIn`, `MOODS`, `ImageTreatment`, `Phot
 |---|---|---|---|
 | `LifeOrb` v6 | One family of the ring's dots: ring, thinking (clear sphere), working (clockwork), searching (web of lines), listening, done (gather) | orb, orbnext, chat, loading | 1 |
 | `ChatIsland` | Dynamic-Island-style pill that grows into a card with the orb while life checks things | chat | 5 |
+| `ReorderRow` | Drag handle with native gesture and accessible move actions | customise | Visual follow-through |
+| `LabRange` | Supplied lab interval, clearly labelled illustrative preview, or unknown-range state | blood | Visual follow-through |
 | `CameraViewport` | Ungraded full-frame local camera surface and portion labels (needed to match `snap`, not a story card) | snap | Track A fidelity |
 | `SearchField` | Rounded search input with clear and voice | search, chathistory, foodsearch | 2 |
 | `Skeleton` | Shape-matched loading placeholders | loadingtoday | 2 |
