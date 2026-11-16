@@ -79,6 +79,10 @@ Behind one interface, `src/services/voice.ts`, so we can swap providers without 
 | Memory search | — | A small embedding model (MIT/Apache) | ~30–90 MB |
 Photo reading and new lessons stay in the cloud and ask first. Pick the exact open models with `tools/evals` at Phase 11; newer small models appear every few months, so treat the names above as a starting point, not a commitment, and prefer Apache-2.0 / MIT licences.
 
+### 3.3c Considered: Supermemory and Maritime (16 Nov 2026)
+- **Supermemory** (memory API for AI; repo MIT, SDKs Apache-2.0; hosted API is paid; the self-host server appears closed source). **Not for v1 memory.** life's memory holds health and money facts (special-category data), so it stays in our own Neon Postgres (pgvector) with on-device embeddings, behind a `memory.ts` interface. Re-evaluate Supermemory later for non-sensitive memory only, after checking its data-processing terms and UK GDPR fit.
+- **Maritime** (maritime.sh: hosts AI agents in isolated micro-VMs, from $1/agent/month; YC F26, very new). **Not needed for the core app** (our API is serverless). **Worth a trial in Phase 11 for "Do it for me"**, where an agent needs its own sandboxed computer and browser to cancel a subscription or fill a form, one VM per task, with approval at every step. Keep it behind an `agents.ts` interface so the host can change.
+
 ### 3.4 A "decision model": yes, but in the right place
 Two different things get called decision models, and life uses both carefully:
 1. **Deciding what you see today** (`planToday()`): **not** an LLM. Rules + scores from the engine pick candidate moves, then a small **learning layer (a contextual bandit, e.g. Thompson sampling)** learns which kind of nudge, at what time, actually gets done by *you*. It starts rule-based and switches learning on after about two weeks of data (SPEC §4.3). It's explainable: "Why am I seeing this?" shows the reasons.
@@ -152,6 +156,7 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Voice behind `voice.ts`: on-device first, Phonon for speech, cloud fallback.** |
 | 15 Nov 2026 | **Models chosen per job by evals; no lock-in. Today's plan is decided by rules + a bandit, not an LLM.** |
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
+| 16 Nov 2026 | **Supermemory: not for v1 (privacy; own Postgres + pgvector instead). Maritime: trial later for Do it for me agents.** |
 | 16 Nov 2026 | **Fuel brought to Cal AI level (13 screens). Voice: Phonon on iPhone, Kitten TTS Nano elsewhere. On-device AI: built-in OS models first, small open models as the fallback download.** |
 | 16 Nov 2026 | **Build UI-first: Track A builds every screen with seed data and light checks; Track B makes it real and adds tests.** |
 | 16 Nov 2026 | **v17: orb is one family of the ring's dots (thinking, working, searching, listening, done); no dividers, card shadows; Fenny teaching language + drawing kit; body numbers; health features from the repos; Cal AI counters; SYSTEM_DESIGN.md.** |
