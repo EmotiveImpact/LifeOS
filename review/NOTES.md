@@ -23,3 +23,5 @@
 - The toolkit: chapter typecheck passed. [~]: 13 routes built; dynamic income/rent-vs-buy/core lab interpretations, cash plan, buffer, protection and early unlock are local. NI history and health stack are labelled sample content. Final visual pass pending.
 
 - Body: chapter typecheck passed. [~]: 35 entries built; health/device/sensor values are seed previews, not live readings. Journal, habits, source choices, water, sleep plan, breathing timer and workout controls work locally. No HealthKit/OAuth/BLE. Full scoring remains Track B. Final visual pass pending.
+
+- Plan · Body · Fuel: chapter typecheck passed. [~]: 28 routes built with confirm/edit/log, counters, local weight and meal history, all import/scan/speech routes and hide-numbers mode. Recognition, target modelling, recipe/menu generation, label reading and imports are explicit sample previews. No external services. Final visual pass pending.

@@ -43,10 +43,11 @@ export const seedDocuments = [
 ];
 export type MealItem = { name: string; grams: number; kcal: number; protein: number; carbs: number; fat: number; fibre: number; confidence: number };
 export const seedMeal: MealItem[] = [
-  { name: 'Salmon', grams: 150, kcal: 312, protein: 34, carbs: 0, fat: 19, fibre: 0, confidence: .9 },
-  { name: 'Rice', grams: 180, kcal: 234, protein: 5, carbs: 52, fat: 1, fibre: 1, confidence: .8 },
-  { name: 'Avocado', grams: 60, kcal: 96, protein: 1, carbs: 5, fat: 9, fibre: 4, confidence: .75 },
-  { name: 'Greens', grams: 80, kcal: 24, protein: 2, carbs: 4, fat: 0, fibre: 3, confidence: .9 },
+  { name: 'Salmon', grams: 120, kcal: 247, protein: 26, carbs: 0, fat: 15, fibre: 0, confidence: .9 },
+  { name: 'Rice', grams: 150, kcal: 195, protein: 4, carbs: 43, fat: 0, fibre: 1, confidence: .8 },
+  { name: 'Avocado', grams: 50, kcal: 80, protein: 1, carbs: 4, fat: 7, fibre: 3, confidence: .75 },
+  { name: 'Edamame', grams: 40, kcal: 48, protein: 5, carbs: 4, fat: 2, fibre: 2, confidence: .9 },
+  { name: 'Egg', grams: 50, kcal: 72, protein: 7, carbs: 0, fat: 5, fibre: 0, confidence: .9 },
 ];
 export const seed = {
   date: SEED_DATE,
