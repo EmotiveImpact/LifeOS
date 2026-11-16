@@ -107,7 +107,7 @@ export const seedMeal: MealItem[] = [
   { name: 'Edamame', grams: 40, kcal: 48, protein: 5, carbs: 4, fat: 2, fibre: 2, confidence: .9 },
   { name: 'Egg', grams: 50, kcal: 72, protein: 7, carbs: 0, fat: 5, fibre: 0, confidence: .9 },
 ];
-export type SeedHabit = { id: string; name: string; cue: string; last14: (boolean | undefined)[]; day?: number; automaticity?: number; source?: string; shortCue?: string };
+export type SeedHabit = { id: string; name: string; cue: string; last14: (boolean | undefined)[]; day?: number; automaticity?: number; source?: string; shortCue?: string; autoComplete?: boolean };
 export const seedHabitStrength = { name: 'Morning walk', strength: 71, beforeMiss: 73, day: 38, typicalDays: 66 };
 export const seed = {
   membership: { annual: 48, monthly: 6, annualRenewal: 59.99 },
@@ -150,3 +150,10 @@ export const seed = {
 export const rentBuyInputs: RentBuyInputs = { price: 425000, deposit: 42500, availableCash: seed.finance.balance, emergencyBuffer: 6000, purchaseCosts: 6500, saleCostsPct: 2, rentMonthly: seed.finance.rent, ownerCostsMonthly: 250, mortgageRatePct: 4.5, termYears: 30, years: 10, homeGrowthPct: 3, rentGrowthPct: 4, investmentReturnPct: 5 };
 export const seedHousing = compareRentAndBuy(rentBuyInputs);
 export const rebateTask = TASK_CATALOG.find(t => /rebate|P87|overpaid/i.test(t.title + t.shortTitle)) ?? TASK_CATALOG[0];
+
+/** Distinct local diary entries; selection never aliases the latest logged meal. */
+export const seedDiaryMeals = [
+  { id: 'seed-breakfast', name: 'Yoghurt, berries, oats', at: '08:10', items: [{ name: 'Yoghurt, berries, oats', grams: 300, kcal: 420, protein: 24, carbs: 54, fat: 12, fibre: 6, confidence: .8 }] },
+  { id: 'seed-lunch', name: 'Salmon rice bowl', at: '12:40', items: [{ name: 'Salmon rice bowl', grams: 450, ...seed.fuel.loggedMealTotals, confidence: .8 }] },
+  { id: 'seed-snack', name: 'Apple and peanut butter', at: '16:00', items: [{ name: 'Apple and peanut butter', grams: 200, kcal: 285, protein: 8, carbs: 32, fat: 15, fibre: 6, confidence: .8 }] },
+];

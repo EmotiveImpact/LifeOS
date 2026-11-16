@@ -1,5 +1,11 @@
 # Track A — review notes
 
+## Follow-up UI wiring corrections
+- Fixed all five reported findings: the Fuel age guard now covers every route (including FuelExtras), the routing hook is unconditional, diary rows select stable meal IDs, portion edits use the actual draft's nutrition snapshot, and new habits persist `autoComplete`.
+- Local browser checks: opening “Earlier oats” with a later apple present selected `review-old`; barcode oat milk at 378g retained 181.44 kcal and 1.512g protein (scaled from 120 kcal/1g per 250g); the saved habit contained `autoComplete: true`; direct food search at age 17 rendered the no-numbers fallback. Review-only fixture was backed up and restored; main app state untouched.
+- No new screens, libraries, engine changes, real integrations or automated test suites. Automatic completion remains a stored preference until the Track B health interface is connected.
+- The prior source fingerprint in `RENDER_EVIDENCE.json` describes the earlier parity commit, not these subsequent corrections. Refreshed mobile typecheck and both exports passed: iOS 3,143 modules at `/tmp/life-track-a-fuel-fixes-ios`; Android 3,142 modules at `/tmp/life-track-a-fuel-fixes-android`; combined exit 0.
+
 ## Built
 - 220 unparked board entries: 196 exact app routes plus inline cards, overlays, parent states, gallery references and platform previews. `doitforme` remains parked without a route.
 - All 43 addition rows in `COMPONENTS.md` are exported through `@/design` and demonstrated in `/design`; the additional camera surface matches the board rather than using a story card.
