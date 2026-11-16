@@ -2,7 +2,7 @@
 
 ## ⭐ Use this one: build the whole app, UI first
 
-Paste into **Codex** (or any builder) with this repo open on branch `design-system-handoff`. It builds every screen with the same design language before any testing or real integrations, and it's written to stop it wandering off.
+Paste into **Codex** (or any builder) with this repo open on branch `master`. It builds every screen with the same design language before any testing or real integrations, and it's written to stop it wandering off.
 
 ```text
 You are building "life", an Expo app for iOS and Android in apps/mobile. Everything is already designed.
@@ -13,7 +13,7 @@ Your job is to build ALL of it, faithfully, looking and feeling premium. You are
    Skim SYSTEM_DESIGN.md (only so your stubs have the right shapes).
 2. Open design-board/life-design-board-v17.html in a browser and keep it open. It is the visual truth.
    Every screen in SCREENS.md is a phone on that board with id "s-<key>".
-3. Create branch build/ui-complete from design-system-handoff.
+3. Create branch build/ui-complete from master.
 4. TRACK A, in this order, without stopping to ask:
    a. Build every component in COMPONENTS.md "To build" (LifeOrb v6 first, ported from the board's
       mountOrb), each shown in the /design gallery.
@@ -36,7 +36,7 @@ When it says "Track A complete", tell Claude: **"Review Track A."** Claude walks
 ---
 
 
-Paste the block below into **Codex**, **Hydrogen** or any coding agent, with this repository open (branch `design-system-handoff`). It works for each phase: change the phase number when you move on.
+Paste the block below into **Codex**, **Hydrogen** or any coding agent, with this repository open (branch `master`). It works for each phase: change the phase number when you move on.
 
 ---
 
@@ -51,7 +51,7 @@ in a browser. That board is the visual target: 221 screens organised by tab, and
 screen it says how it opens (tab, push, sheet, full screen) and where from.
 
 Build PHASE 1 from BUILD_PLAN.md now (then stop):
-- Create branch phase-1-foundations from design-system-handoff.
+- Create branch phase-1-foundations from master.
 - Use only components and tokens from apps/mobile/src/design (import from "@/design").
   If something is missing, add it to the design system first and show it in the /design gallery.
 - Every screen uses TopBar (root | push | sheet | flow) outside its ScrollView. The header never moves.
@@ -83,7 +83,7 @@ in a browser: it is the visual target (221 screens, each says how it opens and f
 OVERNIGHT MODE. Build these phases in order, without waiting for review between them:
   1 → 1b → 2 → 3 → 4 → 4b → 4c → 4d
 For each phase:
-  a. Branch phase-N-<name> from the previous phase's branch (phase 1 from design-system-handoff).
+  a. Branch phase-N-<name> from the previous phase's branch (phase 1 from master).
   b. Build exactly what BUILD_PLAN.md lists for the phase, using only @/design components and tokens,
      the TopBar rule, LifeOrb v6 (port from the board's mountOrb), no borders or dividers, card shadows,
      numbers from packages/core, the schema in SYSTEM_DESIGN.md §4.
@@ -113,7 +113,7 @@ In the morning, tell Claude: "Review the overnight run." Claude reads `review/OV
 - Either way, keep **one builder per phase branch** so two agents never edit the same files.
 
 ## The files to hand over
-The whole repository, on branch `design-system-handoff`. The important ones:
+The whole repository, on branch `master`. The important ones:
 
 | File | What it is |
 |---|---|

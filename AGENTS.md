@@ -20,7 +20,7 @@ Instructions for any coding agent working in this repo (Codex reads this file au
 8. `apps/mobile/src/design/`: the design system that already exists. The `/design` route is a live gallery of every component.
 
 ## Hard rules
-- **One phase per branch** (`phase-N-short-name`), branched from `design-system-handoff` or the last approved phase. Never commit to `main`.
+- **One phase per branch** (`phase-N-short-name`), branched from `master` or the last approved phase. Never commit to `main`.
 - **Use the design system.** Import from `@/design`. No raw hex colours, no new font sizes, no new spacing scales. If a component is missing, add it to `src/design/components/` first and show it in `/design`.
 - **Numbers come from `packages/core`.** Never hard-code a £ figure, score or target in a screen. Don't change engine logic.
 - **No glass, no blur, no mesh gradients.** Solid surfaces only.

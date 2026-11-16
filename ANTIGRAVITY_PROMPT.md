@@ -13,7 +13,7 @@ You are building **life**, an Expo app in `apps/mobile`. Claude designed it and 
 6. `apps/mobile/src/design/`: the design system that already exists, and `/design`, the live component gallery.
 
 **How to work:**
-- Do **one phase at a time**, on its own branch, exactly as BUILD_PLAN.md describes. Create each phase branch from `design-system-handoff` (or from the previous approved phase).
+- Do **one phase at a time**, on its own branch, exactly as BUILD_PLAN.md describes. Create each phase branch from `master` (or from the previous approved phase).
 - Use only `@/design` components and tokens. Numbers come from `packages/core`. Don't change engine logic.
 - At the end of each phase, run the Definition of Done, save light and dark screenshots plus `NOTES.md` in `review/phase-N/`, commit, and **stop**. Say "Phase N ready for Claude review" and wait.
 - If something in the plan is unclear or conflicts with DESIGN.md, write it in `NOTES.md` and make the safest choice. Don't invent new styles.
