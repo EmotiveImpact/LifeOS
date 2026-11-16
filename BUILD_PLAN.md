@@ -8,6 +8,9 @@
 
 ---
 
+## Build order (decided 16 Nov 2026): UI first
+**Track A** builds the whole app's UI first, every screen in `SCREENS.md` with seed data and stubs, light checks only (AGENTS.md "Build mode: UI first"). **Track B** then makes it real phase by phase below (platform, health, AI, Fenny kit) and adds the tests. The phases below still describe *what* each area needs; in Track A only their screens and components are built.
+
 ## Ground rules (every phase)
 
 1. **Branch per phase:** `phase-N-short-name`. Commit small. Never commit to `main` directly.

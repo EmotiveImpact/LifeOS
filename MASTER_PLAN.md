@@ -14,7 +14,9 @@
 | File | What it decides | Who reads it |
 |---|---|---|
 | **MASTER_PLAN.md** (this) | Order, stack, decisions, launch | Everyone, first |
-| `BUILD_PLAN.md` | Phase-by-phase tasks, acceptance and 🛑 gates | Antigravity (the job list) |
+| `BUILD_PLAN.md` | Phase-by-phase tasks, acceptance and 🛑 gates | The builder |
+| `SCREENS.md` | All 207 screens as a checklist with routes (Track A job list) | The builder |
+| `COMPONENTS.md` | Components in code vs still to build | The builder |
 | `SPEC.md` | How everything works: engine, health, learning, data, blind spots | Antigravity, Codex |
 | `DESIGN.md` | The look and the rules (§1–§44) | Everyone building screens |
 | `MOTION.md` | How every screen moves, state to state | Everyone building screens |
@@ -141,6 +143,7 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Voice behind `voice.ts`: on-device first, Phonon for speech, cloud fallback.** |
 | 15 Nov 2026 | **Models chosen per job by evals; no lock-in. Today's plan is decided by rules + a bandit, not an LLM.** |
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
+| 16 Nov 2026 | **Build UI-first: Track A builds every screen with seed data and light checks; Track B makes it real and adds tests.** |
 | 16 Nov 2026 | **v17: orb is one family of the ring's dots (thinking, working, searching, listening, done); no dividers, card shadows; Fenny teaching language + drawing kit; body numbers; health features from the repos; Cal AI counters; SYSTEM_DESIGN.md.** |
 | 15 Nov 2026 | **v16: orb v2 (globe, no core); no borders anywhere (owner's decision); AGENTS.md + BUILD_PROMPT.md for any builder.** |
 | 15 Nov 2026 | **v14: no borders on buttons (avatars and cards keep theirs); the orb evolves ring → sphere → core; chat restored; board organised by navigation; 188 screens.** |

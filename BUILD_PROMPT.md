@@ -1,5 +1,40 @@
 # The build prompt
 
+## ⭐ Use this one: build the whole app, UI first
+
+Paste into **Codex** (or any builder) with this repo open on branch `design-system-handoff`. It builds every screen with the same design language before any testing or real integrations, and it's written to stop it wandering off.
+
+```text
+You are building "life", an Expo app for iOS and Android in apps/mobile. Everything is already designed.
+Your job is to build ALL of it, faithfully, looking and feeling premium. You are not designing anything.
+
+1. Read AGENTS.md completely, twice. Follow "Build mode: UI first", "Do not stray" and "Premium, every
+   screen" exactly. Then read DESIGN.md (§45–48 are final), MOTION.md, COMPONENTS.md and SCREENS.md.
+   Skim SYSTEM_DESIGN.md (only so your stubs have the right shapes).
+2. Open design-board/life-design-board-v17.html in a browser and keep it open. It is the visual truth.
+   Every screen in SCREENS.md is a phone on that board with id "s-<key>".
+3. Create branch build/ui-complete from design-system-handoff.
+4. TRACK A, in this order, without stopping to ask:
+   a. Build every component in COMPONENTS.md "To build" (LifeOrb v6 first, ported from the board's
+      mountOrb), each shown in the /design gallery.
+   b. Create the seed store (apps/mobile/src/state/seed.ts) with the board's sample people, numbers and
+      copy; real figures come from packages/core.
+   c. Build every screen in SCREENS.md, chapter by chapter in order, wiring each route exactly as listed.
+      Match the board in light and dark. Tick the row ([x] or [~] with a one-line note).
+   d. After each chapter: npx tsc --noEmit -p . must be green. Commit "screens: <chapter>".
+5. Do NOT: write tests, run screenshot jobs, build the backend, call real APIs, add features or screens,
+   change the design, refactor working code, or add unlisted libraries. If something blocks you for more
+   than a few minutes, stub it, mark the row [~], note why in review/NOTES.md, and move on.
+6. At the end of Track A: run one iOS and one Android expo export, make them pass, update
+   review/NOTES.md (what's [~] and why) and reply exactly: "Track A complete: the whole app is built."
+   Then stop. Track B (making it real, then testing) starts only after review.
+```
+
+When it says "Track A complete", tell Claude: **"Review Track A."** Claude walks the app against the board screen by screen, fixes the look and feel, and writes the Track B list.
+
+---
+
+
 Paste the block below into **Codex**, **Hydrogen** or any coding agent, with this repository open (branch `design-system-handoff`). It works for each phase: change the phase number when you move on.
 
 ---
@@ -34,7 +69,7 @@ board, and continue. Do not invent new visual styles.
 
 ---
 
-## Overnight run (several phases while you sleep)
+## Older: phase-by-phase overnight run (Track B)
 
 Paste this instead when you want Codex to keep going without waiting for review. It stacks one branch per phase, checks itself after each, and only stops if it's genuinely blocked. Claude reviews all of it in the morning.
 
