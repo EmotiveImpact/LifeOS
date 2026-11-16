@@ -15,3 +15,5 @@
 - Tab 2: chapter typecheck passed. [~]: 10 routes built, Do it for me skipped; mission stages/checks, copy/edit/mail drafts and local completion are wired. Engine amounts replace illustrative board claims where core has no matching rebate calculation. Final visual pass pending.
 
 - Your Chief Aim: chapter typecheck passed. [~]: 4 routes built; four-step editor, statement/history, read ritual and gambit are persisted locally. Glimpse uses sample earned progress. Final visual pass pending.
+
+- Plan · Money: chapter typecheck passed. [~]: 8 routes built; ledger/privacy, subscription review, categories, budget controls and bank selection operate locally. Banking/cancellation are clearly previews. Final visual pass pending.

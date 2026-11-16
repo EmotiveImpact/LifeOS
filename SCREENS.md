@@ -86,14 +86,14 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `money` | Money | Push | Money area | `/plan/money/money` |
-| [ ] | `subs` | Subscriptions | Push | Money → Subscriptions | `/plan/money/subs` |
-| [ ] | `area` | Area: Money | Push | Plan → Money | `/plan/money/area` |
-| [ ] | `txn` | A payment | Push | Money → a payment | `/plan/money/txn` |
-| [ ] | `bill` | A bill | Push | Money → a bill | `/plan/money/bill` |
-| [ ] | `budget` | Budget | Push | Money → Budget | `/plan/money/budget` |
-| [ ] | `networth` | Net worth | Push | Money → Net worth | `/plan/money/networth` |
-| [ ] | `connectbank` | Connect your bank | Full screen | Money → Connect | `/(flows)/connectbank` · fullScreenModal |
+| [~] | `money` | Money | Push | Money area | `/plan/money/money` |
+| [~] | `subs` | Subscriptions | Push | Money → Subscriptions | `/plan/money/subs` |
+| [~] | `area` | Area: Money | Push | Plan → Money | `/plan/money/area` |
+| [~] | `txn` | A payment | Push | Money → a payment | `/plan/money/txn` |
+| [~] | `bill` | A bill | Push | Money → a bill | `/plan/money/bill` |
+| [~] | `budget` | Budget | Push | Money → Budget | `/plan/money/budget` |
+| [~] | `networth` | Net worth | Push | Money → Net worth | `/plan/money/networth` |
+| [~] | `connectbank` | Connect your bank | Full screen | Money → Connect | `/(flows)/connectbank` · fullScreenModal |
 
 ## Plan · Documents and renewals (3)
 
