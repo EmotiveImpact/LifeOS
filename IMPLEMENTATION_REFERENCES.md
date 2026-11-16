@@ -87,7 +87,7 @@ Our version adds: the confirm/edit step, UK CoFID / Open Food Facts lookups, per
 | Device companion UX | [Freeyourgadget/Gadgetbridge](https://codeberg.org/Freeyourgadget/Gadgetbridge) | 🟡 AGPL-3.0 | Ideas only: pairing flows, user-controlled data |
 
 ## 5. Teach me — your own Feynman app ✅ (your code: copy freely)
-[EmotiveImpact/Feynman-voice-app](https://github.com/EmotiveImpact/Feynman-voice-app). The owner has OK'd reuse. Rewrite in life's tokens and naming; drop its glass and colours.
+[EmotiveImpact/Feynman-voice-app](https://github.com/EmotiveImpact/Feynman-voice-app). The owner has OK'd reuse. **A copy of every file below is in `vendor/fenny/`** (docs, api, scene, teach, ui). Rewrite in life's tokens and naming; drop its glass and colours. Read `FENNY_LEARNING.md` first.
 
 | life feature | Files |
 |---|---|
@@ -95,7 +95,7 @@ Our version adds: the confirm/edit step, UK CoFID / Open Food Facts lookups, per
 | Curious-friend teaching moves, "Teach me" offer line | `apps/api/src/policy.ts`, `docs/conversation-engine.md` |
 | Strengths + gaps analysis, "Show me" | `apps/api/src/review.ts`, `docs/behavioural-design.md` |
 | Lesson film, guess-before-reveal | `apps/mobile/src/teach/TeachMode.tsx`, `teach/Picture.tsx`, `teach/Puzzle.tsx`, `teach/Slider.tsx` |
-| Drawn pictures | `apps/mobile/src/scene/SceneView.tsx`, `scene/draw.ts`, `scene/things.ts` |
+| Drawn pictures (Fenny Drawing Kit: 30 devices, 208 things, hand-drawn mode) | `vendor/fenny/scene/draw.ts`, `things.ts`, `types.ts`, `SceneView.tsx`; scene writer `vendor/fenny/api/scene.ts` |
 | Motion springs (now `motion` in tokens.ts) | `apps/mobile/src/ui/motion.ts` |
 | On-device speech (Phonon) and voice providers | the Phonon Expo module and the voice services in `apps/api` |
 

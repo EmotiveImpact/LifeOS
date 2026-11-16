@@ -9,10 +9,12 @@ Instructions for any coding agent working in this repo (Codex reads this file au
 1. `MASTER_PLAN.md`: order of everything, stack (Neon, voice, AI models), decisions log.
 2. `BUILD_PLAN.md`: **your job list**. Phases, tasks, acceptance criteria, gates.
 3. `SPEC.md`: how everything works (engine, health, learning, data model, blind spots).
-4. `DESIGN.md`: the rules. Later sections override earlier ones. Key: §25–28 look, §43 no glass, §44 imagery, **§45–47 (final rules: borders, orb, chat, top bar)**.
+4. `DESIGN.md`: the rules. Later sections override earlier ones. Key: §25–28 look, §43 no glass, §44 imagery, **§45–48 (final rules: no borders, shadows, orb family, top bar, pictures)**.
+4b. **`SYSTEM_DESIGN.md`**: how everything connects (phone layers, database schema, sync, API, AI router, health and food pipelines). Build the data layer exactly as §4.
+4c. **`FENNY_LEARNING.md`**: the teaching language (method, conversation rules, the Fenny Drawing Kit). Source code to port is in `vendor/fenny/` (the owner's own code; port it, don't import from it).
 5. `MOTION.md`: how every screen moves, state to state.
 6. `IMPLEMENTATION_REFERENCES.md`: which open-source files to learn from and what each licence allows.
-7. **`design-board/life-design-board-v16.html`**: every screen (188), organised by tab, each saying **how it opens and from where**. Open it in a browser. It's the visual target and supersedes all earlier boards.
+7. **`design-board/life-design-board-v17.html`**: every screen (207), organised by tab, each saying **how it opens and from where**. Open it in a browser. It's the visual target and supersedes all earlier boards.
 8. `apps/mobile/src/design/`: the design system that already exists. The `/design` route is a live gallery of every component.
 
 ## Hard rules
@@ -20,9 +22,9 @@ Instructions for any coding agent working in this repo (Codex reads this file au
 - **Use the design system.** Import from `@/design`. No raw hex colours, no new font sizes, no new spacing scales. If a component is missing, add it to `src/design/components/` first and show it in `/design`.
 - **Numbers come from `packages/core`.** Never hard-code a £ figure, score or target in a screen. Don't change engine logic.
 - **No glass, no blur, no mesh gradients.** Solid surfaces only.
-- **No borders, ever** (DESIGN §47): no outlines on cards, tiles, avatars, inputs, buttons or chips. Surfaces separate by fill. Only list row dividers and state indicators (current step, today) draw lines.
+- **No borders or dividers, ever** (DESIGN §47–48): surfaces separate by fill; cards get `cardShadow`; list rows separate by spacing. Only state indicators (current step, today) draw lines.
 - **The top bar never moves** (DESIGN §46). Use `TopBar` (`root | push | sheet | flow`) *outside* the ScrollView; pick the kind from how the screen opens (the board shows it under every screen). Never two bars on one screen.
-- **The orb is `LifeOrb`** (`ring | thinking | voice | done`). The flat original ring everywhere; it goes 3D (`thinking`) only while life is working something out for more than a second.
+- **The orb is `LifeOrb` v6** (`ring | thinking | working | searching | listening | done`), one family of the ring's dots; port it from the board's `mountOrb` (DESIGN §48, MOTION.md).
 - **Motion via springs from `tokens.motion`**, haptics and sounds only via `feedback.*`. Respect Reduce Motion (`useCalmMotion`).
 - **Both platforms, every phase.** iOS and Android must both bundle.
 - **Licences:** 🟢 MIT/Apache may be used with notices; 🟡 GPL/AGPL ideas only; 🔴 no licence or non-commercial, don't touch. The owner's own Feynman-voice-app code may be reused. **Never read a WHOOP strap over Bluetooth.**

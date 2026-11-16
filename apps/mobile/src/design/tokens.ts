@@ -121,6 +121,15 @@ export const floatShadow = (color: string) => ({
   elevation: color === 'rgba(0,0,0,0)' ? 0 : 8,
 });
 
+/** Cards: no borders (DESIGN §47); a soft shadow gives depth. Stronger in dark, where it reads less. */
+export const cardShadow = (scheme: 'light' | 'dark') => ({
+  shadowColor: '#000',
+  shadowOpacity: scheme === 'dark' ? 0.35 : 0.08,
+  shadowRadius: 14,
+  shadowOffset: { width: 0, height: 6 },
+  elevation: scheme === 'dark' ? 4 : 2,
+});
+
 /** DESIGN.md §7 motion. */
 export const springs = {
   snappy: { damping: 20, stiffness: 260, mass: 1 },

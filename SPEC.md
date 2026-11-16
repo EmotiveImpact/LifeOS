@@ -264,6 +264,8 @@ System behaviours:
 ---
 
 ## 8. Data model (additions)
+> The full schema (tables, fields, sync rules) is in **`SYSTEM_DESIGN.md` §4**, including `body_profile` (height, weight, waist, body fat, sex at birth, activity, units) and the v17 tables (people, dates, documents, saved meals, food targets).
+
 
 ```ts
 type HealthSample = { id; type: 'sleep'|'hr'|'hrv'|'rhr'|'resp'|'steps'|'workout'|'energy'|'weight'|'water'|'nutrition'; start; end; value: number; unit; source: 'healthkit'|'healthconnect'|'whoop'|'oura'|'aggregator'|'manual'; confidence: number };

@@ -9,9 +9,9 @@ You are building "life", an Expo app (iOS + Android) in apps/mobile of this repo
 Everything is already designed and specified. Your job is to build it faithfully, one phase at a time.
 
 First, read AGENTS.md at the repo root and follow it exactly. Then read, in order:
-MASTER_PLAN.md, BUILD_PLAN.md, SPEC.md, DESIGN.md (sections 45–47 are the final rules),
-MOTION.md, IMPLEMENTATION_REFERENCES.md, and open design-board/life-design-board-v16.html
-in a browser. That board is the visual target: 188 screens organised by tab, and under every
+MASTER_PLAN.md, BUILD_PLAN.md, SYSTEM_DESIGN.md, SPEC.md, DESIGN.md (sections 45–48 are the final rules),
+MOTION.md, FENNY_LEARNING.md, IMPLEMENTATION_REFERENCES.md, and open design-board/life-design-board-v17.html
+in a browser. That board is the visual target: 207 screens organised by tab, and under every
 screen it says how it opens (tab, push, sheet, full screen) and where from.
 
 Build PHASE 1 from BUILD_PLAN.md now (then stop):
@@ -34,10 +34,42 @@ board, and continue. Do not invent new visual styles.
 
 ---
 
+## Overnight run (several phases while you sleep)
+
+Paste this instead when you want Codex to keep going without waiting for review. It stacks one branch per phase, checks itself after each, and only stops if it's genuinely blocked. Claude reviews all of it in the morning.
+
+```text
+You are building "life", an Expo app (iOS + Android) in apps/mobile. Read AGENTS.md first and follow it
+exactly, then MASTER_PLAN.md, BUILD_PLAN.md, SYSTEM_DESIGN.md, SPEC.md, DESIGN.md (45–48 are final),
+MOTION.md, FENNY_LEARNING.md and IMPLEMENTATION_REFERENCES.md. Open design-board/life-design-board-v17.html
+in a browser: it is the visual target (207 screens, each says how it opens and from where).
+
+OVERNIGHT MODE. Build these phases in order, without waiting for review between them:
+  1 → 1b → 2 → 3 → 4 → 4b → 4c → 4d
+For each phase:
+  a. Branch phase-N-<name> from the previous phase's branch (phase 1 from design-system-handoff).
+  b. Build exactly what BUILD_PLAN.md lists for the phase, using only @/design components and tokens,
+     the TopBar rule, LifeOrb v6 (port from the board's mountOrb), no borders or dividers, card shadows,
+     numbers from packages/core, the schema in SYSTEM_DESIGN.md §4.
+  c. Run the Definition of Done in AGENTS.md (typecheck + iOS and Android expo export). Fix until green.
+  d. Write review/phase-N/NOTES.md (built, stubbed, differences from the board and why) and save light
+     and dark screenshots of touched screens if a simulator is available; if not, say so in NOTES.md.
+  e. Commit and move straight on to the next phase.
+Stop early only if: a phase needs a secret or account you don't have (API keys, Apple, Neon), a
+dependency won't install, or the Definition of Done can't be made green after a real attempt. Then write
+review/BLOCKED.md with exactly what you need, and stop.
+At the end, write review/OVERNIGHT.md: each phase, its branch, status, and anything you guessed.
+Never push to main, never delete anything you didn't create, never put secrets in the app.
+```
+
+In the morning, tell Claude: "Review the overnight run." Claude reads `review/OVERNIGHT.md`, checks each branch in order and writes the fix lists.
+
+---
+
 ## After each phase
 1. Tell Claude: "Phase N is ready, review it." Claude re-runs the checks, compares the screenshots with the board and writes `review/phase-N/CLAUDE_REVIEW.md` with fixes.
 2. Give the builder: "Fix everything in review/phase-N/CLAUDE_REVIEW.md, then stop."
-3. Once it's approved, paste the prompt again with the next phase number (1 → 1b → 2 → 3 → 4 → 4b → 4c → 4d → 5 → 6 → 7 → 8 → 8b → 9 → 10 → 11 → 12 → 13).
+3. Once it's approved, paste the prompt again with the next phase number (1 → 1b → 2 → 3 → 4 → 4b → 4c → 4d → 5 → 6 → 7 → 8 → 8b → 8c → 9 → 10 → 11 → 12 → 13).
 
 ## Codex or Hydrogen?
 - **Codex** reads `AGENTS.md` automatically and is good at long, well-specified tasks in a repo. Use it as the main builder.
@@ -55,8 +87,10 @@ The whole repository, on branch `design-system-handoff`. The important ones:
 | `BUILD_PLAN.md` | Phases and gates |
 | `SPEC.md` | How everything works |
 | `DESIGN.md` · `MOTION.md` | Look and movement rules |
+| `SYSTEM_DESIGN.md` | How everything connects, and the database schema |
+| `FENNY_LEARNING.md` · `vendor/fenny/` | The teaching language and the owner's code to port |
 | `IMPLEMENTATION_REFERENCES.md` | Repos to learn from, licences |
-| `design-board/life-design-board-v16.html` | Every screen (open in a browser) |
+| `design-board/life-design-board-v17.html` | Every screen (open in a browser) |
 | `apps/mobile/src/design/` | The design system in code (tokens, components, TopBar, LifeOrb, feedback) |
 | `apps/mobile/assets/` | Photos and sounds |
 | `packages/core` | The engine |

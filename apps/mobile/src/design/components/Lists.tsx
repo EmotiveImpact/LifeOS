@@ -59,7 +59,7 @@ export function ListRow({ title, sub, icon, area, right, chevron, onPress, tone 
   );
 }
 
-/** Wraps rows with hairline dividers between them (never around them). */
+/** Wraps rows in one surface. No dividers (DESIGN §47): rows separate by spacing. */
 export function RowGroup({ children, header, count }: { children: ReactNode[]; header?: string; count?: string }) {
   const t = useTokens();
   return (
@@ -71,7 +71,7 @@ export function RowGroup({ children, header, count }: { children: ReactNode[]; h
         </View>
       ) : null}
       {children.map((c, i) => (
-        <View key={i} style={i > 0 ? { borderTopWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line } : undefined}>
+        <View key={i} style={i > 0 ? { marginTop: 2 } : undefined}>
           {c}
         </View>
       ))}

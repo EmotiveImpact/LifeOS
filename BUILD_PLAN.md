@@ -3,7 +3,7 @@
 > **Start with `MASTER_PLAN.md`** (order, stack, decisions). **Motion:** `MOTION.md` (every screen, state to state).
 > **Who does what:** Antigravity builds each phase. **Claude reviews** at every 🛑 gate before the next phase starts.
 > **Code references:** `IMPLEMENTATION_REFERENCES.md`: which open-source repos and exact files to study per feature, and what each licence allows. **Read the relevant section before building a feature.**
-> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v16.html`** (188 screens, organised by tab, each with how it opens) (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
+> **Sources of truth:** `SPEC.md` (how it works: engine, health, learning, behaviour, data, blind spots), `DESIGN.md` (rules, numbered §) and **`design-board/life-design-board-v17.html`** (207 screens, organised by tab, each with how it opens) (every screen, the visual target, plus the component library). If this plan and DESIGN.md disagree, DESIGN.md wins; flag it.
 > **The app:** `apps/mobile` (Expo SDK 58, expo-router, Reanimated 4, Gesture Handler). Logic: `packages/core` (don't change its logic; strings only).
 
 ---
@@ -51,6 +51,7 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 - Replace `(tabs)/_layout.tsx` with a custom tab bar using `Dock` (§6.12, §43 solid): **Today · Plan · You** + a **Talk** mic button. The tab bar hides on scroll down.
 - Store additions in `useLifeStore` (persisted with AsyncStorage): `filedRecords: FiledRecord[]` (§20), `chiefAim: ChiefAim | null` (§37), `pulseLog: {at, moodId, x, y}[]`, `pictures: { look: 'places' | 'mix' | Look, glimpses: boolean, followMood: boolean }` (default **`'mix'`**: diverse cast, §44), `feedbackPrefs` (wire into `setFeedbackPrefs`).
 - Empty placeholder screens for every route in §29 + §32 so navigation works end to end.
+- **Design-system updates first (DESIGN §45–48):** no borders or dividers anywhere, cards get `cardShadow`; `TopBar` on every route (fixed, never moves); **port `LifeOrb` v6** to Reanimated from the board's `mountOrb` (v17 board, search `LifeOrb v6`): states `ring | thinking | working | searching | listening | done`, every state made of the ring's dots, every change the dots travelling one after another (720 ms, 38 ms stagger), done = gather with a springy overshoot. Show all states in `/design`.
 **Acceptance:** the app opens to Today on both platforms; tabs switch with the selection haptic; the dark/light toggle works; `/design` still works.
 🛑 **Gate 1: Claude reviews the shell, store shape and navigation.**
 
@@ -60,6 +61,7 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 - `src/services/voice.ts` interface (speech to text, text to speech, live) with on-device first (whisper.rn / Phonon) and a cloud fallback (MASTER_PLAN §3.2).
 - `tools/evals/`: the eval harness that picks a model per AI job (MASTER_PLAN §3.3).
 - **Local-first storage** with `expo-sqlite` (the source of truth) + queued sync; migrate the AsyncStorage store.
+- Database schema and repositories exactly as **`SYSTEM_DESIGN.md` §4** (Drizzle migrations), outbox + sync client (§2), API skeleton with `/sync`, `/ai/*` stubs, `/oauth/*`, `/files/sign` (§3).
 - `src/services/ai.ts` interface (talk, ask, extract, food, grade) with schema-validated JSON, plus a stub implementation.
 - Consent screens per data type; privacy policy page; "What life knows" export/delete wired to the DB.
 **Acceptance:** sign in, kill the app, reinstall, sign in → data returns; offline edits sync later.
@@ -90,11 +92,13 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 - `planToday()` uses readiness, sleep debt and load (SPEC §1.1), with "Why am I seeing this?" on each decision.
 - Safety escalation for repeated low moods (§3.7).
 **Acceptance:** real data from at least one iPhone + one Android device; scores match hand-calculated test fixtures; unit tests for readiness, sleep need and debt.
+- **v17 additions (board v17, SYSTEM_DESIGN §5 health flow):** Body numbers + BMI and waist explained (`body_profile`; NICE lower BMI thresholds when the user has shared their background), Today’s target load (strain band from readiness), Heart-rate zones (Karvonen), Something may be coming on (skin temp + RHR + resp together), Breathing library + heart-rate-down pacer, Where this number came from (provenance on every score), Sleep regularity, Training load trend (acute:chronic), Your body this week (digest + one correlation). Port logic from Atria (MIT) where listed in IMPLEMENTATION_REFERENCES; NOOP is ideas only.
 - **v11 functions (SPEC §3.8):** metric detail with honesty badges, How scores work, Body signals, Stress, Breathe, Journal + insights, Live workout (BLE Heart Rate Profile via `react-native-ble-plx`), auto-detected workouts, Sleep planner, Customise Today, Body coach. **Never connect to WHOOP straps over BLE.**
 🛑 **Gate 4b (includes a health-copy safety review)**
 
 ## Phase 4c — Fuel: photo food logging (SPEC §3.5, §3.5b · refs: Cal-AI, openfoodfacts-js, vision-camera, whisper.rn)
 Camera → `ai.food()` → item + portion confirm/edit → CoFID / USDA / Open Food Facts → daily totals vs Mifflin-St Jeor targets; barcode scan; "hide numbers" mode; 18+ gate; low-intake safeguard + Beat signposting.
+- **Cal AI-style counters (board v17):** Fuel at a glance (big "left today" ring, protein/carbs/fat bars, eaten / burned / water), Your food targets (goal, target weight, pace capped 0.25–0.75 kg/wk, the maths shown, safe floors), Saved meals (one-tap re-log), Food and weight over time (trend + adherence month, never red), Exercise added back (none / half / all, default half), plus the v12 screens (meal result + fit score, what can I cook, week of meals, say what you ate, food day, barcode, search).
 🛑 **Gate 4c (includes safety review)**
 
 ## Phase 4d — Habits (SPEC §3.6 · refs: Loop habit strength (ideas only, GPL))
@@ -108,6 +112,7 @@ Tiny version + implementation intention ("After… I will… at…"), max 3 new 
 🛑 **Gate 5**
 
 ## Phase 6 — Onboarding + Chief Aim (#01–04, §37)
+- Include the v17 setup step **Your body, in three numbers** (height, weight, optional waist; metric/imperial; skippable) and the permission primers (mic, camera, calendar, health, notifications).
 - Welcome (cover image: a generic/places or mixed-cast frame), destination question, "Or just tell life" (→ Talk), Building your plan (live engine scan).
 - `aim/new`: 4 steps with a live statement + suggestions; `aim`: statement, read ritual (morning/night + streak), progress, breakdown, edit with history.
 🛑 **Gate 6**
@@ -121,8 +126,12 @@ Library, Lens (THINKER_ATEAM + Napoleon Hill), Idea in 60 seconds (3 cards → a
 🛑 **Gate 8**
 
 ## Phase 8b — Teach me (SPEC §4.4 · MASTER_PLAN §3.5 · refs: your Feynman-voice-app `apps/api/src/lesson.ts`, `policy.ts`, `review.ts`, `apps/mobile/src/teach/*`, `ui/motion.ts`)
-The lesson engine (`ai.lesson`, `ai.analyse`, `ai.showMe`), the `TeachMeButton` (appears for any term not yet in the user's LearningRecord, and in Talk when they sound unsure), and the 10 Teach me screens on the v14 board: offer → lesson ready → bites with pictures → guess first → puzzle → recap → tell it back → how you did → You've got it → What you've learned, plus the playable flow as the motion reference. Life's tokens only (drop the Feynman app's glass and colours). Every lesson ends by returning to the action that needed it.
+**Read `FENNY_LEARNING.md` first.** Port the Fenny Drawing Kit from `vendor/fenny/scene/*` (Skia; life tokens; 30 devices, 208 things, hand-drawn wobble behind `prefs.handDrawn`, Settings toggle), the conversation policy (`vendor/fenny/api/policy.ts`), lesson writer + scenes (`api/lesson.ts`, `api/scene.ts`), analysis (`api/review.ts`) and the lesson film, puzzles and slider (`vendor/fenny/teach/*`). The lesson engine (`ai.lesson`, `ai.analyse`, `ai.showMe`), the `TeachMeButton` (appears for any term not yet in the user's LearningRecord, and in Talk when they sound unsure), and the 10 Teach me screens on the v14 board: offer → lesson ready → bites with pictures → guess first → puzzle → recap → tell it back → how you did → You've got it → What you've learned, plus the playable flow as the motion reference. Life's tokens only (drop the Feynman app's glass and colours). Every lesson ends by returning to the action that needed it.
 🛑 **Gate 8b**
+
+## Phase 8c — Know yourself, people and documents (board v17 chapters "You · Know yourself", "You · People and dates", "Plan · Documents and renewals")
+Big Five (IPIP, public domain), body clock (rMEQ + sleep midpoint), values card sort, money mindset; each result changes engine behaviour as the screens say. People, person page, contacts import (selected only), birthday nudge 4 days before, important dates (memorial: no reminders); documents and renewals with `act_from` timing; Need support now; Focus session; Your year on your birthday.
+🛑 **Gate 8c**
 
 ## Phase 9 — Grow + account (#30–34) + levels (SPEC §5 decision: Your levels, Routines, Bigger decisions, Area pages, Missions history, "Why am I seeing this?")
 Weekly recap (PeekStack), Vantage point (ridge + gates), Level up (IntroCarousel, once per level, `feedback.cleared`), life+ (never blocks level 1), Settings (appearance, sound, haptics, hide balances, nudges, pictures: follow mood / glimpses, connected services, what life knows, export, delete).

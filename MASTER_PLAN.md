@@ -18,8 +18,10 @@
 | `SPEC.md` | How everything works: engine, health, learning, data, blind spots | Antigravity, Codex |
 | `DESIGN.md` | The look and the rules (§1–§44) | Everyone building screens |
 | `MOTION.md` | How every screen moves, state to state | Everyone building screens |
+| `SYSTEM_DESIGN.md` | How everything connects: phone layers, schema, sync, API, AI router, pipelines | Builders, first thing in Phase 1b |
+| `FENNY_LEARNING.md` + `vendor/fenny/` | The teaching language and the owner's Fenny code to port | Phase 8b |
 | `IMPLEMENTATION_REFERENCES.md` | Which repos and files to learn from, and licence rules | Before each feature |
-| `design-board/life-design-board-v16.html` | **Every screen (188), organised by tab**, the component library and the to-do list | The visual target |
+| `design-board/life-design-board-v17.html` | **Every screen (188), organised by tab**, the component library and the to-do list | The visual target |
 | `AGENTS.md` | Rules and commands every builder reads first | Codex, Hydrogen, any builder |
 | `BUILD_PROMPT.md` | The prompt to paste, per phase | You |
 | `apps/mobile/src/design/` | The design system in code (tokens, 70+ components, feedback) | Every screen imports from here |
@@ -98,7 +100,8 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 6 | Onboarding + Chief Aim | Gate 6 |
 | 7 | Toolkit, level-gated | Gate 7 |
 | 8 | Learn | Gate 8 |
-| **8b** | **Teach me: lesson engine, the 11 Teach me screens, the button everywhere** | Gate 8b |
+| **8b** | **Teach me: lesson engine, Fenny Drawing Kit (clean or hand-drawn), the Teach me screens, the button everywhere** | Gate 8b |
+| 8c | Know yourself, people and dates, documents and renewals | Gate 8c |
 | 9 | Grow, account, levels | Gate 9 |
 | 10 | Polish: the full **MOTION.md** pass, accessibility, Android pass, performance | Gate 10 |
 | 11 | Next level: calendar, experiments, forecast, cycle, fitness age, then watch, private mode, memory, Do it for me, your AI (MCP), all your devices, glucose, habit strength, body basics, shared life | Gate 11 |
@@ -138,5 +141,6 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Voice behind `voice.ts`: on-device first, Phonon for speech, cloud fallback.** |
 | 15 Nov 2026 | **Models chosen per job by evals; no lock-in. Today's plan is decided by rules + a bandit, not an LLM.** |
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
+| 16 Nov 2026 | **v17: orb is one family of the ring's dots (thinking, working, searching, listening, done); no dividers, card shadows; Fenny teaching language + drawing kit; body numbers; health features from the repos; Cal AI counters; SYSTEM_DESIGN.md.** |
 | 15 Nov 2026 | **v16: orb v2 (globe, no core); no borders anywhere (owner's decision); AGENTS.md + BUILD_PROMPT.md for any builder.** |
 | 15 Nov 2026 | **v14: no borders on buttons (avatars and cards keep theirs); the orb evolves ring → sphere → core; chat restored; board organised by navigation; 188 screens.** |

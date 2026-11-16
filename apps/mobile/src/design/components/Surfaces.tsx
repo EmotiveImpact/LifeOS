@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Press } from '../Press';
 import { Callout, Text, Title, type Tone } from '../Text';
 import { useTokens } from '../theme';
-import { atmospheres, onAtmosphere, radius, space, type Domain } from '../tokens';
+import { atmospheres, cardShadow, onAtmosphere, radius, space, type Domain } from '../tokens';
 
 /* ───────────────────────── 1. Atmosphere ───────────────────────── */
 
@@ -67,7 +67,7 @@ export type CardProps = {
   accessibilityLabel?: string;
 };
 
-/** DESIGN.md §6.3 + §25: radius 20, 1px hairline edge (v4), no shadow. `tile` is the nested `surface-2` level. */
+/** DESIGN.md §6.3 + §47: radius 20, no border, a soft shadow. `tile` is the nested `surface-2` level (flat). */
 export function Card({ variant = 'default', domain = 'admin', padding, style, children, onPress, accessibilityLabel }: CardProps) {
   const t = useTokens();
   const isTile = variant === 'tile';
@@ -75,13 +75,12 @@ export function Card({ variant = 'default', domain = 'admin', padding, style, ch
     backgroundColor: variant === 'inverted' ? t.ink : isTile ? t.surface2 : t.surface,
     borderRadius: isTile ? radius.md : radius.lg,
     padding: padding ?? (isTile ? 12 : 16),
-    overflow: 'hidden',
-    // v4 hairline depth: a 1px edge defines the surface.
-    // No borders, ever (DESIGN §47): surfaces separate by fill alone.
+    // No borders, ever (DESIGN §47): fill + a soft shadow. Tiles sit flat inside cards.
+    ...(isTile || variant === 'inverted' ? null : cardShadow(t.scheme)),
   };
   const tint =
     variant === 'tinted' ? (
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: atmospheres[domain].tint[t.scheme] }]} />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius.lg, backgroundColor: atmospheres[domain].tint[t.scheme] }]} />
     ) : null;
   if (onPress) {
     return (
