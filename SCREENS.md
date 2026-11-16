@@ -107,19 +107,19 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `cashplan` | 30-day cash plan | Push | Toolkit | `/plan/tools/cashplan` |
-| [ ] | `taxcheck` | Tax & NI check | Push | Toolkit or Money | `/plan/tools/taxcheck` |
-| [ ] | `income` | Income & structure | Push | Toolkit or Work | `/plan/tools/income` |
-| [ ] | `rentbuy` | Rent vs buy | Push | Toolkit or Home | `/plan/tools/rentbuy` |
-| [ ] | `blood` | Bloodwork reader | Push | Toolkit or Health | `/plan/tools/blood` |
-| [ ] | `protect` | Protection review | Push | Toolkit | `/plan/tools/protect` |
-| [ ] | `growth` | Growth path | Push | Toolkit | `/plan/tools/growth` |
-| [ ] | `bedrooms` | Your next home: bedrooms | Push | Toolkit or Home | `/plan/tools/bedrooms` |
-| [ ] | `buffer` | How big a buffer? | Push | Toolkit or Money | `/plan/tools/buffer` |
-| [ ] | `unlock` | Locked tool | Sheet | a locked tool | `/(sheets)/unlock` · formSheet |
-| [ ] | `decisions` | Bigger decisions | Push | Toolkit → Bigger decisions | `/plan/tools/decisions` |
-| [ ] | `tools` | All tools | Push | Plan → Toolkit | `/plan/tools/tools` |
-| [ ] | `healthstack` | Health stack | Push | Toolkit or Health | `/plan/tools/healthstack` |
+| [~] | `cashplan` | 30-day cash plan | Push | Toolkit | `/plan/tools/cashplan` |
+| [~] | `taxcheck` | Tax & NI check | Push | Toolkit or Money | `/plan/tools/taxcheck` |
+| [~] | `income` | Income & structure | Push | Toolkit or Work | `/plan/tools/income` |
+| [~] | `rentbuy` | Rent vs buy | Push | Toolkit or Home | `/plan/tools/rentbuy` |
+| [~] | `blood` | Bloodwork reader | Push | Toolkit or Health | `/plan/tools/blood` |
+| [~] | `protect` | Protection review | Push | Toolkit | `/plan/tools/protect` |
+| [~] | `growth` | Growth path | Push | Toolkit | `/plan/tools/growth` |
+| [~] | `bedrooms` | Your next home: bedrooms | Push | Toolkit or Home | `/plan/tools/bedrooms` |
+| [~] | `buffer` | How big a buffer? | Push | Toolkit or Money | `/plan/tools/buffer` |
+| [~] | `unlock` | Locked tool | Sheet | a locked tool | `/(sheets)/unlock` · formSheet |
+| [~] | `decisions` | Bigger decisions | Push | Toolkit → Bigger decisions | `/plan/tools/decisions` |
+| [~] | `tools` | All tools | Push | Plan → Toolkit | `/plan/tools/tools` |
+| [~] | `healthstack` | Health stack | Push | Toolkit or Health | `/plan/tools/healthstack` |
 
 ## Body (35)
 
