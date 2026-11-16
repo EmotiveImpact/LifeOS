@@ -7,3 +7,5 @@
 
 - First open: 14 UI routes built; chapter typecheck passed. [~]: permissions, voice and sign-in are explicit local previews; no OS prompts or remote accounts. Final visual pass pending.
 - Components: all 42 To build entries exported and demonstrated in /design. SceneView implements the board’s eight sample devices in SVG; full 30-device/208-object Skia port remains Track B.
+
+- Tab 1: chapter typecheck passed. [~]: 13 board entries built, including inline search, nudge and birthday cards; sample health/calendar data, no remote integrations. Final visual pass pending.

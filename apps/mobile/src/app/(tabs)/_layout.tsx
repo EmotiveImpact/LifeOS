@@ -1,75 +1,16 @@
+import { useState } from 'react';
+import { Tabs, useRouter, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
-import { useThemeColor } from 'heroui-native';
-import type { ComponentProps, JSX } from 'react';
-import type { ColorValue } from 'react-native';
-
-type IoniconName = ComponentProps<typeof Ionicons>['name'];
-
-function TabIcon({ name, color }: { name: IoniconName; color: ColorValue }): JSX.Element {
-  // RN 0.88 ColorValue also permits null and processed numbers, which Ionicons rejects.
-  const iconColor = color === null || typeof color === 'number' ? undefined : color;
-  return <Ionicons name={name} size={22} color={iconColor} />;
-}
-
-export default function TabsLayout(): JSX.Element {
-  const bg = useThemeColor('surface');
-  const fg = useThemeColor('foreground');
-  const muted = useThemeColor('muted');
-
-  return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: fg,
-        tabBarInactiveTintColor: muted,
-        tabBarStyle: {
-          backgroundColor: bg,
-          borderTopWidth: 0,
-          elevation: 0,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'home' : 'home-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="discover"
-        options={{
-          title: 'Discover',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'compass' : 'compass-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="missions"
-        options={{
-          title: 'Missions',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'layers' : 'layers-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="you"
-        options={{
-          title: 'You',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'person' : 'person-outline'} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
-  );
+import { Dock } from '@/design';
+import { DockVisibility } from '@/navigation/DockVisibility';
+export default function TabsLayout() {
+  const [hidden, setHidden] = useState(false), router = useRouter();
+  return <DockVisibility.Provider value={setHidden}><Tabs screenOptions={{ headerShown: false, animation: 'fade' }} tabBar={({ state }) => <Dock hidden={hidden} active={state.routes[state.index].name} items={[{ key: 'today', label: 'Today', icon: color => <Ionicons name="home-outline" size={21} color={color} /> }, { key: 'plan', label: 'Plan', icon: color => <Ionicons name="layers-outline" size={21} color={color} /> }, { key: 'you', label: 'You', icon: color => <Ionicons name="person-outline" size={21} color={color} /> }, { key: 'talk', label: 'Talk', icon: color => <Ionicons name="mic-outline" size={21} color={color} />, onLongPress: () => router.push('/(flows)/talk' as Href) }]} onChange={key => { setHidden(false); if (key === 'talk') router.push('/(flows)/chat' as Href); else router.navigate(`/(tabs)/${key}` as Href); }} />}>
+    <Tabs.Screen name="today" options={{ title: 'Today' }} />
+    <Tabs.Screen name="plan" options={{ title: 'Plan' }} />
+    <Tabs.Screen name="you" options={{ title: 'You' }} />
+    <Tabs.Screen name="index" options={{ href: null }} />
+    <Tabs.Screen name="discover" options={{ href: null }} />
+    <Tabs.Screen name="missions" options={{ href: null }} />
+  </Tabs></DockVisibility.Provider>;
 }

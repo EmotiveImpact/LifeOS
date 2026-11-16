@@ -30,19 +30,19 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `today` | Today (home) | Tab | tab bar | `/(tabs)/today` |
-| [ ] | `nudge` | Nudge | Card / notification | Today or Lock Screen | component on Today / anywhere |
-| [ ] | `pulse` | Pulse | Sheet | Today check-in | `/(sheets)/pulse` · formSheet |
-| [ ] | `checkin` | Checking in | Sheet | Today | `/(sheets)/checkin` · formSheet |
-| [ ] | `customise` | Customise Today | Sheet | Today → edit | `/(sheets)/customise` · formSheet |
-| [ ] | `routines` | Your routines | Push | Today → routines | `/today/routines` |
-| [ ] | `why` | Why am I seeing this? | Sheet | “Why am I seeing this?” on any card | `/(sheets)/why` · formSheet |
-| [ ] | `calendar` | Calendar-aware day | Push | Today → day strip | `/today/calendar` |
-| [ ] | `morningbrief` | Morning brief | Sheet | first open of the day | `/(sheets)/morningbrief` · formSheet |
-| [ ] | `evening` | Close the day | Sheet | evening notification or Today | `/(sheets)/evening` · formSheet |
-| [ ] | `inbox` | From life | Push | bell on Today | `/today/inbox` |
-| [ ] | `search` | Search everything | Overlay | pull down on Today | overlay on Today |
-| [ ] | `focus` | Focus session | Full screen | Today or a calendar gap | `/(flows)/focus` · fullScreenModal |
+| [~] | `today` | Today (home) | Tab | tab bar | `/(tabs)/today` |
+| [~] | `nudge` | Nudge | Card / notification | Today or Lock Screen | component on Today / anywhere |
+| [~] | `pulse` | Pulse | Sheet | Today check-in | `/(sheets)/pulse` · formSheet |
+| [~] | `checkin` | Checking in | Sheet | Today | `/(sheets)/checkin` · formSheet |
+| [~] | `customise` | Customise Today | Sheet | Today → edit | `/(sheets)/customise` · formSheet |
+| [~] | `routines` | Your routines | Push | Today → routines | `/today/routines` |
+| [~] | `why` | Why am I seeing this? | Sheet | “Why am I seeing this?” on any card | `/(sheets)/why` · formSheet |
+| [~] | `calendar` | Calendar-aware day | Push | Today → day strip | `/today/calendar` |
+| [~] | `morningbrief` | Morning brief | Sheet | first open of the day | `/(sheets)/morningbrief` · formSheet |
+| [~] | `evening` | Close the day | Sheet | evening notification or Today | `/(sheets)/evening` · formSheet |
+| [~] | `inbox` | From life | Push | bell on Today | `/today/inbox` |
+| [~] | `search` | Search everything | Overlay | pull down on Today | overlay on Today |
+| [~] | `focus` | Focus session | Full screen | Today or a calendar gap | `/(flows)/focus` · fullScreenModal |
 
 ## Talk and file (8)
 

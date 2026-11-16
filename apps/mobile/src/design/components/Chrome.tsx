@@ -68,7 +68,7 @@ function OrbDot({ i, r, size, dot, color, phase, thinking }: { i: number; r: num
 
 /* ───────────────────────── 12. Dock ───────────────────────── */
 
-export type DockItem = { key: string; label: string; icon: (color: string) => ReactNode };
+export type DockItem = { key: string; label: string; icon: (color: string) => ReactNode; onLongPress?: () => void };
 
 /**
  * DESIGN.md §6.12 + §43: floating solid pill with 4 items. Active = inverted capsule with label.
@@ -98,6 +98,8 @@ export function Dock({ items, active, onChange, hidden }: { items: DockItem[]; a
               key={it.key}
               haptic="select"
               onPress={() => onChange(it.key)}
+              onLongPress={it.onLongPress}
+              delayLongPress={350}
               accessibilityRole="tab"
               accessibilityLabel={it.label}
               accessibilityState={{ selected: on }}
