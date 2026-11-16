@@ -1,0 +1,156 @@
+import Foundation
+
+/// Sleep Planner (2026-07-07, WHOOP-research adaptation): works backwards
+/// from the wake-by time to an "in bed by" recommendation for a chosen
+/// performance goal.
+///
+/// Honesty rules: the sleep-need input is the app's existing ledger math
+/// (never recomputed here), the efficiency assumption comes from the user's
+/// own confirmed nights (population default only while learning, and labeled
+/// as such), and with no wake-by time configured there is no recommendation.
+enum AtriaSleepPlannerGoal: String, Codable, CaseIterable, Identifiable {
+    case peak, perform, getBy
+
+    var id: String { rawValue }
+
+    /// Fraction of tonight's sleep need the goal aims to cover (WHOOP's
+    /// public Peak/Perform/Get By tiers).
+    var needFraction: Double {
+        switch self {
+        case .peak: return 1.0
+        case .perform: return 0.85
+        case .getBy: return 0.70
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .peak: return "Peak"
+        case .perform: return "Perform"
+        case .getBy: return "Get by"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .peak: return "100% of need"
+        case .perform: return "85% of need"
+        case .getBy: return "70% of need"
+        }
+    }
+}
+
+struct AtriaSleepPlan: Equatable {
+    let targetSleepHours: Double
+    /// Minutes-of-day (0..<1440) to be in bed by; can wrap past midnight
+    /// into the previous evening.
+    let inBedByMinutes: Int
+    let assumedEfficiency: Double
+    /// True while the efficiency assumption is the population default rather
+    /// than learned from the user's own nights.
+    let efficiencyIsDefault: Bool
+
+    var inBedByText: String {
+        let hour = inBedByMinutes / 60
+        let minute = inBedByMinutes % 60
+        var components = DateComponents()
+        components.hour = hour
+        components.minute = minute
+        let date = Calendar.current.date(from: components) ?? Date()
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+}
+
+enum AtriaSleepPlanner {
+    static let defaultEfficiency = 0.90
+    static let minimumNightsForLearnedEfficiency = 5
+
+    /// Median efficiency across the user's confirmed nights, or the labeled
+    /// population default while fewer than 5 real nights exist.
+    static func assumedEfficiency(nightEfficiencies: [Double]) -> (value: Double, isDefault: Bool) {
+        let usable = nightEfficiencies.filter { $0 > 0.5 && $0 <= 1.0 }.sorted()
+        guard usable.count >= minimumNightsForLearnedEfficiency else {
+            return (defaultEfficiency, true)
+        }
+        let upperMiddle = usable.count / 2
+        let median = usable.count.isMultiple(of: 2)
+            ? (usable[upperMiddle - 1] + usable[upperMiddle]) / 2
+            : usable[upperMiddle]
+        return (median, false)
+    }
+
+    /// The recommendation. `needHours` is tonight's need from the existing
+    /// ledger; `wakeByMinutes` is the configured wake-by time in minutes of
+    /// day. Time in bed = target sleep / efficiency, clamped to sane bounds.
+    static func plan(needHours: Double,
+                     goal: AtriaSleepPlannerGoal,
+                     wakeByMinutes: Int,
+                     nightEfficiencies: [Double]) -> AtriaSleepPlan {
+        let efficiency = assumedEfficiency(nightEfficiencies: nightEfficiencies)
+        let targetSleep = min(max(needHours * goal.needFraction, 3), 12)
+        let timeInBedMinutes = Int((targetSleep / efficiency.value * 60).rounded())
+        var inBedBy = wakeByMinutes - timeInBedMinutes
+        while inBedBy < 0 { inBedBy += 24 * 60 }
+        return AtriaSleepPlan(targetSleepHours: targetSleep,
+                              inBedByMinutes: inBedBy % (24 * 60),
+                              assumedEfficiency: efficiency.value,
+                              efficiencyIsDefault: efficiency.isDefault)
+    }
+}
+
+extension AtriaSleepPlanner {
+    /// Median wake time (minutes of day) over recent confirmed main sleeps,
+    /// so a plan without a wake alarm works back from when this person
+    /// actually gets up (shifted sleepers included). Circular-safe: wakes are
+    /// unwrapped around the first one so 23:50 and 00:10 stay 20 min apart.
+    static func typicalWakeMinute(wakes: [Date], calendar: Calendar = .current) -> Int? {
+        let minutes = wakes.map {
+            calendar.component(.hour, from: $0) * 60 + calendar.component(.minute, from: $0)
+        }
+        guard let anchor = minutes.first, minutes.count >= 3 else { return nil }
+        let unwrapped = minutes.map { m -> Int in
+            var d = m - anchor
+            if d > 720 { d -= 1440 } else if d < -720 { d += 1440 }
+            return anchor + d
+        }.sorted()
+        let median = unwrapped[unwrapped.count / 2]
+        return ((median % 1440) + 1440) % 1440
+    }
+
+    /// The wake time every plan works back from: the wake alarm when it is
+    /// on, otherwise this person's own typical wake (shifted sleepers
+    /// included), and only then the stored default. Without this a plan for
+    /// someone who wakes at 19:15 was built back from a 07:30 default.
+    static func resolvedWakeByMinutes(alarmEnabled: Bool,
+                                      alarmWakeByMinutes: Int,
+                                      recentMainWakes: [Date],
+                                      calendar: Calendar = .current) -> Int {
+        if alarmEnabled { return alarmWakeByMinutes }
+        return typicalWakeMinute(wakes: recentMainWakes, calendar: calendar) ?? alarmWakeByMinutes
+    }
+
+    /// Wake times of the most recent confirmed main sleeps (>= 3 h), newest first.
+    static func recentMainWakes(_ nights: [SleepHistorySnapshot.Night], limit: Int = 14) -> [Date] {
+        Array(nights
+            .filter { $0.confirmed && !$0.isNapEvidence && $0.duration >= 3 * 3600 }
+            .compactMap(\.end)
+            .sorted(by: >)
+            .prefix(limit))
+    }
+
+    /// The Sleep sheet's one-line recommendation (owner 2026-10-03).
+    static func recommendation(needHours: Double?,
+                               goal: AtriaSleepPlannerGoal,
+                               wakeByMinutes: Int?,
+                               nightEfficiencies: [Double]) -> AtriaMetricRecommendation? {
+        guard let needHours, needHours > 0, let wakeByMinutes else { return nil }
+        let plan = plan(needHours: needHours, goal: goal,
+                        wakeByMinutes: wakeByMinutes,
+                        nightEfficiencies: nightEfficiencies)
+        return AtriaMetricRecommendation(
+            systemImage: "bed.double.fill",
+            action: "In bed by \(plan.inBedByText) tonight",
+            reason: "Tonight's need: \(AtriaMetricFormat.sleepHours(needHours))"
+        )
+    }
+}

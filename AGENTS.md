@@ -13,7 +13,8 @@ Instructions for any coding agent working in this repo (Codex reads this file au
 4b. **`SYSTEM_DESIGN.md`**: how everything connects (phone layers, database schema, sync, API, AI router, health and food pipelines). Build the data layer exactly as §4.
 4c. **`FENNY_LEARNING.md`**: the teaching language (method, conversation rules, the Fenny Drawing Kit). Source code to port is in `vendor/fenny/` (the owner's own code; port it, don't import from it).
 5. `MOTION.md`: how every screen moves, state to state.
-6. `IMPLEMENTATION_REFERENCES.md`: which open-source files to learn from and what each licence allows.
+6. `IMPLEMENTATION_REFERENCES.md`: which open-source files to learn from and what each licence allows. **Every repo is pinned to an exact commit in `vendor/REFERENCES.lock.md`**; MIT code we port is copied into `vendor/atria/`, `vendor/calai/`, and the owner's Fenny code into `vendor/fenny/`. Never import from `vendor/`; port it and credit it in `THIRD_PARTY_NOTICES.md`.
+6b. **`COMPONENTS.md`**: what exists in `@/design` and the 34 components still to build. Build a phase's components first, show them in `/design`, then build its screens.
 7. **`design-board/life-design-board-v17.html`**: every screen (207), organised by tab, each saying **how it opens and from where**. Open it in a browser. It's the visual target and supersedes all earlier boards.
 8. `apps/mobile/src/design/`: the design system that already exists. The `/design` route is a live gallery of every component.
 

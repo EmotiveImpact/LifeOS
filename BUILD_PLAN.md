@@ -51,6 +51,7 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 - Replace `(tabs)/_layout.tsx` with a custom tab bar using `Dock` (§6.12, §43 solid): **Today · Plan · You** + a **Talk** mic button. The tab bar hides on scroll down.
 - Store additions in `useLifeStore` (persisted with AsyncStorage): `filedRecords: FiledRecord[]` (§20), `chiefAim: ChiefAim | null` (§37), `pulseLog: {at, moodId, x, y}[]`, `pictures: { look: 'places' | 'mix' | Look, glimpses: boolean, followMood: boolean }` (default **`'mix'`**: diverse cast, §44), `feedbackPrefs` (wire into `setFeedbackPrefs`).
 - Empty placeholder screens for every route in §29 + §32 so navigation works end to end.
+- **Components before screens:** each phase starts by building the `COMPONENTS.md` "To build" rows tagged with its phase, shown in `/design`.
 - **Design-system updates first (DESIGN §45–48):** no borders or dividers anywhere, cards get `cardShadow`; `TopBar` on every route (fixed, never moves); **port `LifeOrb` v6** to Reanimated from the board's `mountOrb` (v17 board, search `LifeOrb v6`): states `ring | thinking | working | searching | listening | done`, every state made of the ring's dots, every change the dots travelling one after another (720 ms, 38 ms stagger), done = gather with a springy overshoot. Show all states in `/design`.
 **Acceptance:** the app opens to Today on both platforms; tabs switch with the selection haptic; the dark/light toggle works; `/design` still works.
 🛑 **Gate 1: Claude reviews the shell, store shape and navigation.**

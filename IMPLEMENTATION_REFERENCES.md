@@ -1,6 +1,7 @@
 # life — Implementation References
 
 > **What this is:** the open-source code worth learning from, mapped to each part of life, with **exact files** and a **licence rule** for each.
+> **Pinned:** every repo here is locked to an exact commit in `vendor/REFERENCES.lock.md`. Atria's files are copied in `vendor/atria/` (MIT), Cal-AI's in `vendor/calai/` (MIT), and the owner's Fenny code in `vendor/fenny/`.
 > Read alongside `SPEC.md` (what to build) and `BUILD_PLAN.md` (when). Licences were checked on GitHub on 15 Nov 2026; re-check before shipping.
 
 ## Licence rules (read first)
