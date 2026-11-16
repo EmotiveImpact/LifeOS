@@ -263,11 +263,11 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `people` | Your people | Push | You → People | `/you/people/people` |
-| [ ] | `person` | A person | Push | People → a person | `/you/people/person` |
-| [ ] | `addperson` | Add people from contacts | Sheet | People → + | `/(sheets)/addperson` · formSheet |
-| [ ] | `birthdaynudge` | A birthday, on Today | Card | Today, 4 days before | component on Today / anywhere |
-| [ ] | `dates` | Important dates | Push | People → Dates | `/you/people/dates` |
+| [~] | `people` | Your people | Push | You → People | `/you/people/people` |
+| [~] | `person` | A person | Push | People → a person | `/you/people/person` |
+| [~] | `addperson` | Add people from contacts | Sheet | People → + | `/(sheets)/addperson` · formSheet |
+| [~] | `birthdaynudge` | A birthday, on Today | Card | Today, 4 days before | component on Today / anywhere |
+| [~] | `dates` | Important dates | Push | People → Dates | `/you/people/dates` |
 
 ## You · Settings and account (14)
 

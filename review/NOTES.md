@@ -35,3 +35,5 @@
 - Tab 3: chapter typecheck passed. [~]: 10 routes built. Core score/levels/areas, household, local records and memory edit/forget/undo, details and shared preview are wired. Memory retrieval, experiments and multi-account sharing remain Track B. Final visual pass pending.
 
 - You · Know yourself: chapter typecheck passed. [~]: 6 routes built with 50 public-domain IPIP statements, local answers, values ordering and editable body measures. Personality/chronotype interpretations are explicitly sample results until Track B scoring. Final visual pass pending.
+
+- You · People: chapter typecheck passed. [~]: 5 entries built: people, person edit/checklist, selected-only sample contacts, dates and inline birthday nudge. Memorial has no countdown/reminder. Real contacts, notifications and sending remain Track B. Final visual pass pending.
