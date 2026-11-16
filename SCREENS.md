@@ -48,14 +48,14 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `talk` | Talk | Full screen | hold the Talk button | `/(flows)/talk` · fullScreenModal |
-| [ ] | `understood` | Understood | Sheet | after Talk | `/(sheets)/understood` · formSheet |
-| [ ] | `ask` | Ask, then file | Full screen | Chat → a question | `/(flows)/ask` · fullScreenModal |
-| [ ] | `attach` | Attach | Sheet | + in Chat | `/(sheets)/attach` · formSheet |
-| [ ] | `scan` | Letter, understood | Full screen | + → Scan a letter | `/(flows)/scan` · fullScreenModal |
-| [ ] | `chat` | Chat | Full screen | tap the Talk button | `/(flows)/chat` · fullScreenModal |
-| [ ] | `chathistory` | Your conversations | Push | Chat → ⋯ | `/talk/chathistory` |
-| [ ] | `editfiled` | Edit what life filed | Sheet | tap any filed item | `/(sheets)/editfiled` · formSheet |
+| [~] | `talk` | Talk | Full screen | hold the Talk button | `/(flows)/talk` · fullScreenModal |
+| [~] | `understood` | Understood | Sheet | after Talk | `/(sheets)/understood` · formSheet |
+| [~] | `ask` | Ask, then file | Full screen | Chat → a question | `/(flows)/ask` · fullScreenModal |
+| [~] | `attach` | Attach | Sheet | + in Chat | `/(sheets)/attach` · formSheet |
+| [~] | `scan` | Letter, understood | Full screen | + → Scan a letter | `/(flows)/scan` · fullScreenModal |
+| [~] | `chat` | Chat | Full screen | tap the Talk button | `/(flows)/chat` · fullScreenModal |
+| [~] | `chathistory` | Your conversations | Push | Chat → ⋯ | `/talk/chathistory` |
+| [~] | `editfiled` | Edit what life filed | Sheet | tap any filed item | `/(sheets)/editfiled` · formSheet |
 
 ## Tab 2 · Plan (11)
 

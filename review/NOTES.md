@@ -9,3 +9,5 @@
 - Components: all 42 To build entries exported and demonstrated in /design. SceneView implements the board’s eight sample devices in SVG; full 30-device/208-object Skia port remains Track B.
 
 - Tab 1: chapter typecheck passed. [~]: 13 board entries built, including inline search, nudge and birthday cards; sample health/calendar data, no remote integrations. Final visual pass pending.
+
+- Talk and file: chapter typecheck passed. [~]: 8 routes built; Talk/transcription, scanning and chat use explicit local samples/engine replies. Confirm/remove/undo and edit/save are local; no AI or upload. Final visual pass pending.
