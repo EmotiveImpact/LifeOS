@@ -2,7 +2,7 @@
 
 > Generated from board v17 (`design-board/life-design-board-v17.html`). **This is the build checklist.** One row per board screen: build it, match the board, tick it. Nothing outside this list gets built; nothing on it gets redesigned.
 > Open the board, find the screen by its key (each phone has id `s-<key>`), and match it: layout, copy, spacing, imagery, motion.
-**221 screens.** Routes use expo-router; sheets use `presentation: 'formSheet'`, full-screen flows `fullScreenModal`. States are not routes: they're how their parent screen looks in that state.
+**224 screens.** Routes use expo-router; sheets use `presentation: 'formSheet'`, full-screen flows `fullScreenModal`. States are not routes: they're how their parent screen looks in that state.
 
 Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the board in light and dark
 
@@ -44,7 +44,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [ ] | `search` | Search everything | Overlay | pull down on Today | overlay on Today |
 | [ ] | `focus` | Focus session | Full screen | Today or a calendar gap | `/(flows)/focus` · fullScreenModal |
 
-## Talk and file (8)
+## Talk and file (9)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
@@ -56,8 +56,9 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [ ] | `chat` | Chat | Full screen | tap the Talk button | `/(flows)/chat` · fullScreenModal |
 | [ ] | `chathistory` | Your conversations | Push | Chat → ⋯ | `/talk/chathistory` |
 | [ ] | `editfiled` | Edit what life filed | Sheet | tap any filed item | `/(sheets)/editfiled` · formSheet |
+| [ ] | `textthread` | Talking to life by text | Platform | iMessage / WhatsApp (via Keiki) | Keiki agent + life MCP tools |
 
-## Tab 2 · Plan (11)
+## Tab 2 · Plan (12)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
@@ -72,6 +73,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [ ] | `areahome` | Area: Home | Push | Plan → Home | `/plan/areahome` |
 | [ ] | `areahealth` | Area: Health | Push | Plan → Health | `/plan/areahealth` |
 | [ ] | `areawork` | Area: Work | Push | Plan → Work | `/plan/areawork` |
+| [ ] | `doitthread` | Do it for me, approved by text | Platform | Do it for me, in the app or by text | Maritime task + approval in app/thread |
 
 ## Your Chief Aim (4)
 
@@ -269,7 +271,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [ ] | `birthdaynudge` | A birthday, on Today | Card | Today, 4 days before | component on Today / anywhere |
 | [ ] | `dates` | Important dates | Push | People → Dates | `/you/people/dates` |
 
-## You · Settings and account (14)
+## You · Settings and account (15)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
@@ -287,6 +289,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [ ] | `help` | Help | Push | Settings | `/you/settings/help` |
 | [ ] | `legal` | About life | Push | Settings | `/you/settings/legal` |
 | [ ] | `aimodels` | What stays on your phone | Push | Private mode → What downloads | `/you/settings/aimodels` |
+| [ ] | `textlife` | Text life | Push | Settings → Text life, or Talk → Text life | `/you/settings/textlife` |
 
 ## Grow (4)
 

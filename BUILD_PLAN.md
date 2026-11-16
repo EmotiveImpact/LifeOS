@@ -79,6 +79,7 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 🛑 **Gate 2**
 
 ## Phase 3 — Missions and memory (#16–18)
+- **Memory via Supermemory** behind `memory.ts` (one space per user): Talk, Chat and Text life write facts; "What life remembers" lists, edits and forgets them. Raw health/money data stays in our database (MASTER_PLAN §3.3c).
 - Mission detail: StageStepper, reference + copy, why, steps, the Draft sheet (editable, copy, open in Mail), activity timeline, one primary action; completing it fires `feedback.cleared()`.
 - Draft message sheet. Things to know (filter by area, source on every card).
 - Shared transition: mission card → detail (§42 #3).
@@ -111,6 +112,7 @@ Tiny version + implementation intention ("After… I will… at…"), max 3 new 
 🛑 **Gate 4d**
 
 ## Phase 5 — Talk, file, ask (#08–12, §19–21)
+- **Text life via Keiki:** create the Keiki agent with life's voice and rules; connect it to life's MCP tools (`file_fact`, `recall`, `todays_move`, `money_answer`, `teach_me`, `do_it_for_me`); link a user's number in Settings → Text life; deliver the morning brief and nudges by text when chosen. Board: Text life, Talking to life by text.
 - Build an **`ai` service interface** (`src/services/ai.ts`): `talk(transcript) → FiledRecord[]`, `ask(question, context) → {answer, records}`. v1 implementation = wrap `processLifeOSMessage` + rule-based extraction. Leave a clear seam for a real model later.
 - Talk: live transcript (expo-speech-recognition or a stub with typed input), recognised phrases fly into the Filing tray, then **Understood** (proposed → confirmed, Remove/Undo). Nothing is filed silently.
 - Ask → answer with engine numbers → FileCard. Attach menu (solid dim, no blur) → Letter understood (stub OCR OK; real VisionKit later).
@@ -149,6 +151,7 @@ Motion pass (**every transition in MOTION.md**, §42), Reduce Motion, Dynamic Ty
 ---
 
 ## Phase 11 — Next level (SPEC §11)
+- **Do it for me on Maritime:** one agent VM per approved task, step log streamed to the app and the text thread, approval gates before send/pay/sign. Board: Do it for me, approved by text.
 Calendar awareness, Experiments, Recovery forecast, Cycle-aware readiness, Fitness age first; then Watch companion, Private mode (on-device AI), What life remembers, Do it for me (approval required), Your data in your AI (MCP, read-only), One picture from all your devices, Glucose, Habit strength, Water/sitting/recovery, Shared life. All on the v14 board.
 🛑 **Gate 11**
 

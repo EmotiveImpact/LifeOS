@@ -1,50 +1,41 @@
-# life — Competition build: "Text life"
+# life — Using Keiki, Supermemory and Maritime inside the app
 
-> A demo-sized slice of life that uses **Keiki**, **Supermemory** and **Maritime** together. Built separately from the main app (its own folder, `competition/`), on sample data, so it never slows the real build.
-> Platform features below are from each product's public site and listings (16 Nov 2026); check the docs before relying on any detail.
+> **The app stays the product.** These three plug into it; nothing is replaced or discarded. One account, one plan, one memory, whether you open the app or text it.
+> Platform features are from each product's public site and listings (16 Nov 2026); check the docs while building.
 
-## The pitch (one line)
-**life is a life admin and wellbeing coach you just text.** No app to open: message it on iMessage or WhatsApp, it files what you say, remembers you, nudges you at the right moment, teaches you what you don't know, and does the boring admin for you, with your OK.
+## Where each one goes
 
-## Who does what
-
-| Platform | What it does in the demo |
-|---|---|
-| **Keiki** | life gets its own number on iMessage and WhatsApp. The agent talks to the user, calls life's tools (TypeScript tools or our MCP server), sends scheduled check-ins (morning brief, birthday reminders, renewal nudges), and lets you step in from Keiki's inbox. |
-| **Supermemory** | life's long-term memory: facts about the user ("paid on the 28th", "sister Ama, birthday 3 March", "doesn't eat pork"), filed from texts and recalled in later chats. |
-| **Maritime** | Hosts **"Do it for me"**: an agent with its own sandboxed computer (one micro-VM per task) that does a real admin job, like filling a form or drafting a cancellation, and reports back in the chat for approval. |
-| **life's engine** (`packages/core`) | The real numbers: tax and NI, cash plan, buffer, food targets, habit strength. The AI explains; the engine calculates. |
+| Platform | Its job inside life | Where in the app | Phase |
+|---|---|---|---|
+| **Keiki** | **Text life**: life gets its own number on iMessage and WhatsApp (also Telegram, email). Texting it is the same as talking to it in the app: it files what you say, answers with your real numbers, sends your morning brief and nudges, and can run a quick Teach me. | Talk button (a new "Text life" option), You → Settings → Text life, nudges and check-ins | 5 (Talk) |
+| **Supermemory** | **What life remembers**: the long-term memory behind every conversation, in the app and by text. Facts you mention ("paid on the 28th", "sister Ama, 3 March", "doesn't eat pork") are stored and recalled. | Talk, Chat, Text life, "What life remembers" (edit and forget), Today's plan | 3 (Missions and memory) |
+| **Maritime** | **Do it for me**: each approved task runs as an agent on its own sandboxed computer (fill a form, draft and send a cancellation, check a scheme), reporting each step back for approval. | "Do it for me" on missions and bills, with progress and approval in the app or by text | 11 |
+| **life's own API and engine** | Still the brain: plan, numbers, records, health, food. The platforms call life's tools; they never hold the source of truth. | Everywhere | All |
 
 ```mermaid
 flowchart LR
-  U["You on iMessage / WhatsApp"] <--> K["Keiki agent"]
-  K -- tools / MCP --> API["life demo API (TypeScript)"]
-  API --> Core["packages/core (real calculations)"]
-  API <--> SM["Supermemory (what life remembers)"]
-  API -- start task --> M["Maritime agent VM (Do it for me)"]
-  M -- result + approval request --> K
+  App["life app"] <--> API["life API"]
+  Text["iMessage / WhatsApp"] <--> K["Keiki agent"]
+  K -- life tools over MCP --> API
+  API --> Core["packages/core + Neon"]
+  API <--> SM["Supermemory (memory)"]
+  API -- approved task --> M["Maritime VM (Do it for me)"]
+  M -- step updates, approval --> API
+  API -- push / message --> App
+  API -- message --> K
 ```
 
-## The demo script (about 3 minutes)
-1. **"hi, I just went freelance in London, what should I sort first?"** → life replies in two-tone plain words: register for Self Assessment by 5 October, start a tax pot of about 25%, with the figure from the engine. It **files** "freelance, London" to memory.
-2. **"my sister Ama's birthday is 3 March and the dentist is Friday at 3"** → filed (Supermemory). Reply: "Got both. I'll remind you about Ama on 27 Feb so a card arrives."
-3. **"what's a tax code?"** → **Teach me by text**: three short bites, one guess ("1100L instead of 1257L: more tax or less?"), then "tell it back in your own words", then "You've got it."
-4. **"I pay £10.99 for Streamly and never use it"** → "Want me to cancel it?" → **yes** → a Maritime agent drafts the cancellation and the confirmation steps, then asks in the thread: "Ready to send. Approve?" Nothing is sent without that yes.
-5. **Scheduled check-in (Keiki):** the next morning, "Morning. One move today: move £50 to your buffer. Ama's birthday is in 10 days." Show it arriving.
-6. **Memory proof:** a new chat, "how much should I put aside from this invoice?" → it remembers you're freelance and answers with your numbers.
+## How it hangs together
+- **One identity.** You link your number to your life account once (Settings → Text life). Keiki's agent calls life's API as you, through the same MCP tools we planned for "Your data in your AI".
+- **One memory.** The app's Talk and Chat and Keiki's texts all write to and read from Supermemory (one memory space per user), through life's `memory.ts`. "What life remembers" in the app lists, edits and deletes those memories.
+- **One plan.** Nudges and the morning brief come from `planToday()`. The app decides *what* to say; Keiki delivers it by text if you've chosen that channel, otherwise it's a notification.
+- **Approval first.** "Do it for me" tasks only start after you approve, and every step that sends, pays or signs asks again, in the app or in the thread.
 
-## Build plan (fastest path)
-1. **Day 1:** `competition/api` (TypeScript): tools `file_fact`, `recall`, `todays_move`, `tax_set_aside`, `teach_me`, `do_it_for_me`. Real figures from `packages/core`; memory via the Supermemory SDK. Expose them as Keiki tools (or as an MCP server Keiki connects to).
-2. **Day 1:** create the Keiki agent with life's voice and rules (plain words, two-tone replies, one question at a time, never shames, never diagnoses, guidance not advice), connect the tools, get the iMessage/WhatsApp number.
-3. **Day 2:** Teach me by text (the quick-lesson format from `FENNY_LEARNING.md`, as short messages), scheduled check-ins in Keiki.
-4. **Day 2:** Maritime "Do it for me": one agent that drafts a cancellation email and a checklist on a demo site, then posts back for approval. Keep the demo task safe and fake (no real accounts, no payments).
-5. **Day 3:** polish the replies, record the 3-minute run, and show the board (`life-design-board-v17`) as "where this goes next".
+## Privacy rules (so the real app stays safe)
+- **Text life is opt-in**, per channel. Messages keep sensitive detail light by default ("Your sleep was short; open life for details") unless you switch on "Show health and money details in texts".
+- **Supermemory stores conversational facts, not raw data.** Health readings, balances and documents stay in life's own database; memory holds the useful facts ("prefers morning workouts"). Each memory shows its source and can be deleted. Check Supermemory's data-processing terms and UK GDPR fit before launch.
+- **Maritime runs with no stored passwords.** The task asks you to sign in or approve where needed; nothing pays without you.
+- Keys live in life's API only.
 
-## Rules for the demo
-- **Sample data only.** No real health or bank data in third-party services during the competition.
-- **Approval before any action**, every time, in the thread.
-- **Copy rules still apply:** guidance not advice for money, wellness not diagnosis for health.
-- Keys and secrets live in the demo API's environment, never in the chat or the repo.
-
-## After the competition
-If it lands well, "Text life" becomes a real channel in Phase 11 (life on iMessage and WhatsApp), with sensitive details kept in the app ("Open life to see your sleep") unless the user opts in. Supermemory and Maritime are re-checked then against the privacy rules in `MASTER_PLAN.md` §3.3c.
+## For the competition
+Show the real app plus Text life working together: start a conversation in the app, carry it on by text, have life remember it, and approve a "Do it for me" task from the thread. The board (v17) has the Text life screens; the build plan lists the work in Phases 3, 5 and 11, and this can be pulled forward as one slice for the deadline.

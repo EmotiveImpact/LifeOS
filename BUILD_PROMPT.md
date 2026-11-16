@@ -46,7 +46,7 @@ Everything is already designed and specified. Your job is to build it faithfully
 First, read AGENTS.md at the repo root and follow it exactly. Then read, in order:
 MASTER_PLAN.md, BUILD_PLAN.md, SYSTEM_DESIGN.md, SPEC.md, DESIGN.md (sections 45–48 are the final rules),
 MOTION.md, FENNY_LEARNING.md, IMPLEMENTATION_REFERENCES.md, and open design-board/life-design-board-v17.html
-in a browser. That board is the visual target: 221 screens organised by tab, and under every
+in a browser. That board is the visual target: 224 screens organised by tab, and under every
 screen it says how it opens (tab, push, sheet, full screen) and where from.
 
 Build PHASE 1 from BUILD_PLAN.md now (then stop):
@@ -77,7 +77,7 @@ Paste this instead when you want Codex to keep going without waiting for review.
 You are building "life", an Expo app (iOS + Android) in apps/mobile. Read AGENTS.md first and follow it
 exactly, then MASTER_PLAN.md, BUILD_PLAN.md, SYSTEM_DESIGN.md, SPEC.md, DESIGN.md (45–48 are final),
 MOTION.md, FENNY_LEARNING.md and IMPLEMENTATION_REFERENCES.md. Open design-board/life-design-board-v17.html
-in a browser: it is the visual target (221 screens, each says how it opens and from where).
+in a browser: it is the visual target (224 screens, each says how it opens and from where).
 
 OVERNIGHT MODE. Build these phases in order, without waiting for review between them:
   1 → 1b → 2 → 3 → 4 → 4b → 4c → 4d
