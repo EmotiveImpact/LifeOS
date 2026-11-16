@@ -1,5 +1,13 @@
 # Track A — review notes
 
+## GitHub-hosted TestFlight pipeline — prepared, not run
+- User explicitly requested GitHub/cloud compilation and TestFlight, overriding local-only for this build/distribution route. Application backends remain disconnected. Destination is the existing private `EmotiveImpact/LifeOS`; no new branch.
+- `.github/workflows/ios-testflight.yml` is manual-only: cheap credential-presence preflight, macOS26/Xcode26.2, pinned official actions, locked npm install, Expo native generation with SQLCipher, Release archive/export and optional TestFlight upload. No push/PR trigger and no public App Store release step.
+- Apple certificate/profile are imported only into an ephemeral runner keychain/profile directories, checked against `app.life.os`, and removed afterward. API key is scoped to the upload step and removed. No private credentials are committed or included in IPA artifacts.
+- Required repo secrets: `IOS_DISTRIBUTION_P12_BASE64`, `IOS_DISTRIBUTION_P12_PASSWORD`, `IOS_PROVISION_PROFILE_BASE64`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_PRIVATE_KEY`. Repo variable `ASC_APP_ID` is the numeric Apple app ID. `bash apps/mobile/scripts/setup-testflight-secrets.sh` uploads selected local files directly to GitHub after interactive confirmation; never paste keys/passwords into chat.
+- User confirms signing files exist but the App Store Connect app record is not created. Create an iOS app record matching `app.life.os` first. TestFlight processing, encryption-compliance answers (SQLCipher), internal tester/group assignment and any external beta review remain Apple-side requirements; upload alone is not a public release or guaranteed tester availability.
+- Local validation: shell syntax, workflow YAML/manual trigger/preflight, and embedded Python parse passed. Fresh read-only CI review found a missing profile installation step; fixed before publication. No signed archive, GitHub build, Apple authentication or TestFlight upload has run yet. Hosted macOS minutes count against the GitHub plan.
+
 ## Visual controls and iPhone build preparation
 - The three named visual gaps are implemented: native drag/accessibility reordering updates and persists Today’s metrics; memory filters use category metadata that round-trips through SQLite; lab graphics use supplied report intervals, explicitly labelled illustrative examples, or an unknown-interval state without inventing clinical cutoffs. Optional bounds/units are validated when entered.
 - `ReorderRow` and `LabRange` are exported in `@/design` and demonstrated in `/design`. Browser preview entry layouts no longer remain stuck hidden in backgrounded panes; iOS/Android spring/fade entry motion is unchanged.
