@@ -45,3 +45,5 @@
 - States: chapter typecheck passed. [~]: 12 entries implemented: nine parent states selected via state query on their existing routes, plus Support, sync conflict and update-required routes. Real network/permission/sync/update detection remains Track B; no extra state routes invented. Final visual pass pending.
 
 - Outside the app: chapter typecheck passed. [~]: 6 platform targets have faithful local UI previews in /design behind platform.ts snapshots. Native widgets/ActivityKit/watch targets/notifications/Siri registration are stubbed for Track B; no new app routes. Final visual pass pending.
+
+- The orb and motion: chapter typecheck passed. [~]: 3 component entries covered in /design: interactive v6 state transitions, all six states, all four fixed TopBar kinds. Native transition/shared-element fidelity awaits device polish. Final visual pass pending.

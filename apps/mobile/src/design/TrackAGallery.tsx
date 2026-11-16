@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { BarcodeFrame, BreathPacer, CalendarDay, ChatIsland, DateRow, DocumentRow, EatingWindow, FocusTimer, GapCard, GuessReveal, HeatGrid, HonestyBadge, Hypnogram, LabelScanOverlay, LessonBar, LessonPicture, LessonPuzzle, LifeOrb, LikertScale, MacroBars, ModelCard, NotificationPreview, NutrientBar, PersonAvatar, ProgressRing, ProjectionChart, RecapList, RegularityChart, SceneView, ScoreBadge, SearchField, ShareBar, SheetOverImage, Skeleton, StatTile, TellBack, Text, TopBar, TraitBar, TrendLine, WatchFace, WeekBars, WeightLogger, ZoneBars, space, type OrbState } from '@/design';
+import { BarcodeFrame, BreathPacer, CalendarDay, ChatIsland, ChipGroup, DateRow, DocumentRow, EatingWindow, FocusTimer, GapCard, GuessReveal, HeatGrid, HonestyBadge, Hypnogram, LabelScanOverlay, LessonBar, LessonPicture, LessonPuzzle, LifeOrb, LikertScale, MacroBars, ModelCard, NotificationPreview, NutrientBar, PersonAvatar, ProgressRing, ProjectionChart, RecapList, RegularityChart, SceneView, ScoreBadge, SearchField, ShareBar, SheetOverImage, Skeleton, StatTile, TellBack, Text, TopBar, TraitBar, TrendLine, WatchFace, WeekBars, WeightLogger, ZoneBars, space, type OrbState } from '@/design';
 
 export function TrackAGallery() {
   const [search, setSearch] = useState(''), [weight, setWeight] = useState(74.2), [likert, setLikert] = useState<number | null>(null), [tell, setTell] = useState(''), [orb, setOrb] = useState<OrbState>('ring');
   const values = [76.6, 76.1, 75.8, 75.5, 75, 74.8, 74.2];
   return <View style={{ gap: space.xxl }}>
     <Text variant="headline">Track A · v17 components</Text>
+    <View style={{ alignItems: 'center', gap: space.lg }}><LifeOrb size={180} state={orb} /><ChipGroup options={(['ring', 'thinking', 'working', 'searching', 'listening', 'done'] as const).map(value => ({ value, label: value }))} value={orb} onChange={setOrb} /></View>
     <View style={{ gap: space.md }}><Text variant="title">LifeOrb v6 · every state</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.lg }}>{(['ring', 'thinking', 'working', 'searching', 'listening', 'done'] as const).map(state => <View key={state} style={{ alignItems: 'center', gap: space.xs }}><LifeOrb size={76} state={state} /><Text variant="callout">{state}</Text></View>)}</View></View>
     <Text variant="title">TopBar · fixed chrome</Text><TopBar kind="root" title="Today" eyebrow="Monday, 16 November" /><TopBar kind="push" title="Sleep" onBack={() => {}} /><TopBar kind="sheet" title="Pulse" onClose={() => {}} /><TopBar kind="flow" onClose={() => {}} step="2 / 3" center={<LessonBar current={1} />} />
     <ChatIsland expanded /><SearchField value={search} onChangeText={setSearch} /><Skeleton height={80} /><SheetOverImage onClose={() => {}} /><HonestyBadge kind="baseline" />

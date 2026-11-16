@@ -4,19 +4,19 @@
 
 ## Status at a glance (16 Nov 2026)
 - **Components in code: 62** (all exported from `@/design`, all typecheck, both platforms bundle).
-- **Components the board uses that aren't in code yet: 42** (below).
-- **Screens built as real app screens: 0 of 221.** The app still has the old placeholder tabs and the `/design` gallery. Every board screen is Codex's work, phase by phase (BUILD_PLAN.md).
+- **Track A additions: all 42 rows below implemented and exported from `@/design`, with examples in `/design`.** LifeOrb is now v6. SceneView is the eight-device board preview; the complete Skia kit remains Track B.
+- **Screens: all 220 unparked board entries have UI implementations or explicitly noted platform/state previews.** See `SCREENS.md` and `review/NOTES.md` for `[~]` limitations.
 
 ## In code ✅
 Surfaces and type: `Text`, `Title`, `TitleSerif`, `Headline`, `Statement`, `Body`, `Callout`, `Mono`, `Unit`, `Numeral`, `Press`, `Card` (no border, `cardShadow`), `Button`, `StatusPill`, `MetricRow`, `PromptBanner`, `ChoiceCard`, `Atmosphere`
 Progress and story: `Ticks`, `CapsuleMeter`, `StageStepper`, `ActivityTimeline`, `WeekStrip`, `TwoTone`, `PeekStack`, `PeekHeader`, `RollingNumeral`, `MoneyFigure`, `Countdown`, `LedgerRow`, `NudgeCard`
-Chrome: `TopBar` (fixed: root, push, sheet, flow), `Dock`, `Sheet`, `DottedOrb`, `LifeOrb` (**v5, needs the v6 port**)
+Chrome: `TopBar` (fixed: root, push, sheet, flow), `Dock`, `Sheet`, `DottedOrb`, `LifeOrb` (**v6, ported from board mountOrb**)
 Controls: `CountStepper`, `Slider`, `Toggle`, `Segmented`, `ChipGroup`, `ControlRow`
 Lists and body: `ListRow`, `RowGroup` (no dividers), `Checklist`, `NewTag`, `ToolTile`, `InsightCard`, `RecordRow`, `ChangeSummary`, `HabitRow`, `FoodItemRow`, `MiniBars`, `RangeBar`, `StageBar`, `MetricTile`
 Talk: `Waveform`, `BigMic`, `Transcript`, `FilingTray`, `UserBubble`, `LifeReply`, `FileCard`, `Composer`, `AttachMenu`
 Mood and imagery: `PulseField`, `PulseCheckIn`, `MOODS`, `ImageTreatment`, `PhotoChip`, `IntroCarousel`, `Ridge`
 
-## To build 🔨 (name · what it is · first board screens that use it · phase)
+## Track A additions 🔨 (implemented; Track B integrations noted in review/NOTES.md)
 | Component | What it is | Used on | Phase |
 |---|---|---|---|
 | `LifeOrb` v6 | One family of the ring's dots: ring, thinking (clear sphere), working (clockwork), searching (web of lines), listening, done (gather) | orb, orbnext, chat, loading | 1 |

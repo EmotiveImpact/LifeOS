@@ -329,7 +329,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `orb` | The orb, evolving | Component | everywhere | `@/design` + `/design` |
-| [ ] | `topbars` | The top bar, everywhere | Component | everywhere | `@/design` + `/design` |
-| [ ] | `orbnext` | Orb states, next | Component | everywhere | `@/design` + `/design` |
+| [~] | `orb` | The orb, evolving | Component | everywhere | `@/design` + `/design` |
+| [~] | `topbars` | The top bar, everywhere | Component | everywhere | `@/design` + `/design` |
+| [~] | `orbnext` | Orb states, next | Component | everywhere | `@/design` + `/design` |
 

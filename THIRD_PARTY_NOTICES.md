@@ -10,5 +10,8 @@ Full licence: `vendor/atria/LICENSE`. Ported: health metric logic (HRV, baseline
 https://github.com/ovishkh/Cal-AI
 Full licence: `vendor/calai/LICENSE`. Used: nutrition data shapes and prompt ideas.
 
+## Fenny (owner’s code)
+Teaching language and hand-drawn wobble adapted from the owner’s Feynman app, pinned at `fc32865ed16f`, and the v17 board. Track A implements local quick pictures and eight SVG scene previews. No imports from `vendor/`; the full Skia renderer is deferred to Track B.
+
 ## Libraries
 Add each installed MIT / Apache-2.0 library here with its copyright line when it's added to `package.json` (Phase 1b onwards).
