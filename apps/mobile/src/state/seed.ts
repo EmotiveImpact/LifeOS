@@ -51,7 +51,7 @@ export const seedMeal: MealItem[] = [
 export const seed = {
   date: SEED_DATE,
   body: { heightCm: 172, weightKg: 74.2, waistCm: 84, bodyFatPct: 22, sexAtBirth: 'Female', activity: 'Active', bp: '118 / 76', bmi: 25.1, waistRatio: .49, rhr: 54, vo2: 44 },
-  health: { readiness: 72, sleepMinutes: 430, sleepNeed: 480, sleepDebt: 130, load: 6.2, loadTarget: [11, 14] as [number, number], hrv: 62, hrvBaseline: 54, resp: 14.6, stress: 1.4, regularity: 78, fitnessAge: 25, loadRatio: 1.12, steps: 8240, waterMl: 1400, forecast: 68,
+  health: { readiness: 72, sleepMinutes: 430, sleepNeed: 480, sleepDebt: 130, load: 6.2, loadTarget: [11, 14] as [number, number], hrv: 62, hrvBaseline: 54, rhr: 54, resp: 14.6, stress: 1.4, regularity: 78, fitnessAge: 25, loadRatio: 1.12, steps: 8240, waterMl: 1400, forecast: 68,
     sleepTrend: [6.2, 7.1, 6.8, 7.5, 7.2, 8.1, 7.17], readinessTrend: [62, 68, 65, 74, 69, 80, 72], weightTrend: [76.6, 76.1, 75.8, 75.5, 75, 74.8, 74.2],
     sleepWindows: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => ({ day, start: [23.2, 23.4, 23.1, 23.6, 24.1, 25.2, 24.6][i], end: [30.9, 31, 30.8, 31.1, 31.4, 33.1, 32.6][i], highlight: i > 4 })),
     zones: [{ name: 'Zone 5', range: '176–190', minutes: 8 }, { name: 'Zone 4', range: '162–175', minutes: 22 }, { name: 'Zone 3', range: '148–161', minutes: 41 }, { name: 'Zone 2', range: '134–147', minutes: 164 }, { name: 'Zone 1', range: '120–133', minutes: 58 }],

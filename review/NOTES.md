@@ -21,3 +21,5 @@
 - Plan · Documents: chapter typecheck passed. [~]: 3 routes built with seeded documents, renewal timing and persistent checklist. File storage/scanning and online renewals are local previews. Final visual pass pending.
 
 - The toolkit: chapter typecheck passed. [~]: 13 routes built; dynamic income/rent-vs-buy/core lab interpretations, cash plan, buffer, protection and early unlock are local. NI history and health stack are labelled sample content. Final visual pass pending.
+
+- Body: chapter typecheck passed. [~]: 35 entries built; health/device/sensor values are seed previews, not live readings. Journal, habits, source choices, water, sleep plan, breathing timer and workout controls work locally. No HealthKit/OAuth/BLE. Full scoring remains Track B. Final visual pass pending.

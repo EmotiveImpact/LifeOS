@@ -125,41 +125,41 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `body` | Body | Push | Plan → Body or Today’s body card | `/plan/body/body` |
-| [ ] | `devices` | Connect devices | Push | Body → Sources | `/plan/body/devices` |
-| [ ] | `readiness` | Readiness | Push | Body | `/plan/body/readiness` |
-| [ ] | `sleep` | Sleep | Push | Body | `/plan/body/sleep` |
-| [ ] | `load` | Load | Push | Body | `/plan/body/load` |
-| [ ] | `trends` | Trends | Push | Body | `/plan/body/trends` |
-| [ ] | `hrv` | Metric detail: HRV | Push | Readiness → HRV | `/plan/body/hrv` |
-| [ ] | `signals` | Body signals | Push | Body | `/plan/body/signals` |
-| [ ] | `stress` | Stress today | Push | Body | `/plan/body/stress` |
-| [ ] | `breathe` | Breathe | Full screen | Stress or a nudge | `/(flows)/breathe` · fullScreenModal |
-| [ ] | `journal` | Evening journal | Sheet | evening | `/(sheets)/journal` · formSheet |
-| [ ] | `insights` | Journal insights | Push | Journal | `/plan/body/insights` |
-| [ ] | `workout` | Live workout | Full screen | start a workout | `/(flows)/workout` · fullScreenModal |
-| [ ] | `detected` | Workouts we spotted | Push | Body | `/plan/body/detected` |
-| [ ] | `sleepplan` | Sleep planner | Push | Sleep | `/plan/body/sleepplan` |
-| [ ] | `math` | How scores work | Push | any score → How it works | `/plan/body/math` |
-| [ ] | `coach` | Ask about your body | Full screen | Body → Ask | `/(flows)/coach` · fullScreenModal |
-| [ ] | `forecast` | Tomorrow's forecast | Push | Readiness | `/plan/body/forecast` |
-| [ ] | `cycle` | Cycle-aware readiness | Push | Body (opt-in) | `/plan/body/cycle` |
-| [ ] | `fitnessage` | Fitness age | Push | Body | `/plan/body/fitnessage` |
-| [ ] | `sources` | One picture from all your devices | Push | Body → Sources | `/plan/body/sources` |
-| [ ] | `cgm` | Glucose, after meals | Push | Body (with a sensor) | `/plan/body/cgm` |
-| [ ] | `basics` | Water, sitting and recovery | Push | Body | `/plan/body/basics` |
-| [ ] | `sleepnight` | One night | Push | Sleep → a night | `/plan/body/sleepnight` |
-| [ ] | `workoutdetail` | A past workout | Push | Load → a workout | `/plan/body/workoutdetail` |
-| [ ] | `weight` | Weight and body | Push | Body | `/plan/body/weight` |
-| [ ] | `bmi` | BMI and waist, explained | Push | Body numbers → BMI | `/plan/body/bmi` |
-| [ ] | `strain` | Today’s target load | Push | Body → Load | `/plan/body/strain` |
-| [ ] | `zones` | Your heart-rate zones | Push | Load → Zones | `/plan/body/zones` |
-| [ ] | `illness` | Something may be coming on | Card / push | Today, when signals rise | component on Today / anywhere |
-| [ ] | `breathlib` | Breathing library | Push | Body → Breathe | `/plan/body/breathlib` |
-| [ ] | `provenance` | Where this number came from | Sheet | tap any score | `/(sheets)/provenance` · formSheet |
-| [ ] | `regularity` | Sleep regularity | Push | Sleep → Regularity | `/plan/body/regularity` |
-| [ ] | `loadtrend` | Training load trend | Push | Load → Trend | `/plan/body/loadtrend` |
-| [ ] | `healthdigest` | Your body this week | Push | Sunday, on Today | `/plan/body/healthdigest` |
+| [~] | `body` | Body | Push | Plan → Body or Today’s body card | `/plan/body/body` |
+| [~] | `devices` | Connect devices | Push | Body → Sources | `/plan/body/devices` |
+| [~] | `readiness` | Readiness | Push | Body | `/plan/body/readiness` |
+| [~] | `sleep` | Sleep | Push | Body | `/plan/body/sleep` |
+| [~] | `load` | Load | Push | Body | `/plan/body/load` |
+| [~] | `trends` | Trends | Push | Body | `/plan/body/trends` |
+| [~] | `hrv` | Metric detail: HRV | Push | Readiness → HRV | `/plan/body/hrv` |
+| [~] | `signals` | Body signals | Push | Body | `/plan/body/signals` |
+| [~] | `stress` | Stress today | Push | Body | `/plan/body/stress` |
+| [~] | `breathe` | Breathe | Full screen | Stress or a nudge | `/(flows)/breathe` · fullScreenModal |
+| [~] | `journal` | Evening journal | Sheet | evening | `/(sheets)/journal` · formSheet |
+| [~] | `insights` | Journal insights | Push | Journal | `/plan/body/insights` |
+| [~] | `workout` | Live workout | Full screen | start a workout | `/(flows)/workout` · fullScreenModal |
+| [~] | `detected` | Workouts we spotted | Push | Body | `/plan/body/detected` |
+| [~] | `sleepplan` | Sleep planner | Push | Sleep | `/plan/body/sleepplan` |
+| [~] | `math` | How scores work | Push | any score → How it works | `/plan/body/math` |
+| [~] | `coach` | Ask about your body | Full screen | Body → Ask | `/(flows)/coach` · fullScreenModal |
+| [~] | `forecast` | Tomorrow's forecast | Push | Readiness | `/plan/body/forecast` |
+| [~] | `cycle` | Cycle-aware readiness | Push | Body (opt-in) | `/plan/body/cycle` |
+| [~] | `fitnessage` | Fitness age | Push | Body | `/plan/body/fitnessage` |
+| [~] | `sources` | One picture from all your devices | Push | Body → Sources | `/plan/body/sources` |
+| [~] | `cgm` | Glucose, after meals | Push | Body (with a sensor) | `/plan/body/cgm` |
+| [~] | `basics` | Water, sitting and recovery | Push | Body | `/plan/body/basics` |
+| [~] | `sleepnight` | One night | Push | Sleep → a night | `/plan/body/sleepnight` |
+| [~] | `workoutdetail` | A past workout | Push | Load → a workout | `/plan/body/workoutdetail` |
+| [~] | `weight` | Weight and body | Push | Body | `/plan/body/weight` |
+| [~] | `bmi` | BMI and waist, explained | Push | Body numbers → BMI | `/plan/body/bmi` |
+| [~] | `strain` | Today’s target load | Push | Body → Load | `/plan/body/strain` |
+| [~] | `zones` | Your heart-rate zones | Push | Load → Zones | `/plan/body/zones` |
+| [~] | `illness` | Something may be coming on | Card / push | Today, when signals rise | component on Today / anywhere |
+| [~] | `breathlib` | Breathing library | Push | Body → Breathe | `/plan/body/breathlib` |
+| [~] | `provenance` | Where this number came from | Sheet | tap any score | `/(sheets)/provenance` · formSheet |
+| [~] | `regularity` | Sleep regularity | Push | Sleep → Regularity | `/plan/body/regularity` |
+| [~] | `loadtrend` | Training load trend | Push | Load → Trend | `/plan/body/loadtrend` |
+| [~] | `healthdigest` | Your body this week | Push | Sunday, on Today | `/plan/body/healthdigest` |
 
 ## Plan · Body · Fuel (28)
 
