@@ -73,9 +73,6 @@ flowchart LR
 | **AI router** | Maps a job to a tier, never a fixed model. Tiers: fast (filing, extraction, tips), strong (lessons, analysis, coach, decisions), vision (meals, letters), voice (live tell-back). Picks by `tools/evals` scores. **Numbers always come from the engine;** the model only explains and drafts. Outputs are schema-checked JSON. |
 | **Wearables** | WHOOP and Oura via their official OAuth APIs (webhooks where offered) → normalised samples → synced to the phone. Garmin/Polar/Suunto via an aggregator (open-wearables, self-hosted) later. **Never** read a WHOOP strap over Bluetooth. |
 | **Files** | Meal photos and scanned letters: uploaded with a signed URL, read by the vision tier, deleted after reading unless the user keeps them. |
-| **Keiki** | Text life: the iMessage/WhatsApp agent. Calls the API's MCP tools as the linked user; the API can send messages through it (brief, nudges, approvals). |
-| **Supermemory** | Memory provider behind `memory.ts`: one space per user; facts only, with source and delete. |
-| **Maritime** | Runs "Do it for me" tasks, one micro-VM per task; posts step updates and approval requests back to the API. |
 | **Push** | Expo push tokens per device; server sends only for things the phone can't know (a WHOOP sync, a reply ready). Everything else is a local notification. |
 
 ## 4. The data model (core tables)

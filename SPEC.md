@@ -332,7 +332,7 @@ Found by comparing life with the strongest open-source projects (see `IMPLEMENTA
 | 6 | **Watch companion** | Breathe, live workout and today's move on the wrist (Apple Watch + Wear OS) | `@bacons/apple-targets` watch target; NOOP watch views idea |
 | 7 | **On-device AI** | Talk transcription and basic extraction stay on the phone: private, fast, works offline | `whisper.rn`, `llama.rn` |
 | 8 | **Long-term memory** | life remembers context across months ("you said rent goes up in March") with sources and delete | FiledRecord + mem0 patterns |
-| 9 | **"Do it for me", with approval** | Agentic actions: life pre-fills the form, drafts the email, opens the cancel page. You approve every step; nothing is sent automatically | AI service + deep links; approval gate in UI |
+| 9 | **"Do it for me", with approval** (⏸ parked 16 Nov 2026; if revived, email/letter tasks first) | Agentic actions: life pre-fills the form, drafts the email, opens the cancel page. You approve every step; nothing is sent automatically | AI service + deep links; approval gate in UI |
 | 10 | **Your data in your AI** | Let people ask ChatGPT or Claude about their own life data through a local, permissioned connection | MCP server pattern (NOOP `NoopLocalAccess` idea) |
 | 11 | **Unified wearables, self-hosted** | Garmin, Polar, Suunto and more without paying an aggregator per user | `open-wearables` (MIT) |
 | 12 | **Metabolic (CGM)** | Consumer glucose sensors (via HealthKit) + Fuel = how meals affect *you* | HealthKit blood glucose |

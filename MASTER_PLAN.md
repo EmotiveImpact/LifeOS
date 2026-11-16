@@ -79,11 +79,10 @@ Behind one interface, `src/services/voice.ts`, so we can swap providers without 
 | Memory search | — | A small embedding model (MIT/Apache) | ~30–90 MB |
 Photo reading and new lessons stay in the cloud and ask first. Pick the exact open models with `tools/evals` at Phase 11; newer small models appear every few months, so treat the names above as a starting point, not a commitment, and prefer Apache-2.0 / MIT licences.
 
-### 3.3c Keiki, Supermemory and Maritime: inside the app (16 Nov 2026)
-The app stays the product; these plug into it (details in `COMPETITION.md`).
-- **Keiki → "Text life":** life on iMessage and WhatsApp (Telegram, email optional). The Keiki agent calls life's API through our MCP tools, so texting life is the same as talking in the app: same account, plan and memory. Morning brief and nudges can arrive by text. Opt-in per channel; sensitive details stay in the app unless the user switches them on. Phase 5.
-- **Supermemory → "What life remembers":** the memory provider behind `memory.ts`, one memory space per user, shared by the app's Talk/Chat and Text life. It stores conversational facts; raw health readings, balances and documents stay in our own database. Check its data-processing terms and UK GDPR fit before launch. Phase 3.
-- **Maritime → "Do it for me":** each approved task runs as an agent in its own micro-VM, reporting steps and stopping for approval before anything sends, pays or signs. No stored passwords. Phase 11 (can be pulled forward).
+### 3.3c Looked at, not adopted (16 Nov 2026)
+- **Keiki** (your product on iMessage/WhatsApp), **Supermemory** (hosted AI memory) and **Maritime** (hosted agent computers) were assessed. None is part of the plan. Keiki is the most interesting (a possible "text life" channel later).
+- **Memory** stays in our own stack: Neon Postgres + pgvector, with mem0-style extraction (mem0 is Apache-2.0 and can run on our database), and on-device embeddings for private mode.
+- **"Do it for me" is parked.** Browser automation at scale is hard (sign-ins, sites blocking bots, cost, liability). If it comes back, it starts with email and letter tasks drafted by our own models and approved by the user.
 
 ### 3.4 A "decision model": yes, but in the right place
 Two different things get called decision models, and life uses both carefully:
@@ -158,7 +157,7 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Voice behind `voice.ts`: on-device first, Phonon for speech, cloud fallback.** |
 | 15 Nov 2026 | **Models chosen per job by evals; no lock-in. Today's plan is decided by rules + a bandit, not an LLM.** |
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
-| 16 Nov 2026 | **Keiki (Text life), Supermemory (memory) and Maritime (Do it for me) are used inside the app, not as a separate demo. Sensitive raw data stays in our own database.** |
+| 16 Nov 2026 | **Keiki, Supermemory and Maritime looked at, not adopted. Memory: own Postgres + pgvector (mem0-style). "Do it for me" parked.** |
 | 16 Nov 2026 | **Fuel brought to Cal AI level (13 screens). Voice: Phonon on iPhone, Kitten TTS Nano elsewhere. On-device AI: built-in OS models first, small open models as the fallback download.** |
 | 16 Nov 2026 | **Build UI-first: Track A builds every screen with seed data and light checks; Track B makes it real and adds tests.** |
 | 16 Nov 2026 | **v17: orb is one family of the ring's dots (thinking, working, searching, listening, done); no dividers, card shadows; Fenny teaching language + drawing kit; body numbers; health features from the repos; Cal AI counters; SYSTEM_DESIGN.md.** |
