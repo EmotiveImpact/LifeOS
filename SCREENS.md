@@ -318,12 +318,12 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `widgets` | Widgets and Live Activity | Home / Lock Screen | iOS | platform target (Home / Lock Screen) |
-| [ ] | `sharecard` | Weekly recap, shared | Share sheet | Weekly recap → Share | platform target (Share sheet) |
-| [ ] | `watch` | Watch companion | Watch | Apple Watch / Wear OS | platform target (Watch) |
-| [ ] | `lockpush` | Notifications | Notification | Lock Screen | platform target (Notification) |
-| [ ] | `androidwidget` | Android widgets | Home screen | Android | platform target (Home screen) |
-| [ ] | `siri` | Siri and Shortcuts | Voice | Siri / Assistant | platform target (Voice) |
+| [~] | `widgets` | Widgets and Live Activity | Home / Lock Screen | iOS | platform target (Home / Lock Screen) |
+| [~] | `sharecard` | Weekly recap, shared | Share sheet | Weekly recap → Share | platform target (Share sheet) |
+| [~] | `watch` | Watch companion | Watch | Apple Watch / Wear OS | platform target (Watch) |
+| [~] | `lockpush` | Notifications | Notification | Lock Screen | platform target (Notification) |
+| [~] | `androidwidget` | Android widgets | Home screen | Android | platform target (Home screen) |
+| [~] | `siri` | Siri and Shortcuts | Voice | Siri / Assistant | platform target (Voice) |
 
 ## The orb and motion (3)
 

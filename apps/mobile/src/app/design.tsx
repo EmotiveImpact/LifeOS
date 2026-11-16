@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { Redirect } from 'expo-router';
 import { TrackAGallery } from '@/design/TrackAGallery';
+import { PlatformGallery } from '@/screens/PlatformGallery';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -162,6 +163,7 @@ function Column({ look, style }: { look: Look; style?: object }) {
   return (
     <View style={[{ backgroundColor: t.canvas, padding: 20, gap: 36, paddingBottom: 160 }, style]}>
       <TrackAGallery />
+      <PlatformGallery />
       <Section title="type">
         <RollingNumeral value={2340} size="xl" />
         <Text variant="titleSerif">Things to know</Text>

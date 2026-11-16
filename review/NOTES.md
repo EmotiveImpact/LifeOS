@@ -43,3 +43,5 @@
 - Grow: chapter typecheck passed. [~]: 4 routes built: core weekly recap PeekStack, vantage/gates, paged level-up and birthday recap. Yearly history is illustrative seed content; earned triggers remain Track B. Final visual pass pending.
 
 - States: chapter typecheck passed. [~]: 12 entries implemented: nine parent states selected via state query on their existing routes, plus Support, sync conflict and update-required routes. Real network/permission/sync/update detection remains Track B; no extra state routes invented. Final visual pass pending.
+
+- Outside the app: chapter typecheck passed. [~]: 6 platform targets have faithful local UI previews in /design behind platform.ts snapshots. Native widgets/ActivityKit/watch targets/notifications/Siri registration are stubbed for Track B; no new app routes. Final visual pass pending.
