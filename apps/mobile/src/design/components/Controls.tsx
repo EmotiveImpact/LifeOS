@@ -174,16 +174,16 @@ export function Slider({ value, min, max, step = 1, onChange, accessibilityLabel
 /* ───────────────────────── Toggle ───────────────────────── */
 
 export function Toggle({ value, onChange, accessibilityLabel }: { value: boolean; onChange: (v: boolean) => void; accessibilityLabel: string }) {
-  const t = useTokens();
+  const t = useTokens(), calm = useCalmMotion();
   const x = useSharedValue(value ? 18 : 0);
   useEffect(() => {
-    x.value = withSpring(value ? 18 : 0, springs.snappy);
-  }, [value, x]);
+    x.value = calm ? value ? 18 : 0 : withSpring(value ? 18 : 0, springs.snappy);
+  }, [value, calm, x]);
   const knob = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   return (
     <Press
       haptic="select"
-      pressScale={0.95}
+      pressScale={0.97}
       onPress={() => onChange(!value)}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}

@@ -3,7 +3,7 @@ import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Uniwind } from 'uniwind';
 import { setFeedbackPrefs } from '@/design/feedback';
-import { engineSnapshot, seed, seedAim, seedMeal, seedPeople, seedProfile, seedRecords, type ChiefAim, type FiledRecord, type MealItem } from './seed';
+import { engineSnapshot, seed, seedAim, seedMeal, seedPeople, seedProfile, seedPulseLog, seedRecords, type ChiefAim, type FiledRecord, type MealItem } from './seed';
 import type { UserProfile } from '@life/core/types';
 
 type SeedData = {
@@ -17,7 +17,7 @@ type SeedData = {
   flags: Record<string, boolean>; choices: Record<string, string>; drafts: Record<string, string>;
 };
 const initial: SeedData = {
-  profile: seedProfile, onboardingDone: false, aim: seedAim, records: seedRecords, completed: [], missionSteps: {}, selectedMission: 'uk-hmrc-tax-code', pulseLog: [], people: seedPeople,
+  profile: seedProfile, onboardingDone: false, aim: seedAim, records: seedRecords, completed: [], missionSteps: {}, selectedMission: 'uk-hmrc-tax-code', pulseLog: seedPulseLog, people: seedPeople,
   meal: seedMeal, mealLogged: false, meals: [], habits: seed.habits, journal: [], weightKg: seed.body.weightKg, heightCm: seed.body.heightCm, waistCm: seed.body.waistCm, learned: [],
   memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov' }],
   prefs: { dark: true, sounds: true, haptics: true, handDrawn: false, hideNumbers: false, hideBalances: false, glimpses: true, followMood: true, look: 'mix', notifications: true, privateMode: false, addback: 'Half' },

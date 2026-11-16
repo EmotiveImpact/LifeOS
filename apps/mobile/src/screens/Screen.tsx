@@ -2,7 +2,7 @@ import { Children, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Button, Card, ImageTreatment, LessonBar, ListRow, Text, TopBar, durations, fonts, motion, radius, space, useCalmMotion, useTokens, type TopBarAction } from '@/design';
+import { Button, Card, ImageTreatment, LessonBar, ListRow, SheetOverImage, Text, TopBar, durations, fonts, motion, radius, space, useCalmMotion, useTokens, type Tone, type TopBarAction } from '@/design';
 import { screens, type ScreenKey } from '@/navigation/screens';
 import { useNavigation } from '@/navigation/useNavigation';
 import type { ImageSourcePropType } from 'react-native';
@@ -11,18 +11,22 @@ export const layout = StyleSheet.create({ row: { flexDirection: 'row', alignItem
 export function Screen({ screen, title, eyebrow, children, footer, action, actions, image, step, progress, onClose, scroll = true, onScroll, onPull }: { screen: ScreenKey; title?: string; eyebrow?: string; children: ReactNode; footer?: ReactNode; action?: TopBarAction; actions?: TopBarAction[]; image?: ImageSourcePropType; step?: string; progress?: number; onClose?: () => void; scroll?: boolean; onScroll?: (y: number) => void; onPull?: () => void }) {
   const t = useTokens(), calm = useCalmMotion(), nav = useNavigation(), insets = useSafeAreaInsets();
   const meta = screens[screen], sheet = meta.kind === 'Sheet', root = meta.kind === 'Tab', flow = meta.kind === 'Full screen', close = onClose ?? nav.close;
+  const cover = screen === 'welcome' || screen === 'levelup';
+  const photoHeight = screen === 'plus' ? 520 : 380;
+  const flowLabel = ['bite', 'predict', 'puzzle', 'bitedrawn'].includes(screen) ? 'Tax codes' : undefined;
   const content = Children.toArray(children).filter(Boolean);
   const body = content.map((child, i) => <Animated.View key={i} entering={calm ? FadeIn.duration(durations.quick) : FadeInDown.delay(Math.min(i, 5) * motion.stagger).springify().duration(motion.rise.duration).dampingRatio(.85)}>{child}</Animated.View>);
-  return <SafeAreaView edges={sheet ? ['bottom'] : ['top', 'bottom']} style={{ flex: 1, backgroundColor: sheet ? t.surface : t.canvas }}>
-    {image ? <ImageTreatment source={image} kind="band" height={360 + insets.top} /> : null}
-    {root ? <TopBar kind="root" title={title ?? meta.title} eyebrow={eyebrow} actions={actions} /> : sheet ? <TopBar kind="sheet" title={title ?? meta.title} action={action} onClose={close} /> : flow ? <TopBar kind="flow" onClose={close} step={step} center={progress !== undefined ? <LessonBar count={3} current={progress} /> : undefined} /> : <TopBar kind="push" title={title ?? meta.title} action={action} onBack={close} onImage={!!image} />}
+  return <SafeAreaView nativeID={`screen-${screen}`} edges={sheet ? ['bottom'] : ['top', 'bottom']} style={{ flex: 1, backgroundColor: sheet ? t.surface : t.canvas }}>
+    {image ? <ImageTreatment source={image} kind={cover ? 'cover' : 'band'} height={cover ? undefined : photoHeight + insets.top} /> : null}
+    {root ? <TopBar kind="root" title={title ?? meta.title} eyebrow={eyebrow} actions={actions} /> : sheet && image ? <SheetOverImage onClose={close} /> : sheet ? <TopBar kind="sheet" title={title ?? meta.title} action={action} onClose={close} /> : flow ? <TopBar kind="flow" onClose={close} step={step} onImage={cover} center={flowLabel ? <Text variant="callout" tone="ink2">{flowLabel}</Text> : progress !== undefined ? <LessonBar count={3} current={progress} /> : undefined} /> : <TopBar kind="push" title={title ?? meta.title} action={action} onBack={close} onImage={!!image} />}
+    {flowLabel && progress !== undefined ? <View style={{ paddingHorizontal: space.gutter, paddingTop: space.xxs }}><LessonBar count={3} current={progress} /></View> : null}
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       {scroll ? <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} onScroll={e => { onScroll?.(e.nativeEvent.contentOffset.y); if (e.nativeEvent.contentOffset.y < -60) onPull?.(); }} scrollEventThrottle={16} contentContainerStyle={{ paddingHorizontal: space.gutter, paddingTop: space.md, paddingBottom: root ? 120 : space.xl, gap: space.lg, flexGrow: 1 }}>{body}</ScrollView> : <View style={{ flex: 1, paddingHorizontal: space.gutter, paddingTop: space.md, gap: space.lg }}>{body}</View>}
-      {footer ? <View style={{ paddingHorizontal: space.gutter, paddingTop: space.xs, paddingBottom: space.sm, gap: space.xs, backgroundColor: sheet ? t.surface : t.canvas }}>{footer}</View> : null}
+      {footer ? <View style={{ paddingHorizontal: space.gutter, paddingTop: space.xs, paddingBottom: space.sm, gap: space.xs, backgroundColor: cover ? 'transparent' : sheet ? t.surface : t.canvas }}>{footer}</View> : null}
     </KeyboardAvoidingView>
   </SafeAreaView>;
 }
-export function Heading({ title, sub }: { title: string; sub?: string }) { return <View style={{ gap: space.sm }}><Text variant="titleSerif">{title}</Text>{sub ? <Text variant="body" tone="ink2">{sub}</Text> : null}</View>; }
+export function Heading({ title, sub, variant = 'titleSerif', tone = 'ink' }: { title: string; sub?: string; variant?: 'titleSerif' | 'headline' | 'statement'; tone?: Tone }) { return <View style={{ gap: space.sm }}><Text variant={variant} tone={tone} accessibilityRole="header">{title}</Text>{sub ? <Text variant="body" tone={tone === 'paper' ? 'paper2' : 'ink2'}>{sub}</Text> : null}</View>; }
 export function Section({ title, meta, children, onPress }: { title: string; meta?: string; children: ReactNode; onPress?: () => void }) { return <View style={{ gap: space.sm }}><View style={layout.between}><Text variant="title">{title}</Text>{meta ? <Button variant="link" label={meta} onPress={onPress} /> : null}</View>{children}</View>; }
 export function Rows({ rows }: { rows: { title: string; sub?: string; value?: string; to?: ScreenKey; onPress?: () => void; icon?: React.ComponentProps<typeof ListRow>['icon'] }[] }) {
   const nav = useNavigation();

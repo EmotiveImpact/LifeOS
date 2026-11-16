@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Image, StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTokens } from '../theme';
-import { radius } from '../tokens';
+import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring } from 'react-native-reanimated';
+import { useCalmMotion, useTokens } from '../theme';
+import { imageScrims, motion, radius } from '../tokens';
 import type { StoryMoment } from './Pulse';
 
 /**
@@ -65,7 +66,7 @@ export function ImageTreatment({ kind, source, height, children, style }: ImageT
   if (kind === 'card') {
     return (
       <View style={[styles.card, { height: height ?? 220 }, style]}>
-        <Image source={source} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors />
+        <StoryPhoto source={source} />
         <LinearGradient colors={['rgba(8,9,10,0)', 'rgba(8,9,10,0.8)']} locations={[0.35, 1]} style={StyleSheet.absoluteFill} />
         <View style={styles.cardBody}>{children}</View>
       </View>
@@ -74,13 +75,26 @@ export function ImageTreatment({ kind, source, height, children, style }: ImageT
   const h = kind === 'band' ? (height ?? 380) : height;
   return (
     <View pointerEvents="box-none" style={[kind === 'cover' && !h ? StyleSheet.absoluteFill : { position: 'absolute', left: 0, right: 0, top: 0, height: h }, style]}>
-      <Image source={source} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors />
+      <StoryPhoto source={source} />
       {/* Top scrim keeps the status bar readable; bottom fades into the canvas. */}
-      <LinearGradient colors={['rgba(8,9,10,0.35)', 'rgba(8,9,10,0)']} locations={[0, 0.28]} style={StyleSheet.absoluteFill} pointerEvents="none" />
-      <LinearGradient colors={['rgba(8,9,10,0)', t.canvas]} locations={[0.55, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      {kind === 'cover' ? <LinearGradient colors={imageScrims.cover} locations={imageScrims.coverLocations} style={StyleSheet.absoluteFill} pointerEvents="none" /> : <>
+        <LinearGradient colors={['rgba(8,9,10,0.35)', 'rgba(8,9,10,0)']} locations={[0, 0.28]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+        <LinearGradient colors={['rgba(8,9,10,0)', t.canvas]} locations={[0.55, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      </>}
       {children}
     </View>
   );
+}
+
+function StoryPhoto({ source }: { source: ImageSourcePropType }) {
+  const calm = useCalmMotion(), t = useTokens();
+  const opacity = useSharedValue(0), scale = useSharedValue(calm ? 1 : 1.04);
+  useEffect(() => {
+    scale.value = calm ? 1 : withSequence(withSpring(1, motion.imageEnter), withRepeat(withSpring(1.06, motion.imageDrift), -1, true));
+    return () => { cancelAnimation(scale); cancelAnimation(opacity); };
+  }, [calm, source, scale, opacity]);
+  const animated = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.surface2 }]}><Animated.Image source={source} resizeMode="cover" accessibilityIgnoresInvertColors onLoad={() => { opacity.value = calm ? 1 : withSpring(1, motion.imageFade); }} style={[StyleSheet.absoluteFill, animated]} /></View>;
 }
 
 /** A solid chip for text over photos (no glass, §43). */

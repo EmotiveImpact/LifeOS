@@ -60,6 +60,11 @@ export const onAtmosphere = {
   tickFilled: 'rgba(244,243,238,0.80)',
 } as const;
 
+export const imageScrims = {
+  cover: ['rgba(8,9,10,0.4)', 'rgba(8,9,10,0)', 'rgba(8,9,10,0.1)', 'rgba(8,9,10,0.9)'] as const,
+  coverLocations: [0, .24, .5, .86] as const,
+};
+
 /** v4 area colours: used only for 6px dots, filing chips and one glow per screen. */
 export const areaColors = {
   dark: { you: '#9AA4AE', home: '#D6A47E', work: '#8FA2FF', money: '#3DD68C', health: '#FF7EB0', goal: '#FF6B3D' },
@@ -92,6 +97,10 @@ export const type = {
   /** Numbers: tabular figures + negative tracking (DESIGN.md §25). */
   numeralXl: { fontFamily: fonts.sansSemibold, fontSize: 56, lineHeight: 58, letterSpacing: -2.5, fontVariant: ['tabular-nums'] as ('tabular-nums')[] },
   numeralL: { fontFamily: fonts.sansSemibold, fontSize: 32, lineHeight: 36, letterSpacing: -1.1, fontVariant: ['tabular-nums'] as ('tabular-nums')[] },
+  /** Board v17 quick-lesson tax-code picture. Not a general display size. */
+  diagramCode: { fontFamily: fonts.sansSemibold, fontSize: 44, lineHeight: 48, letterSpacing: -1.32, fontVariant: ['tabular-nums'] as ('tabular-nums')[] },
+  welcome: { fontFamily: fonts.sansSemibold, fontSize: 46, lineHeight: 48, letterSpacing: -2.07 },
+  welcomeStatement: { fontFamily: fonts.sansMedium, fontSize: 21, lineHeight: 28, letterSpacing: -0.35 },
   titleSerif: { fontFamily: fonts.sansSemibold, fontSize: 30, lineHeight: 34, letterSpacing: -0.9 },
   statement: { fontFamily: fonts.sansMedium, fontSize: 24, lineHeight: 31, letterSpacing: -0.53 },
   headline: { fontFamily: fonts.sansSemibold, fontSize: 20, lineHeight: 26, letterSpacing: -0.4 },
@@ -148,6 +157,9 @@ export const motion = {
   smooth: { duration: 550, dampingRatio: 0.85 },
   snappy: { duration: 350, dampingRatio: 0.9 },
   bouncy: { duration: 600, dampingRatio: 0.7 },
+  imageEnter: { duration: 900, dampingRatio: 1 },
+  imageDrift: { duration: 24000, dampingRatio: 1 },
+  imageFade: { duration: 400, dampingRatio: 1 },
   /** riseIn: opacity 0→1, translateY 14→0, scale 0.98→1 over 420ms. */
   rise: { duration: 420, fromY: 14, fromScale: 0.98 },
   /** Gap between items that enter one after another. */

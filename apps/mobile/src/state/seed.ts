@@ -14,6 +14,15 @@ export const seedProfile: UserProfile = {
   monthlyPensionPct: 0, employerMatchPct: 0, habitStreakDays: 4,
   health: { ...DEFAULT_HEALTH_SNAPSHOT, weightKg: 74.2, trainingDays: 4, waterMlToday: 1400, sleepHoursAvg: 7 + 10 / 60 },
 };
+export const seedPulseLog = ['calm', 'calm', 'driven', 'peaceful', 'restless', 'drained', 'calm', 'calm', 'driven', 'peaceful', 'anxious', 'calm', 'peaceful', 'calm'].map((moodId, i) => ({ at: new Date(Date.UTC(2026, 10, i + 3, 8)).toISOString(), moodId, x: .5, y: .5 }));
+export const moodLines: Record<string, [string, string]> = {
+  calm: ['A clear head today.', 'Good day for the form you’ve been putting off.'],
+  driven: ['You’ve got energy.', 'Put it into your one bigger move.'],
+  restless: ['Let’s burn it off.', 'Three five-minute wins first.'],
+  anxious: ['Let’s make it smaller.', 'Only what’s due this week is showing.'],
+  drained: ['Go gently today.', 'One small thing, then rest.'],
+  peaceful: ['A soft, steady day.', 'Health and home come first.'],
+};
 export const money = (n: number, decimals = 0) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n);
 export function engineSnapshot(profile = seedProfile, completed: string[] = []) {
   const tasks = getEligibleTasks(profile, completed);

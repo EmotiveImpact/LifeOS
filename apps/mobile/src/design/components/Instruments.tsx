@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { StyleSheet, TextInput, View, type ImageSourcePropType } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { Text } from '../Text';
 import { Press } from '../Press';
 import { feedback } from '../feedback';
 import { useCalmMotion, useTokens } from '../theme';
-import { areaColors, durations, radius, space, type Area } from '../tokens';
+import { areaColors, durations, palette, radius, space, type Area } from '../tokens';
 import { Card, StatusPill } from './Surfaces';
 import { LifeOrb, type OrbState } from './Orb';
 import { TrendLine } from './Charts';
@@ -27,7 +27,7 @@ export function Skeleton({ width = '100%', height = 20, rounded = radius.sm }: {
 }
 export function SheetOverImage({ onClose }: { onClose: () => void }) {
   const t = useTokens();
-  return <View style={{ height: 56, alignItems: 'center', justifyContent: 'flex-start', paddingTop: space.xs }}><View style={{ width: 36, height: 5, borderRadius: radius.full, backgroundColor: t.paper }} /><Press onPress={onClose} accessibilityLabel="Close" style={[s.icon, { position: 'absolute', right: space.lg, top: space.xs, backgroundColor: t.canvas, borderRadius: radius.md }]}><Ionicons name="close" size={20} color={t.ink} /></Press></View>;
+  return <View style={{ height: 56, alignItems: 'center', justifyContent: 'flex-start', paddingTop: space.xs }}><View style={{ width: 36, height: 5, borderRadius: radius.full, backgroundColor: t.paper }} /><Press onPress={onClose} accessibilityLabel="Close" style={[s.icon, { position: 'absolute', right: space.lg, top: space.xs, backgroundColor: palette.dark.canvas, borderRadius: radius.md }]}><Ionicons name="close" size={20} color={t.paper} /></Press></View>;
 }
 export function HonestyBadge({ kind = 'estimate' }: { kind?: 'estimate' | 'baseline' | 'validated' }) {
   return <StatusPill kind={kind === 'validated' ? 'done' : 'neutral'} label={kind === 'baseline' ? 'Personal baseline' : kind === 'validated' ? 'Validated' : 'Estimate'} />;
@@ -42,18 +42,27 @@ export function LabelScanOverlay({ rows, active = 0 }: { rows: string[]; active?
   const t = useTokens();
   return <Card style={{ gap: space.xs }}>{rows.map((row, i) => <View key={row} style={{ backgroundColor: i === active ? t.emberTint : t.surface2, borderRadius: radius.xs, padding: space.sm }}><Text variant="body">{row}</Text></View>)}</Card>;
 }
-export function BreathPacer({ active = true, secondsIn = 5, secondsOut = 5 }: { active?: boolean; secondsIn?: number; secondsOut?: number }) {
-  const t = useTokens(), calm = useCalmMotion(), phase = useSharedValue(0), [inhale, setInhale] = useState(true);
+export const BREATH_PATTERNS = {
+  'Physiological sigh': [{ label: 'Breathe in', seconds: 2, scale: .9 }, { label: 'A little more in', seconds: 1, scale: 1 }, { label: 'Long breath out', seconds: 6, scale: .65 }],
+  'Box breathing': [{ label: 'Breathe in', seconds: 4, scale: 1 }, { label: 'Hold', seconds: 4, scale: 1 }, { label: 'Breathe out', seconds: 4, scale: .65 }, { label: 'Hold', seconds: 4, scale: .65 }],
+  Resonance: [{ label: 'Breathe in', seconds: 5, scale: 1 }, { label: 'Breathe out', seconds: 5, scale: .65 }],
+  '4-7-8': [{ label: 'Breathe in', seconds: 4, scale: 1 }, { label: 'Hold', seconds: 7, scale: 1 }, { label: 'Breathe out', seconds: 8, scale: .65 }],
+  'Heart-rate down': [{ label: 'Breathe in', seconds: 5, scale: 1 }, { label: 'Breathe out slowly', seconds: 7, scale: .65 }],
+} as const;
+export type BreathProtocol = keyof typeof BREATH_PATTERNS;
+export function BreathPacer({ active = true, secondsIn = 5, secondsOut = 5, protocol }: { active?: boolean; secondsIn?: number; secondsOut?: number; protocol?: BreathProtocol }) {
+  const t = useTokens(), calm = useCalmMotion(), scale = useSharedValue(.65), [step, setStep] = useState(0);
+  const phases = protocol ? BREATH_PATTERNS[protocol] : [{ label: 'Breathe in', seconds: secondsIn, scale: 1 }, { label: 'Breathe out', seconds: secondsOut, scale: .65 }];
   useEffect(() => {
-    if (!active || calm) { phase.value = 0; return; }
-    const period = (secondsIn + secondsOut) * 1000;
-    phase.value = withRepeat(withTiming(1, { duration: period, easing: Easing.linear }), -1, false);
+    if (!active) { scale.value = .65; setStep(0); return; }
+    if (!calm) scale.value = withRepeat(withSequence(...phases.map(phase => withTiming(phase.scale, { duration: phase.seconds * 1000, easing: Easing.inOut(Easing.sin) }))), -1, false);
+    else scale.value = .82;
     let id: ReturnType<typeof setTimeout>;
-    const turn = (inside: boolean) => { setInhale(inside); feedback.select(); id = setTimeout(() => turn(!inside), (inside ? secondsIn : secondsOut) * 1000); };
-    turn(true); return () => clearTimeout(id);
-  }, [active, calm, secondsIn, secondsOut, phase]);
-  const style = useAnimatedStyle(() => { const split = secondsIn / (secondsIn + secondsOut), p = phase.value < split ? phase.value / split : 1 - (phase.value - split) / (1 - split); return { transform: [{ scale: .65 + .35 * (.5 - .5 * Math.cos(p * Math.PI)) }] }; });
-  return <View style={{ height: 280, alignItems: 'center', justifyContent: 'center' }} accessible accessibilityLabel={active ? `Breathe ${inhale ? 'in' : 'out'}` : 'Breathing paused'}><Animated.View style={[{ width: 240, height: 240, borderRadius: radius.full, backgroundColor: t.surface2, alignItems: 'center', justifyContent: 'center' }, style]}><LifeOrb size={96} state="ring" /></Animated.View><View style={{ position: 'absolute', bottom: 0 }}><Text variant="headline">{active ? inhale ? 'Breathe in' : 'Breathe out' : 'Ready when you are'}</Text></View></View>;
+    const turn = (index: number) => { setStep(index); feedback.select(); id = setTimeout(() => turn((index + 1) % phases.length), phases[index].seconds * 1000); };
+    turn(0); return () => { clearTimeout(id); cancelAnimation(scale); };
+  }, [active, calm, protocol, secondsIn, secondsOut, scale]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <View style={{ height: 280, alignItems: 'center', justifyContent: 'center' }} accessible accessibilityLabel={active ? phases[step]?.label : 'Breathing paused'}><Animated.View style={[{ width: 240, height: 240, borderRadius: radius.full, backgroundColor: t.surface2, alignItems: 'center', justifyContent: 'center' }, style]}><LifeOrb size={96} state="ring" /></Animated.View><View style={{ position: 'absolute', bottom: 0 }}><Text variant="headline">{active ? phases[step]?.label : 'Ready when you are'}</Text></View></View>;
 }
 export function CalendarDay({ blocks }: { blocks: { at: string; title: string; sub?: string; free?: boolean; onPress?: () => void }[] }) {
   const t = useTokens();
@@ -74,7 +83,16 @@ export function FocusTimer({ seconds, running, onFinish }: { seconds: number; ru
   const [remaining, setRemaining] = useState(seconds), finish = useRef(onFinish);
   finish.current = onFinish;
   useEffect(() => { setRemaining(seconds); }, [seconds]);
-  useEffect(() => { if (!running) return; const id = setInterval(() => setRemaining(v => { if (v <= 1) { clearInterval(id); feedback.complete(); finish.current?.(); return 0; } return v - 1; }), 1000); return () => clearInterval(id); }, [running]);
+  useEffect(() => {
+    if (!running) return;
+    const deadline = Date.now() + remaining * 1000;
+    const id = setInterval(() => {
+      const next = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setRemaining(next);
+      if (!next) { clearInterval(id); feedback.complete(); finish.current?.(); }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, seconds]);
   return <View style={{ alignItems: 'center', gap: space.xxl }}><LifeOrb size={170} state={remaining ? 'ring' : 'done'} /><Text variant="numeralXl" accessibilityLiveRegion="none">{`${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`}</Text></View>;
 }
 export function WeightLogger({ value, onChange, trend, unit = 'kg' }: { value: number; onChange: (n: number) => void; trend: number[]; unit?: string }) {

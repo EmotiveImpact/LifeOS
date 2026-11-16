@@ -46,9 +46,11 @@ function target(state: number, k: number, r: number, t: number, spin: number, vo
 export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { size?: number; state?: OrbState; color?: string; rings?: 1 | 2 }) {
   const tokens = useTokens(), calm = useCalmMotion(), ink = color ?? tokens.ink;
   const dot = Math.max(2.6, size / 12), r = size / 2 - Math.max(2, size / 14) - dot / 2;
-  const mode = useSharedValue(STATES.indexOf(state === 'voice' ? 'listening' : state));
-  const points = useSharedValue<Point[]>(Array.from({ length: 30 }, (_, k) => target(mode.value, k, r, 0, 0, .5, 0, [])));
-  const frozen = useSharedValue(points.value), elapsed = useSharedValue(2000), time = useSharedValue(0), spin = useSharedValue(0);
+  const initialMode = STATES.indexOf(state === 'voice' ? 'listening' : state);
+  const initialPoints = Array.from({ length: 30 }, (_, k) => target(initialMode, k, r, 0, 0, .5, 0, []));
+  const mode = useSharedValue(initialMode);
+  const points = useSharedValue<Point[]>(initialPoints);
+  const frozen = useSharedValue(initialPoints), elapsed = useSharedValue(2000), time = useSharedValue(0), spin = useSharedValue(0);
   const head = useSharedValue(0), trail = useSharedValue<number[]>([]), edges = useSharedValue<Record<string, number>>({});
   const hopAt = useSharedValue(0), gather = useSharedValue(0), velocity = useSharedValue(0), voice = useSharedValue(0);
   useEffect(() => {

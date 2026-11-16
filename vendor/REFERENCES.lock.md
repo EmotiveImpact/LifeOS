@@ -29,7 +29,8 @@
 | [Nozbe/WatermelonDB](https://github.com/Nozbe/WatermelonDB/tree/5c463222ecd7) | MIT | master | `5c463222ecd7` | 2025-08-11 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |
 | [powersync-ja/powersync-js](https://github.com/powersync-ja/powersync-js/tree/770a4f652361) | Apache-2.0 | main | `770a4f652361` | 2026-11-09 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |
 | [better-auth/better-auth](https://github.com/better-auth/better-auth/tree/8382ce613f04) | MIT | main | `8382ce613f04` | 2026-11-14 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |
-| [Shopify/react-native-skia](https://github.com/Shopify/react-native-skia/tree/20ecc57a203b) | MIT | main | `20ecc57a203b` | 2026-11-15 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |
+| [Shopify/react-native-skia](https://github.com/Shopify/react-native-skia/tree/20ecc57a203b) | MIT | main | `20ecc57a203b` | 2026-11-15 | Installed as a dependency | Expo-pinned package **`2.14.0`**, exact, installed with user approval; full Fenny renderer. |
+| [necolas/react-native-web](https://github.com/necolas/react-native-web/tree/e5f5751c69cbd9cd03fed40d880ad9fbb00d8f2b) | MIT | package 0.21.4 | `e5f5751c69cbd9cd03fed40d880ad9fbb00d8f2b` | 2026-11-16 | Development-only dependency | **`0.21.4`**, exact; user-approved Expo localhost preview adapter. Commit verified from npm package metadata. |
 
 ## Copied folders
 - `vendor/fenny/` — Feynman-voice-app at `fc32865ed16f` (docs, api, scene, teach, ui, voice: the Phonon Expo module and the Kitten TTS package). Owner’s code.

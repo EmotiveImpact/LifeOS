@@ -1,58 +1,30 @@
-# Track A
+# Track A — review notes
 
-## Final status
-- All 220 unparked board entries have UI implementations or explicitly noted previews: 196 exact app routes and 24 inline/state/reference/platform/component entries. The single parked Do it for me entry was not built.
-- Every chapter typecheck passed. The final local iOS export passed (2,876 modules, 6.8 MB Hermes bundle); Android export passed (2,875 modules, 6.8 MB Hermes bundle). No unit, end-to-end or screenshot jobs were run.
-- **All rows remain `[~]`, not `[x]`: light/dark visual equivalence and device motion/performance are not verified.** The board was opened locally. A local Expo Web preview required Expo’s browser adapter (`react-native-web` 0.21.4); installation was denied, so it was not installed and no permission workaround was attempted.
-- Native platform extension registration (widgets, ActivityKit, Watch, notifications, Siri), the full Fenny Skia renderer, sensors, AI, bank connections, billing and cloud services remain explicit Track A stubs. Their UI layouts are available in the app or `/design`; no backend or external integration was started.
-- Local export artifacts: `/tmp/life-track-a-ios-a9961c98` and `/tmp/life-track-a-android-a9961c98`. These are JS/Hermes exports, not signed App Store/Play builds.
+## Built
+- All **220 unparked board entries**: **196 exact app routes** plus inline cards, overlays, parent states, platform previews and design-gallery references. `doitforme` remains parked and has no route.
+- All **42 component additions** are exported through `@/design` and demonstrated in `/design`, including LifeOrb v6 and all five puzzle kinds.
+- **Full Fenny Drawing Kit:** all **30 devices and 208 objects** ported from the owner’s code at `fc32865ed16f` into `src/learn/scene`; clean/hand-drawn, build-in, slider changes and Reduce Motion. Skia runs on the UI thread. The quick lesson keeps its separate simple pictures.
+- Local seed state, persistence and navigation are wired. Existing tax, income, housing, level, score and health-target calculations use `packages/core`; no engine logic changed.
 
-## Chapter ledger
+## Evidence
+- **214 entries are `[x]` for the reviewed Track A UI; six native platform targets remain `[~]` with individual reasons on their checklist rows.** This does not claim real integrations or device-performance testing.
+- Every chapter passed `npx tsc --noEmit -p .`; the completed fidelity pass also typechecks.
+- Local Expo preview: **196/196 routes rendered in dark and 196/196 in light**, at **393 × 852**, with **zero captured runtime errors**, **zero horizontal page overflows**, and 393pt-wide screen roots. Dark roots used `#08090A`/`#141517`; light roots used `#F7F7F8`/`#FFFFFF`.
+- The full drawing gallery rendered **30/30 devices in dark/clean and 30/30 in light/hand-drawn**, with no drawing warnings or errors. All 208 objects are selectable in the gallery.
+- Manual rendered checks against the board corrected: fixed headers and 44pt targets; Today’s root title/greeting and single-line metrics; 20/26 lesson headings; boxed tax-code picture and guess chips; tell-back dialogue; photo-sheet chrome; cover sizing/scrims/paper buttons; image settle/drift; card shadows; rounded flow diagrams; and Fuel’s default 1,240-left counter.
+- Font and layout inspection confirmed Inter, the board’s 20pt gutters, 120pt Fuel ring, 20/26 lesson headings, and 13/18 single-line Today metric labels. Hand-drawn switching uses the real Skia canvas, not an SVG placeholder.
+- `react-native-web@0.21.4` and `@shopify/react-native-skia@2.14.0` were installed only after explicit approval, pinned exactly, with lifecycle scripts disabled. CanvasKit WASM is served from localhost, not a CDN.
+- No unit tests, end-to-end tests, screenshot jobs, backend, real AI calls or real health/bank integrations were run. Native performance/accessibility testing remains Track B; no device FPS measurement is claimed.
 
-- Building inline on the existing `master` branch as explicitly requested; no new branches or remote services.
-- Track A overrides phase gates: components → local seed → SCREENS.md chapters; chapter typechecks and final iOS/Android exports only. No tests or screenshot jobs.
-- Board v17 is served locally on port 5181 and remains open as the visual reference.
-- Real integrations (auth, health, camera, voice, AI, banks, sync, billing, platform extensions) remain local previews behind service interfaces until Track B.
+## Local stubs / [~] reasons
+- First open, Talk, scans, food recognition and teaching feedback: permission/auth/voice/OCR/AI boundaries return visible local samples. Nothing is recorded, uploaded or silently filed.
+- Body/Fuel/experiments/personality: observations and unimplemented score/target/projection algorithms are clearly labelled seed previews. Local controls, portions, checkoffs, timers and saved state work; actual health ingestion/scoring and validated interpretation remain Track B.
+- Banks, billing, connected services, downloads, memory retrieval and sync: local interface previews only. No credentials, charges, downloads or remote accounts are created. Typed DELETE resets local sample data only.
+- `widgets`, `sharecard`, `watch`, `lockpush`, `androidwidget`, `siri`: their layouts are available in `/design`; native extension registration/delivery is not built in Track A.
+- Parent states remain states of their existing routes, not invented screens: `emptytoday`, `loadingtoday`, `emptyplan`, `emptybody`, `connectfail`, `offline`, `permdenied`, `aidown`, `signedout` are selected by the corresponding `state` query and shown in `/design`.
+- Money figures differ from illustrative board amounts where the existing engine has no matching rebate model; the app does not invent a confirmed entitlement. Tax, income and housing outputs stay engine-derived.
 
-- First open: 14 UI routes built; chapter typecheck passed. [~]: permissions, voice and sign-in are explicit local previews; no OS prompts or remote accounts. Final visual pass pending.
-- Components: all 42 To build entries exported and demonstrated in /design. SceneView implements the board’s eight sample devices in SVG; full 30-device/208-object Skia port remains Track B.
-
-- Tab 1: chapter typecheck passed. [~]: 13 board entries built, including inline search, nudge and birthday cards; sample health/calendar data, no remote integrations. Final visual pass pending.
-
-- Talk and file: chapter typecheck passed. [~]: 8 routes built; Talk/transcription, scanning and chat use explicit local samples/engine replies. Confirm/remove/undo and edit/save are local; no AI or upload. Final visual pass pending.
-
-- Tab 2: chapter typecheck passed. [~]: 10 routes built, Do it for me skipped; mission stages/checks, copy/edit/mail drafts and local completion are wired. Engine amounts replace illustrative board claims where core has no matching rebate calculation. Final visual pass pending.
-
-- Your Chief Aim: chapter typecheck passed. [~]: 4 routes built; four-step editor, statement/history, read ritual and gambit are persisted locally. Glimpse uses sample earned progress. Final visual pass pending.
-
-- Plan · Money: chapter typecheck passed. [~]: 8 routes built; ledger/privacy, subscription review, categories, budget controls and bank selection operate locally. Banking/cancellation are clearly previews. Final visual pass pending.
-
-- Plan · Documents: chapter typecheck passed. [~]: 3 routes built with seeded documents, renewal timing and persistent checklist. File storage/scanning and online renewals are local previews. Final visual pass pending.
-
-- The toolkit: chapter typecheck passed. [~]: 13 routes built; dynamic income/rent-vs-buy/core lab interpretations, cash plan, buffer, protection and early unlock are local. NI history and health stack are labelled sample content. Final visual pass pending.
-
-- Body: chapter typecheck passed. [~]: 35 entries built; health/device/sensor values are seed previews, not live readings. Journal, habits, source choices, water, sleep plan, breathing timer and workout controls work locally. No HealthKit/OAuth/BLE. Full scoring remains Track B. Final visual pass pending.
-
-- Plan · Body · Fuel: chapter typecheck passed. [~]: 28 routes built with confirm/edit/log, counters, local weight and meal history, all import/scan/speech routes and hide-numbers mode. Recognition, target modelling, recipe/menu generation, label reading and imports are explicit sample previews. No external services. Final visual pass pending.
-
-- Plan · Body · Habits: chapter typecheck passed. [~]: 3 routes built with local checkoffs, tiny-habit setup, three-active limit, automaticity choices and history heatmap. Automatic data completion and EMA scoring await Track B. Final visual pass pending.
-
-- Learn from: chapter typecheck passed. [~]: 10 routes built; library, lens, paged ideas, teach-back, recall, results and drawing examples are linked. Lesson/recall progress is local; full Fenny kit and FSRS are Track B. Final visual pass pending.
-
-- Teach me: chapter typecheck passed. [~]: 11 entries covered: nine lesson routes, contextual offer component and reference-only playable flow. Quick/deep lesson path, guess, puzzle, retell and feedback operate locally. Full AI analysis, narration and Skia film are Track B. Final visual pass pending.
-
-- Tab 3: chapter typecheck passed. [~]: 10 routes built. Core score/levels/areas, household, local records and memory edit/forget/undo, details and shared preview are wired. Memory retrieval, experiments and multi-account sharing remain Track B. Final visual pass pending.
-
-- You · Know yourself: chapter typecheck passed. [~]: 6 routes built with 50 public-domain IPIP statements, local answers, values ordering and editable body measures. Personality/chronotype interpretations are explicitly sample results until Track B scoring. Final visual pass pending.
-
-- You · People: chapter typecheck passed. [~]: 5 entries built: people, person edit/checklist, selected-only sample contacts, dates and inline birthday nudge. Memorial has no countdown/reminder. Real contacts, notifications and sending remain Track B. Final visual pass pending.
-
-- You · Settings: chapter typecheck passed. [~]: 14 routes built; appearance/sounds/haptics/privacy controls persist, data export opens the OS share sheet, typed DELETE resets only local seed data. Billing/auth/MCP/model downloads/notifications are explicit previews. Parked automation removed from membership copy; nudge cap stays one/day. Final visual pass pending.
-
-- Grow: chapter typecheck passed. [~]: 4 routes built: core weekly recap PeekStack, vantage/gates, paged level-up and birthday recap. Yearly history is illustrative seed content; earned triggers remain Track B. Final visual pass pending.
-
-- States: chapter typecheck passed. [~]: 12 entries implemented: nine parent states selected via state query on their existing routes, plus Support, sync conflict and update-required routes. Real network/permission/sync/update detection remains Track B; no extra state routes invented. Final visual pass pending.
-
-- Outside the app: chapter typecheck passed. [~]: 6 platform targets have faithful local UI previews in /design behind platform.ts snapshots. Native widgets/ActivityKit/watch targets/notifications/Siri registration are stubbed for Track B; no new app routes. Final visual pass pending.
-
-- The orb and motion: chapter typecheck passed. [~]: 3 component entries covered in /design: interactive v6 state transitions, all six states, all four fixed TopBar kinds. Native transition/shared-element fidelity awaits device polish. Final visual pass pending.
+## Workflow
+- Worked on the existing `master` branch as requested; chapter commits use `screens: <chapter>`. No new branch or remote server was created.
+- The first closure was premature: it established route/build coverage, not rendered fidelity. The approval, full Skia port and dual-theme rendered review above close those identified gaps; platform and integration stubs remain explicit.
+- Final iOS/Android exports after the fidelity pass: pending below.

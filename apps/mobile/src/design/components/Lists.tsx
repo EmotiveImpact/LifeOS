@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Press } from '../Press';
 import { Callout, Mono, Text, Title } from '../Text';
 import { useTokens } from '../theme';
-import { areaColors, radius, type Area } from '../tokens';
+import { areaColors, cardShadow, radius, type Area } from '../tokens';
 import { Slider } from './Controls';
 
 export function useAreaColor(area: Area): string {
@@ -51,7 +51,7 @@ export function ListRow({ title, sub, icon, area, right, chevron, onPress, tone 
     </>
   );
   return onPress ? (
-    <Press haptic="open" pressScale={0.985} onPress={onPress} accessibilityLabel={title} style={styles.row}>
+    <Press haptic="open" pressScale={0.97} onPress={onPress} accessibilityLabel={title} style={styles.row}>
       {body}
     </Press>
   ) : (
@@ -63,7 +63,7 @@ export function ListRow({ title, sub, icon, area, right, chevron, onPress, tone 
 export function RowGroup({ children, header, count }: { children: ReactNode[]; header?: string; count?: string }) {
   const t = useTokens();
   return (
-    <View style={[styles.group, { backgroundColor: t.surface }]}>
+    <View style={[styles.group, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
       {header ? (
         <View style={styles.groupHead}>
           <Title>{header}</Title>
@@ -92,7 +92,7 @@ export function Checklist({ items, onToggle, header, count }: { items: CheckItem
         <Press
           key={it.label}
           haptic={it.done ? 'select' : 'complete'}
-          pressScale={0.985}
+          pressScale={0.97}
           onPress={() => onToggle?.(i)}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: it.done }}
@@ -152,7 +152,7 @@ export function InsightCard({ area, source, value, text, width }: { area: Area; 
   const t = useTokens();
   const c = areaColors[t.scheme][area];
   return (
-    <View style={[styles.card, { backgroundColor: t.surface, width, gap: 10 }]}>
+    <View style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme), width, gap: 10 }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c }} />
         <Callout tone="ink2" numberOfLines={1} style={{ fontSize: 12, flex: 1 }}>
@@ -221,7 +221,7 @@ export function HabitRow({ name, cue, last14, meta, source, onToggleToday }: Hab
   const t = useTokens();
   const done = last14.filter(Boolean).length;
   return (
-    <View style={[styles.card, { backgroundColor: t.surface, gap: 10 }]}>
+    <View style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme), gap: 10 }]}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
         <Title style={{ flex: 1 }}>{name}</Title>
         {source ? (
@@ -344,7 +344,7 @@ export function StageBar({ segments, start, end }: { segments: { stage: SleepSta
 export function MetricTile({ label, value, unit, meaning, children, onPress }: { label: string; value: string; unit?: string; meaning?: string; children?: ReactNode; onPress?: () => void }) {
   const t = useTokens();
   return (
-    <Press haptic="open" onPress={onPress} accessibilityLabel={`${label} ${value} ${unit ?? ''}`} style={[styles.card, { backgroundColor: t.surface, gap: 10, flex: 1 }]}>
+    <Press haptic="open" onPress={onPress} accessibilityLabel={`${label} ${value} ${unit ?? ''}`} style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme), gap: 10, flex: 1 }]}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Callout tone="ink2">{label}</Callout>
         <Ionicons name="chevron-forward" size={16} color={t.inkQuiet} />

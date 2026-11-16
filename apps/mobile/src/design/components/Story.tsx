@@ -25,7 +25,7 @@ export type TwoToneSegment = {
  * DESIGN.md §6.2: the signature sentence. Quiet context in `ink-quiet`, what matters in full ink.
  * Write segments with their own spacing, e.g. [{text:'Nothing urgent — ', tone:'quiet'}, {text:'one form'}].
  */
-export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, style }: { segments: TwoToneSegment[]; size?: 'statement' | 'headline'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
+export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, style }: { segments: TwoToneSegment[]; size?: 'statement' | 'headline' | 'welcomeStatement'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
   const t = useTokens();
   const calm = useCalmMotion();
   const quiet = onAtmos ? onAtmosphere.quiet : t.inkQuiet;

@@ -3,8 +3,8 @@
 > What exists in code today, and what the board (v17) uses that still has to be built. **Build every "To build" component into `apps/mobile/src/design/components/` and show it in `/design` before the screens that need it.** Specs live in DESIGN.md / MOTION.md; the board's code is the visual reference for each one.
 
 ## Status at a glance (16 Nov 2026)
-- **Components in code: 62** (all exported from `@/design`, all typecheck, both platforms bundle).
-- **Track A additions: all 42 rows below implemented and exported from `@/design`, with examples in `/design`.** LifeOrb is now v6. SceneView is the eight-device board preview; the complete Skia kit remains Track B.
+- **Pre-existing components: 62** (all exported from `@/design`, all typecheck, both platforms bundle).
+- **Track A additions: all 42 rows below implemented and exported from `@/design`, with examples in `/design`.** LifeOrb is now v6. SceneView is the full owner-authorised Skia port: all 30 devices and 208 objects, clean or hand-drawn, with all-device gallery controls.
 - **Screens: all 220 unparked board entries have UI implementations or explicitly noted platform/state previews.** See `SCREENS.md` and `review/NOTES.md` for `[~]` limitations.
 
 ## In code ✅

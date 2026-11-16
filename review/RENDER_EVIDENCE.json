@@ -1,0 +1,56 @@
+{
+  "review": "Track A local rendered fidelity pass",
+  "viewport": {
+    "width": 393,
+    "height": 852
+  },
+  "routes": 196,
+  "dark": {
+    "rendered": 196,
+    "runtimeErrors": 0,
+    "horizontalOverflows": 0,
+    "rootWidths": [
+      393
+    ],
+    "surfaces": [
+      "#08090A",
+      "#141517"
+    ]
+  },
+  "light": {
+    "rendered": 196,
+    "runtimeErrors": 0,
+    "horizontalOverflows": 0,
+    "rootWidths": [
+      393
+    ],
+    "surfaces": [
+      "#F7F7F8",
+      "#FFFFFF"
+    ]
+  },
+  "drawingKit": {
+    "devices": 30,
+    "objects": 208,
+    "darkCleanRendered": 30,
+    "lightHandDrawnRendered": 30,
+    "drawingWarnings": 0,
+    "drawingErrors": 0,
+    "renderer": "Skia 2.14.0",
+    "wasm": "localhost/canvaskit.wasm"
+  },
+  "nativePlatformStubs": {
+    "widgets": "Native widget and Live Activity registration remains a local snapshot stub.",
+    "sharecard": "Local share preview; native image-share target remains stubbed.",
+    "watch": "Local watch layout; watchOS and Wear OS targets remain stubbed.",
+    "lockpush": "Local notification layouts; native delivery remains stubbed.",
+    "androidwidget": "Local Android widget layout; native widget registration remains stubbed.",
+    "siri": "Local shortcut response layout; Siri and Assistant registration remain stubbed."
+  },
+  "limits": [
+    "No unit or end-to-end tests",
+    "No screenshot jobs",
+    "No native FPS benchmark",
+    "No real integrations"
+  ]
+}

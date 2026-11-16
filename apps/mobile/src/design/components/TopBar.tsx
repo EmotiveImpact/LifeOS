@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Press } from '../Press';
 import { Text } from '../Text';
 import { useTokens } from '../theme';
+import { palette, radius, space, touch } from '../tokens';
 
 /**
  * TopBar (DESIGN.md §46). The header NEVER moves: it sits fixed above the scroll view, same height and
@@ -25,7 +26,7 @@ export type TopBarProps =
   | { kind: 'root'; eyebrow?: string; title: string; actions?: TopBarAction[]; avatar?: ReactNode }
   | { kind: 'push'; title?: string; action?: TopBarAction; onBack: () => void; onImage?: boolean }
   | { kind: 'sheet'; title: string; action?: TopBarAction; onClose: () => void }
-  | { kind: 'flow'; center?: ReactNode; step?: string; onClose: () => void };
+  | { kind: 'flow'; center?: ReactNode; step?: string; onClose: () => void; onImage?: boolean };
 
 /** Fixed heights, so content below always starts in the same place. */
 export const TOP_BAR_HEIGHT = { root: 72, push: 48, sheet: 64, flow: 48 } as const;
@@ -38,7 +39,7 @@ export function TopBar(props: TopBarProps) {
       <View style={[styles.root, { backgroundColor: t.canvas }]}>
         <View style={{ flex: 1, gap: 1 }}>
           {props.eyebrow ? <Text variant="callout" tone="ink2">{props.eyebrow}</Text> : null}
-          <Text variant="titleSerif" accessibilityRole="header" numberOfLines={1}>{props.title}</Text>
+          <Text variant="titleSerif" accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={.85}>{props.title}</Text>
         </View>
         <View style={styles.actions}>
           {props.avatar}
@@ -62,10 +63,10 @@ export function TopBar(props: TopBarProps) {
 
   if (props.kind === 'flow') {
     return (
-      <View style={[styles.bar, { backgroundColor: t.canvas }]}>
-        <ActionButton action={{ kind: 'icon', icon: 'close', label: 'Close', onPress: props.onClose }} />
+      <View style={[styles.bar, { backgroundColor: props.onImage ? 'transparent' : t.canvas }]}>
+        <ActionButton onImage={props.onImage} action={{ kind: 'icon', icon: 'close', label: 'Close', onPress: props.onClose }} />
         <View style={styles.center}>{props.center}</View>
-        {props.step ? <Text variant="mono" tone="ink2" style={styles.step}>{props.step}</Text> : <View style={styles.spacer} />}
+        {props.step ? <Text variant="mono" tone={props.onImage ? 'paper2' : 'ink2'} style={styles.step}>{props.step}</Text> : <View style={styles.spacer} />}
       </View>
     );
   }
@@ -93,9 +94,9 @@ function ActionButton({ action, onImage }: { action: TopBarAction; onImage?: boo
   }
   return (
     <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label}
-      style={[styles.icon, { backgroundColor: onImage ? t.canvas : t.surface2 }]}>
+      style={[styles.icon, { backgroundColor: onImage ? palette.dark.canvas : t.surface2 }]}>
       <Ionicons name={action.icon} size={19} color={onImage ? t.paper : t.ink2} />
-      {action.badge ? <View style={[styles.badge, { backgroundColor: t.ember, borderColor: t.surface2 }]} /> : null}
+      {action.badge ? <View style={[styles.badge, { backgroundColor: t.ember }]} /> : null}
     </Press>
   );
 }
@@ -110,8 +111,8 @@ const styles = StyleSheet.create({
   sheet: { height: TOP_BAR_HEIGHT.sheet, paddingHorizontal: 20, paddingTop: 8, gap: 8 },
   grabber: { width: 36, height: 5, borderRadius: 3, alignSelf: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  icon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  text: { height: 40, justifyContent: 'center', paddingHorizontal: 4 },
-  spacer: { width: 40, height: 40 },
-  badge: { position: 'absolute', top: 9, right: 10, width: 7, height: 7, borderRadius: 4, borderWidth: 2 },
+  icon: { width: touch.min, height: touch.min, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  text: { minHeight: touch.min, justifyContent: 'center', paddingHorizontal: space.xxs },
+  spacer: { width: touch.min, height: touch.min },
+  badge: { position: 'absolute', top: space.xs, right: space.xs, width: 7, height: 7, borderRadius: radius.full },
 });

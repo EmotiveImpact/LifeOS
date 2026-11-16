@@ -5,7 +5,7 @@ import Animated, { useAnimatedProps, useSharedValue, withSpring } from 'react-na
 import { Text } from '../Text';
 import { Press } from '../Press';
 import { useCalmMotion, useTokens } from '../theme';
-import { areaColors, motion, radius, space } from '../tokens';
+import { areaColors, cardShadow, motion, radius, space } from '../tokens';
 import { RollingNumeral } from './Story';
 
 const ACircle = Animated.createAnimatedComponent(Circle);
@@ -15,7 +15,7 @@ export function ProgressRing({ value, max = 100, size = 120, label, display, col
   useEffect(() => { progress.value = calm ? value / max : withSpring(value / max, motion.smooth); }, [value, max, calm, progress]);
   const props = useAnimatedProps(() => ({ strokeDashoffset: circumference * (1 - Math.max(0, Math.min(1, progress.value))) }));
   return <View style={{ width: size, height: size }} accessible accessibilityRole="progressbar" accessibilityLabel={label} accessibilityValue={{ min: 0, max, now: value, text: display }}>
-    <Svg width={size} height={size}><Circle cx={size / 2} cy={size / 2} r={r} stroke={t.surface2} strokeWidth={10} fill="none" /><ACircle cx={size / 2} cy={size / 2} r={r} stroke={color ?? t.ink} strokeWidth={10} fill="none" strokeDasharray={`${circumference} ${circumference}`} animatedProps={props} strokeLinecap="round" rotation={-90} origin={`${size / 2}, ${size / 2}`} /></Svg>
+    <Svg width={size} height={size}><Circle cx={size / 2} cy={size / 2} r={r} stroke={t.surface2} strokeWidth={10} fill="none" /><ACircle cx={size / 2} cy={size / 2} r={r} stroke={color ?? t.ink} strokeWidth={10} fill="none" strokeDasharray={`${circumference} ${circumference}`} animatedProps={props} strokeLinecap="round" transform={`rotate(-90 ${size / 2} ${size / 2})`} /></Svg>
     <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center' }]}><Text variant="numeralL">{display ?? Math.round(value).toLocaleString('en-GB')}</Text>{label ? <Text variant="callout" tone="ink2">{label}</Text> : null}</View>
   </View>;
 }
@@ -34,7 +34,7 @@ export function MacroBars({ items }: { items: BarDatum[] }) {
 }
 export function ScoreBadge({ value, max = 10 }: { value: number; max?: number }) {
   const t = useTokens();
-  return <View style={{ width: 72, height: 72, borderRadius: radius.lg, backgroundColor: t.gainTint, alignItems: 'center', justifyContent: 'center' }}><Text variant="numeralL" tone="gain">{value}</Text><Text variant="callout" tone="ink2">{`of ${max}`}</Text></View>;
+  return <View style={{ width: 72, height: 72, borderRadius: radius.lg, backgroundColor: t.gainTint, alignItems: 'center', justifyContent: 'center' }}><Text variant="numeralL" tone="gain">{Math.round(value)}</Text><Text variant="callout" tone="ink2">{`of ${max}`}</Text></View>;
 }
 /** One time axis, one series, with directly inspectable readings. No dual scales. */
 export function TrendLine({ values, labels, height = 96, band, color, unit = '', label = 'Trend', min, max }: { values: number[]; labels?: string[]; height?: number; band?: [number, number]; color?: string; unit?: string; label?: string; min?: number; max?: number }) {
@@ -93,6 +93,6 @@ export function ShareBar({ items }: { items: { label: string; value: number }[] 
 }
 export function StatTile({ label, value, unit, note }: { label: string; value: string | number; unit?: string; note?: string }) {
   const t = useTokens();
-  return <View style={{ flex: 1, backgroundColor: t.surface, borderRadius: radius.md, padding: space.sm, gap: space.xxs }}><Text variant="callout" tone="ink2">{label}</Text>{typeof value === 'number' ? <RollingNumeral value={value} size="l" /> : <Text variant="title">{value}{unit ? ` ${unit}` : ''}</Text>}{note ? <Text variant="callout" tone="ink2">{note}</Text> : null}</View>;
+  return <View style={{ flex: 1, backgroundColor: t.surface, ...cardShadow(t.scheme), borderRadius: radius.md, padding: space.sm, gap: space.xxs }}><Text variant="callout" tone="ink2">{label}</Text>{typeof value === 'number' ? <RollingNumeral value={value} size="l" /> : <Text variant="title">{value}{unit ? ` ${unit}` : ''}</Text>}{note ? <Text variant="callout" tone="ink2">{note}</Text> : null}</View>;
 }
 const s = StyleSheet.create({ between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.xs }, inline: { flexDirection: 'row', alignItems: 'center', gap: space.xs }, track: { height: 6, borderRadius: radius.full, overflow: 'hidden' }, dot: { width: 6, height: 6, borderRadius: radius.full } });
