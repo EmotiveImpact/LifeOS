@@ -1,5 +1,14 @@
 # Track A
 
+## Final status
+- All 220 unparked board entries have UI implementations or explicitly noted previews: 196 exact app routes and 24 inline/state/reference/platform/component entries. The single parked Do it for me entry was not built.
+- Every chapter typecheck passed. The final local iOS export passed (2,876 modules, 6.8 MB Hermes bundle); Android export passed (2,875 modules, 6.8 MB Hermes bundle). No unit, end-to-end or screenshot jobs were run.
+- **All rows remain `[~]`, not `[x]`: light/dark visual equivalence and device motion/performance are not verified.** The board was opened locally. A local Expo Web preview required Expo’s browser adapter (`react-native-web` 0.21.4); installation was denied, so it was not installed and no permission workaround was attempted.
+- Native platform extension registration (widgets, ActivityKit, Watch, notifications, Siri), the full Fenny Skia renderer, sensors, AI, bank connections, billing and cloud services remain explicit Track A stubs. Their UI layouts are available in the app or `/design`; no backend or external integration was started.
+- Local export artifacts: `/tmp/life-track-a-ios-a9961c98` and `/tmp/life-track-a-android-a9961c98`. These are JS/Hermes exports, not signed App Store/Play builds.
+
+## Chapter ledger
+
 - Building inline on the existing `master` branch as explicitly requested; no new branches or remote services.
 - Track A overrides phase gates: components → local seed → SCREENS.md chapters; chapter typechecks and final iOS/Android exports only. No tests or screenshot jobs.
 - Board v17 is served locally on port 5181 and remains open as the visual reference.

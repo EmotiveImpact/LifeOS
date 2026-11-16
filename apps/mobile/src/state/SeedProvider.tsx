@@ -29,7 +29,7 @@ const KEY = 'life_track_a_v17';
 export function SeedProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
   const [data, setData] = useState(initial), [hydrated, setHydrated] = useState(false);
-  useEffect(() => { let active = true; AsyncStorage.getItem(KEY).then(raw => { if (!active) return; if (raw) { try { const saved = JSON.parse(raw); setData({ ...initial, ...saved, prefs: { ...initial.prefs, ...saved.prefs } }); } catch { /* Keep the safe local fixtures. */ } } }).finally(() => { if (active) setHydrated(true); }); return () => { active = false; }; }, []);
+  useEffect(() => { let active = true; AsyncStorage.getItem(KEY).then(raw => { if (!active) return; if (raw) { try { const saved = JSON.parse(raw); setData({ ...initial, ...saved, prefs: { ...initial.prefs, ...saved.prefs } }); } catch { /* Keep the safe local fixtures. */ } } }).catch(() => { /* Keep local fixtures if storage is unavailable. */ }).finally(() => { if (active) setHydrated(true); }); return () => { active = false; }; }, []);
   useEffect(() => { Uniwind.setTheme((data.choices.appearance === 'System' ? systemScheme === 'dark' : data.prefs.dark) ? 'dark' : 'light'); setFeedbackPrefs({ sound: data.prefs.sounds, haptics: data.prefs.haptics }); if (hydrated) AsyncStorage.setItem(KEY, JSON.stringify(data)).catch(() => {}); }, [data, hydrated, systemScheme]);
   const engine = useMemo(() => engineSnapshot(data.profile, data.completed), [data.profile, data.completed]);
   const value: SeedContextValue = {
