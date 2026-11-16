@@ -27,4 +27,6 @@
 ## Workflow
 - Worked on the existing `master` branch as requested; chapter commits use `screens: <chapter>`. No new branch or remote server was created.
 - The first closure was premature: it established route/build coverage, not rendered fidelity. The approval, full Skia port and dual-theme rendered review above close those identified gaps; platform and integration stubs remain explicit.
-- Final iOS/Android exports after the fidelity pass: pending below.
+- Final exports after the fidelity pass **passed**: iOS **3,143 modules / 7.7 MB Hermes bundle**, Android **3,142 modules / 7.7 MB Hermes bundle**, exit code **0**. Source commit: `f29859c`.
+- Export artifacts: `/tmp/life-track-a-final-ios-a9961c98` and `/tmp/life-track-a-final-android-a9961c98` (JS/Hermes exports, not signed store builds).
+- Rendered evidence: `review/RENDER_EVIDENCE.json`; one manual UI proof: `review/fidelity/bitedrawn.dark.jpg`. Track B has not started.

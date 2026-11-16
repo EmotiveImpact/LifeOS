@@ -39,6 +39,11 @@
     "renderer": "Skia 2.14.0",
     "wasm": "localhost/canvaskit.wasm"
   },
+  "exports": {
+    "sourceCommit": "f29859c",
+    "ios": { "modules": 3143, "hermesBundleMB": 7.7, "exitCode": 0, "output": "/tmp/life-track-a-final-ios-a9961c98" },
+    "android": { "modules": 3142, "hermesBundleMB": 7.7, "exitCode": 0, "output": "/tmp/life-track-a-final-android-a9961c98" }
+  },
   "nativePlatformStubs": {
     "widgets": "Native widget and Live Activity registration remains a local snapshot stub.",
     "sharecard": "Local share preview; native image-share target remains stubbed.",
