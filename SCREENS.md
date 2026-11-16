@@ -206,16 +206,16 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `library` | Learn | Push | Plan → Learn | `/plan/learn/library` |
-| [ ] | `lens` | A lens | Push | Learn → a lens | `/plan/learn/lens` |
-| [ ] | `idea` | An idea, in 60 seconds | Full screen | Learn or Today | `/(flows)/idea` · fullScreenModal |
-| [ ] | `lensask` | Ask through a lens | Full screen | a lens → Ask | `/(flows)/lensask` · fullScreenModal |
-| [ ] | `recall` | Quick recall | Sheet | Today, when due | `/(sheets)/recall` · formSheet |
-| [ ] | `learning` | Ideas into action | Push | Learn → Into action | `/plan/learn/learning` |
-| [ ] | `teach` | Teach it back | Full screen | end of an idea | `/(flows)/teach` · fullScreenModal |
-| [ ] | `hill` | Lens: definiteness of purpose | Push | Learn or Aim | `/plan/learn/hill` |
-| [ ] | `learned` | What you’ve learned | Push | Learn → What you’ve learned | `/plan/learn/learned` |
-| [ ] | `drawkit` | Pictures that teach | Push | Learn → Pictures | `/plan/learn/drawkit` |
+| [~] | `library` | Learn | Push | Plan → Learn | `/plan/learn/library` |
+| [~] | `lens` | A lens | Push | Learn → a lens | `/plan/learn/lens` |
+| [~] | `idea` | An idea, in 60 seconds | Full screen | Learn or Today | `/(flows)/idea` · fullScreenModal |
+| [~] | `lensask` | Ask through a lens | Full screen | a lens → Ask | `/(flows)/lensask` · fullScreenModal |
+| [~] | `recall` | Quick recall | Sheet | Today, when due | `/(sheets)/recall` · formSheet |
+| [~] | `learning` | Ideas into action | Push | Learn → Into action | `/plan/learn/learning` |
+| [~] | `teach` | Teach it back | Full screen | end of an idea | `/(flows)/teach` · fullScreenModal |
+| [~] | `hill` | Lens: definiteness of purpose | Push | Learn or Aim | `/plan/learn/hill` |
+| [~] | `learned` | What you’ve learned | Push | Learn → What you’ve learned | `/plan/learn/learned` |
+| [~] | `drawkit` | Pictures that teach | Push | Learn → Pictures | `/plan/learn/drawkit` |
 
 ## Teach me (11)
 

@@ -27,3 +27,5 @@
 - Plan · Body · Fuel: chapter typecheck passed. [~]: 28 routes built with confirm/edit/log, counters, local weight and meal history, all import/scan/speech routes and hide-numbers mode. Recognition, target modelling, recipe/menu generation, label reading and imports are explicit sample previews. No external services. Final visual pass pending.
 
 - Plan · Body · Habits: chapter typecheck passed. [~]: 3 routes built with local checkoffs, tiny-habit setup, three-active limit, automaticity choices and history heatmap. Automatic data completion and EMA scoring await Track B. Final visual pass pending.
+
+- Learn from: chapter typecheck passed. [~]: 10 routes built; library, lens, paged ideas, teach-back, recall, results and drawing examples are linked. Lesson/recall progress is local; full Fenny kit and FSRS are Track B. Final visual pass pending.
