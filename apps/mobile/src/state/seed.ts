@@ -92,9 +92,9 @@ export const seedPeople: SeedPerson[] = [
   { id: 'noa', name: 'Noa', relation: 'Friend', date: '', days: 0, note: '' },
 ];
 export const seedDocuments = [
-  { id: 'insurance', name: 'Car insurance', expires: '14 February 2027', actFrom: '24 January 2027', reference: 'POL-48210', summary: 'Renews 14 Feb · compare from 24 Jan', status: 'Act now' },
+  { id: 'insurance', name: 'Car insurance', expires: '14 February 2027', actFrom: '22 January 2027', reference: 'POL-48210', summary: 'Renews 14 Feb · compare from 22 Jan', status: 'Act now' },
   { id: 'mot', name: 'Car MOT', expires: '12 January 2027', actFrom: '12 December 2026', reference: 'Saved from your document', summary: 'Due 12 Jan', status: '' },
-  { id: 'passport', name: 'Passport', expires: '12 August 2027', actFrom: 'February 2027', reference: '•••• 4821', summary: 'Expires Aug 2027', status: '' },
+  { id: 'passport', name: 'Passport', expires: '12 August 2027', expiresISO: '2027-08-12', actFrom: 'February 2027', reference: '•••• 4821', summary: 'Expires Aug 2027', status: '' },
   { id: 'railcard', name: 'Railcard', expires: '3 March 2027', actFrom: 'February 2027', reference: 'Saved from your document', summary: 'Expires 3 Mar', status: '' },
   { id: 'licence', name: 'Driving licence photo', expires: '2031', actFrom: '2030', reference: 'Saved from your document', summary: 'Expires 2031', status: 'Sorted' },
   { id: 'tv', name: 'TV Licence', expires: 'October 2027', actFrom: 'September 2027', reference: 'Saved from your document', summary: 'Paid to Oct 2027', status: 'Sorted' },
@@ -109,6 +109,24 @@ export const seedMeal: MealItem[] = [
 ];
 export type SeedHabit = { id: string; name: string; cue: string; last14: (boolean | undefined)[]; day?: number; automaticity?: number; source?: string; shortCue?: string; autoComplete?: boolean };
 export const seedHabitStrength = { name: 'Morning walk', strength: 71, beforeMiss: 73, day: 38, typicalDays: 66 };
+export const boardHealth = {
+  bodyLoad: 11.4,
+  loadDetail: 11.4,
+  loadTargetPreview: 6.2,
+  readinessHrv: 58,
+  readinessHrvBaseline: 52,
+  readinessRespiration: 14.8,
+  readinessMonth: [58, 61, 55, 49, 52, 66, 70, 64, 60, 57, 45, 41, 52, 58, 63, 67, 71, 69, 62, 60, 55, 50, 58, 64, 68, 72, 70, 66, 71, 72],
+};
+export const seedYearReview = {
+  missionsCleared: 41,
+  ideasLearned: 26,
+  aimProgressChangePct: 38,
+  // Archived observation from the reference, not a sum of current eligible tasks.
+  foundOrSaved: 3180,
+  source: 'Illustrative archived year review from v17',
+};
+export const seedLabMarkerPositions = { 'bw-vitd': 18, 'bw-ferritin': 52, 'bw-hba1c': 40, 'bw-apob': 78 };
 export const seed = {
   membership: { annual: 48, monthly: 6, annualRenewal: 59.99 },
   date: SEED_DATE,

@@ -32,6 +32,16 @@
 | [Shopify/react-native-skia](https://github.com/Shopify/react-native-skia/tree/20ecc57a203b) | MIT | main | `20ecc57a203b` | 2026-11-15 | Installed as a dependency | Expo-pinned package **`2.14.0`**, exact, installed with user approval; full Fenny renderer. |
 | [necolas/react-native-web](https://github.com/necolas/react-native-web/tree/e5f5751c69cbd9cd03fed40d880ad9fbb00d8f2b) | MIT | package 0.21.4 | `e5f5751c69cbd9cd03fed40d880ad9fbb00d8f2b` | 2026-11-16 | Development-only dependency | **`0.21.4`**, exact; user-approved Expo localhost preview adapter. Commit verified from npm package metadata. |
 
+## Phase 1b local data packages (exact package pins)
+These packages are specified by `SYSTEM_DESIGN.md` §2. The Expo versions match SDK 58's installed `bundledNativeModules.json`. Published metadata does not expose `gitHead`; immutable npm integrity is recorded rather than inventing a commit.
+
+| Package | Exact version | Licence | npm integrity |
+|---|---|---|---|
+| `expo-sqlite` | `58.0.17` | MIT | `sha512-nzIS8doaxGYPBu+jJD1aa1wsF5vsafLEr3ji4wwR1MWd66KV3u4lKotJPylxJkP08DZWn2uUnTXyMw9t7BdGUA==` |
+| `expo-secure-store` | `58.0.3` | MIT | `sha512-RpubZfqJREEcwKbx3HFoWbtDd31t+yESMj7Ei5/mGQp5vViwUBzL4nUCZRLFyt+O690mT8We7dDtIUZeIk6LbQ==` |
+| `expo-crypto` | `58.0.8` | MIT | `sha512-yMSiMlallOweQ28oQ3BqJf6I/4ZoBggFNRg+PfjG1NbQWBWzGKmkPPUrd3yT0oPW4P+AYppg+Mw6xoAYddLUKA==` |
+| `drizzle-orm` | `0.45.4` | Apache-2.0 | `sha512-NiM1YZpJ2UxyeE67DpDDZ+Tsw4YLX3trSlkNT7Tm9eKoUNb1LvaAaQzXgYQsWs+AQ9TUmmwMmBOCXuqqxUWKKQ==` |
+
 ## Copied folders
 - `vendor/fenny/` — Feynman-voice-app at `fc32865ed16f` (docs, api, scene, teach, ui, voice: the Phonon Expo module and the Kitten TTS package). Owner’s code.
 - `vendor/atria/` — Atria at `8fedbbdfb6a2`: 18 Swift files + `docs/METRIC_VALIDATION_PLAN.md` + `LICENSE` (MIT) and `LICENSE-APACHE`.

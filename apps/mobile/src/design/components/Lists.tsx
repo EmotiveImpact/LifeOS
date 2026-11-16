@@ -286,26 +286,20 @@ export function MiniBars({ values, max, color, height = 64, guide, label }: { va
   );
 }
 
-/** Low / moderate / high band with a marker (Readiness). value 0–100. */
-export function RangeBar({ value, labels = ['Low', 'Moderate', 'High'] }: { value: number; labels?: [string, string, string] }) {
+/** A value marker with optional source-defined bands and target window. */
+export type RangeSegment = { label: string; from: number; to: number; tone?: 'neutral' | 'gain' | 'ember' };
+export function RangeBar({ value, labels = ['Low', 'Moderate', 'High'], min = 0, max = 100, segments, target }: { value: number; labels?: readonly string[]; min?: number; max?: number; segments?: readonly RangeSegment[]; target?: { min: number; max: number } }) {
   const t = useTokens();
-  return (
-    <View style={{ gap: 6 }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: value }}>
-      <View style={{ height: 8, borderRadius: 4, flexDirection: 'row', overflow: 'hidden' }}>
-        <View style={{ flex: 33, backgroundColor: t.emberTint }} />
-        <View style={{ flex: 33, backgroundColor: t.surface3 }} />
-        <View style={{ flex: 34, backgroundColor: t.gainTint }} />
-      </View>
-      <View style={{ position: 'absolute', left: `${value}%`, top: -4, width: 4, height: 16, borderRadius: 2, marginLeft: -2, backgroundColor: t.ink }} />
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        {labels.map((l) => (
-          <Mono key={l} tone="ink2">
-            {l}
-          </Mono>
-        ))}
-      </View>
+  const position = (n: number) => Math.max(0, Math.min(100, (n - min) / (max - min || 1) * 100));
+  const bands = segments ?? labels.map((label, i) => ({ label, from: min + i / labels.length * (max - min), to: min + (i + 1) / labels.length * (max - min), tone: labels.length === 3 ? i === 0 ? 'ember' as const : i === 2 ? 'gain' as const : 'neutral' as const : 'neutral' as const }));
+  return <View style={{ gap: 6 }} accessibilityRole="progressbar" accessibilityValue={{ min, max, now: Math.max(min, Math.min(max, value)) }}>
+    <View style={{ height: 8, borderRadius: 4, overflow: 'hidden', backgroundColor: t.surface3 }}>
+      {bands.map(band => <View key={band.label} style={{ position: 'absolute', left: `${position(band.from)}%`, width: `${Math.max(0, position(band.to) - position(band.from))}%`, height: '100%', backgroundColor: band.tone === 'ember' ? t.emberTint : band.tone === 'gain' ? t.gainTint : t.surface3 }} />)}
+      {target ? <View style={{ position: 'absolute', left: `${position(target.min)}%`, width: `${Math.max(0, position(target.max) - position(target.min))}%`, height: '100%', backgroundColor: t.gainTint }} /> : null}
     </View>
-  );
+    <View style={{ position: 'absolute', left: `${position(value)}%`, top: -4, width: 4, height: 16, borderRadius: 2, marginLeft: -2, backgroundColor: t.ink }} />
+    <View style={{ flexDirection: 'row', gap: 4 }}>{bands.map((band, i) => <Text key={band.label} variant="callout" tone="ink2" numberOfLines={1} style={{ flex: 1, textAlign: i === 0 ? 'left' : i === bands.length - 1 ? 'right' : 'center' }}>{band.label}</Text>)}</View>
+  </View>;
 }
 
 export type SleepStage = 'awake' | 'light' | 'deep' | 'rem';

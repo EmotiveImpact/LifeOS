@@ -1,5 +1,15 @@
 # Track A — review notes
 
+## Parallel visual / local-data wave — first local slice implemented
+- Explicit user request to run both tracks in parallel overrides the earlier sequencing gate; existing `master` and no-external-services constraints remain.
+- Two disjoint visual workers corrected the owned screen compositions/navigation; main supplied shared image-height/progress/header APIs, vertical payday/equal-code pictures, flexible range bands and reference-specific health fixtures. This is progress, not full visual sign-off: the workers did not render every key in both themes.
+- Track B local foundation: 22 domain tables, Drizzle migrations, area repositories, atomic outbox, user-scoped offline transport/cursors, legacy import, projection reconstruction, local export/delete. Native SQLCipher + SecureStore key initialization fails closed; there is no native plaintext fallback.
+- Existing screen/store API now projects native SQLite data. Writes are serialized; migration removes the legacy plaintext copy only after read-back; deletion does not immediately autosave demo defaults. Web remains a separately labelled AsyncStorage preview adapter.
+- Verified locally: combined mobile typecheck and diff check passed; real in-memory SQLite repository suite 16/16 tests, 107 assertions passed. iOS export 3,304 modules at `/tmp/life-local-wave-ios-1794829428`; Android 3,303 modules at `/tmp/life-local-wave-android-1794829428`; combined exit 0. Web appearance change persisted and survived reload.
+- Native runtime limit: Xcode 16.2 is installed, but `simctl` lists no available devices. SQLCipher/key/migration code has NOT been exercised in a native development build. Do not treat JS exports or Bun SQLite checks as proof of native encryption.
+- Visual follow-through still required: complete dual-theme board comparison; Customise metric ordering; lab interval/range graphics; memory-category filtering. These are not represented as a completed visual approval.
+- No remote database, API/auth server, provider OAuth, real AI, billing, cloud build or deployment was started. This is the first local Track B foundation, not completed Track B or full Phase 1b acceptance.
+
 ## Follow-up UI wiring corrections
 - Fixed all five reported findings: the Fuel age guard now covers every route (including FuelExtras), the routing hook is unconditional, diary rows select stable meal IDs, portion edits use the actual draft's nutrition snapshot, and new habits persist `autoComplete`.
 - Local browser checks: opening “Earlier oats” with a later apple present selected `review-old`; barcode oat milk at 378g retained 181.44 kcal and 1.512g protein (scaled from 120 kcal/1g per 250g); the saved habit contained `autoComplete: true`; direct food search at age 17 rendered the no-numbers fallback. Review-only fixture was backed up and restored; main app state untouched.
@@ -25,7 +35,7 @@
 - Final native export details are recorded in `RENDER_EVIDENCE.json` after reading both completed outputs. These are Hermes exports, not signed store builds.
 
 ## Local stubs / remaining [~]
-- `widgets`, `sharecard`, `watch`, `lockpush`, `androidwidget`, `siri`: layouts exist in `/design`; native extension registration/delivery remains Track B. These are the six remaining `[~]` rows.
+- `widgets`, `sharecard`, `watch`, `lockpush`, `androidwidget`, `siri`: layouts exist in `/design`; native extension registration/delivery remains Track B. These remain six platform-preview limitations; additional visual follow-through is listed above.
 - Auth, voice, OCR, AI, banks, billing, health/provider connections, downloads, memory retrieval and sync are local interface previews. No credentials, charges, remote accounts or real integrations were created. Audio is not recorded/uploaded; proposed facts are persisted only on explicit confirmation.
 - Health/Fuel/experiment/personality scores and projections without an existing core model remain sample observations/previews. The strength view explicitly says the real forgiving model is Track B.
 - Understanding is paged repository fixture metadata (64%/214 total with eight loaded example records), not the core’s different area-readiness metric. Local confirmation/question feedback updates that UI stub; real facts coverage/counting and complete remote exports remain Track B.
@@ -45,4 +55,4 @@
 - Chapter commits use `screens: <chapter>`; final corrections and evidence are committed on the existing branch. Nothing pushed or published.
 - The unchanged v17 board is served at the local preview root and remains open with 221 phones. Only the separate review origin’s demo fixture was refreshed; the main app’s saved state was not reset.
 - Approved pinned packages remain `react-native-web@0.21.4` and `@shopify/react-native-skia@2.14.0`, installed with lifecycle scripts disabled. CanvasKit WASM is local, not CDN-hosted.
-- No backend, real AI calls, unit/E2E tests or screenshot jobs were started. Track B has not begun.
+- No real AI calls or screenshot jobs were started. Track B has now begun with the owner-authorized local foundation above; only its focused repository checks were run.

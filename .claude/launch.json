@@ -24,6 +24,18 @@
       "port": 8082
     },
     {
+      "name": "visual-plan",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/augustusedem/LifeOS/apps/mobile", "run", "start", "--", "--web", "--port", "8083"],
+      "port": 8083
+    },
+    {
+      "name": "visual-body",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/augustusedem/LifeOS/apps/mobile", "run", "start", "--", "--web", "--port", "8084"],
+      "port": 8084
+    },
+    {
       "name": "board",
       "runtimeExecutable": "python3",
       "runtimeArgs": ["/Users/augustusedem/LifeOS/apps/mobile/scripts/serve-board.py"],

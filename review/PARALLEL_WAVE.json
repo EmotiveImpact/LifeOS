@@ -1,0 +1,57 @@
+{
+  "scope": "First parallel visual/local Track B slice, not full approval of either track",
+  "sourceSha256": "d653970afabb2442a97d203034d944cc4233c9894c02e27ec8ea5f64c79d36a6",
+  "sourceFiles": 293,
+  "visual": {
+    "workers": 2,
+    "sourceCorrections": true,
+    "fullDualThemeSignoff": false,
+    "limitedChecks": [
+      "221 reference phones open",
+      "Aim read updates and 375pt button fit",
+      "four-metric selection enforced and reflected on Today"
+    ],
+    "remaining": [
+      "complete screen-by-screen comparison",
+      "metric ordering",
+      "lab range data/graphics",
+      "memory category filtering"
+    ]
+  },
+  "localData": {
+    "domainTables": 22,
+    "sqliteRepositoryTests": 16,
+    "assertions": 107,
+    "testsPassed": true,
+    "nativeSQLCipherImplemented": true,
+    "nativeEncryptionRuntimeVerified": false,
+    "nativePlaintextFallback": false,
+    "realNetworkTransportConnected": false,
+    "webMode": "explicit AsyncStorage visual preview",
+    "nativeMode": "SQLite + Drizzle + SecureStore key"
+  },
+  "integration": {
+    "typecheckExit": 0,
+    "diffCheckExit": 0,
+    "webPreferenceSurvivedReload": true,
+    "coreLogicChanges": false
+  },
+  "exports": {
+    "ios": {
+      "modules": 3304,
+      "exitCode": 0,
+      "output": "/tmp/life-local-wave-ios-1794829428"
+    },
+    "android": {
+      "modules": 3303,
+      "exitCode": 0,
+      "output": "/tmp/life-local-wave-android-1794829428"
+    }
+  },
+  "nativeTooling": {
+    "xcode": "16.2",
+    "availableSimulatorDevices": 0,
+    "androidToolingOnPath": false
+  },
+  "externalServicesStarted": false
+}

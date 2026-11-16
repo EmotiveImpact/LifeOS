@@ -4,16 +4,18 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { HeroUINativeProvider } from 'heroui-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { SheetProvider, useLifeFonts, useTokens } from '@/design';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { Button, SheetProvider, Text, space, useLifeFonts, useTokens } from '@/design';
 import { SeedProvider, useSeed } from '@/state/SeedProvider';
 import '../global.css';
 
 void SplashScreen.preventAutoHideAsync();
 function AppShell() {
-  const fonts = useLifeFonts(), { data, hydrated } = useSeed(), t = useTokens();
-  useEffect(() => { if (fonts && hydrated) void SplashScreen.hideAsync(); }, [fonts, hydrated]);
-  if (!fonts || !hydrated) return null;
+  const fonts = useLifeFonts(), { hydrated, storageError, retryStorage } = useSeed(), t = useTokens();
+  useEffect(() => { if (fonts && (hydrated || storageError)) void SplashScreen.hideAsync(); }, [fonts, hydrated, storageError]);
+  if (!fonts) return null;
+  if (storageError) return <SafeAreaView style={{ flex: 1, backgroundColor: t.canvas, padding: space.gutter, justifyContent: 'center', gap: space.md }}><Text variant="headline">Your local data is unavailable</Text><Text variant="body" tone="ink2">Nothing has been reset. The app could not open or save its local store. Native builds require encrypted storage support.</Text><Button label="Try again" onPress={retryStorage} /></SafeAreaView>;
+  if (!hydrated) return null;
   return <><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas }, animation: 'default' }}>
     <Stack.Screen name="(tabs)" />
     <Stack.Screen name="(sheets)" options={{ presentation: 'formSheet', sheetAllowedDetents: [.55, .92], sheetGrabberVisible: false, contentStyle: { backgroundColor: t.surface } }} />

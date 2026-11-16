@@ -26,7 +26,7 @@ export type TopBarProps =
   | { kind: 'root'; eyebrow?: string; title: string; actions?: TopBarAction[]; avatar?: ReactNode }
   | { kind: 'push'; title?: string; action?: TopBarAction; onBack: () => void; onImage?: boolean }
   | { kind: 'sheet'; title: string; action?: TopBarAction; onClose: () => void }
-  | { kind: 'flow'; center?: ReactNode; step?: string; onClose: () => void; onImage?: boolean };
+  | { kind: 'flow'; center?: ReactNode; step?: string; action?: TopBarAction; onClose: () => void; onImage?: boolean };
 
 /** Fixed heights, so content below always starts in the same place. */
 export const TOP_BAR_HEIGHT = { root: 72, push: 48, sheet: 64, flow: 48 } as const;
@@ -66,7 +66,7 @@ export function TopBar(props: TopBarProps) {
       <View style={[styles.bar, { backgroundColor: props.onImage ? 'transparent' : t.canvas }]}>
         <ActionButton onImage={props.onImage} action={{ kind: 'icon', icon: 'close', label: 'Close', onPress: props.onClose }} />
         <View style={styles.center}>{props.center}</View>
-        {props.step ? <Text variant="mono" tone={props.onImage ? 'paper2' : 'ink2'} style={styles.step}>{props.step}</Text> : <View style={styles.spacer} />}
+        {props.action ? <ActionButton onImage={props.onImage} action={props.action} /> : props.step ? <Text variant="mono" tone={props.onImage ? 'paper2' : 'ink2'} style={styles.step}>{props.step}</Text> : <View style={styles.spacer} />}
       </View>
     );
   }

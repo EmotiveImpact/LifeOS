@@ -34,7 +34,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [x] | `nudge` | Nudge | Card / notification | Today or Lock Screen | component on Today / anywhere |
 | [x] | `pulse` | Pulse | Sheet | Today check-in | `/(sheets)/pulse` · formSheet |
 | [x] | `checkin` | Checking in | Sheet | Today | `/(sheets)/checkin` · formSheet |
-| [x] | `customise` | Customise Today | Sheet | Today → edit | `/(sheets)/customise` · formSheet |
+| [~] | `customise` | Customise Today | Sheet | Today → edit | `/(sheets)/customise` · formSheet · metric selection wired; drag ordering pending |
 | [x] | `routines` | Your routines | Push | Today → routines | `/today/routines` |
 | [x] | `why` | Why am I seeing this? | Sheet | “Why am I seeing this?” on any card | `/(sheets)/why` · formSheet |
 | [x] | `calendar` | Calendar-aware day | Push | Today → day strip | `/today/calendar` |
@@ -111,7 +111,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [x] | `taxcheck` | Tax & NI check | Push | Toolkit or Money | `/plan/tools/taxcheck` |
 | [x] | `income` | Income & structure | Push | Toolkit or Work | `/plan/tools/income` |
 | [x] | `rentbuy` | Rent vs buy | Push | Toolkit or Home | `/plan/tools/rentbuy` |
-| [x] | `blood` | Bloodwork reader | Push | Toolkit or Health | `/plan/tools/blood` |
+| [~] | `blood` | Bloodwork reader | Push | Toolkit or Health | `/plan/tools/blood` · core interpretation wired; supplied lab intervals needed for range graphics |
 | [x] | `protect` | Protection review | Push | Toolkit | `/plan/tools/protect` |
 | [x] | `growth` | Growth path | Push | Toolkit | `/plan/tools/growth` |
 | [x] | `bedrooms` | Your next home: bedrooms | Push | Toolkit or Home | `/plan/tools/bedrooms` |
@@ -244,7 +244,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [x] | `knows` | What life knows | Push | You → What life knows | `/you/knows` |
 | [x] | `levels` | Your levels | Push | You → Levels | `/you/levels` |
 | [x] | `experiment` | Experiment: caffeine | Push | You → Experiments | `/you/experiment` |
-| [x] | `memory` | What life remembers | Push | You → What life remembers | `/you/memory` |
+| [~] | `memory` | What life remembers | Push | You → What life remembers | `/you/memory` · local editing/forgetting UI; category filtering pending |
 | [x] | `shared` | Shared life | Push | You → Shared | `/you/shared` |
 | [x] | `profile` | Your details | Push | You → your details | `/you/profile` |
 

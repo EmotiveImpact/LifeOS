@@ -1,12 +1,13 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Uniwind } from 'uniwind';
 import { setFeedbackPrefs } from '@/design/feedback';
 import { engineSnapshot, seed, seedAim, seedMeal, seedPeople, seedProfile, seedPulseLog, seedRecords, seedKnownRecords, seedKnowledge, type ChiefAim, type FiledRecord, type MealItem } from './seed';
+import { openProjectionStorage } from './persistence';
+import type { ProjectionStorage } from './persistence.types';
 import type { UserProfile } from '@life/core/types';
 
-type SeedData = {
+export type SeedData = {
   profile: UserProfile; onboardingDone: boolean; aim: ChiefAim | null; records: FiledRecord[]; proposals: FiledRecord[]; knowledge: typeof seedKnowledge;
   completed: string[]; missionSteps: Record<string, boolean>; selectedMission: string;
   pulseLog: { at: string; moodId: string; x: number; y: number }[];
@@ -23,17 +24,79 @@ const initial: SeedData = {
   prefs: { dark: true, sounds: true, haptics: true, handDrawn: false, hideNumbers: false, hideBalances: false, glimpses: true, followMood: true, look: 'mix', notifications: true, privateMode: false, addback: 'Half' },
   flags: {}, choices: {}, drafts: {},
 };
-type SeedContextValue = { data: SeedData; hydrated: boolean; set: (patch: Partial<SeedData>) => void; pref: <K extends keyof SeedData['prefs']>(key: K, value: SeedData['prefs'][K]) => void; flag: (key: string, value?: boolean) => void; choose: (key: string, value: string) => void; draft: (key: string, value: string) => void; confirmRecords: () => void; reset: () => void; engine: ReturnType<typeof engineSnapshot> };
+type SeedContextValue = {
+  data: SeedData; hydrated: boolean; storageError: boolean; storageMode: ProjectionStorage['mode'] | null;
+  retryStorage: () => void; exportEverything: () => Promise<unknown>; reset: () => Promise<boolean>;
+  set: (patch: Partial<SeedData>) => void;
+  pref: <K extends keyof SeedData['prefs']>(key: K, value: SeedData['prefs'][K]) => void;
+  flag: (key: string, value?: boolean) => void; choose: (key: string, value: string) => void; draft: (key: string, value: string) => void;
+  confirmRecords: () => void; engine: ReturnType<typeof engineSnapshot>;
+};
 const Context = createContext<SeedContextValue | null>(null);
-const KEY = 'life_track_a_v17';
+
 export function SeedProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
   const [data, setData] = useState(initial), [hydrated, setHydrated] = useState(false);
-  useEffect(() => { let active = true; AsyncStorage.getItem(KEY).then(raw => { if (!active) return; if (raw) { try { const saved = JSON.parse(raw); setData({ ...initial, ...saved, prefs: { ...initial.prefs, ...saved.prefs } }); } catch { /* Keep the safe local fixtures. */ } } }).catch(() => { /* Keep local fixtures if storage is unavailable. */ }).finally(() => { if (active) setHydrated(true); }); return () => { active = false; }; }, []);
-  useEffect(() => { Uniwind.setTheme((data.choices.appearance === 'System' ? systemScheme === 'dark' : data.prefs.dark) ? 'dark' : 'light'); setFeedbackPrefs({ sound: data.prefs.sounds, haptics: data.prefs.haptics }); if (hydrated) AsyncStorage.setItem(KEY, JSON.stringify(data)).catch(() => {}); }, [data, hydrated, systemScheme]);
+  const [storageError, setStorageError] = useState(false), [storageMode, setStorageMode] = useState<ProjectionStorage['mode'] | null>(null), [retry, setRetry] = useState(0);
+  const storage = useRef<ProjectionStorage | null>(null), writes = useRef<Promise<void>>(Promise.resolve());
+  const latest = useRef(data), lastQueued = useRef(''), revision = useRef(0), committed = useRef(0);
+  const resetting = useRef<true | SeedData | null>(null);
+  latest.current = data;
+
+  useEffect(() => {
+    let active = true, opened: ProjectionStorage | null = null;
+    setHydrated(false); setStorageError(false);
+    void (async () => {
+      await writes.current;
+      opened = await openProjectionStorage();
+      if (!active) { await opened.close(); return; }
+      storage.current = opened;
+      // Retry an uncommitted UI projection rather than losing it on recovery.
+      if (revision.current > committed.current) {
+        await opened.save(latest.current);
+        committed.current = revision.current;
+      }
+      const loaded = await opened.load();
+      if (loaded !== null && (typeof loaded !== 'object' || Array.isArray(loaded))) throw new Error('Invalid local projection');
+      const saved = (loaded ?? {}) as Partial<SeedData>;
+      const next: SeedData = { ...initial, ...saved, prefs: { ...initial.prefs, ...saved.prefs }, knowledge: { ...initial.knowledge, ...saved.knowledge, areas: { ...initial.knowledge.areas, ...saved.knowledge?.areas } } };
+      if (!active) return;
+      lastQueued.current = JSON.stringify(next);
+      latest.current = next; setData(next); setStorageMode(opened.mode); setHydrated(true);
+    })().catch(() => { if (active) setStorageError(true); });
+    return () => {
+      active = false; storage.current = null;
+      if (opened) { const closing = opened; writes.current = writes.current.then(() => closing.close()).catch(() => {}); }
+    };
+  }, [retry]);
+
+  useEffect(() => {
+    Uniwind.setTheme((data.choices.appearance === 'System' ? systemScheme === 'dark' : data.prefs.dark) ? 'dark' : 'light');
+    setFeedbackPrefs({ sound: data.prefs.sounds, haptics: data.prefs.haptics });
+  }, [data.prefs, data.choices.appearance, systemScheme]);
+
+  useEffect(() => {
+    if (!hydrated || storageError || !storage.current) return;
+    if (resetting.current) {
+      if (resetting.current === data) resetting.current = null;
+      return; // Never repopulate a deleted database from demo defaults.
+    }
+    const serialized = JSON.stringify(data);
+    if (serialized === lastQueued.current) return;
+    lastQueued.current = serialized;
+    const target = storage.current, snapshot = data, version = ++revision.current;
+    writes.current = writes.current.then(async () => {
+      await target.save(snapshot);
+      committed.current = version;
+    }).catch(() => setStorageError(true));
+  }, [data, hydrated, storageError]);
+
   const engine = useMemo(() => engineSnapshot(data.profile, data.completed), [data.profile, data.completed]);
   const value: SeedContextValue = {
-    data, hydrated, engine, set: patch => setData(current => {
+    data, hydrated, storageError, storageMode, engine,
+    retryStorage: () => setRetry(value => value + 1),
+    exportEverything: async () => { await writes.current; if (!storage.current) throw new Error('Local data unavailable'); return storage.current.exportEverything(); },
+    set: patch => setData(current => {
       const next = { ...current, ...patch };
       if (patch.records && !patch.knowledge) next.knowledge = { ...current.knowledge, recordCount: current.knowledge.recordCount + patch.records.filter(record => record.status === 'confirmed').length - current.records.filter(record => record.status === 'confirmed').length };
       return next;
@@ -48,7 +111,18 @@ export function SeedProvider({ children }: { children: ReactNode }) {
       const records = [...new Map([...d.records, ...accepted].map(record => [record.id, record])).values()];
       return { ...d, records, proposals: [], knowledge: { ...d.knowledge, overall: Math.max(d.knowledge.overall, 81), areas: Object.fromEntries(Object.entries(d.knowledge.areas).map(([area, value]) => [area, Math.min(98, value + Math.max(0, 81 - d.knowledge.overall))])) as typeof seedKnowledge.areas, recordCount: d.knowledge.recordCount + accepted.filter(record => !d.records.some(existing => existing.id === record.id && existing.status === 'confirmed')).length }, profile: accepted.reduce((profile, record) => ({ ...profile, ...record.profilePatch }), d.profile) };
     }),
-    reset: () => { setData({ ...initial, onboardingDone: false }); },
+    reset: async () => {
+      if (!storage.current || resetting.current) return false;
+      resetting.current = true;
+      try {
+        await writes.current;
+        await storage.current.clear();
+        const next = { ...initial, onboardingDone: false };
+        lastQueued.current = JSON.stringify(next); revision.current = 0; committed.current = 0;
+        resetting.current = next; latest.current = next; setData(next);
+        return true;
+      } catch { resetting.current = null; setStorageError(true); return false; }
+    },
   };
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
