@@ -79,6 +79,7 @@ Then save screenshots (simulator/emulator, **light + dark**) of every screen tou
 🛑 **Gate 2**
 
 ## Phase 3 — Missions and memory (#16–18)
+- **Memory with mem0 (open source, self-hosted):** `memory.ts` → mem0 configured with Neon Postgres + pgvector as its store (use mem0's TypeScript SDK in open-source mode if it supports pgvector; otherwise run mem0's open-source Python service alongside the API). Talk and Chat add memories; each reply retrieves the relevant ones; "What life remembers" lists, edits and deletes them, showing each one's source. Pin the mem0 version (vendor/REFERENCES.lock.md).
 - Mission detail: StageStepper, reference + copy, why, steps, the Draft sheet (editable, copy, open in Mail), activity timeline, one primary action; completing it fires `feedback.cleared()`.
 - Draft message sheet. Things to know (filter by area, source on every card).
 - Shared transition: mission card → detail (§42 #3).

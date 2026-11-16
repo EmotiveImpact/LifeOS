@@ -14,7 +14,7 @@
 | [actualbudget/actual](https://github.com/actualbudget/actual/tree/33912a083822) | MIT | master | `33912a083822` | 2026-11-15 | Not copied (large; MIT) | Read for envelope budgeting and rules; copy specific files later if needed. |
 | [maybe-finance/maybe](https://github.com/maybe-finance/maybe/tree/77b546983275) | AGPL-3.0 | main | `77b546983275` | 2025-07-24 | Not copied (AGPL-3.0) | Ideas only. |
 | [the-momentum/open-wearables](https://github.com/the-momentum/open-wearables/tree/dbcdc6995ee7) | MIT | main | `dbcdc6995ee7` | 2026-11-15 | Not copied (MIT, a service) | Evaluate as a self-hosted aggregator (Phase 11). |
-| [mem0ai/mem0](https://github.com/mem0ai/mem0/tree/f1791daa86d4) | Apache-2.0 | main | `f1791daa86d4` | 2026-11-06 | Not copied (Apache-2.0) | Patterns for long-term memory. |
+| [mem0ai/mem0](https://github.com/mem0ai/mem0/tree/f1791daa86d4) | Apache-2.0 | main | `f1791daa86d4` | 2026-11-06 | Dependency (self-hosted) | life's memory engine on our Neon pgvector; pin the package version when installed. |
 | [neuropsychology/NeuroKit](https://github.com/neuropsychology/NeuroKit/tree/f49ad489fd29) | MIT | master | `f49ad489fd29` | 2026-11-01 | Not copied (MIT, Python) | Offline validation of HRV maths in `tools/validation/`. |
 | [paulvangentcom/heartrate_analysis_python](https://github.com/paulvangentcom/heartrate_analysis_python/tree/ef48d23b73d2) | MIT | master | `ef48d23b73d2` | 2025-12-30 | Not copied (MIT, Python) | Offline validation. |
 | [open-spaced-repetition/ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs/tree/e74ffc7c944e) | MIT | main | `e74ffc7c944e` | 2026-11-13 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |

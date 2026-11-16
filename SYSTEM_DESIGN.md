@@ -69,6 +69,7 @@ flowchart LR
 |---|---|
 | **API** | `/sync/push`, `/sync/pull`, `/ai/*` (talk, ask, extract, food, lesson, scene, analyse, showMe, coach), `/oauth/*` callbacks, `/files/sign`, `/push/register`, `/account/export`, `/account/delete`. Validates every payload with zod. Rate-limits per user. |
 | **Neon Postgres** | Mirror of the phone tables plus `users`, `devices`, `sync_ops`, `oauth_tokens` (encrypted), `lesson_cache`, `scene_cache`, `ai_usage`. Every row has `user_id`; row-level security is the second lock. A branch per build phase. |
+| **Memory (mem0)** | Open-source mem0, self-hosted, storing per-user memories in Neon pgvector: add from conversations, search per reply, edit and delete from "What life remembers". |
 | **Auth** | Better Auth (Apple, Google, email). Short-lived access token + refresh; the phone stores tokens in SecureStore. |
 | **AI router** | Maps a job to a tier, never a fixed model. Tiers: fast (filing, extraction, tips), strong (lessons, analysis, coach, decisions), vision (meals, letters), voice (live tell-back). Picks by `tools/evals` scores. **Numbers always come from the engine;** the model only explains and drafts. Outputs are schema-checked JSON. |
 | **Wearables** | WHOOP and Oura via their official OAuth APIs (webhooks where offered) → normalised samples → synced to the phone. Garmin/Polar/Suunto via an aggregator (open-wearables, self-hosted) later. **Never** read a WHOOP strap over Bluetooth. |
@@ -97,7 +98,7 @@ All tables: `id (uuid)`, `user_id`, `created_at`, `updated_at`, `deleted_at` (so
 | `learning_record` | topic, source (library/teachme), level, guess, puzzles[], teach_back{covered, missing}, fsrs{due, stability, difficulty}, led_to |
 | `plan_day` + `nudge` | date, moves[{kind, ref, reasons[]}]; nudge: at, kind, outcome |
 | `bandit_arm` | context_key, arm, alpha, beta |
-| `memory` | text, source, last_used, user_editable |
+| `memory` | managed by mem0 in pgvector: text, embedding, user_id, source, last_used (editable and deletable by the user) |
 | `prefs` | look, sounds, haptics, hand_drawn, hide_numbers, notifications{}, private_mode |
 
 ## 5. The key flows

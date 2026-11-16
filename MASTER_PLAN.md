@@ -66,7 +66,7 @@ Behind one interface, `src/services/voice.ts`, so we can swap providers without 
 
 **How we choose:** for every job, a small **eval set** (30–50 real examples with the right answers) lives in `tools/evals/`. Any new model, including Google's newest Gemini, Claude, GPT or an open model, gets run against it, and wins the tier only if it's better on quality, cost and speed. Your Feynman app already runs Claude with an OpenAI fallback and Gemini for live voice, so the routing pattern exists.
 
-**On Google's latest model:** I can't confirm which release you mean from here, so I won't make claims about it. Gemini models have historically been strong at **vision, long documents and live voice**, which makes them good candidates for meal photos, letter scanning and Tell it back. Put it through the evals; don't lock in.
+**Google's Gemini 4 Hydrogen (launched 12 Nov 2026):** a fast, Flash-tier model, generally available in the Gemini API and AI Studio (model ID reported as `gemini-4-hydrogen`), with a context window of up to 1M tokens. Reported price: $1.50 per million input tokens and $7.50 per million output (check Google's pricing page). It's a **strong candidate for the Fast tier** (filing, extraction, food tips, nudge copy) and worth testing for the **Vision tier** (meal photos, letters, labels). It goes through the same evals as every model; it wins a tier only if it beats the others on quality, speed and cost.
 
 **Rules that never change, whatever the model:** numbers come from `packages/core`, never from the model. Outputs are schema-checked JSON. Money is guidance, not advice; health is wellness, not diagnosis. No training on user data without opt-in.
 
@@ -81,7 +81,7 @@ Photo reading and new lessons stay in the cloud and ask first. Pick the exact op
 
 ### 3.3c Looked at, not adopted (16 Nov 2026)
 - **Keiki** (your product on iMessage/WhatsApp), **Supermemory** (hosted AI memory) and **Maritime** (hosted agent computers) were assessed. None is part of the plan. Keiki is the most interesting (a possible "text life" channel later).
-- **Memory** stays in our own stack: Neon Postgres + pgvector, with mem0-style extraction (mem0 is Apache-2.0 and can run on our database), and on-device embeddings for private mode.
+- **Memory = mem0 (open source, Apache-2.0), self-hosted on our own Neon Postgres with pgvector.** mem0 pulls facts out of conversations, de-duplicates and updates them, and finds the relevant ones for each reply. It sits behind `memory.ts`, one memory space per user; "What life remembers" lists, edits and deletes them. No third party holds the facts. On-device embeddings for private mode.
 - **"Do it for me" is parked.** Browser automation at scale is hard (sign-ins, sites blocking bots, cost, liability). If it comes back, it starts with email and letter tasks drafted by our own models and approved by the user.
 
 ### 3.4 A "decision model": yes, but in the right place
@@ -157,6 +157,7 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Voice behind `voice.ts`: on-device first, Phonon for speech, cloud fallback.** |
 | 15 Nov 2026 | **Models chosen per job by evals; no lock-in. Today's plan is decided by rules + a bandit, not an LLM.** |
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
+| 16 Nov 2026 | **Memory: mem0 (open source) self-hosted on Neon pgvector. Gemini 4 Hydrogen added as the first Fast-tier candidate for evals.** |
 | 16 Nov 2026 | **Keiki, Supermemory and Maritime looked at, not adopted. Memory: own Postgres + pgvector (mem0-style). "Do it for me" parked.** |
 | 16 Nov 2026 | **Fuel brought to Cal AI level (13 screens). Voice: Phonon on iPhone, Kitten TTS Nano elsewhere. On-device AI: built-in OS models first, small open models as the fallback download.** |
 | 16 Nov 2026 | **Build UI-first: Track A builds every screen with seed data and light checks; Track B makes it real and adds tests.** |
