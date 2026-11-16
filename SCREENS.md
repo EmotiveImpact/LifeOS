@@ -77,10 +77,10 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [ ] | `aimnew` | Write your Aim | Full screen | setup or Plan → Aim | `/(flows)/aimnew` · fullScreenModal |
-| [ ] | `aim` | Your Aim | Push | Aim pinned on Plan | `/plan/aim/aim` |
-| [ ] | `gambit` | This month's gambit | Push | Aim → this month | `/plan/aim/gambit` |
-| [ ] | `glimpse` | A glimpse, earned | Full screen | earned, on Today | `/(flows)/glimpse` · fullScreenModal |
+| [~] | `aimnew` | Write your Aim | Full screen | setup or Plan → Aim | `/(flows)/aimnew` · fullScreenModal |
+| [~] | `aim` | Your Aim | Push | Aim pinned on Plan | `/plan/aim/aim` |
+| [~] | `gambit` | This month's gambit | Push | Aim → this month | `/plan/aim/gambit` |
+| [~] | `glimpse` | A glimpse, earned | Full screen | earned, on Today | `/(flows)/glimpse` · fullScreenModal |
 
 ## Plan · Money (8)
 
