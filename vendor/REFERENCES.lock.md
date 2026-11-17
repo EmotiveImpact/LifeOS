@@ -37,11 +37,16 @@ These packages are specified by `SYSTEM_DESIGN.md` §2. The Expo versions match 
 
 | Package | Exact version | Licence | npm integrity |
 |---|---|---|---|
-| `expo-sqlite` | `58.0.17` | MIT | `sha512-nzIS8doaxGYPBu+jJD1aa1wsF5vsafLEr3ji4wwR1MWd66KV3u4lKotJPylxJkP08DZWn2uUnTXyMw9t7BdGUA==` |
+| `expo-sqlite` | `58.0.18` | MIT | `sha512-EbRG/tb4Q+M28sZUY+58TSRrj/bK3RBOoGG8xXeobOJnMuBCMhstoKZlTJpu79ydzqURO5TXdbVhqk9suh39rQ==` |
 | `expo-secure-store` | `58.0.3` | MIT | `sha512-RpubZfqJREEcwKbx3HFoWbtDd31t+yESMj7Ei5/mGQp5vViwUBzL4nUCZRLFyt+O690mT8We7dDtIUZeIk6LbQ==` |
 | `expo-crypto` | `58.0.8` | MIT | `sha512-yMSiMlallOweQ28oQ3BqJf6I/4ZoBggFNRg+PfjG1NbQWBWzGKmkPPUrd3yT0oPW4P+AYppg+Mw6xoAYddLUKA==` |
-| `expo-dev-client` | `58.0.20` | MIT | `sha512-Wp1q6KfvfwQN72M4lGW5KNnnZtRO3XdgcHstX33NlUE5cV3tw3LGHX6hgHu0xN19zKBK9Wb6yiN7JU7mGApMwQ==` |
+| `expo-dev-client` | `58.0.21` | MIT | `sha512-W1ZWddy0p64Z8j8FNOU4bCRDhbU8b5Gt7yZRouiw7bkyCfY5T3yODKTOLCVuhjbs3Oy3aUH6kLdn0i6hXozhqA==` |
 | `drizzle-orm` | `0.45.4` | Apache-2.0 | `sha512-NiM1YZpJ2UxyeE67DpDDZ+Tsw4YLX3trSlkNT7Tm9eKoUNb1LvaAaQzXgYQsWs+AQ9TUmmwMmBOCXuqqxUWKKQ==` |
+
+## Brain / attachment package pins (16 Nov 2026)
+- Expo SDK 58 pins: `expo-asset@58.0.21`, `expo-document-picker@58.0.5`, `expo-image-picker@58.0.10`, `expo-file-system@58.0.14` (MIT). npm integrity: `apps/mobile/package-lock.json`.
+- Android OCR: `com.google.mlkit:text-recognition:16.0.1`, bundled Latin recognition under Google's ML Kit SDK terms, as specified in SPEC §2.2. This is a binary SDK dependency, not copied reference source.
+- Phonon: owner reference still points to Swift package `gradium-ai/xn-ptts` version `0.6.0`; the GitHub tag lookup returned 404 under current access. No unverified package, voice weights or fabricated substitute has been installed.
 
 ## Copied folders
 - `vendor/fenny/` — Feynman-voice-app at `fc32865ed16f` (docs, api, scene, teach, ui, voice: the Phonon Expo module and the Kitten TTS package). Owner’s code.

@@ -7,7 +7,7 @@ import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
-import { durations, floatShadow, radius, springs } from '../tokens';
+import { componentSize, radius, space, touch } from '../tokens';
 
 /* ───────────────────────── 21. DottedOrb ───────────────────────── */
 
@@ -70,53 +70,24 @@ function OrbDot({ i, r, size, dot, color, phase, thinking }: { i: number; r: num
 
 export type DockItem = { key: string; label: string; icon: (color: string) => ReactNode; onLongPress?: () => void };
 
-/**
- * DESIGN.md §6.12 + §43: floating solid pill with 4 items. Active = inverted capsule with label.
- * Pass `hidden` from your scroll handler (true while scrolling down) to tuck it away.
- */
-export function Dock({ items, active, onChange, hidden }: { items: DockItem[]; active: string; onChange: (key: string) => void; hidden?: boolean }) {
+/** Owner-approved full-width navigation: steady, solid, all labels visible.
+ * This sits in layout flow so screens end above it instead of underneath it. */
+export function Dock({ items, active, onChange }: { items: DockItem[]; active: string; onChange: (key: string) => void }) {
   const t = useTokens();
   const insets = useSafeAreaInsets();
-  const calm = useCalmMotion();
-  const y = useSharedValue(0);
-  useEffect(() => {
-    const to = hidden ? 120 : 0;
-    y.value = calm ? withTiming(to, { duration: durations.quick }) : withSpring(to, springs.smooth);
-  }, [hidden, calm, y]);
-  const anim = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   return (
-    <Animated.View pointerEvents="box-none" style={[styles.dockWrap, { bottom: 12 + insets.bottom }, anim]}>
-      {/* Shadow lives on the outer view; the inner one clips the blur to the pill shape. */}
-      <View style={[{ borderRadius: radius.full }, floatShadow(t.shadow)]}>
+    <View style={{ flexShrink: 0, width: '100%', paddingBottom: insets.bottom, backgroundColor: t.dockBg }}>
       <View style={styles.dock} accessibilityRole="tablist">
-        {/* Solid surface + hairline. No blur or glass anywhere (DESIGN.md §43). */}
-        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.dockBg, borderRadius: radius.full }]} />
-        {items.map((it) => {
-          const on = it.key === active;
-          return (
-            <Press
-              key={it.key}
-              haptic="select"
-              onPress={() => onChange(it.key)}
-              onLongPress={it.onLongPress}
-              delayLongPress={350}
-              accessibilityRole="tab"
-              accessibilityLabel={it.label}
-              accessibilityState={{ selected: on }}
-              style={[styles.dockItem, on && { backgroundColor: t.ink, paddingHorizontal: 18 }]}
-            >
-              {it.icon(on ? t.canvas : t.ink2)}
-              {on ? (
-                <Text variant="micro" style={{ color: t.canvas }}>
-                  {it.label}
-                </Text>
-              ) : null}
-            </Press>
-          );
+        {items.map(it => {
+          const selected = it.key === active;
+          const color = selected ? t.ink : t.ink2;
+          return <Press key={it.key} haptic="select" onPress={() => onChange(it.key)} onLongPress={it.onLongPress} delayLongPress={350} accessibilityRole="tab" accessibilityLabel={it.label} accessibilityState={{ selected }} style={styles.dockItem}>
+            {it.icon(color)}
+            <Text variant="micro" numberOfLines={1} style={{ color }}>{it.label}</Text>
+          </Press>;
         })}
       </View>
-      </View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -168,7 +139,6 @@ export const Sheet = forwardRef<SheetHandle, SheetProps>(function Sheet({ childr
 export { BottomSheetModalProvider as SheetProvider } from '@gorhom/bottom-sheet';
 
 const styles = StyleSheet.create({
-  dockWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  dock: { flexDirection: 'row', alignItems: 'center', gap: 4, padding: 6, borderRadius: radius.full, overflow: 'hidden' },
-  dockItem: { height: 48, minWidth: 52, borderRadius: radius.full, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 14 },
+  dock: { height: componentSize.bottomNav, flexDirection: 'row', alignItems: 'center', gap: space.xxs, paddingHorizontal: space.xs, paddingVertical: space.xs },
+  dockItem: { flex: 1, minWidth: touch.min, minHeight: touch.min, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', gap: space.xxs, paddingHorizontal: space.xxs },
 });

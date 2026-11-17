@@ -51,7 +51,7 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 | [x] | `talk` | Talk | Full screen | hold the Talk button | `/(flows)/talk` · fullScreenModal |
 | [x] | `understood` | Understood | Sheet | after Talk | `/(sheets)/understood` · formSheet |
 | [x] | `ask` | Ask, then file | Full screen | Chat → a question | `/(flows)/ask` · fullScreenModal |
-| [x] | `attach` | Attach | Sheet | + in Chat | `/(sheets)/attach` · formSheet |
+| [x] | `attach` | Attach | Full screen | + in Chat | `/(flows)/attach` · fade (owner feedback) |
 | [x] | `scan` | Letter, understood | Full screen | + → Scan a letter | `/(flows)/scan` · fullScreenModal |
 | [x] | `chat` | Chat | Full screen | tap the Talk button | `/(flows)/chat` · fullScreenModal |
 | [x] | `chathistory` | Your conversations | Push | Chat → ⋯ | `/talk/chathistory` |

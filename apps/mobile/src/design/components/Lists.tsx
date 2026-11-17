@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Press } from '../Press';
 import { Callout, Mono, Text, Title } from '../Text';
 import { useTokens } from '../theme';
-import { areaColors, cardShadow, radius, type Area } from '../tokens';
+import { areaColors, cardShadow, componentSize, radius, space, touch, type Area } from '../tokens';
 import { Slider } from './Controls';
 
 export function useAreaColor(area: Area): string {
@@ -40,13 +40,13 @@ export function ListRow({ title, sub, icon, area, right, chevron, onPress, tone 
         </View>
       ) : null}
       {dot ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dot }} /> : null}
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
         <Text variant="body" tone={tone === 'ember' ? 'ember' : 'ink'} style={{ fontFamily: sub ? 'Inter_500Medium' : 'Inter_400Regular' }}>
           {title}
         </Text>
         {sub ? <Callout tone="ink2">{sub}</Callout> : null}
       </View>
-      {right}
+      {right ? <View style={{ flexShrink: 1, maxWidth: '42%', alignItems: 'flex-end' }}>{right}</View> : null}
       {chevron ? <Ionicons name="chevron-forward" size={18} color={t.inkQuiet} /> : null}
     </>
   );
@@ -102,7 +102,7 @@ export function Checklist({ items, onToggle, header, count }: { items: CheckItem
           <View style={[styles.box, it.done ? { backgroundColor: t.ink } : { backgroundColor: t.surface3 }]}>
             {it.done ? <Ionicons name="checkmark" size={14} color={t.canvas} /> : null}
           </View>
-          <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
             <Text variant="body" tone={it.done ? 'quiet' : 'ink'} style={it.done ? { textDecorationLine: 'line-through' } : undefined}>
               {it.label}
             </Text>
@@ -231,13 +231,13 @@ export function HabitRow({ name, cue, last14, meta, source, onToggleToday }: Hab
         ) : null}
       </View>
       <Callout tone="ink2">{cue}</Callout>
-      <View style={{ flexDirection: 'row', gap: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xxs }}>
         {last14.map((d, i) => {
           const today = i === last14.length - 1;
           const bg = d ? t.ink : today ? t.surface2 : d === false ? t.surface3 : t.surface3;
           const cell = <View style={{ height: 22, borderRadius: 5, backgroundColor: bg, borderWidth: today && !d ? 1.5 : 0, borderColor: t.ember }} />;
           return today && onToggleToday ? (
-            <Press key={i} haptic={d ? 'select' : 'complete'} onPress={onToggleToday} accessibilityRole="checkbox" accessibilityState={{ checked: !!d }} accessibilityLabel={`${name} today`} style={{ flex: 1 }}>
+            <Press key={i} haptic={d ? 'select' : 'complete'} onPress={onToggleToday} accessibilityRole="checkbox" accessibilityState={{ checked: !!d }} accessibilityLabel={`${name} today`} hitSlop={{ left: space.md, right: space.md }} style={{ flex: 1, minHeight: touch.min, justifyContent: 'center' }}>
               {cell}
             </Press>
           ) : (
@@ -358,8 +358,8 @@ export function MetricTile({ label, value, unit, meaning, children, onPress }: {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, minHeight: 52 },
-  icon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.sm, minHeight: componentSize.row },
+  icon: { width: componentSize.rowIcon, height: componentSize.rowIcon, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   group: { borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 2 },
   groupHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, paddingBottom: 4 },
   box: { width: 22, height: 22, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },

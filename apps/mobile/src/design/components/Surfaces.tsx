@@ -74,7 +74,7 @@ export function Card({ variant = 'default', domain = 'admin', padding, style, ch
   const base: ViewStyle = {
     backgroundColor: variant === 'inverted' ? t.ink : isTile ? t.surface2 : t.surface,
     borderRadius: isTile ? radius.md : radius.lg,
-    padding: padding ?? (isTile ? 12 : 16),
+    padding: padding ?? (isTile ? space.sm : space.cardPad),
     // No borders, ever (DESIGN §47): fill + a soft shadow. Tiles sit flat inside cards.
     ...(isTile || variant === 'inverted' ? null : cardShadow(t.scheme)),
   };
@@ -152,7 +152,7 @@ export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAt
       disabled={disabled}
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
-      style={[styles.button, { backgroundColor: bg, opacity: disabled ? 0.4 : 1, height: compact ? touch.min : componentSize.button }, style]}
+      style={[styles.button, { backgroundColor: bg, opacity: disabled ? 0.4 : 1, minHeight: compact ? touch.min : componentSize.button }, style]}
     >
       {icon ? <Ionicons name={icon} size={18} color={fg} /> : null}
       <Text variant={compact ? 'buttonCompact' : 'button'} style={{ color: fg }}>

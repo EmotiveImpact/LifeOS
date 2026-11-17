@@ -243,9 +243,9 @@ export const screens = {
   "attach": {
     "key": "attach",
     "title": "Attach",
-    "kind": "Sheet",
+    "kind": "Full screen",
     "from": "+ in Chat",
-    "route": "/(sheets)/attach",
+    "route": "/(flows)/attach",
     "chapter": "Talk and file"
   },
   "scan": {

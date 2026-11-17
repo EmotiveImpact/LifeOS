@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["LifeIntelligenceModule"] },
+  "android": { "modules": ["app.life.intelligence.LifeIntelligenceModule"] }
+}

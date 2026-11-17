@@ -52,7 +52,7 @@ export const seedTaxClaim = {
 };
 export type FiledRecord = { id: string; kind: 'fact' | 'insight' | 'mission' | 'decision' | 'goal' | 'answer'; area: Area; label: string; value?: string | number; profilePatch?: Partial<UserProfile>; taskId?: string; source: { type: 'talk' | 'chat' | 'question' | 'document' | 'record'; at: string; excerpt?: string }; status: 'proposed' | 'confirmed' | 'removed' };
 export type MemoryCategory = 'Money' | 'Body' | 'People';
-export type MemoryEntry = { id: string; text: string; source: string; category?: MemoryCategory };
+export type MemoryEntry = { id: string; text: string; source: string; category?: MemoryCategory; recordId?: string };
 export const seedMemoryCategories: Record<string, MemoryCategory> = { rent: 'Money', kofi: 'People', aim: 'Money' };
 export type ChiefAim = { what: string; when: string; give: string; plan: string; createdAt: string; history: string[]; readLog: string[] };
 export const seedAim: ChiefAim = { what: 'own a two-bed flat in South London', when: 'June 2029', give: 'save £800 a month and grow my design rate by 20%', plan: 'lifetime ISA first, then a mortgage in principle by 2028', createdAt: SEED_DATE, history: [], readLog: Array.from({ length: 21 }, (_, i) => `${new Date(Date.UTC(2026, 9, 27 + i)).toISOString().slice(0, 10)}-morning`) };

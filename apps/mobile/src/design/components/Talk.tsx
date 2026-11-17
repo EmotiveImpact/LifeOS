@@ -134,9 +134,9 @@ function TrayTile({ area, count }: { area: Area; count: number }) {
 export function UserBubble({ text }: { text: string }) {
   const t = useTokens();
   return (
-    <Animated.View entering={FadeInDown.springify().damping(18)} style={[styles.bubble, { backgroundColor: t.surface2 }]}>
+    <View style={[styles.bubble, { backgroundColor: t.surface2 }]}>
       <Text variant="body">{text}</Text>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -201,13 +201,13 @@ export function FileCard({ prompt, savedText, onSave }: { prompt: string; savedT
 
 /* ───────────────────────── Composer ───────────────────────── */
 
-export function Composer({ value, onChangeText, onSend, onTalk, onAttach, placeholder = 'Message' }: { value: string; onChangeText: (v: string) => void; onSend: () => void; onTalk?: () => void; onAttach?: () => void; placeholder?: string }) {
+export function Composer({ value, onChangeText, onSend, onTalk, onAttach, placeholder = 'Message', disabled = false, hasAttachments = false }: { value: string; onChangeText: (v: string) => void; onSend: () => void; onTalk?: () => void; onAttach?: () => void; placeholder?: string; disabled?: boolean; hasAttachments?: boolean }) {
   const t = useTokens();
-  const empty = value.trim().length === 0;
+  const readyToSend = value.trim().length > 0 || hasAttachments;
   return (
     <View style={[styles.composer, { backgroundColor: t.surface2 }]}>
       {onAttach ? (
-        <Press haptic="select" onPress={onAttach} accessibilityLabel="Attach" style={styles.cIcon}>
+        <Press haptic="select" onPress={onAttach} accessibilityLabel="Attach" disabled={disabled} style={styles.cIcon}>
           <Ionicons name="add" size={22} color={t.ink2} />
         </Press>
       ) : null}
@@ -217,12 +217,13 @@ export function Composer({ value, onChangeText, onSend, onTalk, onAttach, placeh
         placeholder={placeholder}
         placeholderTextColor={t.inkQuiet}
         style={{ flex: 1, fontFamily: 'Inter_400Regular', fontSize: 16, color: t.ink, paddingVertical: 10 }}
-        onSubmitEditing={() => !empty && onSend()}
+        onSubmitEditing={() => !disabled && readyToSend && onSend()}
+        editable={!disabled}
         returnKeyType="send"
         accessibilityLabel={placeholder}
       />
-      <Press haptic="primary" onPress={() => empty ? onTalk?.() : onSend()} disabled={empty && !onTalk} accessibilityLabel={empty ? 'Talk' : 'Send'} style={[styles.cIcon, { backgroundColor: t.ink, borderRadius: 12 }]}>
-        <Ionicons name={empty ? 'mic' : 'arrow-up'} size={19} color={t.canvas} />
+      <Press haptic="primary" onPress={() => readyToSend ? onSend() : onTalk?.()} disabled={disabled || (!readyToSend && !onTalk)} accessibilityLabel={readyToSend ? 'Send' : 'Talk'} style={[styles.cIcon, { backgroundColor: t.ink, borderRadius: 12 }]}>
+        <Ionicons name={readyToSend ? 'arrow-up' : 'mic'} size={19} color={t.canvas} />
       </Press>
     </View>
   );

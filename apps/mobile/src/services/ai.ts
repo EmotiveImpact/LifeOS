@@ -1,16 +1,12 @@
-import { processLifeOSMessage } from '@life/core/engine';
-import type { UserProfile } from '@life/core/types';
-import { local, records } from './local';
-import { seed } from '@/state/seed';
+import { analyseTeachBack, extractStatements } from '@life/brain';
+import { proposalRecord } from './brainState';
+import { brain } from './brain';
+
+/** Compatibility facade: no canned sample facts or fabricated lesson grades. */
 export const ai = {
-  talk: records.propose,
-  ask: async (question: string, profile: UserProfile, completed: string[]) => {
-    const patches: Partial<UserProfile>[] = [];
-    const result = processLifeOSMessage(question, profile, completed, patch => patches.push(patch), () => {});
-    return local({ answer: result.replyText, patches, records: [] });
-  },
-  extract: records.propose,
-  lesson: async (_request: { topic: string; level: string }) => local(seed.lesson),
-  analyse: async (text: string) => local({ covered: text.trim().length ? ['The purpose of a tax code'] : [], missing: ['What the number stands for'], quote: text.trim() }),
-  showMe: async (_gap: string) => local('The number is usually your tax-free allowance divided by ten. Now tell me in your own words.'),
+  talk: async (text: string) => ({ data: extractStatements(text).map(proposal => proposalRecord(proposal, 'talk')), mode: 'rules' as const }),
+  extract: async (text: string) => ({ data: extractStatements(text).map(proposal => proposalRecord(proposal, 'document')), mode: 'rules' as const }),
+  run: brain.run,
+  capabilities: brain.capabilities,
+  analyse: async (text: string) => analyseTeachBack(text),
 };

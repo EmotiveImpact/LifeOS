@@ -27,12 +27,11 @@ export type TwoToneSegment = {
  */
 export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, style }: { segments: TwoToneSegment[]; size?: 'statement' | 'headline' | 'welcomeStatement'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
   const t = useTokens();
-  const calm = useCalmMotion();
   const quiet = onAtmos ? onAtmosphere.quiet : t.inkQuiet;
   const ink = onAtmos ? onAtmosphere.text : t.ink;
   const glyph = size === 'statement' ? 22 : 18;
   return (
-    <Animated.View entering={calm ? FadeIn.duration(durations.quick) : FadeInDown.springify().damping(springs.smooth.damping).stiffness(springs.smooth.stiffness)} style={style}>
+    <View style={style}>
       <Text variant={size} accessibilityRole="text">
         {segments.map((s, i) => (
           <Text key={i} variant={size} style={{ color: s.tone === 'quiet' ? quiet : ink }}>
@@ -49,7 +48,7 @@ export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, s
           </Text>
         ))}
       </Text>
-    </Animated.View>
+    </View>
   );
 }
 

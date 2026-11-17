@@ -5,12 +5,14 @@ const { withUniwindConfig } = require("uniwind/metro");
 const projectRoot = __dirname;
 const monorepoRoot = path.resolve(projectRoot, "../..");
 const coreRoot = path.resolve(monorepoRoot, "packages/core");
+const brainRoot = path.resolve(monorepoRoot, "packages/brain");
 const rootReactDir = path.resolve(monorepoRoot, "node_modules/react");
 const rootReactDomDir = path.resolve(monorepoRoot, "node_modules/react-dom");
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const CORE_ALIASES = {
+  "@life/brain": path.resolve(brainRoot, "src/index.ts"),
   "@life/core": path.resolve(coreRoot, "src/index.ts"),
   "@life/core/engine": path.resolve(coreRoot, "src/data/lifeosEngine.ts"),
   "@life/core/types": path.resolve(coreRoot, "src/types/lifeos.ts"),
@@ -27,7 +29,7 @@ const config = getDefaultConfig(projectRoot);
 
 // Watch @life/core while preventing Metro from ever resolving root React 18,
 // keeping hierarchical lookup enabled for nested packages (e.g. reanimated's semver@7).
-config.watchFolders = [coreRoot];
+config.watchFolders = [coreRoot, brainRoot];
 config.resolver.nodeModulesPaths = [path.resolve(projectRoot, "node_modules")];
 config.resolver.blockList = [
   new RegExp(`^${escapeRegex(rootReactDir)}[/\\\\].*$`),

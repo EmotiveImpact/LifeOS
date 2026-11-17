@@ -54,6 +54,7 @@ import {
   MetricRow,
   MoneyFigure,
   Mono,
+  NextMoveCard,
   NudgeCard,
   PeekHeader,
   PeekStack,
@@ -181,6 +182,10 @@ function Column({ look, style }: { look: Look; style?: object }) {
         <PulseCheckIn onChange={setMood} />
       </Section>
 
+      <Section title="V22 · one useful next move">
+        <NextMoveCard source={storyImage(look, 'calm')} title="HMRC tax rebate" description="One form left · takes 6 min" onPress={() => {}} />
+      </Section>
+
       <Section title={`imagery · look ${look} · follows the pulse`}>
         <ImageTreatment kind="card" source={storyImage(look, mood?.moment ?? 'calm')} height={260}>
           <PhotoChip>
@@ -297,9 +302,9 @@ function Column({ look, style }: { look: Look; style?: object }) {
 
       <MoreComponents look={look} />
 
-      <Section title="sheet · dock (solid, no glass §43)">
+      <Section title="sheet · full-width bottom navigation (solid, no glass)">
         <Button label="Open draft sheet" variant="secondary" onPress={() => sheet.current?.open()} />
-        <View style={{ height: 96 }}>
+        <View style={{ minHeight: 96 }}>
           <Dock
             active={tab}
             onChange={setTab}

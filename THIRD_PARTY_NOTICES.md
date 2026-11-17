@@ -26,11 +26,15 @@ Copyright (c) 2011 Google Inc. All rights reserved. https://skia.org/
 The installed Skia dependency supplies the CanvasKit runtime; its WASM is served locally for preview, never from a CDN. Full licence texts for these additions are included in `apps/mobile/public/THIRD_PARTY_LICENSES.txt`.
 
 ## Local data foundation dependencies
-- **Expo SQLite 58.0.17, Expo SecureStore 58.0.3, Expo Crypto 58.0.8 — MIT.** Copyright (c) 2015-present 650 Industries, Inc. (aka Expo). https://github.com/expo/expo . MIT licence texts are included in each installed package's `LICENSE` file. SQLite/SQLCipher platform dependency notices must also be retained in native distributions.
+- **Expo SQLite 58.0.18, Expo SecureStore 58.0.3, Expo Crypto 58.0.8 — MIT.** Copyright (c) 2015-present 650 Industries, Inc. (aka Expo). https://github.com/expo/expo . MIT licence texts are included in each installed package's `LICENSE` file. SQLite/SQLCipher platform dependency notices must also be retained in native distributions.
 - **Drizzle ORM 0.45.4 — Apache-2.0.** Drizzle Team. https://github.com/drizzle-team/drizzle-orm . Licence: https://github.com/drizzle-team/drizzle-orm/blob/main/LICENSE . Used as a dependency for the typed SQLite schema and native migration/ORM boundary, not copied source.
 
-## Expo Development Client 58.0.20 (MIT)
+## Expo Development Client 58.0.21 (MIT)
 Copyright (c) 2015-present 650 Industries, Inc. (aka Expo). https://github.com/expo/expo . SDK-pinned development tooling for a custom local native build; not an external application service. Licence retained in the installed package.
+
+## Brain and attachment foundation
+- **Expo Asset 58.0.21, Expo Document Picker 58.0.5, Expo Image Picker 58.0.10, Expo File System 58.0.14 — MIT.** Copyright (c) 2015-present 650 Industries, Inc. (aka Expo). https://github.com/expo/expo . Exact SDK pins and integrity are in `apps/mobile/package-lock.json`; licences remain in the installed packages.
+- **Google ML Kit Text Recognition 16.0.1 (Android native dependency).** Used for the on-device OCR pipeline specified in SPEC §2.2, not copied source. Distributed under Google's ML Kit SDK terms: https://developers.google.com/ml-kit/terms . Preserve SDK notices in native distributions. Its model is bundled, not a cloud OCR call.
 
 ## Libraries
 Add each installed MIT / Apache-2.0 library here with its copyright line when it's added to `package.json` (Phase 1b onwards).

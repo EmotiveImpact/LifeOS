@@ -2,8 +2,10 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "allowImportingTsExtensions": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@life/brain": ["../../packages/brain/src/index.ts"],
       "@/assets/*": ["./assets/*"],
       "@life/core": ["../../packages/core/src/index.ts"],
       "@life/core/engine": ["../../packages/core/src/data/lifeosEngine.ts"],

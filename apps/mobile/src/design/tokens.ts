@@ -121,7 +121,7 @@ export const space = { xxs: 4, xs: 8, sm: 12, md: 16, lg: 20, xl: 24, xxl: 32, x
 /** v4: tighter, more precise. Buttons are 14pt slabs; pills only for tags/chips. */
 export const radius = { xs: 7, sm: 10, md: 12, lg: 20, xl: 28, button: 14, score: 16, chart: 8, full: 999 } as const;
 
-export const componentSize = { progressCapsule: 30, progressBar: 6, progressThin: 4, lightField: 440, button: 50, moneyAccount: 140, cameraShutter: 74, cameraModes: 205, cameraBottom: 34, mealConfirmPhoto: 150, mealResultPhoto: 190, mealScore: 56 } as const;
+export const componentSize = { icon: 20, navIcon: 22, rowIcon: 40, row: 64, nextMovePhoto: 190, bottomNav: 64, progressCapsule: 30, progressBar: 6, progressThin: 4, lightField: 440, button: 50, moneyAccount: 140, cameraShutter: 74, cameraModes: 205, cameraBottom: 34, mealConfirmPhoto: 150, mealResultPhoto: 190, mealScore: 56 } as const;
 
 export const touch = { min: 44 } as const;
 

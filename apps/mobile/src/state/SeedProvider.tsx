@@ -4,10 +4,14 @@ import { Uniwind } from 'uniwind';
 import { setFeedbackPrefs } from '@/design/feedback';
 import { engineSnapshot, seed, seedAim, seedMeal, seedPeople, seedProfile, seedPulseLog, seedRecords, seedKnownRecords, seedKnowledge, type ChiefAim, type FiledRecord, type MealItem, type MemoryEntry, seedMemoryCategories } from './seed';
 import { openProjectionStorage } from './persistence';
+import { removeAttachmentCopy } from '@/services/attachments';
 import type { ProjectionStorage } from './persistence.types';
 import type { UserProfile } from '@life/core/types';
+import { emptyBrainState, type BrainState } from '@life/brain';
+import { confirmBrainRecords } from '@/services/brainState';
 
 export type SeedData = {
+  brain: BrainState;
   profile: UserProfile; onboardingDone: boolean; aim: ChiefAim | null; records: FiledRecord[]; proposals: FiledRecord[]; knowledge: typeof seedKnowledge;
   completed: string[]; missionSteps: Record<string, boolean>; selectedMission: string;
   pulseLog: { at: string; moodId: string; x: number; y: number }[];
@@ -18,6 +22,7 @@ export type SeedData = {
   flags: Record<string, boolean>; choices: Record<string, string>; drafts: Record<string, string>;
 };
 const initial: SeedData = {
+  brain: emptyBrainState(),
   profile: seedProfile, onboardingDone: false, aim: seedAim, records: seedKnownRecords, proposals: seedRecords, knowledge: seedKnowledge, completed: [], missionSteps: {}, selectedMission: 'uk-hmrc-tax-code', pulseLog: seedPulseLog, people: seedPeople,
   meal: seedMeal, mealLogged: false, meals: [], habits: seed.habits, journal: [], weightKg: seed.body.weightKg, heightCm: seed.body.heightCm, waistCm: seed.body.waistCm, learned: [],
   memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov', category: 'Money' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov', category: 'People' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov', category: 'Money' }],
@@ -28,6 +33,7 @@ type SeedContextValue = {
   data: SeedData; hydrated: boolean; storageError: boolean; storageMode: ProjectionStorage['mode'] | null;
   retryStorage: () => void; exportEverything: () => Promise<unknown>; reset: () => Promise<boolean>;
   set: (patch: Partial<SeedData>) => void;
+  update: (apply: (current: SeedData) => SeedData) => void;
   pref: <K extends keyof SeedData['prefs']>(key: K, value: SeedData['prefs'][K]) => void;
   flag: (key: string, value?: boolean) => void; choose: (key: string, value: string) => void; draft: (key: string, value: string) => void;
   confirmRecords: () => void; engine: ReturnType<typeof engineSnapshot>;
@@ -101,21 +107,25 @@ export function SeedProvider({ children }: { children: ReactNode }) {
       if (patch.records && !patch.knowledge) next.knowledge = { ...current.knowledge, recordCount: current.knowledge.recordCount + patch.records.filter(record => record.status === 'confirmed').length - current.records.filter(record => record.status === 'confirmed').length };
       return next;
     }),
+    update: apply => setData(apply),
     pref: (key, v) => setData(d => ({ ...d, prefs: { ...d.prefs, [key]: v } })),
     flag: (key, v) => setData(d => ({ ...d, flags: { ...d.flags, [key]: v ?? !d.flags[key] } })),
     choose: (key, v) => setData(d => ({ ...d, choices: { ...d.choices, [key]: v } })),
     draft: (key, v) => setData(d => ({ ...d, drafts: { ...d.drafts, [key]: v } })),
     confirmRecords: () => setData(d => {
+      const confirmedBrain = confirmBrainRecords(d);
       const accepted = d.proposals.filter(record => record.status !== 'removed').map(record => ({ ...record, status: 'confirmed' as const }));
       if (!accepted.length) return { ...d, proposals: [] };
       const records = [...new Map([...d.records, ...accepted].map(record => [record.id, record])).values()];
-      return { ...d, records, proposals: [], knowledge: { ...d.knowledge, overall: Math.max(d.knowledge.overall, 81), areas: Object.fromEntries(Object.entries(d.knowledge.areas).map(([area, value]) => [area, Math.min(98, value + Math.max(0, 81 - d.knowledge.overall))])) as typeof seedKnowledge.areas, recordCount: d.knowledge.recordCount + accepted.filter(record => !d.records.some(existing => existing.id === record.id && existing.status === 'confirmed')).length }, profile: accepted.reduce((profile, record) => ({ ...profile, ...record.profilePatch }), d.profile) };
+      const fromBrain = accepted.some(record => 'brainField' in record);
+      return { ...d, brain: confirmedBrain.brain, memories: confirmedBrain.memories, records, proposals: [], knowledge: { ...d.knowledge, overall: fromBrain ? d.knowledge.overall : Math.max(d.knowledge.overall, 81), areas: fromBrain ? d.knowledge.areas : Object.fromEntries(Object.entries(d.knowledge.areas).map(([area, value]) => [area, Math.min(98, value + Math.max(0, 81 - d.knowledge.overall))])) as typeof seedKnowledge.areas, recordCount: d.knowledge.recordCount + accepted.filter(record => !d.records.some(existing => existing.id === record.id && existing.status === 'confirmed')).length }, profile: accepted.reduce((profile, record) => ({ ...profile, ...record.profilePatch }), d.profile) };
     }),
     reset: async () => {
       if (!storage.current || resetting.current) return false;
       resetting.current = true;
       try {
         await writes.current;
+        for (const thread of latest.current.brain.conversations) for (const attachment of thread.attachments) await removeAttachmentCopy(attachment);
         await storage.current.clear();
         const next = { ...initial, onboardingDone: false };
         lastQueued.current = JSON.stringify(next); revision.current = 0; committed.current = 0;

@@ -10,11 +10,12 @@
 ## In code ✅
 Surfaces and type: `Text`, `Title`, `TitleSerif`, `Headline`, `Statement`, `Body`, `Callout`, `Mono`, `Unit`, `Numeral`, `Press`, `Card` (no border, `cardShadow`), `Button`, `StatusPill`, `MetricRow`, `PromptBanner`, `ChoiceCard`, `Atmosphere`
 Progress and story: `Ticks`, `CapsuleMeter`, `StageStepper`, `ActivityTimeline`, `WeekStrip`, `TwoTone`, `PeekStack`, `PeekHeader`, `RollingNumeral`, `MoneyFigure`, `Countdown`, `LedgerRow`, `NudgeCard`
-Chrome: `TopBar` (fixed: root, push, sheet, flow), `Dock`, `Sheet`, `DottedOrb`, `LifeOrb` (**v6, ported from board mountOrb**)
+Chrome: `TopBar` (fixed: root, push, sheet, flow), `Dock` (owner-approved full-width bottom bar; all four labels visible), `Sheet`, `DottedOrb`, `LifeOrb` (**v6, ported from board mountOrb**)
 Controls: `CountStepper`, `Slider`, `Toggle`, `Segmented`, `ChipGroup`, `ControlRow`
 Lists and body: `ListRow`, `RowGroup` (no dividers), `Checklist`, `NewTag`, `ToolTile`, `InsightCard`, `RecordRow`, `ChangeSummary`, `HabitRow`, `FoodItemRow`, `MiniBars`, `RangeBar`, `StageBar`, `MetricTile`
 Talk: `Waveform`, `BigMic`, `Transcript`, `FilingTray`, `UserBubble`, `LifeReply`, `FileCard`, `Composer`, `AttachMenu`
 Mood and imagery: `PulseField`, `PulseCheckIn`, `MOODS`, `ImageTreatment`, `PhotoChip`, `IntroCarousel`, `Ridge`
+V22: `NextMoveCard` — 190pt focal-aware photograph, readable next-move identity and one 50pt action; implemented in `Imagery.tsx`, exported via `@/design`, shown in `/design`.
 
 ## Track A additions 🔨 (implemented; Track B integrations noted in review/NOTES.md)
 | Component | What it is | Used on | Phase |

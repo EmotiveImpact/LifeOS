@@ -34,7 +34,7 @@ export function Press({ haptic = 'select', pressScale = 0.97, style, onPressIn, 
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        scale.value = withSpring(1, springs.snappy);
+        scale.value = calm ? 1 : withSpring(1, springs.snappy);
         onPressOut?.(e);
       }}
       onPress={(e) => {
