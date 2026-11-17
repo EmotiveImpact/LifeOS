@@ -1,16 +1,29 @@
-<!doctype html>
-<html lang="en-GB" data-theme="dark">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101112"><title>life · Design board V24</title>
-<link rel="stylesheet" href="v24/board.css">
-</head>
-<body>
-<header class="board-bar"><span class="brand"><i class="dotring"></i>life</span><span class="board-name">Design board <b>V24</b></span>
-<nav aria-label="Board sections"><button id="show-board" aria-pressed="true">Overview</button><button id="show-library" aria-pressed="false">Screen library</button></nav>
-<button id="theme" type="button" aria-label="Switch to light theme"></button></header>
-<main><section id="gallery" aria-label="Featured designs"></section>
-<section id="library" hidden><div class="library-head"><div class="eyebrow">LifeOS / V24</div><h1>Screen library</h1><p id="library-count"></p><label><span class="sr">Find a screen</span><input id="find" type="search" placeholder="Find a screen, chapter or route"></label></div><div id="entries"></div></section></main>
-<dialog id="viewer" aria-label="Full-size screen"><div class="view-tools"><button id="close">← Board</button><strong id="screen-name"></strong><button id="forward" aria-label="Next featured screen">Next →</button></div><div id="full-phone"></div><iframe id="archive" title="LifeOS full screen catalogue" hidden></iframe></dialog>
-<script src="v24/catalogue.js"></script><script src="v24/board.js"></script>
-</body></html>
+<template id="v24-interface">
+  <link rel="stylesheet" href="v24/board.css">
+  <header class="board-bar">
+    <span class="brand"><i class="dotring"></i>life</span>
+    <span class="board-name">Complete design board <b>V24</b></span>
+    <div class="board-controls">
+      <label><span class="sr">Jump to a chapter</span><select id="chapter"><option value="">Jump to chapter</option></select></label>
+      <button id="theme" type="button" aria-label="Switch to light theme"></button>
+    </div>
+  </header>
+  <div class="board-lead">
+    <h1>LifeOS</h1>
+    <p id="board-count"></p>
+  </div>
+  <section id="gallery" aria-label="Today, Plan, You and Talk"></section>
+  <dialog id="viewer" aria-label="Full-size screen">
+    <div class="view-tools">
+      <button id="close">← Board</button>
+      <strong id="screen-name"></strong>
+      <button id="forward" aria-label="Next featured screen">Next →</button>
+    </div>
+    <div id="full-phone"></div>
+  </dialog>
+</template>
+<div id="v24-interface-host"></div>
+<main id="v24-chapters" aria-label="All board chapters"></main>
+<link rel="stylesheet" href="v24/full-board.css">
+<script src="v24/catalogue.js"></script>
+<script src="v24/board.js"></script>

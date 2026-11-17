@@ -6,7 +6,10 @@
   const names = { today: 'Today', plan: 'Plan', you: 'You', talk: 'Talk', letter: 'Tax letter', situation: 'Rent situation', filing: 'Review details' };
   const dockIcons = ['home', 'calendar', 'person', 'mic'];
   const state = { segment: 'Situations', steps: [false, false], saved: [], pending: ['document', 'date'] };
-  const $ = id => document.getElementById(id);
+  const host = document.getElementById('v24-interface-host');
+  const ui = host.attachShadow({ mode: 'open' });
+  ui.append(document.getElementById('v24-interface').content.cloneNode(true));
+  const $ = id => ui.getElementById(id);
   const html = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
   const icon = (name, size = 20) => '<svg aria-hidden="true" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">'+icons[name]+'</svg>';
   const button = (key, name, symbol) => '<button class="ic" data-key="'+key+'" aria-label="'+name+'">'+icon(symbol)+'</button>';
@@ -76,47 +79,106 @@
   function gallery() {
     $('gallery').innerHTML = featured.map(key=>'<article class="tile"><button class="caption" data-key="'+key+'" aria-label="Open '+names[key]+' full size">'+names[key]+icon('arrow',16)+'</button><div class="frame" data-key="'+key+'" aria-hidden="true"><div inert class="phone-preview">'+phone(key)+'</div></div></article>').join('');
     const observer = new ResizeObserver(items=>items.forEach(item=> item.target.style.setProperty('--scale',item.contentRect.width/390)));
-    document.querySelectorAll('.frame').forEach(frame=>observer.observe(frame));
+    ui.querySelectorAll('.frame').forEach(frame=>observer.observe(frame));
   }
-  function library() {
-    const q = $('find').value.trim().toLocaleLowerCase();
-    const result = catalogue.filter(r=>[r.key,r.title,r.chapter,r.route].some(v=>String(v??'').toLocaleLowerCase().includes(q)));
-    $('library-count').textContent = q ? result.length+(result.length===1?' matching screen':' matching screens') : catalogue.length+' screens across '+chapters+' chapters';
-    $('entries').innerHTML = result.length ? result.map(r=>'<button class="entry" data-key="'+html(r.key)+'"><strong>'+html(names[r.key]||r.title)+'</strong><small>'+html(r.chapter)+'</small></button>').join('') : '<p class="hint">No screens match this search.</p>';
+  function mountChapters() {
+    const board = document.getElementById('v24-chapters');
+    const chapterList = new Map();
+    for (const row of catalogue) {
+      if (!chapterList.has(row.chapter)) chapterList.set(row.chapter, []);
+      chapterList.get(row.chapter).push(row);
+    }
+    const gridResize = new ResizeObserver(items => {
+      for (const { target, contentRect } of items) {
+        const columns = contentRect.width > 900 ? 4 : contentRect.width > 620 ? 3 : 2;
+        const gap = contentRect.width > 620 ? 20 : 10;
+        const width = (contentRect.width - gap * (columns - 1)) / columns;
+        target.style.setProperty('--columns', columns);
+        target.style.setProperty('--slot-gap', gap + 'px');
+        target.style.setProperty('--z', Math.min(width / 415, 0.78));
+      }
+    });
+    let chapterNumber = 0;
+    for (const [name, rows] of chapterList) {
+      const section = document.createElement('section');
+      section.className = 'v24-chapter';
+      section.id = 'board-chapter-' + (++chapterNumber);
+      const grid = document.createElement('div');
+      grid.className = 'v24-chapter-grid';
+      section.innerHTML = '<h2>'+html(name)+'</h2>';
+      section.append(grid);
+      $('chapter').add(new Option(name, section.id));
+
+      for (const row of rows) {
+        const shot = document.getElementById('s-' + row.key);
+        if (!shot) throw new Error('Board screen is missing: ' + row.key);
+        if (featured.includes(row.key)) continue;
+        const slot = document.createElement('article');
+        slot.className = 'v24-board-slot';
+        const inspect = document.createElement('button');
+        inspect.className = 'v24-inspect';
+        inspect.dataset.v24Open = row.key;
+        inspect.textContent = row.title;
+        inspect.setAttribute('aria-label', 'Open ' + row.title);
+        shot.querySelector('.frame').inert = true;
+        slot.append(inspect, shot);
+        grid.append(slot);
+      }
+      board.append(section);
+      gridResize.observe(grid);
+    }
+    $('board-count').textContent = catalogue.length + ' screens across ' + chapters + ' chapters';
   }
+
   let active = null;
-  let archiveReady=false;
-  const viewer=$('viewer'), archive=$('archive');
-  function showArchive(key) {
-    if (archiveReady) archive.contentWindow.__V21Inspect(key);
-    else if (!archive.hasAttribute('src')) archive.src='life-complete-board-v23.html';
-  }
-  function open(key) {
-    if (!screens[key] && !index.has(key)) return;
-    active=key;
-    $('screen-name').textContent=names[key]||index.get(key).title;
-    $('forward').hidden=!featured.includes(key);
-    $('full-phone').hidden=!screens[key];
-    archive.hidden=!!screens[key];
+  const viewer = $('viewer');
+  const legacyInspector = document.querySelector('.v21-inspector');
+  const legacyStage = legacyInspector.querySelector('[data-v21-stage]');
+  new MutationObserver(records => {
+    for (const record of records) {
+      for (const previous of record.removedNodes) {
+        if (previous.nodeType === Node.ELEMENT_NODE) previous.querySelector('.frame').inert = true;
+      }
+    }
+    const current = legacyStage.querySelector('.frame');
+    if (current) current.inert = false;
+  }).observe(legacyStage, { childList: true });
+
+  function open(key, trigger) {
+    if (!screens[key]) {
+      if (!index.has(key)) return;
+      if (viewer.open) viewer.close();
+      window.__V21Inspect(key, trigger);
+      return;
+    }
+    if (!legacyInspector.hidden) window.__V21Close();
+    active = key;
+    $('screen-name').textContent = names[key];
+    $('forward').hidden = !featured.includes(key);
+    $('full-phone').innerHTML = phone(key);
     if (!viewer.open) viewer.showModal();
-    if (screens[key]) $('full-phone').innerHTML=phone(key);
-    else showArchive(key);
   }
-  archive.addEventListener('load',()=>{
-    archiveReady=typeof archive.contentWindow.__V21Inspect==='function';
-    if (!archiveReady) return;
-    archive.contentWindow.addEventListener('click',e=>{
-      const jump=e.target.closest('[data-jump],[data-v21-open]');
-      const key=jump?.dataset.jump||jump?.dataset.v21Open;
-      if (featured.includes(key)) {e.preventDefault();e.stopImmediatePropagation();open(key);}
-    },true);
-    if (active && !screens[active]) showArchive(active);
-  });
+  document.addEventListener('click', event => {
+    const card = event.target.closest('[data-v24-open]');
+    const link = event.target.closest('[data-jump], [data-v21-open]');
+    const step = event.target.closest('[data-v21-next],[data-v21-prev]');
+    let key = card?.dataset.v24Open || link?.dataset.jump || link?.dataset.v21Open;
+    if (step && !legacyInspector.hidden) {
+      const current = catalogue.findIndex(row => row.key === window.__V21_INSPECTING);
+      const offset = step.hasAttribute('data-v21-prev') ? -1 : 1;
+      key = catalogue[(current + offset + catalogue.length) % catalogue.length].key;
+    }
+    if (card || step || featured.includes(key)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      open(key, card);
+    }
+  }, true);
   function refresh() {
-    document.querySelectorAll('.frame').forEach(f=>f.querySelector('.phone-preview').innerHTML=phone(f.dataset.key));
+    ui.querySelectorAll('.frame').forEach(f=>f.querySelector('.phone-preview').innerHTML=phone(f.dataset.key));
     if (screens[active]) open(active);
   }
-  document.addEventListener('click',e=>{
+  ui.addEventListener('click',e=>{
     const target=e.target.closest('[data-key],[data-segment],[data-save]');
     if (!target) return;
     if (target.dataset.key) open(target.dataset.key);
@@ -126,31 +188,42 @@
   viewer.addEventListener('change',e=>{
     if (e.target.hasAttribute('data-step')) {
       state.steps[Number(e.target.dataset.step)]=e.target.checked;
-      document.querySelector('.frame[data-key="plan"] .phone-preview').innerHTML=phone('plan');
+      ui.querySelector('.frame[data-key="plan"] .phone-preview').innerHTML=phone('plan');
     }
     if (e.target.hasAttribute('data-fact')) {
       state.pending=[...viewer.querySelectorAll('[data-fact]:checked')].map(el=>el.dataset.fact);
       viewer.querySelector('[data-save]').disabled=!state.pending.length;
     }
   });
-  function switchBoard(list) {
-    $('library').hidden=!list; $('gallery').hidden=list;
-    $('show-board').setAttribute('aria-pressed',!list);$('show-library').setAttribute('aria-pressed',list);
-    if (list) {library();$('find').focus();}
-  }
   function theme() {
     const light=document.documentElement.dataset.theme==='light';
+    host.dataset.theme = light ? 'light' : 'dark';
     $('theme').innerHTML=icon(light?'moon':'sun');
     $('theme').setAttribute('aria-label','Switch to '+(light?'dark':'light')+' theme');
   }
-  $('show-library').onclick=()=>switchBoard(true);
-  $('show-board').onclick=()=>switchBoard(false);
-  $('find').oninput=library;
+  $('chapter').addEventListener('change', event => {
+    document.getElementById(event.target.value)?.scrollIntoView();
+  });
   $('close').onclick=()=>viewer.close();
   viewer.onclose=()=>{active=null;};
   $('forward').onclick=()=>open(featured[(featured.indexOf(active)+1)%featured.length]);
-  $('theme').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';theme();};
-  gallery();theme();
+  $('theme').onclick = () => {
+    const newTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.querySelector('[data-th="' + newTheme + '"]').click();
+  };
+  new MutationObserver(theme).observe(document.documentElement, {
+    attributes: true, attributeFilter: ['data-theme']
+  });
+  function fitInspector() {
+    const width = document.documentElement.clientWidth;
+    const zoom = width < 440 ? (width - 16) / 415 : 1;
+    document.documentElement.style.setProperty('--v24-phone-zoom', zoom);
+  }
+  window.addEventListener('resize', fitInspector);
+  fitInspector();
+  mountChapters();
+  gallery();
+  theme();
   const start = new URLSearchParams(location.search).get('screen');
   if (start) open(start);
 })();

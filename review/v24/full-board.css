@@ -1,0 +1,67 @@
+:root {
+  --v24-board: #101112;
+  --v24-board-text: #f4f2ee;
+  --v24-phone-zoom: 1;
+}
+:root[data-theme="light"] {
+  --v24-board: #eaeae7;
+  --v24-board-text: #1e2022;
+}
+body:has(#v24-chapters) {
+  background: var(--v24-board);
+  color: var(--v24-board-text);
+}
+.wrap[inert] { display: none; }
+#v24-interface-host {
+  display: block;
+}
+#v24-chapters {
+  max-width: 1600px;
+  margin: auto;
+  padding: 28px clamp(14px, 4vw, 58px) 80px;
+}
+.v24-chapter {
+  margin: 0 0 60px;
+  scroll-margin-top: 20px;
+}
+.v24-chapter h2 {
+  font-size: clamp(25px, 3vw, 40px);
+  letter-spacing: -.055em;
+  margin: 0 0 22px;
+}
+.v24-chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--columns, 2), minmax(0, 1fr));
+  gap: 28px var(--slot-gap, 10px);
+  --z: .40;
+}
+.v24-board-slot {
+  position: relative;
+  min-width: 0;
+  height: calc(874px * var(--z) + 40px);
+}
+.v24-board-slot .shot {
+  position: absolute;
+  inset: 40px auto auto 0;
+}
+.v24-board-slot .shot-cap { display: none; }
+.v24-inspect {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 4px 0;
+  min-width: 0;
+  max-width: calc(415px * var(--z));
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 650;
+  cursor: zoom-in;
+}
+.v24-inspect:focus-visible { outline: 2px solid var(--ember); outline-offset: 4px; }
+.v21-inspector .shot { --z: var(--v24-phone-zoom) !important; }
