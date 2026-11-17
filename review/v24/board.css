@@ -24,3 +24,18 @@
 .board-controls{margin-left:auto;display:flex;gap:4px;align-items:center}
 .board-controls select{padding:8px;max-width:min(175px,45vw);border:0;border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
 @media(max-width:620px){.board-controls{margin-left:auto}}
+#chapter-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 15px;
+}
+#chapter-shortcuts button {
+  background: var(--surface);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--ink);
+  padding: 9px 12px;
+  min-height: 40px;
+}
+#chapter-shortcuts button:hover { background: var(--surf2); }

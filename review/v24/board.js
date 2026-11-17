@@ -2,6 +2,13 @@
   'use strict';
   const { catalogue, chapters, icons } = window.LIFE_BOARD;
   const index = new Map(catalogue.map(row => [row.key, row]));
+  const chapterShortcuts = {
+    'First open': 'Onboarding',
+    'Plan · Money': 'Money',
+    'Body': 'Body',
+    'Teach me': 'Lessons',
+    'Plan · Documents and renewals': 'Documents'
+  };
   const featured = ['today', 'plan', 'you', 'talk'];
   const names = { today: 'Today', plan: 'Plan', you: 'You', talk: 'Talk', letter: 'Tax letter', situation: 'Rent situation', filing: 'Review details' };
   const dockIcons = ['home', 'calendar', 'person', 'mic'];
@@ -108,11 +115,19 @@
       section.innerHTML = '<h2>'+html(name)+'</h2>';
       section.append(grid);
       $('chapter').add(new Option(name, section.id));
+      if (chapterShortcuts[name]) {
+        const shortcut = document.createElement('button');
+        shortcut.dataset.chapter = section.id;
+        shortcut.textContent = chapterShortcuts[name];
+        $('chapter-shortcuts').append(shortcut);
+      }
 
       for (const row of rows) {
         const shot = document.getElementById('s-' + row.key);
         if (!shot) throw new Error('Board screen is missing: ' + row.key);
         if (featured.includes(row.key)) continue;
+        shot.style.removeProperty('--z');
+        window.designLifeScreen(shot, row);
         const slot = document.createElement('article');
         slot.className = 'v24-board-slot';
         const inspect = document.createElement('button');
@@ -201,8 +216,18 @@
     $('theme').innerHTML=icon(light?'moon':'sun');
     $('theme').setAttribute('aria-label','Switch to '+(light?'dark':'light')+' theme');
   }
-  $('chapter').addEventListener('change', event => {
-    document.getElementById(event.target.value)?.scrollIntoView();
+  function goToChapter(id) {
+    const section = document.getElementById(id);
+    if (section) {
+      history.replaceState(null, '', '#' + section.id);
+      $('chapter').value = id;
+      section.scrollIntoView({ behavior: 'instant' });
+    }
+  }
+  $('chapter').addEventListener('change', event => goToChapter(event.target.value));
+  $('chapter-shortcuts').addEventListener('click', event => {
+    const shortcut = event.target.closest('[data-chapter]');
+    if (shortcut) goToChapter(shortcut.dataset.chapter);
   });
   $('close').onclick=()=>viewer.close();
   viewer.onclose=()=>{active=null;};
@@ -226,4 +251,7 @@
   theme();
   const start = new URLSearchParams(location.search).get('screen');
   if (start) open(start);
+  else if (location.hash) requestAnimationFrame(() => {
+    goToChapter(location.hash.slice(1));
+  });
 })();
