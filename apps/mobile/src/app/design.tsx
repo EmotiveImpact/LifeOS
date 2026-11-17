@@ -4,9 +4,12 @@ import { Redirect } from 'expo-router';
 import { TrackAGallery } from '@/design/TrackAGallery';
 import { FullDrawingGallery } from '@/design/FullDrawingGallery';
 import { PlatformGallery } from '@/screens/PlatformGallery';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '@/design/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  space,
+  componentSize,
+  Icon,
   ActivityTimeline,
   AttachMenu,
   BigMic,
@@ -164,6 +167,10 @@ function Column({ look, style }: { look: Look; style?: object }) {
 
   return (
     <View style={[{ backgroundColor: t.canvas, padding: 20, gap: 36, paddingBottom: 160 }, style]}>
+      <Section title="Original calmer mockup · exact SVG icons">
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.lg }}>{(['home', 'layers', 'person', 'mic', 'search', 'bell', 'chev', 'arrow', 'doc', 'gift', 'heart', 'book', 'spark', 'check', 'gear', 'wallet'] as const).map(name => <View key={name} style={{ minWidth: componentSize.row, alignItems: 'center', gap: space.xs }}><Icon name={name} /><Text variant="micro" tone="ink2">{name}</Text></View>)}</View>
+        <View style={{ flexDirection: 'row', gap: space.xs }}><ToolTile compact title="Cash plan" icon="wallet-outline" /><ToolTile compact title="Documents" icon="document-text-outline" /></View>
+      </Section>
       <FullDrawingGallery />
       <TrackAGallery />
       <PlatformGallery />

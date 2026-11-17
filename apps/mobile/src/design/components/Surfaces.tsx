@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import { Image, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '../Icon';
 import { Press } from '../Press';
 import { Callout, Text, Title, type Tone } from '../Text';
 import { useTokens } from '../theme';
@@ -125,18 +125,19 @@ export type ButtonProps = {
   /** Inverts the primary button to paper-on-ink for use on an atmosphere. */
   onAtmosphere?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
+  iconPosition?: 'leading' | 'trailing';
   disabled?: boolean;
   compact?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
 /** DESIGN.md §6.13: one primary per screen. Verb + object labels ("Book appointment"). */
-export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAtmos, icon, disabled, compact = false, style }: ButtonProps) {
+export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAtmos, icon, iconPosition = 'leading', disabled, compact = false, style }: ButtonProps) {
   const t = useTokens();
   if (variant === 'link') {
     return (
       <Press haptic="select" onPress={onPress} disabled={disabled} accessibilityLabel={label} style={[styles.link, style]}>
-        <Callout tone={onAtmos ? 'paper' : 'ink'} style={{ textDecorationLine: 'underline' }}>
+        <Callout tone={onAtmos ? 'paper' : 'ink'}>
           {label}
         </Callout>
       </Press>
@@ -154,10 +155,11 @@ export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAt
       accessibilityState={{ disabled }}
       style={[styles.button, { backgroundColor: bg, opacity: disabled ? 0.4 : 1, minHeight: compact ? touch.min : componentSize.button }, style]}
     >
-      {icon ? <Ionicons name={icon} size={18} color={fg} /> : null}
+      {icon && iconPosition === 'leading' ? <Ionicons name={icon} size={componentSize.icon} color={fg} /> : null}
       <Text variant={compact ? 'buttonCompact' : 'button'} style={{ color: fg }}>
         {label}
       </Text>
+      {icon && iconPosition === 'trailing' ? <Ionicons name={icon} size={componentSize.icon} color={fg} /> : null}
     </Press>
   );
 }

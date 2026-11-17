@@ -1,0 +1,170 @@
+{
+  "status": "official-source research complete; concept only, no production integrations",
+  "accessedDate": "2026-11-17",
+  "illustrativeBoardDay": "2026-11-16",
+  "recommendation": "Ship an editorial, completion-aware feed and real data foundations before optional focus shielding. Preserve the full product; remove repetition, not capability.",
+  "decisions": [
+    {
+      "title": "Focus, not a trap",
+      "priority": "P2 · native feasibility",
+      "summary": "User-chosen selected-app protection with a time limit and immediate bypass. Never promise the entire phone is locked until exercise.",
+      "details": [
+        "iOS individual Family Controls authorization, ManagedSettings shields and DeviceActivity require native work plus distribution entitlement approval.",
+        "Android consumer blocking is not equivalent to managed-device kiosk control; accessibility approaches need clear disclosure, consent and Play policy review.",
+        "Missing, delayed or denied activity data must never trap the user. Essential access and rest/accessibility alternatives remain available."
+      ],
+      "dataSource": "NEW native Screen Time / policy-compliant Android bridge and restriction-session model; not present in the repo."
+    },
+    {
+      "title": "Real movement first",
+      "priority": "P1 · functional foundation",
+      "summary": "Steps and workout progress require real ingestion and provenance; today’s app shows fixtures.",
+      "details": [
+        "HealthKit stepCount/workouts on iOS; aggregated Health Connect steps/exercise on supported Android devices.",
+        "An available phone sensor / Expo Pedometer is a foreground feedback fallback, not cross-device daily history.",
+        "Background delivery is not immediate or guaranteed. Do not promise instant exercise-triggered unblocking.",
+        "Deduplicate sources, respect timezone/day boundaries, show permissions, freshness and no-data states."
+      ],
+      "dataSource": "Existing health_sample source/device/confidence, daily_health.steps and habit_log.source; real ingestion still missing."
+    },
+    {
+      "title": "Evidence without pretending",
+      "priority": "P1/P2 · confidence contract",
+      "summary": "Distinguish self-report, recorded activity and estimated exercise. Steps do not prove a run or push-ups.",
+      "details": [
+        "A workout record can be manually entered or inaccurate; show its source rather than an absolute ‘verified’ badge.",
+        "Photos and voice are submissions, not objective proof. Camera rep estimation is separate research and consented processing.",
+        "Keep exercise footage and health evaluation on-device when possible; never upload by default."
+      ],
+      "dataSource": "Existing habit/habit_log plus NEW evidence/observation metadata and consent; no verification service currently exists."
+    },
+    {
+      "title": "Swipe to choose",
+      "priority": "P2 · optional interaction",
+      "summary": "A short, bounded deck for choosing a daily move; ordinary labelled buttons remain available.",
+      "details": [
+        "Right chooses a move for today; left defers that candidate. Both have Undo.",
+        "Neither action completes a task, submits a form, awards progress or changes Aim value.",
+        "Deadlines remain visible outside the deck; no endless feed or punitive streak mechanic."
+      ],
+      "dataSource": "Existing engine task candidates, plan_day.moves, mission refs and nudge outcomes; selection must not mutate completion."
+    },
+    {
+      "title": "A day that genuinely changes",
+      "priority": "P0 · behaviour",
+      "summary": "Check-in and completed actions give space back instead of stacking more cards.",
+      "details": [
+        "Determine today’s Pulse by local day, not whether any historic Pulse exists.",
+        "Retain level, Aim, editorial prose, five Body readings, life knows you, life is asking and due dates.",
+        "Unify selection, actual task status, outcomes and date sources before claiming adaptive intelligence."
+      ],
+      "dataSource": "Existing pulseLog / pulse_log, local-day identity, plan_day, mission_step and recorded outcomes."
+    }
+  ],
+  "repoReality": {
+    "exists": [
+      "Original complete screen and component library",
+      "Local SQLite/Drizzle storage, dated habit logs and provenance fields",
+      "Confirmed-record memory and a grounded conversation foundation",
+      "Rendered Fenny drawing kit",
+      "Native speech/OCR source with runtime verification still pending"
+    ],
+    "missing": [
+      "Real HealthKit/Health Connect and step-counter bridge",
+      "Daily check-in lifecycle and genuine plan selection/outcome linkage",
+      "Truthful sourced dates and shared task status across surfaces",
+      "Production authentication/sync and live AI/provider services",
+      "Actual habit evidence evaluation and app restriction sessions",
+      "Durable notifications, focus timing and live recall scheduling",
+      "Real document/meal extraction and nutrition lookups, rather than sample processing results",
+      "Automatic loading/error/offline/provenance states and native accessibility/performance validation",
+      "Production privacy, health/money copy review, account recovery and complete remote export/delete"
+    ]
+  },
+  "sources": [
+    {
+      "title": "Apple: What’s new in Screen Time API",
+      "url": "https://developer.apple.com/videos/play/wwdc2022/110336/",
+      "supports": "Individual authorization, selected-app shielding, revocation and DeviceActivity"
+    },
+    {
+      "title": "Apple: Family Controls distribution entitlement",
+      "url": "https://developer.apple.com/documentation/familycontrols/requesting-the-family-controls-entitlement",
+      "supports": "Distribution approval and relevant extension requirements"
+    },
+    {
+      "title": "Apple: Authorizing health-data access",
+      "url": "https://developer.apple.com/documentation/healthkit/authorizing-access-to-health-data",
+      "supports": "Per-type consent, HealthKit capability and read-denial privacy"
+    },
+    {
+      "title": "Apple: HealthKit background delivery",
+      "url": "https://developer.apple.com/documentation/healthkit/hkhealthstore/enablebackgrounddelivery(for:frequency:withcompletion:)",
+      "supports": "Step-data background notifications are limited, not an immediate exercise-unlock signal"
+    },
+    {
+      "title": "Android: Read Health Connect data",
+      "url": "https://developer.android.com/health-and-fitness/health-connect/read-data",
+      "supports": "Aggregation, availability, permissions and supported native phone-step capabilities"
+    },
+    {
+      "title": "Android: Motion sensors",
+      "url": "https://developer.android.com/develop/sensors-and-location/sensors/sensors_motion",
+      "supports": "Step-counter availability, permission, since-reboot semantics and latency"
+    },
+    {
+      "title": "Google Play: Sensitive permissions and APIs",
+      "url": "https://support.google.com/googleplay/android-developer/answer/9888170?hl=en",
+      "supports": "Accessibility disclosure, consent and policy constraints"
+    },
+    {
+      "title": "Expo: Pedometer",
+      "url": "https://docs.expo.dev/versions/latest/sdk/pedometer/",
+      "supports": "Foreground updates, platform permissions and history/background limitations"
+    }
+  ],
+  "roadmap": [
+    {
+      "priority": "P0",
+      "effort": "M–L",
+      "title": "One truthful daily loop",
+      "source": "pulseLog, plan_day, mission_step, recorded outcomes, confirmed date fields",
+      "body": "Local-day check-in, consistent task status, sourced countdowns and explicit completion. No synthetic knowledge-confidence claims."
+    },
+    {
+      "priority": "P0",
+      "effort": "L",
+      "title": "Accounts, sync and service boundaries",
+      "source": "Existing SQLite/outbox and local API; Better Auth + Neon/RLS + production file/model adapters still to connect",
+      "body": "Keep local data safe through sign-in, recovery and offline sync. Live AI must use authenticated, consented minimum context."
+    },
+    {
+      "priority": "P1",
+      "effort": "M–L",
+      "title": "Real steps and health provenance",
+      "source": "HealthKit/Health Connect, supported sensor fallback, health_sample, daily_health",
+      "body": "Permissions, source arbitration, freshness and no-data states before any automatic habit completion. Validate wellness scores separately."
+    },
+    {
+      "priority": "P1",
+      "effort": "L",
+      "title": "Make intake and answers genuinely useful",
+      "source": "Existing record/document/food_entry shapes and native OCR source; live vision/extraction, nutrition lookup, Fenny lesson/analysis and evaluated voice/model providers still to wire",
+      "body": "A picked file or meal needs a real reader, reviewable result, confirmation, correct destination and an updated plan. Keep camera/health uploads consented and model limitations visible."
+    },
+    {
+      "priority": "P1",
+      "effort": "M–L",
+      "title": "Durable follow-through",
+      "source": "habit_log, background-task capability, calendar consent, notifications, learning_record / FSRS",
+      "body": "Real reminders with quiet hours, recall scheduling and focus-session timing. Finishing a timer is not proof of completing the work."
+    },
+    {
+      "priority": "P2",
+      "effort": "M–L",
+      "title": "Optional selection and focus experiments",
+      "source": "Proposed bounded move picker; NEW restriction/evidence models and native entitlements",
+      "body": "Test whether these reduce friction. Selected-app shielding and camera estimation are optional, policy-dependent work—not prerequisites for core usefulness."
+    }
+  ]
+}

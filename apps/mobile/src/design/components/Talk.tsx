@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '../Icon';
 import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Callout, Text } from '../Text';

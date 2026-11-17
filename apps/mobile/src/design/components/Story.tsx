@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Image, PanResponder, StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '../Icon';
 import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Callout, Headline, Mono, Text, Title, type Tone } from '../Text';
@@ -27,7 +27,7 @@ export type TwoToneSegment = {
  */
 export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, style }: { segments: TwoToneSegment[]; size?: 'statement' | 'headline' | 'welcomeStatement'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
   const t = useTokens();
-  const quiet = onAtmos ? onAtmosphere.quiet : t.inkQuiet;
+  const quiet = onAtmos ? onAtmosphere.text2 : t.ink2;
   const ink = onAtmos ? onAtmosphere.text : t.ink;
   const glyph = size === 'statement' ? 22 : 18;
   return (

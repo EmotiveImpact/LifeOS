@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, View, type TextProps, type ViewProps } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '@/design/Icon';
 import { Surface, useThemeColor } from 'heroui-native';
 import { withUniwind } from 'uniwind';
 

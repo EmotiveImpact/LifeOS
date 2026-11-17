@@ -9,6 +9,7 @@ export * from './fonts';
 export * from './feedback';
 export * from './Text';
 export * from './Press';
+export * from './Icon';
 export * from './components/Surfaces';
 export * from './components/Progress';
 export * from './components/Story';

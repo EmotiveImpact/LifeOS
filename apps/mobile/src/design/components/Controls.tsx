@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PanResponder, StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '../Icon';
 import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Callout, Text } from '../Text';

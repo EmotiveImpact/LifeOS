@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Linking, Share, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { TASK_CATALOG } from '@life/core/engine';
-import { ActivityTimeline, Button, Card, Checklist, ChipGroup, InsightCard, MoneyFigure, Press, StageStepper, StatusPill, Text, Ticks, ToolTile, TwoTone, feedback, space } from '@/design';
+import { ActivityTimeline, Button, Card, Checklist, ChipGroup, InsightCard, ListRow, MoneyFigure, Press, StageStepper, StatusPill, Text, Ticks, ToolTile, TwoTone, feedback, space } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
@@ -15,7 +15,7 @@ import { MissionPreview } from './Today';
 export const toolkit: { title: string; key: ScreenKey; level: number; icon: React.ComponentProps<typeof ToolTile>['icon'] }[] = [
   { title: '30-day cash plan', key: 'cashplan', level: 1, icon: 'cash-outline' }, { title: 'Tax & NI check', key: 'taxcheck', level: 1, icon: 'calculator-outline' }, { title: 'Money & ledger', key: 'money', level: 2, icon: 'wallet-outline' }, { title: 'Subscriptions', key: 'subs', level: 2, icon: 'repeat-outline' }, { title: 'Body & habits', key: 'body', level: 1, icon: 'heart-outline' }, { title: 'Income & structure', key: 'income', level: 3, icon: 'briefcase-outline' }, { title: 'Rent vs buy', key: 'rentbuy', level: 3, icon: 'home-outline' }, { title: 'Bloodwork reader', key: 'blood', level: 3, icon: 'water-outline' }, { title: 'Protection review', key: 'protect', level: 4, icon: 'shield-outline' }, { title: 'Growth path', key: 'growth', level: 4, icon: 'trending-up-outline' }, { title: 'Learn', key: 'library', level: 1, icon: 'bulb-outline' }, { title: 'Health stack', key: 'healthstack', level: 2, icon: 'fitness-outline' }, { title: 'Mortgage vs invest', key: 'rentbuy', level: 4, icon: 'bar-chart-outline' },
 ];
-export function ToolGrid() { const nav = useNavigation(), { engine, choose, data } = useSeed(); return <View style={layout.grid}>{toolkit.filter(tool => tool.key !== 'healthstack').map(tool => <View key={tool.title} style={{ width: '48%', flexGrow: 1 }}><ToolTile title={tool.title} icon={tool.icon} locked={tool.level > engine.level.currentLevel && !data.flags[`unlocked-${tool.key}`]} level={tool.level} onPress={() => { if (tool.level > engine.level.currentLevel && !data.flags[`unlocked-${tool.key}`]) { choose('unlock-tool', tool.key); choose('unlock-tool-title', tool.title); nav.go('unlock'); } else nav.go(tool.key); }} /></View>)}</View>; }
+export function ToolGrid() { const nav = useNavigation(), { engine, choose, data } = useSeed(); return <View style={layout.grid}>{toolkit.map(tool => <View key={tool.title} style={{ width: '48%', flexGrow: 1 }}><ToolTile title={tool.title} icon={tool.icon} locked={tool.level > engine.level.currentLevel && !data.flags[`unlocked-${tool.key}`]} level={tool.level} onPress={() => { if (tool.level > engine.level.currentLevel && !data.flags[`unlocked-${tool.key}`]) { choose('unlock-tool', tool.key); choose('unlock-tool-title', tool.title); nav.go('unlock'); } else nav.go(tool.key); }} /></View>)}</View>; }
 export function PlanScreen({ screen }: { screen: ScreenKey }) {
   const nav = useNavigation(), { data, set, flag, choose, draft, engine } = useSeed();
   const [filter, setFilter] = useState('All'), [goal, setGoal] = useState(data.drafts['newgoal'] ?? 'Move out by July 2027'), [copied, setCopied] = useState(false);
@@ -26,20 +26,38 @@ export function PlanScreen({ screen }: { screen: ScreenKey }) {
   const reference = isTax ? seedTaxClaim.reference : isReferral ? 'UBRN-4821-0934' : task.id;
   const steps = isTax ? ['Sign in to Government Gateway', 'Check the P800 against payslips', 'Claim by bank transfer'] : task.steps;
   const openMission = (id: string) => { set({ selectedMission: id }); nav.go('mission'); };
+  const [planDetails, setPlanDetails] = useState(false);
   const params = useLocalSearchParams<{ state?: string }>();
   if (screen === 'plan' && params.state === 'emptyplan') return <Screen screen={screen} title="Plan"><ParentStateContent kind="emptyplan" /></Screen>;
-  if (screen === 'plan') return <Screen screen={screen} title="Plan" eyebrow={`November · ${engine.tasks.filter(task => !data.completed.includes(task.id)).length} open`} actions={[{ kind: 'icon', icon: 'add', label: 'Add something', onPress: () => nav.go('newgoal') }]}>
-    <Section title="Needs you" meta="All missions" onPress={() => nav.go('missions')}>
-      {!data.completed.includes('nhs-outpatient-referral') ? <MissionPreview title="Hospital referral" status="Waiting" sub="Cardiology · waiting 11 weeks · sample record" filled={7} id="nhs-outpatient-referral" /> : null}
-      {!data.completed.includes('uk-single-person-council') ? <MissionPreview title="Council tax discount" status="To do" sub="25% off · takes 4 min" filled={2} id="uk-single-person-council" /> : null}
-      {data.completed.includes('nhs-outpatient-referral') && data.completed.includes('uk-single-person-council') ? <Text variant="body" tone="ink2">Those next steps are cleared. See all missions for your other options.</Text> : null}
-    </Section>
-    {!data.completed.includes('uk-hmrc-tax-code') ? <Section title="Waiting"><MissionPreview title="HMRC tax rebate" status="Submitted" sub="Sample case · decision in 6 days" filled={16} /></Section> : null}
-    <Card onPress={() => nav.go('gambit')} style={{ gap: space.sm }}><View style={[layout.between, { flexWrap: 'wrap' }]}><Text variant="callout" tone="ink2">This month’s gambit</Text><Text variant="callout" tone="ink2">Check-in Sat 17:00</Text></View><TwoTone size="headline" segments={[{ text: 'I want to ', tone: 'quiet' }, { text: 'claim every £ I’m owed ' }, { text: 'and ', tone: 'quiet' }, { text: 'start a 3-month buffer ' }, { text: 'so money stops running my week.', tone: 'quiet' }]} /></Card>
-    <Section title="Your areas"><ChipGroup options={['Money', 'Work', 'Home', 'Health', 'Relationships', 'Life admin'].map(v => ({ value: v, label: v }))} value={filter} onChange={v => { setFilter(v); nav.go(v === 'Money' ? 'area' : v === 'Work' ? 'areawork' : v === 'Home' ? 'areahome' : v === 'Health' ? 'areahealth' : v === 'Relationships' ? 'people' : 'vault'); }} /></Section>
-    <Section title="Toolkit" meta="All tools" onPress={() => nav.go('tools')}><ToolGrid /></Section>
-    <Rows rows={[{ title: 'Your Aim', to: 'aim' }, { title: 'Things to know', to: 'ttk' }, { title: 'Body', to: 'body' }, { title: 'Documents and renewals', to: 'vault' }, { title: 'Learn', to: 'library' }, { title: 'Missions history', to: 'history' }]} />
-  </Screen>;
+  if (screen === 'plan') {
+    const habit = data.habits.find(item => !item.last14[item.last14.length - 1]) ?? data.habits[0];
+    const ready = [
+      { title: 'Check your tax code', sub: 'Start with your payslip.', area: 'Money', icon: 'document-text-outline' as const, visible: !data.completed.includes('uk-hmrc-tax-code'), onPress: () => nav.go('taxcheck') },
+      { title: 'Set your cash plan', sub: 'Know what the month needs.', area: 'Money', icon: 'wallet-outline' as const, visible: true, onPress: () => nav.go('cashplan') },
+      { title: habit?.name ?? 'Your habits', sub: 'Keep the small routine going.', area: 'Body', icon: 'heart-outline' as const, visible: true, onPress: () => nav.go('habits') },
+      { title: 'Council tax discount', sub: 'Check your household details.', area: 'Home', icon: 'home-outline' as const, visible: !data.completed.includes('uk-single-person-council'), onPress: () => openMission('uk-single-person-council') },
+    ].filter(row => row.visible && (filter === 'All' || filter === row.area)).slice(0, 3);
+    const waiting = [
+      { title: 'Hospital referral', sub: 'Waiting 11 weeks · sample record', area: 'Body', icon: 'heart-outline' as const, id: 'nhs-outpatient-referral' },
+      { title: 'HMRC tax rebate', sub: 'Submitted · sample case', area: 'Money', icon: 'document-text-outline' as const, id: 'uk-hmrc-tax-code' },
+    ].filter(row => !data.completed.includes(row.id) && (filter === 'All' || filter === row.area));
+    return <Screen screen={screen} title="Plan" actions={[{ kind: 'icon', icon: 'add', label: 'Add something', onPress: () => nav.go('newgoal') }]}>
+      <TwoTone segments={[{ text: 'Everything you’re managing.\n' }, { text: 'Not everything to do today.', tone: 'quiet' }]} />
+      <ChipGroup options={['All', 'Money', 'Home', 'Body'].map(value => ({ value, label: value }))} value={filter} onChange={setFilter} />
+      <Section title="Ready when you are" meta="All missions" onPress={() => nav.go('missions')}>
+        {ready.length ? <Rows rows={ready} /> : <Text variant="callout" tone="ink2">Nothing active in this area. Your other work is still in All.</Text>}
+      </Section>
+      {waiting.length ? <Section title="Waiting, not forgotten"><Rows rows={waiting.map(row => ({ title: row.title, sub: row.sub, icon: row.icon, value: 'Waiting', onPress: () => openMission(row.id) }))} /><Text variant="callout" tone="ink2">Waiting items don’t compete with things you can act on.</Text></Section> : null}
+      <Section title="Your tools" meta="All tools" onPress={() => nav.go('tools')}>
+        <View style={[layout.row, { alignItems: 'stretch', gap: space.xs }]}><ToolTile compact title="Cash plan" icon="wallet-outline" onPress={() => nav.go('cashplan')} /><ToolTile compact title="Documents" icon="document-text-outline" onPress={() => nav.go('vault')} /></View>
+      </Section>
+      <ListRow title="This month’s gambit" sub={data.profile.monthlyGambit ?? 'Your one bigger commitment.'} chevron onPress={() => nav.go('gambit')} />
+      <Section title="Your areas"><ChipGroup options={['Money', 'Work', 'Home', 'Health', 'Relationships', 'Life admin'].map(value => ({ value, label: value }))} value={null} onChange={value => nav.go(value === 'Money' ? 'area' : value === 'Work' ? 'areawork' : value === 'Home' ? 'areahome' : value === 'Health' ? 'areahealth' : value === 'Relationships' ? 'people' : 'vault')} /></Section>
+      <ListRow title="Completed and history" sub="What you’ve already taken care of." chevron onPress={() => nav.go('history')} />
+      <Button variant="secondary" label={planDetails ? 'Fewer Plan links' : 'More from Plan'} onPress={() => setPlanDetails(value => !value)} />
+      {planDetails ? <View style={{ gap: space.lg }}><Section title="Full toolkit"><ToolGrid /></Section><Rows rows={[{ title: 'Your Aim', to: 'aim' }, { title: 'Things to know', to: 'ttk' }, { title: 'Body', to: 'body' }, { title: 'Documents and renewals', to: 'vault' }, { title: 'Learn', to: 'library' }, { title: 'All missions', to: 'missions' }]} /></View> : null}
+    </Screen>;
+  }
   if (screen === 'mission') return <Screen screen={screen} title={title} action={{ kind: 'icon', icon: 'ellipsis-horizontal', label: 'Mission actions', onPress: () => flag('mission-actions') }} footer={<><Button label={clear ? 'Cleared · undo' : 'Mark as cleared'} onPress={() => { set({ completed: clear ? data.completed.filter(id => id !== task.id) : [...data.completed, task.id] }); if (!clear) feedback.cleared(); }} /><Button variant="link" label="Why am I seeing this?" onPress={() => nav.go('why')} /></>}>
     <View style={{ gap: space.xs }}><Text variant="callout" tone="ink2">{`${isTax ? 'Money' : isReferral ? 'Health' : 'Plan'} · ${task.provider}`}</Text>{missionValue ? <><Text variant="callout" tone="ink2">Estimated value</Text><MoneyFigure value={missionValue} decimals={0} size="l" align="left" hidden={data.prefs.hideBalances} /></> : null}<Text variant="body" tone="ink2">About 12 minutes in total</Text></View>
     <View style={{ gap: space.lg }}><StageStepper stages={[{ label: 'Started', timestamp: '12 Nov' }, { label: 'Submitted', timestamp: 'Today' }, { label: 'Cleared', timestamp: '~22 Nov' }]} current={clear ? 3 : 1} /><View style={[layout.between, { flexWrap: 'wrap' }]}><View style={{ flex: 1, minWidth: space.xxxl * 3, gap: space.xxs }}><Text variant="callout" tone="ink2">Reference</Text><Text variant="mono">{reference}</Text></View><Button variant="link" label={copied ? 'Copied' : 'Copy'} onPress={async () => { await Clipboard.setStringAsync(reference); setCopied(true); }} /></View></View>

@@ -9,7 +9,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '../Icon';
 import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Body, Callout, Mono, Text } from '../Text';

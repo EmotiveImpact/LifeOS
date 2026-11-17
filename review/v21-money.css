@@ -1,0 +1,133 @@
+/* v21 Money — content-only composition. Header/footer/photography/control geometry
+   are owned by the lead. Every selector below requires an explicitly assigned class. */
+.v21-money .v21-m-stack { gap:20px!important; }
+.v21-money .v21-m-paper { background:transparent!important; box-shadow:none!important; border-radius:0!important; padding:0!important; }
+.v21-money .v21-m-label { display:block; margin:0; }
+.v21-money .v21-m-record { min-height:44px; padding:12px 0; gap:12px; box-shadow:none!important; }
+.v21-money .v21-m-record>.lt { min-width:0; }
+.v21-money .v21-m-section-title { margin-top:4px; }
+.v21-money .v21-m-reading { max-width:100%; }
+
+/* A working tax case: the three existing steps become a readable action sequence. */
+.v21-money .v21-m-case-intro { gap:8px!important; }
+.v21-money .v21-m-case-status { gap:16px!important; }
+.v21-money .v21-m-case-steps { display:flex; flex-direction:column; gap:12px; margin:0; padding:0; overflow:visible; }
+.v21-money .v21-m-case-step { flex:0 0 auto!important; display:grid; grid-template-columns:88px minmax(0,1fr); align-items:start; gap:12px!important; }
+.v21-money .v21-m-case-step>.tag { justify-self:start; }
+.v21-money .v21-m-draft-link { min-height:44px; gap:8px!important; padding:16px!important; border-radius:14px!important; background:var(--surface-2)!important; }
+
+/* The live balance is not boxed. All three account pots fit without hiding one. */
+.v21-money .v21-m-balance { align-items:flex-start!important; gap:8px!important; padding:16px 20px 0!important; }
+.v21-money .v21-m-pots { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0; padding:0; overflow:visible; }
+.v21-money .v21-m-pot { min-width:0; flex:initial!important; padding:12px!important; border-radius:12px; gap:8px!important; box-shadow:none!important; background:var(--surface-2); }
+.v21-money .v21-m-pot>.tnum { white-space:nowrap; font-size:16px; line-height:21px; }
+.v21-money .v21-m-ledger>.row { padding:0 0 8px!important; }
+.v21-money .v21-m-ledger>.v21-m-record>.tnum { flex-shrink:0; text-align:right; }
+.v21-money .v21-m-ledger>.v21-m-record>.ic { background:var(--surface-2); }
+
+/* Merchant, amount, facts: receipt structure rather than a loose stack of labels. */
+.v21-money .v21-m-receipt { align-items:stretch!important; }
+.v21-money .v21-m-receipt-identity { display:flex; align-items:center; gap:12px; }
+.v21-money .v21-m-merchant { width:44px!important; height:44px!important; border-radius:12px!important; background:var(--surface-2)!important; color:var(--text)!important; }
+.v21-money .v21-m-payment { margin:4px 0 8px; }
+.v21-money .v21-m-receipt-facts { display:flex; flex-direction:column; gap:8px!important; }
+.v21-money .v21-m-fact { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:8px 12px; min-height:44px; padding:12px 0; box-shadow:none!important; }
+.v21-money .v21-m-fact-pair { display:grid!important; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:4px 16px!important; }
+.v21-money .v21-m-fact-pair>.t-callout:not(.v21-m-debt-note) { color:var(--text); text-align:right; }
+.v21-money .v21-m-fact-pair>.t-body { color:var(--text-2); }
+.v21-money .v21-m-receipt-facts>.v21-m-fact>.t-callout { grid-column:1/-1; justify-self:end; }
+
+/* Charge and opportunity stay distinct; the original 12-month bars do not change. */
+.v21-money .v21-m-bill-head { align-items:flex-start; }
+.v21-money .v21-m-bill-head>.col { align-items:flex-start; gap:8px!important; }
+.v21-money .v21-m-bill-amount { font-size:56px; line-height:58px; letter-spacing:-.045em; }
+.v21-money .v21-m-opportunity { background:var(--surface)!important; gap:12px!important; }
+.v21-money .v21-m-opportunity-title { color:var(--text)!important; font-size:20px; line-height:26px; }
+.v21-money .v21-m-bill-history { gap:12px!important; margin-top:4px; }
+
+/* Flexible categories are ordered by pressure, with already-covered costs quieter. */
+.v21-money .v21-m-budget-group { display:flex; flex-direction:column; gap:16px; }
+.v21-money .v21-m-budget-group>.v21-m-label { margin-bottom:4px; }
+.v21-money .v21-m-budget-line { gap:8px!important; }
+.v21-money .v21-m-budget-attention { padding:16px!important; border-radius:14px!important; background:var(--surface)!important; }
+.v21-money .v21-m-budget-covered { padding-top:4px; }
+.v21-money .v21-m-budget-remaining { color:var(--text); font-size:20px; line-height:26px; }
+
+/* A balance sheet: values line up, the debt qualification gets a complete line. */
+.v21-money .v21-m-worth-total { font-size:32px; line-height:36px; letter-spacing:-.035em; }
+.v21-money .v21-m-balance-sheet { display:flex; flex-direction:column; gap:4px!important; }
+.v21-money .v21-m-balance-sheet>.v21-m-fact { display:block; }
+.v21-money .v21-m-debt-note { grid-column:1/-1; text-align:left; color:var(--text-2); padding-top:4px; }
+
+/* Cancellation keeps its own 44pt action, never squeezed between long labels. */
+.v21-money .v21-m-subscriptions-unused { display:flex; flex-direction:column; gap:12px; }
+.v21-money .v21-m-subscription { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 12px; align-items:start; padding:16px; border-radius:14px; background:var(--surface); box-shadow:none!important; }
+.v21-money .v21-m-subscription-copy { min-width:0; gap:4px!important; }
+.v21-money .v21-m-subscription>.tnum { white-space:nowrap; }
+.v21-money .v21-m-cancel { grid-column:2; justify-self:end; min-width:44px; min-height:44px; height:44px!important; padding:0 12px!important; margin:0!important; font-size:13px!important; }
+
+/* Only the income assumption moves; original slider and timeline internals survive. */
+.v21-money .v21-m-income-assumption { padding:16px; border-radius:14px; background:var(--surface); display:flex; flex-direction:column; gap:12px; }
+.v21-money .v21-m-income-line { padding:0; box-shadow:none!important; }
+.v21-money .v21-m-income-line>.col { gap:12px!important; }
+.v21-money .v21-m-cash-answer { gap:8px!important; }
+.v21-money .v21-m-commitments { gap:4px!important; }
+
+/* Current overpayment reads as one actionable year, not a third settled record. */
+.v21-money .v21-m-tax-action { padding:16px; border-radius:14px; background:var(--surface); }
+.v21-money .v21-m-tax-year { padding:0; min-height:44px; box-shadow:none!important; }
+.v21-money .v21-m-ni { gap:16px!important; margin-top:4px; }
+.v21-money .v21-m-ni-heading { display:flex; flex-wrap:wrap; align-items:flex-start; gap:8px 12px; }
+.v21-money .v21-m-ni-heading>.t-title3 { flex:1 1 180px; }
+
+/* Company status is a comparison, with the engine's conclusion before the detail. */
+.v21-money .v21-m-compare { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px!important; }
+.v21-money .v21-m-compare-option { display:flex; flex-direction:column; gap:12px; background:var(--surface-2); border-radius:14px; padding:16px; min-width:0; }
+.v21-money .v21-m-compare-value { display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+.v21-money .v21-m-compare-note { grid-column:1/-1; margin-top:4px; }
+.v21-money .v21-m-unused-separator { display:none; }
+.v21-money .v21-m-engine-conclusion { font-size:24px!important; line-height:31px!important; }
+
+/* Affordability precedes aspirational upside, without touching model marks. */
+.v21-money .v21-m-affordability { align-items:flex-start; gap:12px!important; }
+.v21-money .v21-m-affordability>.chipb { min-width:44px; min-height:44px; flex-shrink:0; }
+.v21-money .v21-m-model-fact { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:12px; padding:12px 0; box-shadow:none!important; }
+.v21-money .v21-m-model-fact>.tnum { white-space:nowrap; text-align:right; }
+
+/* The next mission has more space, not more competing calls to action. */
+.v21-money .v21-m-lead-mission { padding:16px; border-radius:14px; background:var(--surface); }
+.v21-money .v21-m-lead-mission-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 12px; padding:0; min-height:44px; }
+.v21-money .v21-m-lead-mission-row>.src { grid-column:1/-1; }
+.v21-money .v21-m-lead-mission-row>.lt { min-width:0; gap:8px!important; }
+.v21-money .v21-m-lead-mission-row>.lt>.t-body { font-size:20px; line-height:26px; }
+.v21-money .v21-m-lead-mission-row>.tag { align-self:start; }
+.v21-money .v21-m-waiting { padding:0 16px!important; background:var(--surface-2)!important; border-radius:14px!important; }
+
+/* Cleared includes non-cash outcomes. Long confirmations wrap instead of colliding. */
+.v21-money .v21-m-history-total { font-size:32px; line-height:36px; letter-spacing:-.035em; }
+.v21-money .v21-m-audit-row { display:grid; grid-template-columns:24px minmax(0,1fr); align-items:start; gap:4px 12px; padding:16px 0; box-shadow:none!important; }
+.v21-money .v21-m-audit-row>.box { grid-row:1/3; margin-top:4px; }
+.v21-money .v21-m-audit-row>.lt { min-width:0; color:var(--text)!important; text-decoration:none!important; gap:4px!important; }
+.v21-money .v21-m-audit-outcome { grid-column:2; color:var(--text); justify-self:start; text-align:left; }
+
+/* One urgent renewal, then a calm archive of the five other records. */
+.v21-money .v21-m-document-action { background:var(--surface); border-radius:14px; padding:16px; }
+.v21-money .v21-m-document-action-row { display:grid; grid-template-columns:32px minmax(0,1fr); align-items:start; gap:8px 12px; padding:0; min-height:44px; }
+.v21-money .v21-m-document-action-row>.col { min-width:0; gap:4px!important; }
+.v21-money .v21-m-document-action-row>.col>.t-body { font-size:20px; line-height:26px; }
+.v21-money .v21-m-document-action-row>.tag { grid-column:2; justify-self:start; }
+.v21-money .v21-m-document-archive>.v21-m-record>.col { min-width:0; gap:4px!important; }
+
+/* Expiry and its reminder are one document brief; the encrypted copy is separate. */
+.v21-money .v21-m-document-summary { display:flex; flex-direction:column; gap:16px; background:var(--surface); border-radius:14px; padding:16px; }
+.v21-money .v21-m-expiry { flex-direction:column; align-items:flex-start; gap:12px; }
+.v21-money .v21-m-expiry>.col { gap:8px!important; }
+.v21-money .v21-m-reminder { gap:8px!important; }
+.v21-money .v21-m-saved-copy { padding:0 16px; background:var(--surface-2); border-radius:14px; }
+
+/* The comparison window is the decision; the insurer's price is context. */
+.v21-money .v21-m-renewal-window { gap:12px!important; background:var(--surface); }
+.v21-money .v21-m-window-heading { flex-direction:column; align-items:flex-start; gap:12px; }
+.v21-money .v21-m-window-heading>.t-body { font-size:24px; line-height:31px; }
+.v21-money .v21-m-renewal-quote { gap:8px!important; }
+.v21-money .v21-m-renewal-actions { display:flex; flex-direction:column; gap:4px; }

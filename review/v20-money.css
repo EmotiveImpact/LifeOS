@@ -1,0 +1,156 @@
+/* v20 money: all rules are scoped to catalogue screens marked by v20-money.js. */
+.v20-money{--v20-gutter:20px;--v20-4:4px;--v20-8:8px;--v20-12:12px;--v20-16:16px;--v20-20:20px;--v20-24:24px;color:var(--text)}
+.v20-money .scroll>.pad,.v20-money>.pad{padding-left:var(--v20-gutter)!important;padding-right:var(--v20-gutter)!important}
+.v20-money .v20-topbar{min-height:44px!important;padding-top:4px!important;padding-bottom:4px!important}
+.v20-money .v20-topbar>.t-title3{font-size:16px;line-height:21px;letter-spacing:-.014em;font-weight:600}
+.v20-money .v20-intro-block{gap:4px!important;padding-top:8px!important}
+.v20-money .v20-main-content{gap:16px!important;padding-top:16px!important;padding-bottom:24px!important}
+.v20-money .v20-title-block{gap:4px!important;align-items:flex-start}
+.v20-money .v20-screen-title{font-size:32px!important;line-height:36px!important;letter-spacing:-.034em!important;font-weight:600!important}
+.v20-money .t-display,.v20-money .v20-financial-headline{font-size:56px;line-height:58px;letter-spacing:-.045em;font-weight:600;font-variant-numeric:tabular-nums}
+.v20-money .t-title1{font-size:32px;line-height:36px;letter-spacing:-.034em;font-weight:600}
+.v20-money .t-title2{font-size:24px;line-height:31px;letter-spacing:-.022em;font-weight:500}
+.v20-money .t-title3{font-size:16px;line-height:21px;letter-spacing:-.014em}
+.v20-money .t-body{font-size:15px;line-height:22px;letter-spacing:-.008em}
+.v20-money .t-callout{font-size:13px;line-height:18px;letter-spacing:-.003em}
+.v20-money .tnum,.v20-money [data-mk],.v20-money .count{font-variant-numeric:tabular-nums}
+.v20-money .cq{color:var(--text-2)}
+.v20-money .t-display .cq,.v20-money .v20-financial-headline .cq{font-size:.62em;letter-spacing:-.02em}
+.v20-money .card{border:0!important;border-radius:20px!important}
+.v20-money .card:not(.v20-list-card){padding:20px!important}
+.v20-money .v20-list-card{padding:4px 16px!important}
+.v20-money .li{border:0!important;min-height:56px;padding:12px 0!important;gap:12px}
+.v20-money .li+.li{margin-top:4px}
+.v20-money .v20-money-row{align-items:center}
+.v20-money .v20-row-copy{gap:2px!important;min-width:0}
+.v20-money .v20-row-copy>.t-body:first-child{font-weight:600!important}
+.v20-money .v20-row-amount{font-size:16px!important;line-height:21px!important;letter-spacing:-.014em!important;white-space:nowrap}
+.v20-money .v20-row-status{flex:0 0 auto;white-space:nowrap}
+.v20-money .ic,.v20-money .src{flex:0 0 auto}
+.v20-money .tag{border:0!important;min-height:24px;padding:4px 8px;border-radius:12px;font-size:13px;line-height:16px}
+.v20-money .segm{border:0!important;padding:4px!important;border-radius:14px!important;background:var(--surface-2)!important;gap:4px}
+.v20-money .segm button{border:0!important;min-height:36px;border-radius:12px!important;font-size:13px;line-height:18px}
+.v20-money .btn{border:0!important;min-height:50px;border-radius:14px!important;padding:12px 20px;font-size:15px;line-height:22px;font-weight:600}
+.v20-money .v20-main-content>.btn:not(.s),.v20-money .sheet>.btn:not(.s){width:100%}
+.v20-money .chipb{border:0!important;min-height:40px;border-radius:20px!important;padding:8px 12px;font-size:13px;line-height:18px}
+.v20-money .box{border:0!important;background:var(--surface-2)}
+.v20-money .ticks{border:0!important}
+.v20-money .v20-structural-group{display:flex;flex-direction:column;gap:12px;min-width:0}
+.v20-money .v20-finance-hero{gap:4px;padding:8px 0 20px;align-items:flex-start}
+.v20-money .v20-finance-hero>.t-callout:first-child{font-weight:500}
+.v20-money .v20-named-group{gap:8px}
+.v20-money .v20-named-group>.t-callout:first-child{padding:0 4px;font-weight:600;color:var(--text)}
+.v20-money .v20-card-stack,.v20-money .v20-calculator-panels,.v20-money .v20-budget-stack{gap:12px}
+.v20-money .v20-card-stack>.card,.v20-money .v20-calculator-panels>.card,.v20-money .v20-budget-stack>.card{margin:0}
+.v20-money .v20-secondary-action{align-self:stretch;background:var(--surface-2);color:var(--text)}
+
+.v20-money.v20-money-key-money .v20-balance-hero{gap:4px!important;padding-top:20px!important;align-items:center!important}
+.v20-money.v20-money-key-money .v20-balance-hero .t-callout:first-child{order:2;margin-top:4px}
+.v20-money.v20-money-key-money .v20-balance-hero [data-bal]{order:1}
+.v20-money.v20-money-key-money .v20-balance-hero [data-bd]{order:3}
+.v20-money.v20-money-key-money .v20-main-content{gap:20px!important;padding-top:20px!important}
+.v20-money.v20-money-key-money .v20-account-group{display:block;overflow:visible}
+.v20-money.v20-money-key-money .v20-account-group>.hrow{gap:8px;padding:0 0 4px}
+.v20-money.v20-money-key-money .v20-account-group .card{flex-basis:140px!important;min-height:100px;padding:16px!important;justify-content:flex-end;gap:8px!important;border-radius:14px!important}
+.v20-money.v20-money-key-money .v20-account-group .t-title3{font-size:20px;line-height:26px;letter-spacing:-.02em}
+.v20-money.v20-money-key-money .v20-ledger-group{gap:8px}
+.v20-money.v20-money-key-money .v20-ledger-group>.row{padding:0 4px!important}
+.v20-money.v20-money-key-money .v20-ledger-group>.row>.t-title3{font-size:20px;line-height:26px;letter-spacing:-.02em}
+.v20-money.v20-money-key-money .v20-ledger-group>.card{border-radius:20px!important}
+.v20-money.v20-money-key-money .v20-ledger-group .li{min-height:64px}
+
+.v20-money.v20-money-key-txn .v20-main-content{gap:16px!important;padding-top:20px!important}
+.v20-money.v20-money-key-txn .v20-payment-hero{width:100%;padding-bottom:8px}
+.v20-money.v20-money-key-txn .v20-payment-hero .adot{margin-bottom:12px}
+.v20-money.v20-money-key-txn .v20-payment-hero .t-callout{order:3}
+.v20-money.v20-money-key-txn .v20-payment-hero .t-display{order:2}
+.v20-money.v20-money-key-txn .v20-facts-card{width:100%;padding:4px 16px!important}
+
+.v20-money.v20-money-key-bill .v20-bill-hero{padding-top:12px;padding-bottom:8px}
+.v20-money.v20-money-key-bill .v20-bill-hero>.row{width:100%;align-items:flex-start;gap:12px}
+.v20-money.v20-money-key-bill .v20-bill-hero .t-title1{font-size:56px;line-height:58px;letter-spacing:-.045em}
+.v20-money.v20-money-key-bill .v20-opportunity-card{gap:12px!important;background:var(--gain-tint)!important}
+.v20-money.v20-money-key-bill .v20-opportunity-card>.t-body{font-size:20px;line-height:26px;letter-spacing:-.02em}
+.v20-money.v20-money-key-bill .v20-history-card{padding:16px 20px!important;gap:12px!important}
+
+.v20-money.v20-money-key-subs .v20-subscription-hero{padding-top:4px;padding-bottom:12px}
+.v20-money.v20-money-key-subs .v20-subscription-hero .t-title1{font-size:56px;line-height:58px;letter-spacing:-.045em}
+.v20-money.v20-money-key-subs .v20-subscription-list{padding:4px 16px!important}
+.v20-money.v20-money-key-subs .v20-subscription-list .li{min-height:68px}
+.v20-money.v20-money-key-subs .v20-subscription-list .ce{font-weight:600}
+
+.v20-money.v20-money-key-budget .v20-intro-block{padding-top:12px!important}
+.v20-money.v20-money-key-budget .v20-main-content{padding-top:20px!important}
+.v20-money.v20-money-key-budget .v20-budget-stack{gap:8px}
+.v20-money.v20-money-key-budget .v20-budget-stack>.card{padding:16px 20px!important;border-radius:14px!important;gap:12px!important}
+.v20-money.v20-money-key-budget .v20-budget-stack>.card .row{align-items:baseline}
+.v20-money.v20-money-key-budget .v20-budget-stack>.card .t-body{font-size:16px;line-height:21px}
+.v20-money.v20-money-key-budget .v20-budget-stack>.card [style*="height:6px"]{height:8px!important;border-radius:4px!important;overflow:hidden}
+.v20-money.v20-money-key-budget .v20-budget-stack>.card [style*="height:6px"]>i{border-radius:4px!important}
+
+.v20-money.v20-money-key-networth .v20-networth-hero{padding-top:4px;padding-bottom:16px}
+.v20-money.v20-money-key-networth .v20-networth-hero>.t-callout{font-weight:600;color:var(--gain)}
+.v20-money.v20-money-key-networth .v20-main-content>.card{padding:4px 16px!important}
+.v20-money.v20-money-key-networth .v20-main-content>.card .li{min-height:64px}
+
+.v20-money.v20-money-calculator .v20-title-block{gap:4px!important}
+.v20-money.v20-money-calculator .v20-main-content{gap:16px!important}
+.v20-money.v20-money-calculator .v20-calculator-panels{gap:12px}
+.v20-money.v20-money-calculator .v20-calculator-panels>.card{border-radius:14px!important}
+.v20-money.v20-money-calculator .v20-calculator-panels>.card:first-child{border-radius:20px!important}
+.v20-money.v20-money-calculator .range-bar,.v20-money.v20-money-calculator .ticks{overflow:hidden}
+.v20-money.v20-money-key-cashplan .v20-main-content>.t-statement,.v20-money.v20-money-key-taxcheck .v20-main-content>.t-statement,.v20-money.v20-money-key-rentbuy .v20-main-content>.t-statement{font-size:24px;line-height:31px;letter-spacing:-.022em}
+.v20-money.v20-money-key-income .v20-main-content>.row,.v20-money.v20-money-key-rentbuy .v20-main-content>.row{padding:8px 0}
+.v20-money.v20-money-key-blood .v20-main-content>.card{padding:16px 20px!important}
+.v20-money.v20-money-key-blood .range-bar{border-radius:12px!important}
+.v20-money.v20-money-key-protect .v20-list-card .li{min-height:64px}
+.v20-money.v20-money-key-growth .chipb{min-height:44px;padding:12px 16px}
+.v20-money.v20-money-key-decisions .v20-card-stack>.card{padding:16px 20px!important;border-radius:14px!important}
+.v20-money.v20-money-key-healthstack .v20-card-stack>.card:first-child{border-radius:20px!important}
+
+.v20-money.v20-money-list-heavy .v20-main-content{gap:20px!important}
+.v20-money.v20-money-list-heavy .v20-list-card{border-radius:20px!important}
+.v20-money.v20-money-key-mission .v20-mission-hero{gap:4px;padding:4px 0 8px}
+.v20-money.v20-money-key-mission .v20-mission-hero .t-title1{font-size:32px;line-height:36px}
+.v20-money.v20-money-key-mission .v20-main-content>.card{border-radius:14px!important}
+.v20-money.v20-money-key-missions .v20-named-group,.v20-money.v20-money-key-history .v20-named-group{gap:8px}
+.v20-money.v20-money-key-missions .v20-named-group>.card,.v20-money.v20-money-key-history .v20-named-group>.card{margin:0}
+.v20-money.v20-money-key-area .v20-main-content>.card,.v20-money.v20-money-key-areahome .v20-main-content>.card,.v20-money.v20-money-key-areahealth .v20-main-content>.card,.v20-money.v20-money-key-areawork .v20-main-content>.card{padding:4px 16px!important}
+.v20-money.v20-money-key-tools .v20-main-content{gap:20px!important}
+.v20-money.v20-money-key-tools .v20-main-content>.card{padding:16px 20px!important;border-radius:14px!important}
+.v20-money.v20-money-key-tools .v20-main-content>.card .ic{background:var(--surface-2)}
+.v20-money.v20-money-key-doitforme .v20-main-content>.card{padding:16px 20px!important}
+
+.v20-money.v20-money-documents .v20-main-content{gap:16px!important}
+.v20-money.v20-money-key-vault .v20-due-group{gap:8px}
+.v20-money.v20-money-key-vault .v20-priority-row{min-height:88px;padding:16px!important;border-radius:20px;background:var(--surface);align-items:center}
+.v20-money.v20-money-key-vault .v20-priority-row .t-body{font-size:16px;line-height:21px;font-weight:600!important}
+.v20-money.v20-money-key-vault .v20-sorted-documents{padding:4px 16px!important}
+.v20-money.v20-money-key-vault .v20-sorted-documents .li{min-height:64px}
+.v20-money.v20-money-key-docdetail .v20-document-hero,.v20-money.v20-money-key-renewal .v20-document-hero{padding-top:8px;padding-bottom:12px}
+.v20-money.v20-money-key-docdetail .v20-document-hero>.row{width:100%;align-items:flex-start}
+.v20-money.v20-money-key-renewal .v20-document-hero .t-title1{font-size:56px;line-height:58px;letter-spacing:-.045em}
+.v20-money.v20-money-key-renewal .v20-main-content>.card:first-of-type{padding:20px!important}
+.v20-money.v20-money-key-renewal .v20-list-card .li{min-height:64px}
+
+.v20-money.v20-money-key-connectbank .v20-main-content{gap:20px!important;padding-top:24px!important}
+.v20-money.v20-money-key-connectbank .v20-main-content>.sqb{margin-bottom:4px}
+.v20-money.v20-money-key-connectbank .v20-main-content>.t-title1{font-size:32px;line-height:36px}
+.v20-money.v20-money-key-connectbank .v20-list-card .li{min-height:64px}
+.v20-money.v20-money-key-ttk .hrow{gap:8px;padding-bottom:4px}
+.v20-money.v20-money-key-ttk [data-tl]{gap:8px!important}
+.v20-money.v20-money-key-ttk .askbar{border:0!important}
+.v20-money.v20-money-key-newgoal .aimt{border:0!important;border-radius:20px!important;padding:16px 20px!important;font-size:20px!important;line-height:26px!important;background:var(--surface)!important;color:var(--text)!important}
+.v20-money.v20-money-key-newgoal .v20-main-content>.card{padding:16px 20px!important}
+
+.v20-money.v20-money-sheet .sheet{border:0!important;border-radius:20px 20px 0 0!important;padding-left:20px!important;padding-right:20px!important;gap:12px!important;background:var(--surface)!important;box-shadow:none!important}
+.v20-money.v20-money-sheet .sheet>.grab{background:var(--surface-2)!important}
+.v20-money.v20-money-key-draft .sheet>.card{padding:4px 16px!important}
+.v20-money.v20-money-key-draft .sheet>.btn{width:100%}
+.v20-money.v20-money-key-bedrooms .sheet [data-count],.v20-money.v20-money-key-buffer .sheet [data-count]{gap:16px!important}
+.v20-money.v20-money-key-bedrooms .sheet .count,.v20-money.v20-money-key-buffer .sheet .count{font-size:56px;line-height:58px;letter-spacing:-.045em}
+.v20-money.v20-money-key-unlock .sheet>.card{padding:16px 20px!important}
+
+@media (prefers-reduced-motion:reduce){
+  .v20-money *{animation-duration:0s!important;transition-duration:0s!important;scroll-behavior:auto!important}
+}

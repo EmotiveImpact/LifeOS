@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '@/design/Icon';
 import { settledTranscript } from '@life/brain';
 import { LIFE_DESTINATIONS } from '@life/core/engine';
 import { BigMic, Button, CalendarDay, Card, ChipGroup, ChoiceCard, ControlRow, LifeOrb, NotificationPreview, PhotoChip, Press, Segmented, StatusPill, Text, Ticks, Toggle, TwoTone, feedback, radius, space, useTokens } from '@/design';

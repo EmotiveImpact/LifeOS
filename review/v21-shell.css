@@ -1,0 +1,320 @@
+/* life v21 shell — content only. No selectors target shared chrome or native mounts. */
+
+.v21-shell .v21-shell-section {
+  gap: 12px !important;
+  min-width: 0;
+}
+.v21-shell .v21-shell-section-label {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* A question is a decision, not a wall of equally heavy boxes. */
+.v21-shell .v21-shell-question { gap: 24px !important; }
+.v21-shell .v21-shell-question-title {
+  font-size: 30px !important;
+  line-height: 34px !important;
+  letter-spacing: -.02em;
+}
+.v21-shell .v21-shell-choices { gap: 12px !important; }
+.v21-shell .v21-shell-choices > .card {
+  min-height: 64px;
+  padding: 16px !important;
+  border-radius: 14px;
+  box-shadow: none !important;
+  background: var(--surface-2);
+}
+.v21-shell .v21-shell-choices > .card > .col { min-width: 0; }
+.v21-shell .v21-shell-choices > .card > .src { flex-shrink: 0; }
+
+/* Permission choices: three core inputs, then the optional food/water source. */
+.v21-shell .v21-shell-health { gap: 20px !important; }
+.v21-shell .v21-shell-permission-list {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  gap: 8px !important;
+}
+.v21-shell .v21-shell-permission-list > .li,
+.v21-shell .v21-shell-optional-permission > .li {
+  min-height: 64px;
+  gap: 16px;
+  padding: 8px 0;
+}
+.v21-shell .v21-shell-optional-permission {
+  background: var(--surface-2);
+  padding: 4px 16px;
+  border-radius: 14px;
+}
+.v21-shell .v21-shell-permission-note { line-height: 18px; }
+
+/* Confirm facts before contemplating the consequences of saving them. */
+.v21-shell .v21-shell-understood { gap: 24px !important; }
+.v21-shell .v21-shell-fact-review {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.v21-shell .v21-shell-fact-review > .li {
+  min-height: 64px;
+  padding: 12px 0;
+  gap: 12px;
+  align-items: flex-start;
+}
+.v21-shell .v21-shell-fact-review > .li > .adot { margin-top: 8px; }
+.v21-shell .v21-shell-fact-review > .li > .lx { padding-top: 4px; }
+.v21-shell .v21-shell-fact-review > .li > button {
+  min-height: 44px !important;
+  height: auto !important;
+  flex-shrink: 0;
+}
+.v21-shell .v21-shell-impact {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  gap: 8px !important;
+}
+.v21-shell .v21-shell-impact > .ce { color: var(--text-2); }
+.v21-shell .v21-shell-confirm-actions { gap: 8px !important; }
+.v21-shell .v21-shell-confirm-actions > .btn { min-height: 44px; }
+
+/* Letter: answer, source, filed consequences. Exact fields are never rewritten. */
+.v21-shell .v21-shell-letter { gap: 24px !important; }
+.v21-shell .v21-shell-letter-meaning {
+  font-size: 24px !important;
+  line-height: 31px !important;
+  letter-spacing: -.02em;
+}
+.v21-shell .v21-shell-letter-source { gap: 16px !important; }
+.v21-shell .v21-shell-letter-source > .col { gap: 12px !important; }
+.v21-shell .v21-shell-letter-source > .col > .row {
+  align-items: flex-start;
+  gap: 16px;
+}
+.v21-shell .v21-shell-letter-source > .col > .row > :last-child { text-align: right; }
+.v21-shell .v21-shell-letter-filed {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.v21-shell .v21-shell-letter-filed > .li { padding: 12px 0; gap: 12px; }
+
+/* Settings: open preferences, connected services, then account consequences. */
+.v21-shell .v21-shell-settings { gap: 20px !important; }
+.v21-shell .v21-shell-appearance {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  gap: 12px !important;
+}
+.v21-shell .v21-shell-preference-list,
+.v21-shell .v21-shell-account-list {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.v21-shell .v21-shell-preference-list > .li,
+.v21-shell .v21-shell-account-list > .li {
+  min-height: 56px;
+  padding: 12px 0;
+  gap: 16px;
+}
+.v21-shell .v21-shell-settings-connections { padding: 4px 16px !important; }
+.v21-shell .v21-shell-settings-connections > .li {
+  min-height: 64px;
+  gap: 12px;
+  padding: 12px 0;
+}
+.v21-shell .v21-shell-settings-connections > .li > .tag {
+  background: var(--surface-2);
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+.v21-shell .v21-shell-destructive {
+  margin-top: 12px;
+  padding-top: 8px;
+}
+.v21-shell .v21-shell-destructive > .li { min-height: 64px; padding: 12px 0; }
+
+/* The inventory is primary; export and irreversible deletion are not peers. */
+.v21-shell .v21-shell-knowledge { gap: 24px !important; }
+.v21-shell .v21-shell-knowledge-filters { gap: 8px !important; }
+.v21-shell .v21-shell-knowledge-list {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.v21-shell .v21-shell-knowledge-list > .li {
+  min-height: 64px;
+  gap: 12px;
+  padding: 12px 0;
+}
+.v21-shell .v21-shell-knowledge-list > .li > button {
+  min-height: 44px !important;
+  height: auto !important;
+  flex-shrink: 0;
+}
+.v21-shell .v21-shell-knowledge-actions { flex-direction: column; gap: 8px !important; }
+.v21-shell .v21-shell-knowledge-actions > button { flex: auto !important; min-height: 44px; }
+.v21-shell .v21-shell-knowledge-delete { gap: 8px !important; }
+.v21-shell .v21-shell-knowledge-delete > button {
+  flex: auto !important;
+  background: transparent;
+  min-height: 44px;
+}
+
+/* Memories used today retain their exact provenance, with an actionable 44pt remove target. */
+.v21-shell .v21-shell-memory { gap: 24px !important; }
+.v21-shell .v21-shell-memory-used { gap: 0 !important; }
+.v21-shell .v21-shell-memory-used > .v21-shell-section-label { margin-bottom: 8px; }
+.v21-shell .v21-shell-memory-used > .li {
+  background: var(--surface-2);
+  padding: 12px 16px;
+}
+.v21-shell .v21-shell-memory-used > .li:nth-child(2) { border-radius: 14px 14px 0 0; }
+.v21-shell .v21-shell-memory-used > .li:last-child { border-radius: 0 0 14px 14px; }
+.v21-shell .v21-shell-memory-other {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.v21-shell .v21-shell-memory-record { gap: 12px; min-height: 64px; padding: 12px 0; }
+.v21-shell .v21-shell-memory-record > .sq {
+  width: 44px !important;
+  height: 44px !important;
+  flex-shrink: 0;
+}
+
+/* Chat content only: no compositor, Island or input-bar positioning here. */
+.v21-shell .v21-shell-chat-thread { gap: 24px !important; }
+.v21-shell .v21-shell-chat-question { max-width: 86% !important; align-self: flex-end; }
+.v21-shell .v21-shell-chat-reply > .col { gap: 16px !important; }
+.v21-shell .v21-shell-chat-reply > .col > .card { margin-left: 0 !important; padding: 16px !important; }
+.v21-shell .v21-shell-chat-reply > .col > .row { gap: 12px !important; }
+
+/* Conversation history earns one featured record, not five identical cards. */
+.v21-shell .v21-shell-history { gap: 24px !important; }
+.v21-shell .v21-shell-history-latest {
+  background: var(--surface-2);
+  border-radius: 14px;
+  min-height: 80px;
+  padding: 16px;
+  gap: 12px;
+  align-items: flex-start;
+}
+.v21-shell .v21-shell-history-latest > .lt > .t-body { font-size: 20px; line-height: 26px; }
+.v21-shell .v21-shell-history-latest > .tag { flex-shrink: 0; margin-top: 4px; }
+.v21-shell .v21-shell-history-earlier {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.v21-shell .v21-shell-history-earlier > .li { min-height: 64px; padding: 12px 0; gap: 12px; }
+.v21-shell .v21-shell-history-earlier > .li > .tag { flex-shrink: 0; }
+
+/* Editing is about the entered values, with the original utterance still available below. */
+.v21-shell .v21-shell-edit { gap: 24px !important; }
+.v21-shell .v21-shell-edit-fields { padding: 4px 16px !important; }
+.v21-shell .v21-shell-edit-fields > .li { min-height: 64px; padding: 12px 0; gap: 16px; }
+.v21-shell .v21-shell-field-label { font-size: 13px; line-height: 18px; color: var(--text-2); font-weight: 400 !important; }
+.v21-shell .v21-shell-field-value { font-size: 15px; line-height: 22px; color: var(--text); font-weight: 500; }
+.v21-shell .v21-shell-edit-source {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  gap: 8px !important;
+}
+
+/* Privacy: policy, agency over one's data, infrastructure, then account deletion. */
+.v21-shell .v21-shell-privacy { gap: 24px !important; }
+.v21-shell .v21-shell-privacy-promise {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  gap: 8px !important;
+}
+.v21-shell .v21-shell-privacy-promise > .t-body { font-size: 24px; line-height: 31px; letter-spacing: -.02em; }
+.v21-shell .v21-shell-privacy-data { gap: 0 !important; }
+.v21-shell .v21-shell-privacy-data > .v21-shell-section-label { margin-bottom: 8px; }
+.v21-shell .v21-shell-privacy-data > .li { min-height: 64px; padding: 12px 0; gap: 16px; }
+.v21-shell .v21-shell-privacy-infrastructure {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.v21-shell .v21-shell-privacy-infrastructure > .li { min-height: 64px; padding: 12px 0; gap: 16px; }
+.v21-shell .v21-shell-delete-account { min-height: 44px; margin-top: 8px; }
+
+/* Local versus cloud permissions: expose the labels already in the source. */
+.v21-shell .v21-shell-private { gap: 20px !important; }
+.v21-shell .v21-shell-private-switch {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  gap: 16px;
+  align-items: flex-start;
+}
+.v21-shell .v21-shell-private-switch > .col { min-width: 0; flex: 1; gap: 8px !important; }
+.v21-shell .v21-shell-private-switch > .col > .t-body { font-size: 20px; line-height: 26px; }
+.v21-shell .v21-shell-private-switch > .toggle { flex-shrink: 0; margin-top: 4px; }
+.v21-shell .v21-shell-capability-heading { min-height: 0; padding: 0; margin-top: 4px; }
+.v21-shell .v21-shell-local-capabilities {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+.v21-shell .v21-shell-local-capabilities > .li,
+.v21-shell .v21-shell-cloud-capabilities > .li { min-height: 64px; padding: 12px 0; gap: 16px; }
+.v21-shell .v21-shell-cloud-capabilities { background: var(--surface-2); padding: 4px 16px !important; box-shadow: none !important; }
+
+/* Routines: imminent action, the other active routine, then future availability. */
+.v21-shell .v21-shell-routines { gap: 24px !important; }
+.v21-shell .v21-shell-routine-summary { font-size: 24px !important; line-height: 31px !important; }
+.v21-shell .v21-shell-routine-next { padding: 20px !important; gap: 12px !important; }
+.v21-shell .v21-shell-routine-next > .row > .t-title3 { font-size: 20px; line-height: 26px; }
+.v21-shell .v21-shell-routine-active,
+.v21-shell .v21-shell-routine-locked {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 8px 0 !important;
+  gap: 8px !important;
+}
+.v21-shell .v21-shell-routine-locked { opacity: 1 !important; }
+.v21-shell .v21-shell-routine-locked > .t-body { color: var(--text-2); }
+.v21-shell .v21-shell-routine-future { gap: 16px !important; }
+
+/* Calendar is a schedule, not a stack of event boxes. */
+.v21-shell .v21-shell-calendar { gap: 24px !important; }
+.v21-shell .v21-shell-calendar-summary { font-size: 24px !important; line-height: 31px !important; }
+.v21-shell .v21-shell-agenda {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  gap: 8px !important;
+}
+.v21-shell .v21-shell-agenda-slot { gap: 12px !important; align-items: stretch; min-height: 44px; }
+.v21-shell .v21-shell-agenda-time { width: 44px !important; flex-shrink: 0; padding-top: 12px !important; }
+.v21-shell .v21-shell-agenda-event { background: transparent !important; padding: 12px !important; border-radius: 12px !important; }
+.v21-shell .v21-shell-agenda-opportunity { background: var(--ember-tint) !important; padding: 16px 12px !important; border-radius: 12px !important; }
+
+/* Notifications: unread status is the signal; read history needs no card frame. */
+.v21-shell .v21-shell-inbox { gap: 24px !important; }
+.v21-shell .v21-shell-inbox-new { gap: 8px !important; }
+.v21-shell .v21-shell-inbox-new > .li { min-height: 64px; gap: 12px; padding: 16px; background: var(--surface-2); border-radius: 14px; }
+.v21-shell .v21-shell-inbox-new > .li > i { flex-shrink: 0; }
+.v21-shell .v21-shell-inbox-priority > .col > .t-body { font-size: 20px; line-height: 26px; }
+.v21-shell .v21-shell-inbox-earlier {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+.v21-shell .v21-shell-inbox-earlier > .li { min-height: 64px; padding: 12px 0; gap: 12px; }
+
+/* AI recovery: preserve continuity, not a theatrical full-screen error icon. */
+.v21-shell .v21-shell-recovery { gap: 24px !important; margin-top: 32px; }
+.v21-shell .v21-shell-recovery-heading { flex-direction: row; align-items: flex-start; gap: 16px !important; }
+.v21-shell .v21-shell-recovery-icon { background: var(--surface-2) !important; color: var(--text) !important; flex-shrink: 0; }
+.v21-shell .v21-shell-recovery-title { font-size: 24px; line-height: 31px; letter-spacing: -.02em; }
+.v21-shell .v21-shell-recovery-continuity { font-size: 15px; line-height: 22px; }

@@ -1,0 +1,31 @@
+{
+  "changedKeys": ["money", "subs", "area", "txn", "bill", "budget", "networth", "connectbank", "cashplan", "taxcheck", "income", "rentbuy", "blood", "growth", "decisions", "tools", "healthstack", "plan", "mission", "draft", "ttk", "missions", "history", "newgoal", "areahome", "vault", "docdetail", "renewal"],
+  "retainedKeys": [
+    {"key": "protect", "why": "Core-generated risk order, interactive policy state and advice caveat already form the intended single checklist."},
+    {"key": "bedrooms", "why": "CountStepper owns the illustration, count controls and generated consequence; its explicit confirmation already fits the board."},
+    {"key": "buffer", "why": "Interactive months, core/seed-derived target and explicit confirmation already form one focused decision."},
+    {"key": "unlock", "why": "Level explanation, two prerequisites and open-early escape already preserve the intentional gate."},
+    {"key": "areahealth", "why": "Health-admin versus Body distinction, progress and navigation retained; shared shell owns geometry."},
+    {"key": "areawork", "why": "Full-bleed photo, freelance aim, progress and existing admin routes retained; no extra finance wrapper."}
+  ],
+  "bugs": [
+    {"id": "V22-M01", "defect": "Unused subscriptions were buried and their fake cancel action claimed Opened.", "status": "fixed", "fix": "Unused records now precede renewals; each action opens an explicit local cancellation preview, preserving the existing flags without claiming provider access."},
+    {"id": "V22-M02", "defect": "Bank selection looked like connection success despite no authentication.", "status": "fixed", "fix": "Preview-bank CTA and the returning money-screen notice explicitly describe sample balances and no connected bank; selection, flag and route survive."},
+    {"id": "V22-M03", "defect": "Every ledger detail claimed grocery categorisation and weekly grocery behaviour.", "status": "fixed", "fix": "Selected payment infers its initial category; grocery-specific facts stay with the Tesco sample, while other ledger records retain their own direction and type. Category editing and local splitting remain."},
+    {"id": "V22-M04", "defect": "Historical balance dates were detached from the seed date and invalid saved indices could produce undefined figures.", "status": "fixed", "fix": "Scrubber dates derive from seed.date and the existing history length; indices are finite, rounded and bounded."},
+    {"id": "V22-M05", "defect": "Completed missions appeared in active lists and submitted sample work was mixed with urgent next actions.", "status": "fixed", "fix": "Active filtering excludes cleared IDs; needs-you missions are urgency-ordered and waiting sample HMRC work has its own section. Local history remains reversible."},
+    {"id": "V22-M06", "defect": "Any tax-category mission inherited the P800 refund, reference and draft.", "status": "fixed", "fix": "P800-specific presentation now applies only to uk-hmrc-tax-code; other missions retain their own core estimates, steps, explanation and drafts."},
+    {"id": "V22-M07", "defect": "Level-labelled decision cards bypassed the existing unlock flow; toolkit counts described thirteen records while only eight were shown.", "status": "fixed", "fix": "Decision navigation uses the existing unlock choices and open-early path; directory counts derive from its actual eight-tool list, with a useful empty-search state."},
+    {"id": "V22-M08", "defect": "Every document borrowed passport-only GOV.UK renewal facts, and renewal-preview/removal actions had no useful visible result.", "status": "fixed", "fix": "Passport keeps GOV.UK timing and fee caveats; other documents use their issuer/reference. Renewal preview is visibly local, copy removal is per-document and undoable, and encryption/reminders are not claimed live."},
+    {"id": "V22-M09", "defect": "Supplement timing claimed No clashes without an interaction check.", "status": "fixed", "fix": "Removed the unsupported status, retained doses, iron GP flag and pharmacist caveat, and explicitly identified the example as not an interaction check."},
+    {"id": "V22-M10", "defect": "Results, inputs and next actions were separated by repetitive cards or squeezed horizontal content.", "status": "fixed", "fix": "Cash input sits beside its result; income conclusion precedes the two-option comparison; housing shortfall precedes projection; mission steps are vertical; ledger/budget/history read as open records; insurance urgency leads the archive and renewal screen. Long title/status pairs wrap using existing tokens."},
+    {"id": "V22-M11", "defect": "A blank intention could be explicitly filed, and the home council-tax link could reopen a different selected mission.", "status": "fixed", "fix": "Blank Add is disabled and guarded; the home and Money-area council/HMRC links select their intended existing mission IDs. No proposal auto-filing was added."}
+  ],
+  "limits": [
+    "Only the four assigned screen files and this JSON were edited. No branch, worktree, commit, push, services, libraries, browser or server.",
+    "Owned TSX files have zero TypeScript parser diagnostics and git diff --check is clean. No typecheck, test suite, exports, integration run or screenshot was performed; the coordinator owns final integration and visual verification.",
+    "Existing finance/housing engines, seeded numbers, clinical marker order/interpretation, draft edit/copy/mail, checklists, preferences and navigation remain. Shared Screen/TopBar/rows/cards/tokens are coordinator-owned.",
+    "393pt/1.3 Dynamic Type is addressed structurally with wrapping pairs, fitting text variants, open vertical steps and flexible account/compare layouts; exact light/dark rendering remains unverified.",
+    "Document, banking, cancellation, reminder and case-provider integrations remain local/demo. Sample case timelines and the new-goal starting plan remain seeded, not externally verified or newly generated. Existing health/work generic mission links were retained rather than inventing catalogue mappings."
+  ]
+}

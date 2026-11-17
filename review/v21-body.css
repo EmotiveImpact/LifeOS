@@ -1,0 +1,470 @@
+/* life v21 — scoped Body / Fuel / Habits compositions.
+   No chrome selectors, no chart-mark/picker rules, no new palette or type scale. */
+
+/* Body: the sleep shortfall is today's lead, not one of four equal tiles. */
+.v21-body.v21-body-domain .v21b-brief {
+  font-size: 24px !important;
+  line-height: 31px !important;
+  margin-bottom: 8px;
+}
+.v21-body.v21-body-domain .v21b-body-metrics {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 12px !important;
+}
+.v21-body.v21-body-domain .v21b-sleep-priority,
+.v21-body.v21-body-domain .v21b-fuel-summary {
+  grid-column: 1 / -1;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 16px !important;
+  row-gap: 8px !important;
+  align-items: start;
+}
+.v21-body.v21-body-domain .v21b-sleep-priority > .row,
+.v21-body.v21-body-domain .v21b-fuel-summary > .row {
+  grid-column: 1;
+  grid-row: 1;
+}
+.v21-body.v21-body-domain .v21b-sleep-priority > .t-num,
+.v21-body.v21-body-domain .v21b-fuel-summary > .t-num {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  white-space: nowrap;
+}
+.v21-body.v21-body-domain .v21b-sleep-priority > .ticks,
+.v21-body.v21-body-domain .v21b-fuel-summary > .ticks {
+  grid-column: 1;
+  grid-row: 2;
+}
+.v21-body.v21-body-domain .v21b-sleep-priority > .t-callout,
+.v21-body.v21-body-domain .v21b-fuel-summary > .t-callout {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+.v21-body.v21-body-domain .v21b-support-metric {
+  min-width: 0;
+  gap: 12px !important;
+}
+.v21-body.v21-body-domain .v21b-fuel-summary {
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+.v21-body.v21-body-domain .v21b-today-habits {
+  margin-top: 8px;
+}
+.v21-body.v21-body-domain .v21b-today-habits > .row {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.v21-body.v21-body-domain .v21b-today-habits > .row > button {
+  min-height: 44px;
+}
+.v21-body.v21-body-domain .v21b-today-habits > .li {
+  box-shadow: none !important;
+  border: 0 !important;
+  min-height: 44px;
+}
+.v21-body.v21-body-domain .v21b-today-habits .lt {
+  min-width: 0;
+}
+.v21-body.v21-body-domain .v21b-body-tools {
+  gap: 12px !important;
+  margin-top: 8px;
+}
+
+/* Evidence is a reading list, not another nested white box. */
+.v21-body.v21-body-domain .v21b-evidence-list,
+.v21-body.v21-body-domain .v21b-movement-records,
+.v21-body.v21-body-domain .v21b-meal-reasons {
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  border-radius: 0;
+}
+.v21-body.v21-body-domain .v21b-evidence-list > .li,
+.v21-body.v21-body-domain .v21b-movement-records > .li,
+.v21-body.v21-body-domain .v21b-meal-reasons > .li {
+  box-shadow: none !important;
+  border: 0 !important;
+  padding: 12px 0 !important;
+  gap: 12px;
+}
+.v21-body.v21-body-domain .v21b-evidence-list > .row {
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.v21-body.v21-body-domain .v21b-evidence-list > .li > .lt,
+.v21-body.v21-body-domain .v21b-movement-records > .li > .lt,
+.v21-body.v21-body-domain .v21b-meal-reasons > .li > .lt {
+  min-width: 0;
+}
+.v21-body.v21-body-domain .v21b-evidence-list > .li > .t-callout,
+.v21-body.v21-body-domain .v21b-movement-records > .li > .tnum {
+  flex-shrink: 0;
+}
+.v21-body.v21-body-domain .v21b-score {
+  gap: 8px !important;
+}
+.v21-body.v21-body-domain .v21b-action-note {
+  padding: 20px !important;
+  gap: 8px !important;
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+.v21-body.v21-body-domain .v21b-action-note > .t-callout {
+  color: var(--text) !important;
+}
+
+/* Sleep: the next bedtime is actionable before the retrospective details. */
+.v21-body.v21-body-domain .v21b-tonight {
+  padding: 20px !important;
+  gap: 16px !important;
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+.v21-body.v21-body-domain .v21b-tonight > .li {
+  min-height: 44px;
+  border: 0 !important;
+  box-shadow: none !important;
+  gap: 16px;
+}
+.v21-body.v21-body-domain .v21b-sleep-stages {
+  margin-top: 8px;
+}
+
+/* Load: number + suggested range, then the activities behind it. */
+.v21-body.v21-body-domain .v21b-load-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface-2);
+  border-radius: 20px;
+}
+.v21-body.v21-body-domain .v21b-load-range {
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+.v21-body.v21-body-domain .v21b-load-range > .row {
+  align-items: flex-start;
+  gap: 12px;
+}
+.v21-body.v21-body-domain .v21b-load-range > .row > :last-child {
+  flex-shrink: 0;
+}
+.v21-body.v21-body-domain .v21b-movement-records {
+  margin-top: 8px;
+}
+
+/* Confirm: a quiet estimate header, then the editable ingredient record. */
+.v21-body.v21-body-domain .v21b-meal-estimate {
+  padding: 8px 0 !important;
+  gap: 20px;
+  background: none !important;
+  box-shadow: none !important;
+}
+.v21-body.v21-body-domain .v21b-estimate-total {
+  font-size: 32px !important;
+  line-height: 36px !important;
+}
+.v21-body.v21-body-domain .v21b-estimate-protein {
+  font-size: 20px !important;
+  line-height: 26px !important;
+}
+.v21-body.v21-body-domain .v21b-editable-ingredients > .li {
+  min-height: 44px;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* Result: identity before the picture; interpretation stays non-moralising. */
+.v21-body.v21-body-domain .v21b-meal-identity {
+  align-items: flex-start;
+  gap: 16px;
+}
+.v21-body.v21-body-domain .v21b-meal-identity > .col {
+  min-width: 0;
+  gap: 8px !important;
+}
+.v21-body.v21-body-domain .v21b-meal-identity > :last-child {
+  flex-shrink: 0;
+}
+.v21-body.v21-body-domain .v21b-macro-strip {
+  padding: 16px !important;
+  gap: 8px !important;
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+.v21-body.v21-body-domain .v21b-macro-strip > .col {
+  align-items: flex-start !important;
+  gap: 8px !important;
+}
+
+/* A day of food: one daily summary and one meal log, not seven equal cards. */
+.v21-body.v21-body-domain .v21b-day-summary {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 12px !important;
+}
+.v21-body.v21-body-domain .v21b-day-summary > .card {
+  gap: 8px !important;
+  padding: 16px !important;
+}
+.v21-body.v21-body-domain .v21b-day-energy {
+  grid-column: 1 / -1;
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+  padding: 20px !important;
+}
+.v21-body.v21-body-domain .v21b-day-energy > .tnum {
+  font-size: 56px !important;
+  line-height: 58px !important;
+}
+.v21-body.v21-body-domain .v21b-meal-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.v21-body.v21-body-domain .v21b-meal-record {
+  align-items: flex-start;
+  gap: 20px;
+  padding: 16px 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+.v21-body.v21-body-domain .v21b-meal-record > .col {
+  min-width: 0;
+  gap: 8px !important;
+}
+.v21-body.v21-body-domain .v21b-meal-record > .t-mono {
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+/* Habits: unfinished action first; recovery guidance attached to its habit. */
+.v21-body.v21-body-domain .v21b-habit-next {
+  gap: 12px !important;
+  padding: 20px !important;
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+.v21-body.v21-body-domain .v21b-habit-rescue {
+  padding: 4px 0 16px !important;
+  gap: 12px !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+.v21-body.v21-body-domain .v21b-habit-rescue > .row {
+  flex-wrap: wrap;
+}
+.v21-body.v21-body-domain .v21b-habit-rescue .chipb,
+.v21-body.v21-body-domain .v21b-automaticity .chipb {
+  min-height: 44px;
+}
+.v21-body.v21-body-domain .v21b-habit-record {
+  padding: 16px 0 !important;
+  gap: 12px !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+.v21-body.v21-body-domain .v21b-habit-next > .row.sb,
+.v21-body.v21-body-domain .v21b-habit-record > .row.sb {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 12px;
+}
+.v21-body.v21-body-domain .v21b-automaticity {
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+  padding: 20px !important;
+  gap: 12px !important;
+}
+.v21-body.v21-body-domain .v21b-automaticity > .row.sb {
+  gap: 16px;
+}
+
+/* New habit: sentence-first composition, then the fields which form it. */
+.v21-body.v21-body-domain .v21b-habit-preview {
+  padding: 20px !important;
+  gap: 12px !important;
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+.v21-body.v21-body-domain .v21b-habit-preview > [data-hp] {
+  font-size: 24px !important;
+  line-height: 31px !important;
+}
+.v21-body.v21-body-domain .v21b-habit-builder {
+  gap: 20px !important;
+}
+.v21-body.v21-body-domain .v21b-habit-automatic {
+  align-items: flex-start;
+  gap: 16px;
+  min-height: 44px;
+}
+.v21-body.v21-body-domain .v21b-habit-automatic > .col {
+  min-width: 0;
+  gap: 4px !important;
+}
+
+/* Strength: explain the change before its historical chart. */
+.v21-body.v21-body-domain .v21b-strength-reading {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.v21-body.v21-body-domain .v21b-strength-context {
+  padding: 4px 0 8px !important;
+  gap: 8px !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+
+/* Signals: a single safety lead, three off-normal records, one normal record. */
+.v21-body.v21-body-domain .v21b-signal-guidance {
+  gap: 12px !important;
+  padding: 20px !important;
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+.v21-body.v21-body-domain .v21b-signal-guidance > .t-callout {
+  font-size: 20px !important;
+  line-height: 26px !important;
+}
+.v21-body.v21-body-domain .v21b-signal-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 12px 0;
+}
+.v21-body.v21-body-domain .v21b-signal-record {
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+.v21-body.v21-body-domain .v21b-signal-record > .row,
+.v21-body.v21-body-domain .v21b-normal-signal > .row {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.v21-body.v21-body-domain .v21b-normal-signal {
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+
+/* Provenance: source/time together, then the evidence used in the estimate. */
+.v21-body.v21-body-domain .v21b-source-reading {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 12px;
+}
+.v21-body.v21-body-domain .v21b-provenance-table {
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+.v21-body.v21-body-domain .v21b-source-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  padding: 16px;
+  background: var(--surface-2);
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+.v21-body.v21-body-domain .v21b-source-pair > .li {
+  min-width: 0;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+.v21-body.v21-body-domain .v21b-provenance-table > .li {
+  padding: 12px 0 !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+.v21-body.v21-body-domain .v21b-source-pair .lt {
+  min-width: 0;
+  gap: 8px !important;
+}
+
+/* Food targets: explain why, then distinguish energy from supporting targets. */
+.v21-body.v21-body-domain .v21b-target-rationale {
+  padding: 4px 0;
+}
+.v21-body.v21-body-domain .v21b-target-totals {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px !important;
+  padding: 20px !important;
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+.v21-body.v21-body-domain .v21b-target-totals > .li {
+  min-width: 0;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+.v21-body.v21-body-domain .v21b-target-totals > .li > .lt {
+  gap: 8px !important;
+  min-width: 0;
+}
+.v21-body.v21-body-domain .v21b-target-energy {
+  grid-column: 1 / -1;
+  padding-bottom: 8px !important;
+}
+.v21-body.v21-body-domain .v21b-target-energy > .lt > .t-callout {
+  color: var(--text) !important;
+  font-size: 32px !important;
+  line-height: 36px !important;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Correction: revised outcome first, ingredient-level audit trail second. */
+.v21-body.v21-body-domain .v21b-correction-request {
+  padding: 12px 16px !important;
+}
+.v21-body.v21-body-domain .v21b-correction-total {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: var(--surface-2);
+  border-radius: 20px;
+}
+.v21-body.v21-body-domain .v21b-correction-total > .tnum {
+  font-size: 32px !important;
+  line-height: 36px !important;
+}
+.v21-body.v21-body-domain .v21b-correction-audit {
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+.v21-body.v21-body-domain .v21b-correction-audit > .li {
+  align-items: flex-start;
+  padding: 12px 0 !important;
+  gap: 16px;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+.v21-body.v21-body-domain .v21b-correction-audit > .li > .lt {
+  min-width: 0;
+  gap: 4px !important;
+}
+.v21-body.v21-body-domain .v21b-correction-audit > .li > .t-mono {
+  flex-shrink: 0;
+}

@@ -19,7 +19,7 @@ export function Screen({ screen, title, eyebrow, children, footer, action, actio
   const barProgress = progress ?? (numberedStep ? Number(numberedStep[1]) - 1 : undefined);
   const flowLabel = ['bite', 'predict', 'puzzle', 'bitedrawn'].includes(screen) ? 'Tax codes' : undefined;
   const params = useLocalSearchParams<{ state?: string }>();
-  const field = screenLightFields[params.state ?? screen];
+  const field = root ? undefined : screenLightFields[params.state ?? screen];
   // The native navigator owns page transitions. No per-section spring,
   // translation or stagger: content stays steady when a page opens.
   const body = Children.toArray(children).filter(Boolean).map((child, i) => <View key={i}>{child}</View>);
@@ -34,7 +34,7 @@ export function Screen({ screen, title, eyebrow, children, footer, action, actio
     <View style={{ flexShrink: 0 }}>{root ? <TopBar kind="root" title={title ?? meta.title} eyebrow={eyebrow} actions={actions} avatar={avatar} onImage={!!image} /> : sheet && image ? <SheetOverImage onClose={close} /> : sheet ? <TopBar kind="sheet" title={title ?? meta.title} action={action} onClose={close} onImage={!!image} /> : flow ? <TopBar kind="flow" onClose={close} action={action} step={step} onImage={!!image || overlayChrome} center={flowCenter ?? (flowLabel ? <Text variant="callout" tone="ink2">{flowLabel}</Text> : barProgress !== undefined ? <LessonBar count={barCount} current={barProgress} /> : undefined)} /> : <TopBar kind="push" title={title ?? meta.title} action={action} onBack={close} onImage={!!image} />}</View>
     {flowLabel && barProgress !== undefined ? <View style={{ paddingHorizontal: space.gutter, paddingTop: space.xxs }}><LessonBar count={barCount} current={barProgress} /></View> : null}
     <KeyboardAvoidingView style={{ flex: 1, minHeight: 0 }} behavior={Platform.OS === 'ios' && !sheet ? 'padding' : undefined}>
-      {scroll ? <ScrollView style={{ flex: 1, minHeight: 0 }} contentInsetAdjustmentBehavior="never" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} onScroll={e => { onScroll?.(e.nativeEvent.contentOffset.y); if (e.nativeEvent.contentOffset.y < -60) onPull?.(); }} scrollEventThrottle={16} contentContainerStyle={{ paddingHorizontal: space.gutter, paddingTop: space.md, paddingBottom: space.xl, gap: space.lg, flexGrow: 1 }}>{body}</ScrollView> : <View style={{ flex: 1, minHeight: 0, paddingHorizontal: space.gutter, paddingTop: space.md, gap: space.lg }}>{body}</View>}
+      {scroll ? <ScrollView style={{ flex: 1, minHeight: 0 }} contentInsetAdjustmentBehavior="never" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} onScroll={e => { onScroll?.(e.nativeEvent.contentOffset.y); if (e.nativeEvent.contentOffset.y < -60) onPull?.(); }} scrollEventThrottle={16} contentContainerStyle={{ paddingHorizontal: space.gutter, paddingTop: root ? space.xs : space.md, paddingBottom: space.xl, gap: space.lg, flexGrow: 1 }}>{body}</ScrollView> : <View style={{ flex: 1, minHeight: 0, paddingHorizontal: space.gutter, paddingTop: root ? space.xs : space.md, gap: space.lg }}>{body}</View>}
       {footer ? <View style={{ flexShrink: 0, paddingHorizontal: space.gutter, paddingTop: space.xs, paddingBottom: overlayChrome ? Math.max(insets.bottom, componentSize.cameraBottom) : space.sm, gap: space.xs, backgroundColor: cover || overlayChrome ? 'transparent' : sheet ? t.surface : t.canvas }}>{footer}</View> : null}
     </KeyboardAvoidingView>
   </SafeAreaView></View>;

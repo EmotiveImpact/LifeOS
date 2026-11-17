@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '../Icon';
 import { Press } from '../Press';
 import { Callout, Mono, Text, Title } from '../Text';
 import { useTokens } from '../theme';
-import { areaColors, cardShadow, componentSize, radius, space, touch, type Area } from '../tokens';
+import { areaColors, cardShadow, componentSize, fonts, radius, space, touch, type Area } from '../tokens';
 import { Slider } from './Controls';
 
 export function useAreaColor(area: Area): string {
@@ -36,12 +36,12 @@ export function ListRow({ title, sub, icon, area, right, chevron, onPress, tone 
     <>
       {icon ? (
         <View style={[styles.icon, { backgroundColor: t.surface2 }]}>
-          <Ionicons name={icon} size={17} color={t.ink} />
+          <Ionicons name={icon} size={componentSize.icon} color={t.ink2} />
         </View>
       ) : null}
       {dot ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dot }} /> : null}
       <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
-        <Text variant="body" tone={tone === 'ember' ? 'ember' : 'ink'} style={{ fontFamily: sub ? 'Inter_500Medium' : 'Inter_400Regular' }}>
+        <Text variant="body" tone={tone === 'ember' ? 'ember' : 'ink'} style={{ fontFamily: fonts.sansMedium }}>
           {title}
         </Text>
         {sub ? <Callout tone="ink2">{sub}</Callout> : null}
@@ -128,19 +128,19 @@ export function NewTag({ level }: { level: number }) {
 }
 
 /** Toolkit tile. Locked tiles are quiet outlines with "L3"; tapping a locked tile offers "Unlock early" (SPEC §5). */
-export function ToolTile({ title, icon, locked, level, onPress }: { title: string; icon: keyof typeof Ionicons.glyphMap; locked?: boolean; level?: number; onPress?: () => void }) {
+export function ToolTile({ title, icon, locked, level, onPress, compact = false }: { title: string; icon: keyof typeof Ionicons.glyphMap; locked?: boolean; level?: number; onPress?: () => void; compact?: boolean }) {
   const t = useTokens();
   return (
     <Press
       haptic={locked ? 'select' : 'open'}
       onPress={onPress}
       accessibilityLabel={locked ? `${title}, unlocks at level ${level}` : title}
-      style={[styles.tool, { backgroundColor: locked ? 'transparent' : t.surface }]}
+      style={[styles.tool, compact ? { minHeight: componentSize.toolCompact, borderRadius: radius.button, padding: space.md, gap: space.sm } : null, { backgroundColor: locked ? 'transparent' : t.surface }]}
     >
-      <View style={[styles.icon, { backgroundColor: t.surface2, opacity: locked ? 0.4 : 1 }]}>
-        <Ionicons name={icon} size={17} color={t.ink} />
-      </View>
-      <Title style={{ fontSize: 15, lineHeight: 19, opacity: locked ? 0.45 : 1 }}>{title}</Title>
+      {compact ? <Ionicons name={icon} size={componentSize.icon} color={t.ink2} /> : <View style={[styles.icon, { backgroundColor: t.surface2, opacity: locked ? 0.4 : 1 }]}>
+        <Ionicons name={icon} size={componentSize.icon} color={t.ink2} />
+      </View>}
+      <Text variant={compact ? 'callout' : 'title'} style={{ opacity: locked ? 0.45 : 1 }}>{title}</Text>
       {locked ? <Text variant="micro" tone="ink2" style={{ position: 'absolute', top: 14, right: 14 }}>{`L${level}`}</Text> : null}
     </Press>
   );

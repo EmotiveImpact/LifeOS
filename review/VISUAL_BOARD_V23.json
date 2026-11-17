@@ -1,0 +1,47 @@
+{
+  "version": 23,
+  "artifact": "life-complete-board-v23.html",
+  "originalScreens": 221,
+  "originalChapters": 21,
+  "accountedScreens": 221,
+  "uniqueKeys": 221,
+  "missingKeys": [],
+  "duplicateKeys": [],
+  "classifications": {
+    "native-route": 196,
+    "parent-rendered-overlay": 2,
+    "parent-rendered-state": 9,
+    "platform-preview": 6,
+    "parent-rendered-component": 2,
+    "reference-only": 1,
+    "parked": 1,
+    "component-preview": 4
+  },
+  "sourceHashes": {
+    "v22": "493a6d864c9842bc958876e611b4d6abc89c99cbfe6e975bf977941423caa9bd",
+    "calmer": "ae47b15188065dbae6b4e0473dff91d96e7f3a7870ec1131f0c738a7fa81fd15"
+  },
+  "sourceIconFamily": "Exact original calmer SVG paths, from the corrected app design system",
+  "actualAppRendersIncluded": true,
+  "earlierBoardsUnchanged": true,
+  "headingRecommendation": "life heading; Today navigation. Not applied in this checkpoint.",
+  "renderVerification": {
+    "renderedScreens": 221,
+    "accountedRows": 221,
+    "uniqueKeys": 221,
+    "missingKeys": [],
+    "duplicateKeys": [],
+    "preservationErrors": [],
+    "darkGeometryFailures": 0,
+    "lightGeometryFailures": 0,
+    "normalFlowScreens": 205,
+    "specialGeometryScreens": 16,
+    "controlIconsUpdated": 367,
+    "rootIconFill": "none",
+    "rootIconStroke": "currentColor, 1.6",
+    "accountingSearch": "passed",
+    "fullSizeInspector": "passed",
+    "consoleErrors": 0,
+    "nativeVisualAcceptance": "Not established by board coverage"
+  }
+}

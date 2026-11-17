@@ -1,0 +1,348 @@
+/* v20 personal / learning / Aim / growth refinement pass. */
+.v20-personal {
+  color: var(--text);
+}
+
+.v20-personal .pad {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+.v20-personal .t-title1 {
+  font-size: 32px !important;
+  line-height: 1.08 !important;
+  letter-spacing: -.04em !important;
+}
+
+.v20-personal .t-title2 {
+  font-size: 24px !important;
+  line-height: 1.16 !important;
+  letter-spacing: -.03em !important;
+}
+
+.v20-personal .t-title3 {
+  font-size: 16px !important;
+  line-height: 1.25 !important;
+}
+
+.v20-personal .t-body {
+  font-size: 15px !important;
+  line-height: 1.46 !important;
+}
+
+.v20-personal .t-callout,
+.v20-personal .t-mono,
+.v20-personal .tag,
+.v20-personal .pchip {
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+}
+
+.v20-personal .t-statement {
+  font-size: 20px !important;
+  line-height: 1.36 !important;
+  letter-spacing: -.02em !important;
+  max-width: 32ch;
+}
+
+.v20-personal .v20-topline {
+  min-height: 44px;
+  gap: 12px !important;
+}
+
+.v20-personal .v20-intro {
+  gap: 8px !important;
+}
+
+.v20-personal .v20-card {
+  border-radius: 14px !important;
+}
+
+.v20-personal .t-card,
+.v20-personal .ph-img,
+.v20-personal .t-band {
+  border-radius: 20px;
+}
+
+.v20-personal .sq,
+.v20-personal .chipb,
+.v20-personal .box {
+  border-radius: 12px !important;
+}
+
+.v20-personal .v20-readable-row {
+  min-height: 48px;
+  gap: 12px !important;
+}
+
+.v20-personal .v20-readable-row .lt,
+.v20-personal .v20-readable-row > .col {
+  gap: 4px !important;
+  min-width: 0;
+}
+
+.v20-personal .v20-readable-row .t-body,
+.v20-personal .v20-readable-row .t-callout {
+  overflow-wrap: anywhere;
+}
+
+.v20-personal .v20-action-dock {
+  padding-bottom: 20px !important;
+}
+
+.v20-personal .v20-primary-action {
+  min-height: 48px;
+  border-radius: 14px !important;
+  font-size: 15px !important;
+}
+
+/* Learn: preserve the editorial image lead, then make the reading path explicit. */
+.v20-personal.v20-learning-index .v20-lead + .t-body,
+.v20-personal.v20-learning-index .v20-lead + .t-callout {
+  max-width: 32ch;
+}
+
+.v20-personal.v20-learning-index .card.col {
+  gap: 12px !important;
+}
+
+.v20-personal.v20-learning-index .card .li {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.v20-key-library .t-card .body {
+  gap: 8px !important;
+  padding: 20px !important;
+}
+
+.v20-key-library .t-card .t-callout,
+.v20-key-lens .t-statement,
+.v20-key-hill .t-statement {
+  max-width: 30ch;
+}
+
+.v20-key-learning .v20-thesis,
+.v20-key-recap .v20-lead {
+  margin-bottom: 4px;
+}
+
+.v20-key-recall .card,
+.v20-key-lensask .card {
+  padding: 16px !important;
+}
+
+/* Lessons: one bite, one recap, then one purposeful action. */
+.v20-learning-bite,
+.v20-recap-group,
+.v20-trait-stack,
+.v20-aim-stack,
+.v20-profile-summary,
+.v20-upcoming-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.v20-learning-bite > .v20-lead {
+  margin-bottom: 4px;
+}
+
+.v20-learning-bite > .card {
+  margin-bottom: 4px;
+}
+
+.v20-lesson-sequence .v20-lead {
+  max-width: 20ch;
+}
+
+.v20-lesson-sequence .v20-thesis {
+  max-width: 29ch;
+}
+
+.v20-key-lessonrecap [data-rc],
+.v20-key-tellback .card,
+.v20-key-gaps .card {
+  border-radius: 14px !important;
+}
+
+.v20-key-gaps .card {
+  gap: 12px !important;
+  padding: 16px !important;
+}
+
+.v20-key-gaps .card .row {
+  gap: 12px !important;
+}
+
+/* Aim and growth: keep the portrait, compress context, foreground the next move. */
+.v20-personal.v20-aim-context .v20-aim-meta {
+  min-height: 24px;
+}
+
+.v20-personal.v20-aim-context .v20-thesis {
+  max-width: 31ch;
+}
+
+.v20-personal.v20-aim-context .v20-card {
+  padding: 16px !important;
+}
+
+.v20-key-aim .v20-aim-stack {
+  gap: 12px;
+}
+
+.v20-key-aim .v20-aim-stack .card {
+  margin: 0 !important;
+}
+
+.v20-key-aim .v20-aim-stack .row,
+.v20-key-gambit .card .row {
+  gap: 12px !important;
+}
+
+.v20-key-vantage .v20-lead,
+.v20-key-recap .v20-lead {
+  max-width: 18ch;
+}
+
+.v20-key-recap .v20-recap-group {
+  gap: 16px;
+}
+
+.v20-key-recap .peek {
+  border-radius: 14px;
+}
+
+.v20-key-recap .v20-recap-group > .t-callout {
+  max-width: 31ch;
+  font-size: 15px !important;
+  line-height: 1.46 !important;
+}
+
+/* Self profile: narrative summary first, detailed evidence second. */
+.v20-personal.v20-self-profile .v20-thesis {
+  max-width: 29ch;
+  font-size: 24px !important;
+  line-height: 1.25 !important;
+}
+
+.v20-personal.v20-self-profile .v20-card {
+  padding: 16px !important;
+}
+
+.v20-key-bigfive .v20-trait-stack {
+  gap: 8px;
+}
+
+.v20-key-bigfive .v20-trait-stack .card {
+  gap: 8px !important;
+}
+
+.v20-key-bigfive .v20-trait-stack .row {
+  align-items: flex-start;
+  gap: 12px !important;
+}
+
+.v20-key-bigfive .v20-trait-stack .row .t-callout {
+  max-width: 19ch;
+  text-align: right;
+}
+
+.v20-key-chronotype .v20-profile-summary {
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.v20-key-values .card.row {
+  gap: 12px !important;
+  padding: 12px 16px !important;
+}
+
+.v20-key-measures .v20-readable-row {
+  align-items: flex-start;
+}
+
+.v20-key-measures .v20-readable-row > .t-callout:last-child {
+  max-width: 12ch;
+  text-align: right;
+}
+
+/* People and dates: names and dates scan first; supporting detail stays quiet. */
+.v20-personal.v20-people-dates .adot {
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+.v20-key-people .v20-upcoming-group {
+  gap: 8px;
+}
+
+.v20-key-people .v20-upcoming-group > .row {
+  gap: 8px !important;
+}
+
+.v20-key-people .v20-upcoming-group .card {
+  gap: 8px !important;
+  padding: 12px !important;
+}
+
+.v20-key-people .v20-readable-row,
+.v20-key-dates .v20-readable-row,
+.v20-key-person .v20-readable-row {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.v20-person-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.v20-person-identity > .col {
+  gap: 4px !important;
+  min-width: 0;
+}
+
+.v20-key-person .v20-card {
+  width: 100%;
+  gap: 12px !important;
+  padding: 16px !important;
+}
+
+.v20-key-dates .v20-readable-row > .tnum {
+  flex: 0 0 32px;
+  font-size: 20px !important;
+}
+
+.v20-key-dates .v20-readable-row > .col {
+  gap: 4px !important;
+}
+
+.v20-key-birthdaynudge .t-card .body {
+  gap: 8px !important;
+  padding: 20px !important;
+}
+
+/* Styling only for drawing kits, puzzles, sliders, and earned moments. */
+.v20-personal.v20-immersive-preserved .v20-lead {
+  max-width: 22ch;
+}
+
+.v20-key-levelup .t-title1,
+.v20-key-gotit .t-title1,
+.v20-key-yourbirthday .t-title1 {
+  font-size: 32px !important;
+}
+
+.v20-key-yourbirthday .card {
+  border-radius: 14px !important;
+  padding: 16px !important;
+}
+
+.v20-key-yourbirthday .card .t-title2 {
+  font-size: 24px !important;
+}

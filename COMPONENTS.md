@@ -16,6 +16,7 @@ Lists and body: `ListRow`, `RowGroup` (no dividers), `Checklist`, `NewTag`, `Too
 Talk: `Waveform`, `BigMic`, `Transcript`, `FilingTray`, `UserBubble`, `LifeReply`, `FileCard`, `Composer`, `AttachMenu`
 Mood and imagery: `PulseField`, `PulseCheckIn`, `MOODS`, `ImageTreatment`, `PhotoChip`, `IntroCarousel`, `Ridge`
 V22: `NextMoveCard` — 190pt focal-aware photograph, readable next-move identity and one 50pt action; implemented in `Imagery.tsx`, exported via `@/design`, shown in `/design`.
+Calmer restoration: `Icon` — the 18 exact owner-authored SVG paths from the original calmer mockup, with matching utility outlines; replaces icon-font rendering across the app and is shown in `/design`. `ToolTile compact` matches the reference’s 88pt shortcut tiles.
 
 ## Track A additions 🔨 (implemented; Track B integrations noted in review/NOTES.md)
 | Component | What it is | Used on | Phase |

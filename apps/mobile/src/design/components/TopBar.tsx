@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '../Icon';
 import { Press } from '../Press';
 import { Text } from '../Text';
 import { useTokens } from '../theme';
@@ -63,7 +63,7 @@ export function TopBar(props: TopBarProps) {
 function ActionButton({ action, onImage }: { action: TopBarAction; onImage?: boolean }) {
   const t = useTokens();
   if (action.kind === 'text') return <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label} style={styles.text}><Text variant="callout" tone={onImage ? 'paper' : 'ink'} numberOfLines={1}>{action.label}</Text></Press>;
-  return <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label} style={[styles.icon, { backgroundColor: onImage ? palette.dark.surface : t.surface2 }]}>
+  return <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label} style={[styles.icon, { backgroundColor: onImage ? palette.dark.surface : t.surface }]}>
     <Ionicons name={action.icon} size={componentSize.icon} color={onImage ? t.paper : t.ink} />
     {action.badge ? <View style={[styles.badge, { backgroundColor: t.ember }]} /> : null}
   </Press>;

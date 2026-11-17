@@ -1,37 +1,33 @@
 @import "tailwindcss";
 @import "uniwind";
-
 @import "heroui-native/styles";
-
 @source "../node_modules/heroui-native/lib";
 
-@theme {
-  --font-sans: "System";
-}
+@theme { --font-sans: "Inter_400Regular"; }
 
-/* Override light background/surface with calm editorial stone palette matching life Phone OS */
+/* Exact surface/ink mirror of design/tokens.ts and the original calmer mockup.
+   Legacy utility consumers must not silently use a different stone palette. */
 @layer theme {
   :root {
     @variant light {
-      --background: #F6F5F1;
-      --foreground: #141417;
+      --background: #F7F7F8;
+      --foreground: #0D0E10;
       --surface: #FFFFFF;
-      --surface-secondary: #EFECE6;
-      --surface-tertiary: #E7E3DC;
-      --muted: #6C6B73;
-      --accent: #141417;
-      --accent-foreground: #FFFFFF;
+      --surface-secondary: #F3F3F5;
+      --surface-tertiary: #E6E6EA;
+      --muted: #5C6068;
+      --accent: #0D0E10;
+      --accent-foreground: #F7F7F8;
     }
-
     @variant dark {
-      --background: #101013;
-      --foreground: #F4F3EE;
-      --surface: #1A1A1F;
-      --surface-secondary: #222229;
-      --surface-tertiary: #2C2C35;
-      --muted: #9A98A0;
-      --accent: #F4F3EE;
-      --accent-foreground: #101013;
+      --background: #08090A;
+      --foreground: #F7F8F8;
+      --surface: #141517;
+      --surface-secondary: #1B1C1F;
+      --surface-tertiary: #26272B;
+      --muted: #8A8F98;
+      --accent: #F7F8F8;
+      --accent-foreground: #08090A;
     }
   }
 }

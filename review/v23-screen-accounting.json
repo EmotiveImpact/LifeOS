@@ -1,0 +1,2219 @@
+{
+  "originalScreens": 221,
+  "originalChapters": 21,
+  "uniqueKeys": 221,
+  "rows": [
+    {
+      "key": "welcome",
+      "title": "Welcome",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "first launch",
+      "route": "/(flows)/onboarding/welcome",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "question",
+      "title": "One question at a time",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "Welcome",
+      "route": "/(flows)/onboarding/question",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "tell",
+      "title": "Or just tell life",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "Welcome → “Or just tell life”",
+      "route": "/(flows)/onboarding/tell",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "building",
+      "title": "Building your plan",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "end of setup",
+      "route": "/(flows)/onboarding/building",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "today",
+      "title": "Today (home)",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Tab",
+      "from": "tab bar",
+      "route": "/(tabs)/today",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "plan",
+      "title": "Plan",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Tab",
+      "from": "tab bar",
+      "route": "/(tabs)/plan",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "you",
+      "title": "You",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Tab",
+      "from": "tab bar",
+      "route": "/(tabs)/you",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "talk",
+      "title": "Talk",
+      "chapter": "Talk and file",
+      "opensAs": "Full screen",
+      "from": "hold the Talk button",
+      "route": "/(flows)/talk",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "understood",
+      "title": "Understood",
+      "chapter": "Talk and file",
+      "opensAs": "Sheet",
+      "from": "after Talk",
+      "route": "/(sheets)/understood",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "ask",
+      "title": "Ask, then file",
+      "chapter": "Talk and file",
+      "opensAs": "Full screen",
+      "from": "Chat → a question",
+      "route": "/(flows)/ask",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "attach",
+      "title": "Attach",
+      "chapter": "Talk and file",
+      "opensAs": "Full screen",
+      "from": "+ in Chat",
+      "route": "/(flows)/attach",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage. V17 opens as Sheet; SCREENS.md and native metadata override this to Full screen (fade), citing owner feedback."
+    },
+    {
+      "key": "scan",
+      "title": "Letter, understood",
+      "chapter": "Talk and file",
+      "opensAs": "Full screen",
+      "from": "+ → Scan a letter",
+      "route": "/(flows)/scan",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "nudge",
+      "title": "Nudge",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Card / notification",
+      "from": "Today or Lock Screen",
+      "route": null,
+      "status": "parent-rendered-overlay",
+      "note": "Today.tsx renders NudgeContent in a modal at /(tabs)/today?nudge=1; not a standalone route. Notification delivery is not established by this preview. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "pulse",
+      "title": "Pulse",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Sheet",
+      "from": "Today check-in",
+      "route": "/(sheets)/pulse",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "household",
+      "title": "Household",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Sheet",
+      "from": "your details → lives with",
+      "route": "/(sheets)/household",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "mission",
+      "title": "Mission",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Push",
+      "from": "any mission",
+      "route": "/plan/mission",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "draft",
+      "title": "Draft message",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Sheet",
+      "from": "a mission step",
+      "route": "/(sheets)/draft",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "ttk",
+      "title": "Things to know",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Push",
+      "from": "Plan → Things to know",
+      "route": "/plan/ttk",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "cashplan",
+      "title": "30-day cash plan",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit",
+      "route": "/plan/tools/cashplan",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "taxcheck",
+      "title": "Tax & NI check",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit or Money",
+      "route": "/plan/tools/taxcheck",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "money",
+      "title": "Money",
+      "chapter": "Plan · Money",
+      "opensAs": "Push",
+      "from": "Money area",
+      "route": "/plan/money/money",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "subs",
+      "title": "Subscriptions",
+      "chapter": "Plan · Money",
+      "opensAs": "Push",
+      "from": "Money → Subscriptions",
+      "route": "/plan/money/subs",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "income",
+      "title": "Income & structure",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit or Work",
+      "route": "/plan/tools/income",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "rentbuy",
+      "title": "Rent vs buy",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit or Home",
+      "route": "/plan/tools/rentbuy",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "blood",
+      "title": "Bloodwork reader",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit or Health",
+      "route": "/plan/tools/blood",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "protect",
+      "title": "Protection review",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit",
+      "route": "/plan/tools/protect",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "growth",
+      "title": "Growth path",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit",
+      "route": "/plan/tools/growth",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "library",
+      "title": "Learn",
+      "chapter": "Learn from the best",
+      "opensAs": "Push",
+      "from": "Plan → Learn",
+      "route": "/plan/learn/library",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "lens",
+      "title": "A lens",
+      "chapter": "Learn from the best",
+      "opensAs": "Push",
+      "from": "Learn → a lens",
+      "route": "/plan/learn/lens",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "idea",
+      "title": "An idea, in 60 seconds",
+      "chapter": "Learn from the best",
+      "opensAs": "Full screen",
+      "from": "Learn or Today",
+      "route": "/(flows)/idea",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "lensask",
+      "title": "Ask through a lens",
+      "chapter": "Learn from the best",
+      "opensAs": "Full screen",
+      "from": "a lens → Ask",
+      "route": "/(flows)/lensask",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "recall",
+      "title": "Quick recall",
+      "chapter": "Learn from the best",
+      "opensAs": "Sheet",
+      "from": "Today, when due",
+      "route": "/(sheets)/recall",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "learning",
+      "title": "Ideas into action",
+      "chapter": "Learn from the best",
+      "opensAs": "Push",
+      "from": "Learn → Into action",
+      "route": "/plan/learn/learning",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "mood",
+      "title": "Mood over time",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Push",
+      "from": "You → Mood",
+      "route": "/you/mood",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "recap",
+      "title": "Weekly recap",
+      "chapter": "Grow",
+      "opensAs": "Full screen",
+      "from": "Sunday, on Today",
+      "route": "/(flows)/moments/recap",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "vantage",
+      "title": "Vantage point",
+      "chapter": "Grow",
+      "opensAs": "Full screen",
+      "from": "when earned",
+      "route": "/(flows)/moments/vantage",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "levelup",
+      "title": "Level up",
+      "chapter": "Grow",
+      "opensAs": "Full screen",
+      "from": "when earned",
+      "route": "/(flows)/moments/levelup",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "plus",
+      "title": "life+",
+      "chapter": "You · Settings and account",
+      "opensAs": "Sheet",
+      "from": "a locked feature or Settings",
+      "route": "/(sheets)/plus",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "settings",
+      "title": "Settings",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "You → Settings",
+      "route": "/you/settings/settings",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "aimnew",
+      "title": "Write your Aim",
+      "chapter": "Your Chief Aim",
+      "opensAs": "Full screen",
+      "from": "setup or Plan → Aim",
+      "route": "/(flows)/aimnew",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "aim",
+      "title": "Your Aim",
+      "chapter": "Your Chief Aim",
+      "opensAs": "Push",
+      "from": "Aim pinned on Plan",
+      "route": "/plan/aim/aim",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "body",
+      "title": "Body",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Plan → Body or Today’s body card",
+      "route": "/plan/body/body",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "devices",
+      "title": "Connect devices",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body → Sources",
+      "route": "/plan/body/devices",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "readiness",
+      "title": "Readiness",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/readiness",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "sleep",
+      "title": "Sleep",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/sleep",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "load",
+      "title": "Load",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/load",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "snap",
+      "title": "Snap a meal",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Full screen",
+      "from": "Fuel → camera",
+      "route": "/(flows)/snap",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "confirm",
+      "title": "Confirm the meal",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Sheet",
+      "from": "after a snap",
+      "route": "/(sheets)/confirm",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "fuel",
+      "title": "Fuel",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Body → Fuel",
+      "route": "/plan/body/fuel/fuel",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "habits",
+      "title": "Habits",
+      "chapter": "Plan · Body · Habits",
+      "opensAs": "Push",
+      "from": "Body → Habits",
+      "route": "/plan/body/habits/habits",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "habitnew",
+      "title": "New habit",
+      "chapter": "Plan · Body · Habits",
+      "opensAs": "Sheet",
+      "from": "Habits → +",
+      "route": "/(sheets)/habitnew",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "trends",
+      "title": "Trends",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/trends",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "checkin",
+      "title": "Checking in",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Sheet",
+      "from": "Today",
+      "route": "/(sheets)/checkin",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "teach",
+      "title": "Teach it back",
+      "chapter": "Learn from the best",
+      "opensAs": "Full screen",
+      "from": "end of an idea",
+      "route": "/(flows)/teach",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "hill",
+      "title": "Lens: definiteness of purpose",
+      "chapter": "Learn from the best",
+      "opensAs": "Push",
+      "from": "Learn or Aim",
+      "route": "/plan/learn/hill",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "where",
+      "title": "Where do you live?",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "setup",
+      "route": "/(flows)/onboarding/where",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "signin",
+      "title": "Save your progress",
+      "chapter": "First open",
+      "opensAs": "Sheet",
+      "from": "after the plan is built",
+      "route": "/(sheets)/signin",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "healthprimer",
+      "title": "Before Apple Health asks",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "setup or Body",
+      "route": "/(flows)/onboarding/healthprimer",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "notifprimer",
+      "title": "One nudge a day, at most",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "setup",
+      "route": "/(flows)/onboarding/notifprimer",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "gambit",
+      "title": "This month's gambit",
+      "chapter": "Your Chief Aim",
+      "opensAs": "Push",
+      "from": "Aim → this month",
+      "route": "/plan/aim/gambit",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "children",
+      "title": "Children",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Sheet",
+      "from": "your details",
+      "route": "/(sheets)/children",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "bedrooms",
+      "title": "Your next home: bedrooms",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit or Home",
+      "route": "/plan/tools/bedrooms",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "buffer",
+      "title": "How big a buffer?",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit or Money",
+      "route": "/plan/tools/buffer",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "unlock",
+      "title": "Locked tool",
+      "chapter": "The toolkit",
+      "opensAs": "Sheet",
+      "from": "a locked tool",
+      "route": "/(sheets)/unlock",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "knows",
+      "title": "What life knows",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Push",
+      "from": "You → What life knows",
+      "route": "/you/knows",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "notifs",
+      "title": "Notifications",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Settings",
+      "route": "/you/settings/notifs",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "emptytoday",
+      "title": "Today, on day one",
+      "chapter": "States",
+      "opensAs": "State",
+      "from": "Today on day one",
+      "route": null,
+      "status": "parent-rendered-state",
+      "note": "States.tsx ParentStateContent; Today.tsx renders at /(tabs)/today?state=emptytoday; also previewed in /design. Not a standalone route. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "offline",
+      "title": "Offline and errors",
+      "chapter": "States",
+      "opensAs": "State",
+      "from": "no connection",
+      "route": null,
+      "status": "parent-rendered-state",
+      "note": "States.tsx ParentStateContent; Money.tsx renders at /plan/money/money?state=offline; also previewed in /design. Preview does not establish actual connectivity or bank-sync handling. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "widgets",
+      "title": "Widgets and Live Activity",
+      "chapter": "Outside the app",
+      "opensAs": "Home / Lock Screen",
+      "from": "iOS",
+      "route": null,
+      "status": "platform-preview",
+      "note": "PlatformGallery.tsx, mounted in /design, previews iOS widgets and Live Activity. Native widget/ActivityKit targets are not established; SCREENS.md marks UI-preview-only. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "sharecard",
+      "title": "Weekly recap, shared",
+      "chapter": "Outside the app",
+      "opensAs": "Share sheet",
+      "from": "Weekly recap → Share",
+      "route": null,
+      "status": "platform-preview",
+      "note": "PlatformGallery.tsx, mounted in /design, previews the share card and invokes React Native Share with sample text. Native rendered-card export is not established; SCREENS.md marks UI-preview-only. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "hrv",
+      "title": "Metric detail: HRV",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Readiness → HRV",
+      "route": "/plan/body/hrv",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "signals",
+      "title": "Body signals",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/signals",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "stress",
+      "title": "Stress today",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/stress",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "breathe",
+      "title": "Breathe",
+      "chapter": "Body",
+      "opensAs": "Full screen",
+      "from": "Stress or a nudge",
+      "route": "/(flows)/breathe",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "journal",
+      "title": "Evening journal",
+      "chapter": "Body",
+      "opensAs": "Sheet",
+      "from": "evening",
+      "route": "/(sheets)/journal",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "insights",
+      "title": "Journal insights",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Journal",
+      "route": "/plan/body/insights",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "workout",
+      "title": "Live workout",
+      "chapter": "Body",
+      "opensAs": "Full screen",
+      "from": "start a workout",
+      "route": "/(flows)/workout",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "detected",
+      "title": "Workouts we spotted",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/detected",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "sleepplan",
+      "title": "Sleep planner",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Sleep",
+      "route": "/plan/body/sleepplan",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "customise",
+      "title": "Customise Today",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Sheet",
+      "from": "Today → edit",
+      "route": "/(sheets)/customise",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "math",
+      "title": "How scores work",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "any score → How it works",
+      "route": "/plan/body/math",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "coach",
+      "title": "Ask about your body",
+      "chapter": "Body",
+      "opensAs": "Full screen",
+      "from": "Body → Ask",
+      "route": "/(flows)/coach",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "levels",
+      "title": "Your levels",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Push",
+      "from": "You → Levels",
+      "route": "/you/levels",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "routines",
+      "title": "Your routines",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Push",
+      "from": "Today → routines",
+      "route": "/today/routines",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "decisions",
+      "title": "Bigger decisions",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit → Bigger decisions",
+      "route": "/plan/tools/decisions",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "glimpse",
+      "title": "A glimpse, earned",
+      "chapter": "Your Chief Aim",
+      "opensAs": "Full screen",
+      "from": "earned, on Today",
+      "route": "/(flows)/glimpse",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "why",
+      "title": "Why am I seeing this?",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Sheet",
+      "from": "“Why am I seeing this?” on any card",
+      "route": "/(sheets)/why",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "area",
+      "title": "Area: Money",
+      "chapter": "Plan · Money",
+      "opensAs": "Push",
+      "from": "Plan → Money",
+      "route": "/plan/money/area",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "history",
+      "title": "Missions history",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Push",
+      "from": "Missions → Cleared",
+      "route": "/plan/history",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "mealresult",
+      "title": "Meal, logged",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "after confirming",
+      "route": "/plan/body/fuel/mealresult",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "cook",
+      "title": "What can I cook?",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → What can I cook?",
+      "route": "/plan/body/fuel/cook",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "mealplan",
+      "title": "A week of meals",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Week",
+      "route": "/plan/body/fuel/mealplan",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "sayit",
+      "title": "Say what you ate",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Sheet",
+      "from": "Fuel → Say it",
+      "route": "/(sheets)/sayit",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "calendar",
+      "title": "Calendar-aware day",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Push",
+      "from": "Today → day strip",
+      "route": "/today/calendar",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "experiment",
+      "title": "Experiment: caffeine",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Push",
+      "from": "You → Experiments",
+      "route": "/you/experiment",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "forecast",
+      "title": "Tomorrow's forecast",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Readiness",
+      "route": "/plan/body/forecast",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "cycle",
+      "title": "Cycle-aware readiness",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body (opt-in)",
+      "route": "/plan/body/cycle",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "fitnessage",
+      "title": "Fitness age",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/fitnessage",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "teachoffer",
+      "title": "Teach me, right where it’s needed",
+      "chapter": "Teach me",
+      "opensAs": "Button",
+      "from": "anywhere a new term appears",
+      "route": null,
+      "status": "parent-rendered-component",
+      "note": "Teach.tsx exports TeachOffer; Toolkit.tsx renders it when tax-details is enabled, linking to lessonready. Not a standalone route or a verified global contextual trigger. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "lessonready",
+      "title": "Your lesson, ready",
+      "chapter": "Teach me",
+      "opensAs": "Full screen",
+      "from": "Teach me",
+      "route": "/(flows)/teach/lessonready",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "bite",
+      "title": "A bite: one idea, one picture",
+      "chapter": "Teach me",
+      "opensAs": "Full screen",
+      "from": "lesson",
+      "route": "/(flows)/teach/bite",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "predict",
+      "title": "Guess first, then see",
+      "chapter": "Teach me",
+      "opensAs": "Full screen",
+      "from": "lesson",
+      "route": "/(flows)/teach/predict",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "puzzle",
+      "title": "One quick puzzle",
+      "chapter": "Teach me",
+      "opensAs": "Full screen",
+      "from": "lesson",
+      "route": "/(flows)/teach/puzzle",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "lessonrecap",
+      "title": "The whole idea, in three lines",
+      "chapter": "Teach me",
+      "opensAs": "Full screen",
+      "from": "lesson",
+      "route": "/(flows)/teach/lessonrecap",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "tellback",
+      "title": "Tell it back to life",
+      "chapter": "Teach me",
+      "opensAs": "Full screen",
+      "from": "lesson",
+      "route": "/(flows)/teach/tellback",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "gaps",
+      "title": "What you got, and the one gap",
+      "chapter": "Teach me",
+      "opensAs": "Full screen",
+      "from": "after telling back",
+      "route": "/(flows)/teach/gaps",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "gotit",
+      "title": "You’ve got it",
+      "chapter": "Teach me",
+      "opensAs": "Full screen",
+      "from": "end of lesson",
+      "route": "/(flows)/teach/gotit",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "learned",
+      "title": "What you’ve learned",
+      "chapter": "Learn from the best",
+      "opensAs": "Push",
+      "from": "Learn → What you’ve learned",
+      "route": "/plan/learn/learned",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "teachplay",
+      "title": "Play the whole lesson",
+      "chapter": "Teach me",
+      "opensAs": "Prototype",
+      "from": "the whole flow",
+      "route": null,
+      "status": "reference-only",
+      "note": "SCREENS.md identifies this as reference only: the board prototype for the whole lesson, not a standalone native route. Individual lesson routes exist; a native teachplay entry was not found. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "watch",
+      "title": "Watch companion",
+      "chapter": "Outside the app",
+      "opensAs": "Watch",
+      "from": "Apple Watch / Wear OS",
+      "route": null,
+      "status": "platform-preview",
+      "note": "PlatformGallery.tsx, mounted in /design, previews WatchFace and local actions. Apple Watch/Wear OS targets are not established; SCREENS.md marks UI-preview-only. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "ondevice",
+      "title": "Private mode: AI on your phone",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Settings → Private mode",
+      "route": "/you/settings/ondevice",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "memory",
+      "title": "What life remembers",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Push",
+      "from": "You → What life remembers",
+      "route": "/you/memory",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "doitforme",
+      "title": "Do it for me",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Sheet",
+      "from": "“Do it for me” on a step or bill",
+      "route": null,
+      "status": "parked",
+      "note": "Explicitly parked in SCREENS.md: do not build. Original proposed route /(sheets)/doitforme is not active; intentionally absent from the 220-entry native metadata catalogue. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "yourai",
+      "title": "Your data in your AI",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Settings → Your AI",
+      "route": "/you/settings/yourai",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "sources",
+      "title": "One picture from all your devices",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body → Sources",
+      "route": "/plan/body/sources",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "cgm",
+      "title": "Glucose, after meals",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body (with a sensor)",
+      "route": "/plan/body/cgm",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "strength",
+      "title": "Habit strength",
+      "chapter": "Plan · Body · Habits",
+      "opensAs": "Push",
+      "from": "a habit",
+      "route": "/plan/body/habits/strength",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "basics",
+      "title": "Water, sitting and recovery",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/basics",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "shared",
+      "title": "Shared life",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Push",
+      "from": "You → Shared",
+      "route": "/you/shared",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "orb",
+      "title": "The orb, evolving",
+      "chapter": "The orb and motion",
+      "opensAs": "Component",
+      "from": "everywhere",
+      "route": "/design",
+      "status": "component-preview",
+      "note": "Metadata route @/design is an import alias, not an Expo route. /design mounts TrackAGallery and OrbDemo for LifeOrb demonstrations; not a standalone product screen. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "chat",
+      "title": "Chat",
+      "chapter": "Talk and file",
+      "opensAs": "Full screen",
+      "from": "tap the Talk button",
+      "route": "/(flows)/chat",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "chathistory",
+      "title": "Your conversations",
+      "chapter": "Talk and file",
+      "opensAs": "Push",
+      "from": "Chat → ⋯",
+      "route": "/talk/chathistory",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "editfiled",
+      "title": "Edit what life filed",
+      "chapter": "Talk and file",
+      "opensAs": "Sheet",
+      "from": "tap any filed item",
+      "route": "/(sheets)/editfiled",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "micprimer",
+      "title": "Before the mic asks",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "first Talk",
+      "route": "/(flows)/onboarding/micprimer",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "camprimer",
+      "title": "Before the camera asks",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "first snap or scan",
+      "route": "/(flows)/onboarding/camprimer",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "calprimer",
+      "title": "Before the calendar asks",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "setup or Calendar-aware day",
+      "route": "/(flows)/onboarding/calprimer",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "devicesetup",
+      "title": "Connect what you wear",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "setup",
+      "route": "/(flows)/onboarding/devicesetup",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "firstmove",
+      "title": "Your first move",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "end of setup",
+      "route": "/(flows)/onboarding/firstmove",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "loadingtoday",
+      "title": "Today, loading",
+      "chapter": "States",
+      "opensAs": "State",
+      "from": "Today while loading",
+      "route": null,
+      "status": "parent-rendered-state",
+      "note": "States.tsx ParentStateContent; Today.tsx renders at /(tabs)/today?state=loadingtoday; also previewed in /design. Not a standalone route. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "morningbrief",
+      "title": "Morning brief",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Sheet",
+      "from": "first open of the day",
+      "route": "/(sheets)/morningbrief",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "evening",
+      "title": "Close the day",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Sheet",
+      "from": "evening notification or Today",
+      "route": "/(sheets)/evening",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "inbox",
+      "title": "From life",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Push",
+      "from": "bell on Today",
+      "route": "/today/inbox",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "search",
+      "title": "Search everything",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Overlay",
+      "from": "pull down on Today",
+      "route": null,
+      "status": "parent-rendered-overlay",
+      "note": "Today.tsx opens SearchOverlay from its search action or pull gesture; not a standalone route. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "missions",
+      "title": "All missions",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Push",
+      "from": "Plan → Missions",
+      "route": "/plan/missions",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "newgoal",
+      "title": "Add something",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Sheet",
+      "from": "+ on Plan",
+      "route": "/(sheets)/newgoal",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "emptyplan",
+      "title": "Plan, on day one",
+      "chapter": "States",
+      "opensAs": "State",
+      "from": "Plan on day one",
+      "route": null,
+      "status": "parent-rendered-state",
+      "note": "States.tsx ParentStateContent; Plan.tsx renders at /(tabs)/plan?state=emptyplan; also previewed in /design. Not a standalone route. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "areahome",
+      "title": "Area: Home",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Push",
+      "from": "Plan → Home",
+      "route": "/plan/areahome",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "areahealth",
+      "title": "Area: Health",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Push",
+      "from": "Plan → Health",
+      "route": "/plan/areahealth",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "areawork",
+      "title": "Area: Work",
+      "chapter": "Tab 2 · Plan",
+      "opensAs": "Push",
+      "from": "Plan → Work",
+      "route": "/plan/areawork",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "tools",
+      "title": "All tools",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Plan → Toolkit",
+      "route": "/plan/tools/tools",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "healthstack",
+      "title": "Health stack",
+      "chapter": "The toolkit",
+      "opensAs": "Push",
+      "from": "Toolkit or Health",
+      "route": "/plan/tools/healthstack",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "txn",
+      "title": "A payment",
+      "chapter": "Plan · Money",
+      "opensAs": "Push",
+      "from": "Money → a payment",
+      "route": "/plan/money/txn",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "bill",
+      "title": "A bill",
+      "chapter": "Plan · Money",
+      "opensAs": "Push",
+      "from": "Money → a bill",
+      "route": "/plan/money/bill",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "budget",
+      "title": "Budget",
+      "chapter": "Plan · Money",
+      "opensAs": "Push",
+      "from": "Money → Budget",
+      "route": "/plan/money/budget",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "networth",
+      "title": "Net worth",
+      "chapter": "Plan · Money",
+      "opensAs": "Push",
+      "from": "Money → Net worth",
+      "route": "/plan/money/networth",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "connectbank",
+      "title": "Connect your bank",
+      "chapter": "Plan · Money",
+      "opensAs": "Full screen",
+      "from": "Money → Connect",
+      "route": "/(flows)/connectbank",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "sleepnight",
+      "title": "One night",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Sleep → a night",
+      "route": "/plan/body/sleepnight",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "workoutdetail",
+      "title": "A past workout",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Load → a workout",
+      "route": "/plan/body/workoutdetail",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "weight",
+      "title": "Weight and body",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body",
+      "route": "/plan/body/weight",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "foodday",
+      "title": "A day of food",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → a day",
+      "route": "/plan/body/fuel/foodday",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "barcode",
+      "title": "Scan a barcode",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Full screen",
+      "from": "Fuel → barcode",
+      "route": "/(flows)/barcode",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "foodsearch",
+      "title": "Search for a food",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → search",
+      "route": "/plan/body/fuel/foodsearch",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "emptybody",
+      "title": "Body, with no device",
+      "chapter": "States",
+      "opensAs": "State",
+      "from": "Body with no device",
+      "route": null,
+      "status": "parent-rendered-state",
+      "note": "States.tsx ParentStateContent; Body.tsx renders at /plan/body/body?state=emptybody; also previewed in /design. Not a standalone route. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "profile",
+      "title": "Your details",
+      "chapter": "Tab 3 · You",
+      "opensAs": "Push",
+      "from": "You → your details",
+      "route": "/you/profile",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "appearance",
+      "title": "Look, sound and feel",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Settings",
+      "route": "/you/settings/appearance",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "services",
+      "title": "Connected services",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Settings",
+      "route": "/you/settings/services",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "privacy",
+      "title": "Your data",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Settings",
+      "route": "/you/settings/privacy",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "deleteacct",
+      "title": "Delete your account",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Your data",
+      "route": "/you/settings/deleteacct",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "subscription",
+      "title": "Your life+",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Settings → life+",
+      "route": "/you/settings/subscription",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "plussuccess",
+      "title": "Welcome to life+",
+      "chapter": "You · Settings and account",
+      "opensAs": "Full screen",
+      "from": "after subscribing",
+      "route": "/(flows)/plussuccess",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "help",
+      "title": "Help",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Settings",
+      "route": "/you/settings/help",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "legal",
+      "title": "About life",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Settings",
+      "route": "/you/settings/legal",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "permdenied",
+      "title": "A permission you said no to",
+      "chapter": "States",
+      "opensAs": "State",
+      "from": "a declined permission",
+      "route": null,
+      "status": "parent-rendered-state",
+      "note": "States.tsx ParentStateContent; Fuel.tsx renders at /(flows)/snap?state=permdenied; also previewed in /design. Parent parameter preview does not prove automatic permission-denial handling. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "syncissue",
+      "title": "Two phones disagree",
+      "chapter": "States",
+      "opensAs": "Sheet",
+      "from": "two devices disagree",
+      "route": "/(sheets)/syncissue",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "aidown",
+      "title": "life’s AI is having a moment",
+      "chapter": "States",
+      "opensAs": "State",
+      "from": "AI unavailable",
+      "route": null,
+      "status": "parent-rendered-state",
+      "note": "States.tsx ParentStateContent; Talk.tsx renders at /(flows)/chat?state=aidown; also previewed in /design. Parent parameter preview does not prove automatic AI-outage handling. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "forceupdate",
+      "title": "Update needed",
+      "chapter": "States",
+      "opensAs": "Full screen",
+      "from": "old version",
+      "route": "/(flows)/forceupdate",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "signedout",
+      "title": "Welcome back",
+      "chapter": "States",
+      "opensAs": "State",
+      "from": "after sign-out or new phone",
+      "route": null,
+      "status": "parent-rendered-state",
+      "note": "States.tsx ParentStateContent; Onboarding.tsx renders at /(sheets)/signin?state=signedout; also previewed in /design. Not a standalone route or verified authentication integration. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "connectfail",
+      "title": "A device stopped syncing",
+      "chapter": "States",
+      "opensAs": "State",
+      "from": "Body when a device stops syncing",
+      "route": null,
+      "status": "parent-rendered-state",
+      "note": "States.tsx ParentStateContent; Body.tsx renders at /plan/body/body?state=connectfail; also previewed in /design. Local sync-failure preview, not verified device integration. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "lockpush",
+      "title": "Notifications",
+      "chapter": "Outside the app",
+      "opensAs": "Notification",
+      "from": "Lock Screen",
+      "route": null,
+      "status": "platform-preview",
+      "note": "PlatformGallery.tsx, mounted in /design, renders NotificationPreview examples. Real notification delivery is not established; SCREENS.md marks UI-preview-only. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "androidwidget",
+      "title": "Android widgets",
+      "chapter": "Outside the app",
+      "opensAs": "Home screen",
+      "from": "Android",
+      "route": null,
+      "status": "platform-preview",
+      "note": "PlatformGallery.tsx, mounted in /design, previews an Android widget. Native Android widget target is not established; SCREENS.md marks UI-preview-only. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "siri",
+      "title": "Siri and Shortcuts",
+      "chapter": "Outside the app",
+      "opensAs": "Voice",
+      "from": "Siri / Assistant",
+      "route": null,
+      "status": "platform-preview",
+      "note": "PlatformGallery.tsx, mounted in /design, previews Siri/Assistant interaction. Shortcut/Assistant registration is not established; SCREENS.md marks UI-preview-only. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "topbars",
+      "title": "The top bar, everywhere",
+      "chapter": "The orb and motion",
+      "opensAs": "Component",
+      "from": "everywhere",
+      "route": "/design",
+      "status": "component-preview",
+      "note": "Metadata route @/design is an import alias, not an Expo route. /design mounts TrackAGallery with root/push/sheet/flow TopBar examples; not a standalone product screen. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "tests",
+      "title": "Know yourself",
+      "chapter": "You · Know yourself",
+      "opensAs": "Push",
+      "from": "You → Know yourself",
+      "route": "/you/self/tests",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "testq",
+      "title": "One statement at a time",
+      "chapter": "You · Know yourself",
+      "opensAs": "Full screen",
+      "from": "Know yourself → a test",
+      "route": "/(flows)/testq",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "bigfive",
+      "title": "Your personality",
+      "chapter": "You · Know yourself",
+      "opensAs": "Push",
+      "from": "end of the personality test",
+      "route": "/you/self/bigfive",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "chronotype",
+      "title": "Your body clock",
+      "chapter": "You · Know yourself",
+      "opensAs": "Push",
+      "from": "Know yourself",
+      "route": "/you/self/chronotype",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "values",
+      "title": "What matters most",
+      "chapter": "You · Know yourself",
+      "opensAs": "Push",
+      "from": "Know yourself",
+      "route": "/you/self/values",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "people",
+      "title": "Your people",
+      "chapter": "You · People and dates",
+      "opensAs": "Push",
+      "from": "You → People",
+      "route": "/you/people/people",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "person",
+      "title": "A person",
+      "chapter": "You · People and dates",
+      "opensAs": "Push",
+      "from": "People → a person",
+      "route": "/you/people/person",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "addperson",
+      "title": "Add people from contacts",
+      "chapter": "You · People and dates",
+      "opensAs": "Sheet",
+      "from": "People → +",
+      "route": "/(sheets)/addperson",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "birthdaynudge",
+      "title": "A birthday, on Today",
+      "chapter": "You · People and dates",
+      "opensAs": "Card",
+      "from": "Today, 4 days before",
+      "route": null,
+      "status": "component-preview",
+      "note": "Today.tsx exports BirthdayCard, but no caller was found in current app/screens sources. TodayHome shows a simpler Kofi birthday list row, not this full board card; parent placement is not confirmed. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "dates",
+      "title": "Important dates",
+      "chapter": "You · People and dates",
+      "opensAs": "Push",
+      "from": "People → Dates",
+      "route": "/you/people/dates",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "vault",
+      "title": "Documents and renewals",
+      "chapter": "Plan · Documents and renewals",
+      "opensAs": "Push",
+      "from": "Plan → Documents",
+      "route": "/plan/documents/vault",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "docdetail",
+      "title": "Passport",
+      "chapter": "Plan · Documents and renewals",
+      "opensAs": "Push",
+      "from": "Documents → a document",
+      "route": "/plan/documents/docdetail",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "renewal",
+      "title": "Renewal: car insurance",
+      "chapter": "Plan · Documents and renewals",
+      "opensAs": "Push",
+      "from": "Documents or Today, when it’s time",
+      "route": "/plan/documents/renewal",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "support",
+      "title": "Need support now",
+      "chapter": "States",
+      "opensAs": "Push",
+      "from": "You → Help, or offered when needed",
+      "route": "/states/support",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "focus",
+      "title": "Focus session",
+      "chapter": "Tab 1 · Today",
+      "opensAs": "Full screen",
+      "from": "Today or a calendar gap",
+      "route": "/(flows)/focus",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "yourbirthday",
+      "title": "Your year",
+      "chapter": "Grow",
+      "opensAs": "Full screen",
+      "from": "your birthday, on Today",
+      "route": "/(flows)/moments/yourbirthday",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "orbnext",
+      "title": "Orb states, next",
+      "chapter": "The orb and motion",
+      "opensAs": "Component",
+      "from": "everywhere",
+      "route": "/design",
+      "status": "component-preview",
+      "note": "Metadata route @/design is an import alias, not an Expo route. /design mounts TrackAGallery with the six LifeOrb v6 states; not a standalone product screen. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "drawkit",
+      "title": "Pictures that teach",
+      "chapter": "Learn from the best",
+      "opensAs": "Push",
+      "from": "Learn → Pictures",
+      "route": "/plan/learn/drawkit",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "bitedrawn",
+      "title": "A bite, drawn live",
+      "chapter": "Teach me",
+      "opensAs": "Full screen",
+      "from": "lesson",
+      "route": "/(flows)/teach/bitedrawn",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "measures",
+      "title": "Your body numbers",
+      "chapter": "You · Know yourself",
+      "opensAs": "Push",
+      "from": "You → Body numbers",
+      "route": "/you/self/measures",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "measuresetup",
+      "title": "Your body, in three numbers",
+      "chapter": "First open",
+      "opensAs": "Full screen",
+      "from": "setup, after where you live",
+      "route": "/(flows)/onboarding/measuresetup",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "bmi",
+      "title": "BMI and waist, explained",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body numbers → BMI",
+      "route": "/plan/body/bmi",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "strain",
+      "title": "Today’s target load",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body → Load",
+      "route": "/plan/body/strain",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "zones",
+      "title": "Your heart-rate zones",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Load → Zones",
+      "route": "/plan/body/zones",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "illness",
+      "title": "Something may be coming on",
+      "chapter": "Body",
+      "opensAs": "Card / push",
+      "from": "Today, when signals rise",
+      "route": null,
+      "status": "parent-rendered-component",
+      "note": "HealthDetails.tsx exports IllnessCard; TodayHome.tsx renders it when the lighter-day flag is set. Sample signals, not a live illness alert; not a standalone route. Catalogue classification only; native visual approval and completed integrations are not implied."
+    },
+    {
+      "key": "breathlib",
+      "title": "Breathing library",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Body → Breathe",
+      "route": "/plan/body/breathlib",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "provenance",
+      "title": "Where this number came from",
+      "chapter": "Body",
+      "opensAs": "Sheet",
+      "from": "tap any score",
+      "route": "/(sheets)/provenance",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "regularity",
+      "title": "Sleep regularity",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Sleep → Regularity",
+      "route": "/plan/body/regularity",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "loadtrend",
+      "title": "Training load trend",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Load → Trend",
+      "route": "/plan/body/loadtrend",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "healthdigest",
+      "title": "Your body this week",
+      "chapter": "Body",
+      "opensAs": "Push",
+      "from": "Sunday, on Today",
+      "route": "/plan/body/healthdigest",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "fuelhome",
+      "title": "Fuel, at a glance",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Body → Fuel",
+      "route": "/plan/body/fuel/fuelhome",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "fuelgoal",
+      "title": "Your food targets",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Targets",
+      "route": "/plan/body/fuel/fuelgoal",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "savedmeals",
+      "title": "Saved meals",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Saved",
+      "route": "/plan/body/fuel/savedmeals",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "fuelprogress",
+      "title": "Food and weight, over time",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Progress",
+      "route": "/plan/body/fuel/fuelprogress",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "exerciseadd",
+      "title": "Exercise, added back",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Settings",
+      "route": "/plan/body/fuel/exerciseadd",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "fuelplan",
+      "title": "Your plan is ready",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Full screen",
+      "from": "end of food setup",
+      "route": "/(flows)/fuelplan",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "weighin",
+      "title": "Log your weight",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Sheet",
+      "from": "Fuel → Weight or Today",
+      "route": "/(sheets)/weighin",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "labelscan",
+      "title": "Scan a nutrition label",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Full screen",
+      "from": "Snap → Label",
+      "route": "/(flows)/labelscan",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "menuscan",
+      "title": "What should I order?",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Snap → Menu",
+      "route": "/plan/body/fuel/menuscan",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "fixwords",
+      "title": "Fix it in your own words",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Sheet",
+      "from": "a logged meal → Fix",
+      "route": "/(sheets)/fixwords",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "nutrients",
+      "title": "Everything you ate today",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Nutrients",
+      "route": "/plan/body/fuel/nutrients",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "describeexercise",
+      "title": "Describe a workout",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Sheet",
+      "from": "Fuel or Load → + Activity",
+      "route": "/(sheets)/describeexercise",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "weekbudget",
+      "title": "Your week, not just today",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Week",
+      "route": "/plan/body/fuel/weekbudget",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "mealtiming",
+      "title": "Meals and your sleep",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Insights",
+      "route": "/plan/body/fuel/mealtiming",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "foodquality",
+      "title": "Food quality",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Insights",
+      "route": "/plan/body/fuel/foodquality",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "alcohol",
+      "title": "Alcohol",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Alcohol",
+      "route": "/plan/body/fuel/alcohol",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "quicklog",
+      "title": "Log in two taps",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Sheet",
+      "from": "+ on Fuel",
+      "route": "/(sheets)/quicklog",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "importfood",
+      "title": "Bring your history",
+      "chapter": "Plan · Body · Fuel",
+      "opensAs": "Push",
+      "from": "Fuel → Settings → Import",
+      "route": "/plan/body/fuel/importfood",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    },
+    {
+      "key": "aimodels",
+      "title": "What stays on your phone",
+      "chapter": "You · Settings and account",
+      "opensAs": "Push",
+      "from": "Private mode → What downloads",
+      "route": "/you/settings/aimodels",
+      "status": "native-route",
+      "note": "Native route metadata and route module exist. Native visual approval and completed integrations are not established by catalogue coverage."
+    }
+  ],
+  "missingKeys": [],
+  "duplicateKeys": []
+}

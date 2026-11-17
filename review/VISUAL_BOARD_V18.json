@@ -1,0 +1,21 @@
+{
+  "artifact": "life-complete-board-v18.html",
+  "source": "design-board/life-design-board-v17.html",
+  "sourceSha256": "d7d94a609ff5f5c57f0863fa08040a96ba2a8ccbab6d5409cd1e56dce163d2ee",
+  "sourceScreenKeys": 221,
+  "renderedScreenKeys": 221,
+  "originalChaptersRetained": 21,
+  "missingKeys": [],
+  "addedRouteKeys": [],
+  "todayRetained": ["Aim", "level", "two-tone editorial briefing", "readiness", "sleep", "load", "stress", "fuel", "life knows you", "life is asking", "due dates and countdowns", "level gates", "learning", "Things to know"],
+  "interactiveChecks": {
+    "snapshotBodyMoneyLearning": "passed; Aim, level, knowledge, question and due summary remain outside tabs",
+    "metricCustomisation": "passed; Stress toggle removed/restored the same homepage tile, all five default readings restored; v18 design proposal allows five",
+    "fullFeedInspection": "passed; the same Today screen expands for review and returns to its normal scroll viewport",
+    "questionAndKnowledgeBinding": "passed; original demo state advanced from question 1/3 to 2/3 and knowledge 64% to 69%",
+    "screenSearch": "passed; stress returned 4 matches, clearing restored all 221",
+    "photos": "25 rendered image instances; zero broken loaded images"
+  },
+  "limitations": ["Design review artifact, not an installed app update", "All dates, account states and readings are illustrative", "Adaptive live planning and integrations are not represented as implemented"],
+  "originalBoardModified": false
+}
