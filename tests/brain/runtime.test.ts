@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { BrainError, analyseTeachBack, extractStatements, prepareExternalRequest, retrieveMemories, runBrain, validateOutput, type ModelAdapter, type Request } from '../../packages/brain/src/index.ts';
+import { BrainError, analyseTeachBack, extractStatements, prepareExternalRequest, reconcilePendingRequest, retrieveMemories, runBrain, settledTranscript, validateOutput, type ModelAdapter, type Request } from '../../packages/brain/src/index.ts';
 
 export function request(text = 'Explain this carefully'): Request { return { id: 'request-a', job: 'ask', text, context: { sample: false, moves: [], memories: [], facts: [{ id: 'net', label: 'Take-home', value: '£2,400', source: { id: 'engine:income', label: 'Income calculator', kind: 'engine' } }] }, history: [], attachments: [], privateMode: false, consent: null }; }
 const output = () => ({ answer: 'Your take-home is {{fact:net}}.', citations: ['engine:income'], proposals: [] });
@@ -43,6 +43,19 @@ describe('conservative extraction and memory', () => {
     const external = prepareExternalRequest(original);
     expect(external.attachments).toEqual([{ id: 'read', name: 'Extracted text', mime: 'text/plain', uri: '', size: 13, text: 'expiry August', status: 'ready' }]);
     expect(original.attachments[0].name).toBe('passport.jpg');
+  });
+  test('reconciles pending consent with current privacy state without adding data', () => {
+    const pending = { ...request(), context: { sample: false, moves: [{ id: 'old-move', title: 'Old', area: 'money' as const, urgent: false, reasons: [] }], memories: [{ id: 'forgotten', text: 'Secret', source: { id: 'memory:forgotten', kind: 'memory' as const, label: 'Chat' } }], facts: [{ id: 'old', label: 'Old', value: 'one', source: { id: 'record:old', kind: 'record' as const, label: 'Old' } }] }, attachments: [{ id: 'removed', name: 'Extracted text', mime: 'text/plain', uri: '', size: 6, text: 'secret', status: 'ready' as const }] };
+    const current = { sample: false, moves: [{ id: 'new-move', title: 'New', area: 'money' as const, urgent: false, reasons: [] }], memories: [], facts: [{ id: 'new', label: 'New', value: 'two', source: { id: 'record:new', kind: 'record' as const, label: 'New' } }] };
+    const result = reconcilePendingRequest(pending, current, new Set());
+    expect(result.attachments).toEqual([]);
+    expect(result.context.memories).toEqual([]);
+    expect(result.context.facts).toEqual([]);
+    expect(result.context.moves).toEqual([]);
+  });
+  test('manual voice stop keeps the final native transcript', () => {
+    expect(settledTranscript('partial words', 'partial words plus final phrase')).toBe('partial words plus final phrase');
+    expect(settledTranscript('typed fallback', '')).toBe('typed fallback');
   });
   test('provides conservative local teach-back feedback without claiming a model grade', () => {
     expect(analyseTeachBack('The number is the tax-free allowance and the letter tells payroll which rules apply.')).toEqual({ mode: 'rules', understood: ['allowance', 'letter'], gaps: [] });

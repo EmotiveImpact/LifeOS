@@ -4,3 +4,4 @@ export * from './memory.ts';
 export * from './policy.ts';
 export * from './runtime.ts';
 export * from './lesson.ts';
+export * from './voice.ts';

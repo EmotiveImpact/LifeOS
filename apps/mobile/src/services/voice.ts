@@ -20,7 +20,8 @@ let subscription: Subscription | null = null;
 let notify: ((text: string, final: boolean, error?: string) => void) | null = null;
 async function stop() {
   generation++;
-  try { if (native && (active || subscription)) latest = await native.stop(); return latest; }
+  const hadSession = active || starting || !!subscription;
+  try { if (native && hadSession) latest = await native.stop(); return hadSession ? latest : ''; }
   finally { active = false; starting = false; subscription?.remove(); subscription = null; notify = null; }
 }
 AppState.addEventListener('change', state => {

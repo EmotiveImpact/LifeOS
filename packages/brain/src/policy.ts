@@ -40,6 +40,12 @@ export function renderFacts(text: string, request: Request): string {
   const facts = new Map(request.context.facts.map(f => [f.id, f.value]));
   return text.replace(/\{\{fact:([^}]+)\}\}/g, (_match, id: string) => facts.get(id) ?? 'Unavailable');
 }
+export function reconcilePendingRequest(request: Request, current: Request['context'], attachmentIds: ReadonlySet<string>): Request {
+  const facts = new Set(current.facts.map(fact => fact.id));
+  const memories = new Set(current.memories.map(memory => memory.id));
+  const moves = new Set(current.moves.map(move => move.id));
+  return { ...request, context: { ...request.context, facts: request.context.facts.filter(fact => facts.has(fact.id)), memories: request.context.memories.filter(memory => memories.has(memory.id)), moves: request.context.moves.filter(move => moves.has(move.id)) }, attachments: request.attachments.filter(attachment => attachmentIds.has(attachment.id)) };
+}
 export function prepareExternalRequest(request: Request): Request {
   return { ...request, attachments: request.attachments.filter(attachment => attachment.status === 'ready' && !!attachment.text).map(attachment => ({ id: attachment.id, name: 'Extracted text', mime: 'text/plain', uri: '', size: attachment.text!.length, text: attachment.text, status: 'ready' })) };
 }

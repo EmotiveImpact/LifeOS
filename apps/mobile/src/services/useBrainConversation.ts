@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as Crypto from 'expo-crypto';
-import { BrainError, retrieveMemories, terms, isMemoryOverview, type Conversation, type Request, type Result } from '@life/brain';
+import { BrainError, reconcilePendingRequest, retrieveMemories, terms, isMemoryOverview, type Conversation, type Request, type Result } from '@life/brain';
 import { useSeed } from '@/state/SeedProvider';
 import { brain } from './brain';
 import { brainContext } from './brainContext';
@@ -50,5 +50,5 @@ export function useBrainConversation() {
     const request: Request = { id, job: 'ask', text: text.trim(), context, history: thread.messages.filter(message => !message.error).slice(-20).map(({ role, text: message }) => ({ role, text: message })), attachments: thread.attachments, privateMode: state.prefs.privateMode, consent: null };
     await run(request, thread.id);
   };
-  return { current, thinking, pending, send, stop: () => { controller.current?.abort(); setThinking(false); }, allowNetwork: () => pending ? run({ ...pending.request, consent: { requestId: pending.request.id, locations: ['server', 'cloud'] } }, pending.conversationId) : Promise.resolve(), declineNetwork: () => setPending(null), review: (proposals: NonNullable<Conversation['messages'][number]['proposals']>) => { set({ proposals: proposals.map(proposal => proposalRecord(proposal, 'chat')) }); }, newThread: () => update(state => ({ ...state, brain: { ...state.brain, activeConversationId: null } })), openThread: (id: string) => update(state => ({ ...state, brain: { ...state.brain, activeConversationId: id } })) };
+  return { current, thinking, pending, send, stop: () => { controller.current?.abort(); setThinking(false); }, allowNetwork: () => pending ? (() => { const state = latest.current; const context = brainContext(state); const thread = state.brain.conversations.find(item => item.id === pending.conversationId); const current = reconcilePendingRequest(pending.request, context, new Set(thread?.attachments.map(attachment => attachment.id) ?? [])); return run({ ...current, consent: { requestId: current.id, locations: ['server', 'cloud'] } }, pending.conversationId); })() : Promise.resolve(), declineNetwork: () => setPending(null), review: (proposals: NonNullable<Conversation['messages'][number]['proposals']>) => { set({ proposals: proposals.map(proposal => proposalRecord(proposal, 'chat')) }); }, newThread: () => update(state => ({ ...state, brain: { ...state.brain, activeConversationId: null } })), openThread: (id: string) => update(state => ({ ...state, brain: { ...state.brain, activeConversationId: id } })) };
 }

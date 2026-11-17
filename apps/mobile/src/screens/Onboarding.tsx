@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { settledTranscript } from '@life/brain';
 import { LIFE_DESTINATIONS } from '@life/core/engine';
 import { BigMic, Button, CalendarDay, Card, ChipGroup, ChoiceCard, ControlRow, LifeOrb, NotificationPreview, PhotoChip, Press, Segmented, StatusPill, Text, Ticks, Toggle, TwoTone, feedback, radius, space, useTokens } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
@@ -43,7 +44,7 @@ export function OnboardingScreen({ screen }: { screen: ScreenKey }) {
     <TwoTone segments={[{ text: 'What would make the biggest difference ' }, { text: 'this year?', tone: 'quiet' }]} />
     <View style={{ gap: space.xs }}>{destinations.map(([title, description, id]) => <Press key={id} onPress={() => setSelected(id)} accessibilityRole="radio" accessibilityState={{ selected: selected === id }} accessibilityLabel={title}><Card style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: selected === id ? t.surface2 : t.surface }}><Ionicons name={selected === id ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={selected === id ? t.ink : t.ink2} /><View style={{ flex: 1, gap: space.xxs }}><Text variant="title">{title}</Text><Text variant="callout" tone="ink2">{description}</Text></View></Card></Press>)}</View>
   </Screen>;
-  if (screen === 'tell') return <Screen screen={screen} footer={<><View style={{ alignItems: 'center', gap: space.sm }}><BigMic live={listening} onPress={toggleVoice} /><Text variant="callout" tone="ink2">Tap to start talking · or type instead</Text></View>{transcript ? <Button label="Review what life understood" onPress={async () => { const result = await records.propose(transcript); set({ proposals: result.data }); flag('records-confirmed', false); nav.go('understood', { setup: '1' }); }} /> : null}</>}>
+  if (screen === 'tell') return <Screen screen={screen} footer={<><View style={{ alignItems: 'center', gap: space.sm }}><BigMic live={listening} onPress={toggleVoice} /><Text variant="callout" tone="ink2">Tap to start talking · or type instead</Text></View>{transcript ? <Button label="Review what life understood" onPress={async () => { const words = settledTranscript(transcript, await voice.stop()); setListening(false); setTranscript(words); if (!words) return; const result = await records.propose(words); set({ proposals: result.data }); flag('records-confirmed', false); nav.go('understood', { setup: '1' }); }} /> : null}</>}>
     <Text variant="callout" tone="ink2">Faster than questions</Text><Heading title="Tell life about you, in your own words." sub="Talk for a minute and life will set itself up. You’ll see everything it understood before anything is saved." />
     <Rows rows={['Where you live and who with', 'What you do for work', 'Anything worrying you about money', 'Health things you’ve been putting off', 'Where you want to be in a few years'].map(title => ({ title }))} />
     <Input value={transcript} onChange={setTranscript} label="Your words" multiline placeholder="Tell life about you…" />{voiceError ? <Text variant="callout" tone="ink2">{voiceError}</Text> : null}<LocalNotice text="Your words are reviewed before filing. If on-device speech is unavailable, type instead." />
