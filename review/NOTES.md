@@ -151,3 +151,8 @@
 - The unchanged v17 board is served at the local preview root and remains open with 221 phones. Only the separate review origin’s demo fixture was refreshed; the main app’s saved state was not reset.
 - Approved pinned packages remain `react-native-web@0.21.4` and `@shopify/react-native-skia@2.14.0`, installed with lifecycle scripts disabled. CanvasKit WASM is local, not CDN-hosted.
 - No real AI calls or screenshot jobs were started. Track B has now begun with the owner-authorized local foundation above; only its focused repository checks were run.
+
+## V25 board (19 Nov 2026, branch phase-12-v25-best-of, from V23)
+- `review/life-complete-board-v25.html` (build: `node review/build-visual-board-v25.mjs`). All 221 V23 screens; Today, Plan, You and Talk redesigned from the best of v17 (briefing, level, body numbers, life knows you), V19 (order, check-in that shrinks), calmer mockup (icons, contrast, Plan groups) and V24 (photographs, Ready to file, Coming up). V24's other restyling is not used.
+- Every screen has Approve / Needs work (+ note), saved in the browser; "Copy for Claude" exports decisions. 67 screens tagged with the reference they draw on (Atria, Cal AI, Loop, Actual, Maybe, Gadgetbridge, Fenny, mem0, ts-fsrs).
+- Standalone main-screen mockup: `review/v25/index.html`. Accounting: `review/v25-screen-accounting.json`. Not yet in the Expo app; that follows approval.

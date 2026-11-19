@@ -1,0 +1,46 @@
+{
+  "version": 25,
+  "output": "review/life-complete-board-v25.html",
+  "outputSha256": "aaf27d657288140582b5cf67557ede5253f36644b000252cfe9de2aaa8ac6610",
+  "source": {
+    "file": "review/life-complete-board-v23.html",
+    "sha256": "e7bbd20d99a2b1cfd9f8322d2c6478846330a353371f112156bac8fd2ea5fb46"
+  },
+  "redesigned": [
+    "today",
+    "plan",
+    "you",
+    "talk"
+  ],
+  "photographs": {
+    "areahome": "terrace",
+    "areawork": "work",
+    "household": "people",
+    "glimpse": "home",
+    "birthdaynudge": "people"
+  },
+  "references": 67,
+  "renderVerification": {
+    "date": "2026-11-19",
+    "renderedScreens": 221,
+    "uniqueKeys": 221,
+    "missingKeys": [],
+    "redesigned": [
+      "today",
+      "plan",
+      "you",
+      "talk"
+    ],
+    "photographsAdded": [
+      "household"
+    ],
+    "referenceTags": 67,
+    "reviewControls": 221,
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "consoleErrors": 0,
+    "checked": "jump from Today to Body, check-in collapse and undo, Needs work note saved and counted"
+  }
+}
