@@ -3,7 +3,8 @@ import { createApi } from './app';
 import { createAuth } from './auth';
 import { bunDb } from './db/bun';
 import { assertRowSecurity } from './db/client';
-import { readEnv } from './env';
+import { readEnv, wearableApps } from './env';
+import { sealer } from './seal';
 import { modelsFromEnv } from './models/registry';
 import { storageFromEnv } from './storage';
 
@@ -20,7 +21,7 @@ const auth = createAuth({
   google: env.GOOGLE_CLIENT_ID ? { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } : undefined,
 });
 const storage = storageFromEnv(env);
-const server = Bun.serve({ port: env.PORT, fetch: createApi({ db, auth, corsOrigins: origins, storage, graceDays: env.ACCOUNT_GRACE_DAYS, jobsSecret: env.JOBS_SECRET, ai: { models: modelsFromEnv(env) } }) });
+const server = Bun.serve({ port: env.PORT, fetch: createApi({ db, auth, corsOrigins: origins, storage, graceDays: env.ACCOUNT_GRACE_DAYS, jobsSecret: env.JOBS_SECRET, ai: { models: modelsFromEnv(env) }, wearables: { apps: wearableApps(env), publicUrl: env.PUBLIC_URL ?? env.BETTER_AUTH_URL, sealer: await sealer(env.TOKEN_KEY), stateKey: env.TOKEN_KEY } }) });
 // Locally the server runs its own hourly sweep; a hosted server's scheduler calls POST /jobs/sweep instead.
 setInterval(() => { void purgeClosedAccounts(db, storage, Date.now()).catch(error => console.error('sweep failed', error)); }, 60 * 60 * 1000);
 console.log(`life API on ${server.url}${storage ? '' : ' (no file storage set up)'}`);

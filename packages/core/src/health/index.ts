@@ -8,3 +8,5 @@ export * from './load';
 export * from './stress';
 export * from './signals';
 export * from './habits';
+export * from './days';
+export * from './body';

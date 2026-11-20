@@ -11,9 +11,10 @@
  * the morning you woke up; everything else belongs to its life day (time/zone.ts).
  */
 import { isNum, mean, round, sum } from '../math/stats';
-import { lifeDay, localDate, localParts, offsetMinutes, resolveTimeZone, sleepDay, type DateKey } from '../time/zone';
+import { lifeDay, lifeDayBounds, localDate, localParts, offsetMinutes, resolveTimeZone, sleepDay, type DateKey } from '../time/zone';
 import { estimateMaxHr, trimpFromHeartRate, type BodySex } from './load';
-import type { DailyHealth, HrvMethod, NightSleep, SleepStageMinutes } from './types';
+import { stressDay, WINDOW_MINUTES, type StressContext, type StressWindow } from './stress';
+import type { DailyHealth, DayStress, HrvMethod, NightSleep, SleepStageMinutes } from './types';
 
 export type SourceKind = 'device' | 'wearable' | 'aggregator' | 'manual';
 export const SOURCE_PRIORITY: Record<SourceKind, number> = { device: 0, wearable: 1, aggregator: 2, manual: 3 };
@@ -21,7 +22,7 @@ export const SOURCE_PRIORITY: Record<SourceKind, number> = { device: 0, wearable
 export interface HealthSource { id: string; kind: SourceKind; name?: string }
 
 export type SampleType =
-  | 'sleep' | 'hrv' | 'restingHeartRate' | 'heartRate' | 'respiratoryRate' | 'skinTemperatureDelta'
+  | 'sleep' | 'hrv' | 'restingHeartRate' | 'heartRate' | 'respiratoryRate' | 'skinTemperatureDelta' | 'skinTemperature'
   | 'oxygenSaturation' | 'steps' | 'activeEnergy' | 'recoveryScore';
 export type SleepStage = 'inBed' | 'awake' | 'asleep' | 'light' | 'deep' | 'rem';
 
@@ -43,7 +44,7 @@ export interface Reading extends HealthSample { startMs: number; endMs: number; 
 
 const PLAUSIBLE: Partial<Record<SampleType, [number, number]>> = {
   heartRate: [25, 250], restingHeartRate: [25, 150], hrv: [5, 300], respiratoryRate: [4, 40],
-  oxygenSaturation: [70, 100], skinTemperatureDelta: [-5, 5], steps: [0, 100_000], activeEnergy: [0, 10_000], recoveryScore: [0, 100],
+  oxygenSaturation: [70, 100], skinTemperatureDelta: [-5, 5], skinTemperature: [25, 42], steps: [0, 100_000], activeEnergy: [0, 10_000], recoveryScore: [0, 100],
 };
 
 const toMs = (v: string | number) => (typeof v === 'number' ? v : Date.parse(v));
@@ -57,6 +58,7 @@ export function normaliseSample(sample: HealthSample, fallbackZone = 'UTC'): Rea
   if (sample.type === 'activeEnergy' && unit === 'kj') value /= 4.184;
   if (sample.type === 'oxygenSaturation' && value <= 1) value *= 100;
   if (sample.type === 'skinTemperatureDelta' && (unit === 'degf' || unit === '°f')) value = value * 5 / 9;
+  if (sample.type === 'skinTemperature' && (unit === 'degf' || unit === '°f')) value = (value - 32) * 5 / 9;
   if (sample.type === 'heartRate' && unit === 'count/s') value *= 60;
   const limits = PLAUSIBLE[sample.type];
   if (limits && (value < limits[0] || value > limits[1])) return null;
@@ -165,7 +167,52 @@ export interface SummariseOptions {
   restingHr?: number;
 }
 
-const OVERNIGHT: ReadonlySet<SampleType> = new Set(['hrv', 'respiratoryRate', 'oxygenSaturation', 'skinTemperatureDelta']);
+const OVERNIGHT: ReadonlySet<SampleType> = new Set(['hrv', 'respiratoryRate', 'oxygenSaturation', 'skinTemperatureDelta', 'skinTemperature']);
+
+/* ───────────────────────── Stress windows ───────────────────────── */
+
+/** Steps around a heart-rate reading (the 15 minutes before it to 5 after) below which it counts as still. */
+export const STILL_STEPS = 40;
+export const STILL_BEFORE_MS = 15 * 60_000;
+export const STILL_AFTER_MS = 5 * 60_000;
+/** With no step count at all, a heart-rate reserve above this could be a walk, so it is left out. */
+export const STILL_HRR_WITHOUT_STEPS = 0.4;
+
+/** Steps taken around `at`, sharing out a long step record by how much of it falls inside. */
+function stepsNear(at: number, steps: readonly Reading[]): number {
+  const from = at - STILL_BEFORE_MS, to = at + STILL_AFTER_MS;
+  let total = 0;
+  for (const r of steps) {
+    if (r.endMs === r.startMs) { if (r.startMs >= from && r.startMs <= to) total += r.value; continue; }
+    const overlap = Math.min(r.endMs, to) - Math.max(r.startMs, from);
+    if (overlap > 0) total += r.value * overlap / (r.endMs - r.startMs);
+  }
+  return total;
+}
+
+/**
+ * The life day in half hours: each window's average heart rate while awake and still. A reading is still when
+ * fewer than 40 steps were taken in the 15 minutes before it and the 5 after (so the heart rate settling after a
+ * walk isn't counted either), or, with no step count that day, when the heart rate couldn't be a walk. A window
+ * counts when at least two of its readings are still (or all of them, when it has just one), and uses only those,
+ * so a trip to the kettle doesn't lose the half hour. Null when there is no heart rate.
+ */
+function stressFromReadings(date: DateKey, timeZone: string, heart: readonly Reading[], steps: readonly Reading[] | undefined, ctx: StressContext): DayStress | null {
+  if (!heart.length) return null;
+  const { start, end } = lifeDayBounds(date, timeZone);
+  const size = WINDOW_MINUTES * 60_000, count = Math.round((end - start) / size);
+  const isStill = (r: Reading) => (steps ? stepsNear(r.startMs, steps) < STILL_STEPS : (r.value - ctx.restingHr) / (ctx.maxHr - ctx.restingHr) < STILL_HRR_WITHOUT_STEPS);
+  const windows: StressWindow[] = Array.from({ length: count }, (_, i) => {
+    const from = start + i * size, to = from + size;
+    const inside = heart.filter(r => r.startMs >= from && r.startMs < to);
+    if (!inside.length) return { start: from, still: false };
+    const still = inside.filter(isStill);
+    if (still.length < Math.min(2, inside.length)) return { start: from, bpm: mean(inside.map(r => r.value)) ?? undefined, still: false };
+    return { start: from, bpm: mean(still.map(r => r.value)) ?? undefined, still: true };
+  });
+  const day = stressDay(windows, ctx);
+  return day.average === null ? null : { ...day, start, windowMinutes: WINDOW_MINUTES };
+}
 
 export function summariseDays(samples: readonly HealthSample[], options: SummariseOptions): { days: DailyHealth[]; disagreements: Disagreement[] } {
   const preferred = options.preferred ?? {};
@@ -218,6 +265,7 @@ export function summariseDays(samples: readonly HealthSample[], options: Summari
     groups.set(key, [...(groups.get(key) ?? []), r]);
   }
   const heart: { date: DateKey; readings: Reading[] }[] = [];
+  const stepsByDate = new Map<DateKey, Reading[]>();
   for (const [key, list] of groups) {
     const [type, date] = key.split('|') as [SampleType, DateKey];
     const chosen = rankSources(list, type, preferred, xs => xs.length);
@@ -238,7 +286,8 @@ export function summariseDays(samples: readonly HealthSample[], options: Summari
       case 'respiratoryRate': d.respiratoryRate = round(avg(overnight), 1); break;
       case 'oxygenSaturation': d.spo2 = round(avg(overnight), 1); break;
       case 'skinTemperatureDelta': d.skinTempDelta = round(avg(overnight), 2); break;
-      case 'steps': d.steps = Math.round(sum(use.map(r => r.value))); break;
+      case 'skinTemperature': d.skinTemp = round(avg(overnight), 2); break;
+      case 'steps': d.steps = Math.round(sum(use.map(r => r.value))); stepsByDate.set(date, use); break;
       case 'activeEnergy': d.activeKcal = Math.round(sum(use.map(r => r.value))); break;
       case 'recoveryScore': {
         const last = use.reduce((a, b) => (b.endMs > a.endMs ? b : a));
@@ -255,6 +304,10 @@ export function summariseDays(samples: readonly HealthSample[], options: Summari
     const d = days.get(date)!;
     const resting = d.restingHr ?? options.restingHr ?? 60;
     d.trimp = trimpFromHeartRate(hr.map(r => ({ at: r.startMs, bpm: r.value })), { restingHr: resting, maxHr, sex: options.sex, mode: 'day' }).trimp;
+    const night = mainByDate.get(date);
+    const awake = night ? hr.filter(r => r.startMs < night.start || r.startMs > night.end) : hr;
+    const stress = stressFromReadings(date, d.timeZone ?? hr[0].tz, awake, stepsByDate.get(date), { restingHr: resting, maxHr });
+    if (stress) d.stress = stress;
   }
 
   return { days: [...days.values()].sort((a, b) => a.date.localeCompare(b.date)), disagreements };

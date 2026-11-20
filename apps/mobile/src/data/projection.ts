@@ -5,8 +5,8 @@ import { digest, stableId } from './ids';
 import { embed } from '@life/brain';
 
 const domainKeys = new Set(['profile', 'weightKg', 'heightCm', 'waistCm', 'prefs', 'records', 'filedRecords', 'aim', 'chiefAim', 'meals', 'habits', 'people', 'learned', 'memories', 'completed', 'missionSteps', ...syncedSettings()]);
-/** Choices, flags and whether setup is done travel with the account inside the prefs row, so a restored phone has them. */
-function syncedSettings() { return ['choices', 'flags', 'onboardingDone']; }
+/** Choices, flags, the core loops' plans and ticks, and whether setup is done travel with the account inside the prefs row, so a restored phone has them. */
+function syncedSettings() { return ['choices', 'flags', 'onboardingDone', 'loops']; }
 /** A memory's attributes kept in its source column (services/memory.ts); `lastUsed` has its own column. */
 const MEMORY_ATTRIBUTES = ['kind', 'confidence', 'validFrom', 'validTo', 'uses'] as const;
 const array = (value: unknown): Record<string, unknown>[] => Array.isArray(value) ? value.map(object) : [];

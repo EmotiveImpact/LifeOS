@@ -31,6 +31,7 @@ import { Corners, PaperLink, PhotoStatus } from './firstopen';
 import { Composer } from './talk';
 import { SearchV26, TodayV26 } from './today';
 import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, PhotoTile, QuietLink, Row, RowsCard, Shelf, Statement, two } from './kit';
+import { TodayLoops } from './loops';
 
 const shortDate = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
 const dayMonth = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
@@ -141,6 +142,7 @@ export function EmptyTodayV26() {
         </View>
       </View>
       <Btn label="Talk to life" icon="mic" onPress={() => nav.go('talk')} style={{ marginTop: space.md }} />
+      <TodayLoops />
       <Callout center style={{ marginTop: space.sm }}>Nothing is saved until you say so.</Callout>
       <Box onPress={() => nav.go('knows')} accessibilityLabel="life knows you, 0%" style={{ marginTop: space.lg }}>
         <Between><Text variant="title">life knows you</Text><Text variant="title">0%</Text></Between>

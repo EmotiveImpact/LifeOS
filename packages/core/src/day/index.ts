@@ -2,3 +2,4 @@
 export * from './planner';
 export * from './learning';
 export * from './notifications';
+export * from './loops';

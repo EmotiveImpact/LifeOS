@@ -89,7 +89,7 @@ export async function exportAccount(db: Db, userId: string, now: number) {
     const connections = await tx.select({ provider: oauthTokens.provider, scope: oauthTokens.scope, expires_at: oauthTokens.expires_at, created_at: oauthTokens.created_at, updated_at: oauthTokens.updated_at }).from(oauthTokens);
     const stored = await tx.select({ id: files.id, kind: files.kind, content_type: files.content_type, keep: files.keep, delete_after: files.delete_after, created_at: files.created_at }).from(files);
     const usage = withoutOwner(await tx.select().from(aiUsage));
-    return { tables, devices: phones.map(({ push_token, ...p }) => ({ ...p, push: push_token !== null })), connections, files: stored, aiUsage: usage };
+    return { tables, devices: phones.map(({ push_token, ...p }) => ({ ...p, push: push_token !== null })), connections: connections.filter(c => !c.provider.startsWith('pending:')), files: stored, aiUsage: usage };
   });
   return {
     format: 'life-export',

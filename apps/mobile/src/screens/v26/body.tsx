@@ -4,7 +4,7 @@
  * Health is wellness guidance, not a diagnosis.
  */
 import { useEffect, useState } from 'react';
-import { Platform, Share, StyleSheet, TextInput, View } from 'react-native';
+import { AppState, Platform, Share, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -27,6 +27,10 @@ import {
 import { Between, BigPhoto, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Micro, Page, PeekStack, PhotoBackdrop, PhotoRound, Row, RowsCard, Shelf, Statement, drawerStyle, useDrawerPhoto } from './kit';
 import { Axis, FigRow, Gauge, Head, Measure, RangeMark, XL } from './bodykit';
 import { Composer } from './talk';
+import { apiConfigured } from '@/services/brain';
+import { lastWearableProblems, readHealthNow } from '@/services/health/useHealthRunner';
+import { WEARABLES, connectWearable, disconnectWearable, wearableStatus, type Wearable, type WearableProblem } from '@/services/health/wearables';
+import { since } from '@/state/health';
 
 const h = seed.health;
 const info = (label: string, onPress: () => void) => ({ kind: 'icon' as const, icon: 'info' as const, label, onPress });
@@ -156,9 +160,42 @@ export function ReadinessV26() {
 const READS = [{ key: 'sleep', label: 'Sleep', on: true }, { key: 'heart', label: 'Heart rate and HRV', on: true }, { key: 'workouts', label: 'Workouts and steps', on: true }, { key: 'food', label: 'Food and water', on: true }, { key: 'weight', label: 'Weight', on: false }];
 
 export function DevicesV26() {
-  const { data, choose, flag } = useSeed(), t = useTokens();
+  const { data, choose, flag } = useSeed(), t = useTokens(), nav = useNavigation();
   const reads = (k: string, d: boolean) => (data.choices[`health-read-${k}`] ?? (d ? 'on' : 'off')) === 'on';
-  const others = [{ id: 'whoop', icon: 'watch' as const, name: 'WHOOP', gives: 'Recovery, strain, sleep', act: 'Connect' }, { id: 'oura', icon: 'moon' as const, name: 'Oura', gives: 'Readiness, sleep, temperature', act: 'Connect' }, { id: 'strap', icon: 'pulse' as const, name: 'Heart-rate strap', gives: 'Any Bluetooth strap: Polar, Garmin, Wahoo', act: 'Pair' }];
+  // The sample life shows the phone's store as connected; a real account shows what it actually connected.
+  const storeOn = SHOW_SAMPLES || !!data.flags['health-connected'];
+  const [problems, setProblems] = useState<WearableProblem[]>(lastWearableProblems());
+  const [busy, setBusy] = useState<string | null>(null);
+  // Back from a wearable's sign-in page: ask the life API what is connected now.
+  useEffect(() => {
+    if (!apiConfigured) return;
+    const check = async () => {
+      const status = await wearableStatus();
+      for (const w of WEARABLES) {
+        const on = status.connections.some(c => c.provider === w.id);
+        if (on !== !!data.flags[`device-${w.id}`]) { flag(`device-${w.id}`, on); if (on) readHealthNow(); }
+      }
+      setProblems(lastWearableProblems());
+    };
+    void check();
+    const sub = AppState.addEventListener('change', st => { if (st === 'active') void check(); });
+    return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const wearable = async (id: Wearable) => {
+    const on = !!data.flags[`device-${id}`], again = problems.some(p => p.provider === id && p.problem === 'reconnect');
+    if (!apiConfigured) { flag(`device-wanted-${id}`, !data.flags[`device-wanted-${id}`]); feedback.select(); return; }
+    setBusy(id);
+    try {
+      if (on && !again) { if (await disconnectWearable(id)) { flag(`device-${id}`, false); feedback.select(); } }
+      else if (!(await connectWearable(id))) { flag(`device-wanted-${id}`, true); feedback.select(); }
+    } finally { setBusy(null); }
+  };
+  const others = [
+    { id: 'whoop', icon: 'watch' as const, name: 'WHOOP', gives: 'Recovery, sleep, temperature' },
+    { id: 'oura', icon: 'moon' as const, name: 'Oura', gives: 'Readiness, sleep, temperature' },
+    { id: 'strap', icon: 'pulse' as const, name: 'Heart-rate strap', gives: 'Any Bluetooth strap: Polar, Garmin, Wahoo' },
+  ];
   return (
     <Page screen="devices" bar={{ kind: 'push', title: 'Devices' }}>
       <Eyebrow>Body · connections</Eyebrow>
@@ -168,9 +205,9 @@ export function DevicesV26() {
         <Between style={{ alignItems: 'flex-start' }}>
           <View style={{ flexDirection: 'row', gap: space.sm, flexShrink: 1 }}>
             <Badge icon="heart" />
-            <View style={{ flexShrink: 1 }}><Text variant="title">{source}</Text><Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>Sleep, heart, HRV, workouts, steps, food</Text></View>
+            <View style={{ flexShrink: 1 }}><Text variant="title">{source}</Text><Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>{storeOn && !SHOW_SAMPLES ? `Last read ${since(data.health.lastRead).toLowerCase()}` : 'Sleep, heart, HRV, workouts, steps'}</Text></View>
           </View>
-          <Chip label="On" tone="done" />
+          {storeOn ? <Chip label="On" tone="done" /> : <Chip label="Connect" icon="add" onPress={() => nav.go('healthprimer')} />}
         </Between>
         <Micro style={{ marginTop: space.lg }}>WHAT LIFE CAN READ · ONE BY ONE</Micro>
         <View style={{ marginTop: space.xs }}>
@@ -185,18 +222,25 @@ export function DevicesV26() {
       <SectionHead title="Add another" link="when you’re ready" />
       <Shelf>
         {others.map(o => {
-          const asked = !!data.flags[`device-wanted-${o.id}`];
+          const live = o.id !== 'strap' && apiConfigured, on = !!data.flags[`device-${o.id}`], asked = !!data.flags[`device-wanted-${o.id}`];
+          const again = problems.some(p => p.provider === o.id && p.problem === 'reconnect');
+          const sub = again ? 'Sign in to it again to keep reading' : on ? 'Connected. Readings come in with your phone’s' : asked ? (live ? 'Not open yet. life will remind you' : 'life will remind you when this opens') : o.gives;
+          const label = busy === o.id ? 'Opening…' : again ? 'Connect again' : on ? 'Disconnect' : asked ? 'Noted' : o.id === 'strap' ? 'Pair' : 'Connect';
+          const press = () => {
+            if (o.id === 'strap') { flag(`device-wanted-${o.id}`, !asked); feedback.select(); return; }
+            void wearable(o.id as Wearable);
+          };
           return (
             <Box key={o.id} pad={space.md} style={{ width: 168 }}>
               <View style={[styles.thumb, { backgroundColor: t.surface2 }]}><Icon name={o.icon} size={22} color={t.ink} /></View>
               <Text variant="title" style={{ marginTop: space.sm }} numberOfLines={2}>{o.name}</Text>
-              <Text variant="callout" tone="ink2" style={{ marginTop: 2, flex: 1 }}>{asked ? 'life will remind you when this opens' : o.gives}</Text>
-              <Btn ghost sm label={asked ? 'Noted' : o.act} icon={asked ? 'check' : undefined} onPress={() => { flag(`device-wanted-${o.id}`, !asked); feedback.select(); }} style={{ marginTop: 14 }} />
+              <Text variant="callout" tone="ink2" style={{ marginTop: 2, flex: 1 }}>{sub}</Text>
+              <Btn ghost sm label={label} icon={on && !again ? undefined : asked && !on ? 'check' : undefined} disabled={busy === o.id} onPress={press} style={{ marginTop: 14 }} />
             </Box>
           );
         })}
       </Shelf>
-      <Callout style={{ marginTop: space.md }}>WHOOP and Oura connect through your account with them. Only a heart-rate strap pairs over Bluetooth.</Callout>
+      <Callout style={{ marginTop: space.md }}>WHOOP and Oura connect through your account with them, on their own sign-in page. Only a heart-rate strap pairs over Bluetooth.</Callout>
       <SectionHead title="Already works" />
       <RowsCard>
         <Row icon="watch" title="Garmin, Fitbit, Samsung and more" sub="Through Apple Health or Health Connect" right={<Chip label="Works" tone="q" />} />

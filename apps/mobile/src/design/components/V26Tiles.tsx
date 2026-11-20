@@ -98,8 +98,8 @@ export type ReadingProps = {
   unit?: string;
   /** How it compares with your normal ("6 ms above your normal"). */
   delta?: string;
-  /** The week, oldest first, drawn against `normal`. */
-  series: number[];
+  /** The week, oldest first, drawn against `normal`; a null day is a gap. */
+  series: (number | null)[];
   normal: [number, number];
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;

@@ -14,6 +14,8 @@ import {
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
+import { CHECK_IN_WORDS, useLoops } from '@/state/loops';
+import { CHECK_IN_STYLES } from '@life/core';
 import { money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { ai } from '@/services/ai';
@@ -172,8 +174,8 @@ function QuietHoursRuler({ from, until }: { from: number; until: number }) {
 const FROM = [20, 21, 22, 23], UNTIL = [6, 7, 8, 9];
 
 export function NotifsV26() {
-  const { data, flag, choose } = useSeed();
-  const nudges = data.choices.nudges ?? '1';
+  const { data, flag, choose } = useSeed(), L = useLoops();
+  const style = L.loops.checkIn, words = CHECK_IN_WORDS[style];
   const from = Number(data.choices['quiet-from'] ?? quietHours.from), until = Number(data.choices['quiet-until'] ?? quietHours.until);
   const isOn = (key: string, fallback: boolean) => data.flags[`notification-off-${key}`] === undefined ? fallback : !data.flags[`notification-off-${key}`];
   const kinds = notifGroups.flatMap(g => g.kinds), on = kinds.filter(k => isOn(k.key, k.on)).length;
@@ -181,14 +183,11 @@ export function NotifsV26() {
   return (
     <Page screen="notifs" bar={{ kind: 'push', title: 'Notifications' }}>
       <Eyebrow>{`${on} of ${kinds.length} kinds are on`}</Eyebrow>
-      <Display s={`At most {@bell ${nudges} nudge${nudges === '1' ? '' : 's'} a day}, and {@moon nothing at night}.`} />
+      <Display s={style === 'off' ? 'life {@bell won’t ask}, and {@moon nothing at night}.' : `life checks in {@bell ${words.line}}, and {@moon nothing at night}.`} />
       <Card style={{ marginTop: space.lg }}>
-        <Micro>NUDGES A DAY, AT MOST</Micro>
-        <Between style={{ alignItems: 'flex-end', marginTop: 6 }}>
-          <Figure value={nudges} unit="a day" />
-          <SegmentedV26 style={{ width: 150, marginBottom: space.xs }} options={['1', '2', '3'].map(v => ({ value: v, label: v }))} value={nudges} onChange={v => choose('nudges', v)} />
-        </Between>
-        <Callout style={{ marginTop: space.xs }}>{`Sent between ${nudgeWindow}. Too many? Turn it down here.`}</Callout>
+        <Micro>HOW LIFE CHECKS IN</Micro>
+        <SegmentedV26 style={{ marginTop: space.xs }} options={CHECK_IN_STYLES.map(v => ({ value: v, label: CHECK_IN_WORDS[v].label }))} value={style} onChange={v => L.setCheckIn(v)} />
+        <Callout style={{ marginTop: space.xs }}>{`${words.sub} Never more than one nudge a day, sent between ${nudgeWindow}.`}</Callout>
         <Micro style={{ marginTop: space.lg }}>QUIET HOURS</Micro>
         <QuietHoursRuler from={from} until={until} />
         <Between style={{ marginTop: space.xs }}><Callout>00:00</Callout><Callout>12:00</Callout><Callout>24:00</Callout></Between>
