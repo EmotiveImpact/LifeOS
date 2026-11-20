@@ -2,6 +2,8 @@
 
 20 November 2026 · Private product handoff for Claude · Discussion and implementation proposal, not shipped behaviour
 
+See the [wider voice discussion](VOICE-DISCUSSION.md) for the original product rationale, examples, and ideas not included in the first build.
+
 ## 1. Conversation record
 
 These are verbatim excerpts from the voice transcription, in discussion order. Speaker labels are editorial. Hesitations and transcription artefacts are kept. This is the relevant decision record, not a complete call transcript. No actual health readings or personal calendar entries are included.
