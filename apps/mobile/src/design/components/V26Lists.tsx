@@ -280,7 +280,7 @@ export function SpineTimeline({ items, style }: { items: SpineItem[]; style?: St
           ) : null}
           <View style={[styles.spineDot, { backgroundColor: it.state === 'done' ? t.ink : it.state === 'now' ? t.ember : t.surface3 }]} />
           <Text variant="micro" tone="ink2" style={{ paddingVertical: 6 }}>{it.when}</Text>
-          <RichText text={it.text} tone={it.state === 'later' ? 'ink2' : 'ink'} strong style={{ marginTop: 2 }} />
+          {it.text ? <RichText text={it.text} tone={it.state === 'later' ? 'ink2' : 'ink'} strong style={{ marginTop: 2 }} /> : null}
           {it.children}
         </View>
       ))}

@@ -15,7 +15,7 @@ export type SeedData = {
   profile: UserProfile; onboardingDone: boolean; aim: ChiefAim | null; records: FiledRecord[]; proposals: FiledRecord[]; knowledge: typeof seedKnowledge;
   completed: string[]; missionSteps: Record<string, boolean>; selectedMission: string;
   pulseLog: { at: string; moodId: string; x: number; y: number }[];
-  people: typeof seedPeople; meal: MealItem[]; mealLogged: boolean; meals: { id: string; name: string; at: string; items: MealItem[] }[];
+  people: typeof seedPeople; meal: MealItem[]; mealLogged: boolean; meals: { id: string; name: string; at: string; items: MealItem[]; day?: string; photo?: string; via?: 'photo' | 'said' | 'scan' | 'search' | 'saved' | 'quick' | 'menu' | 'label' | 'plan'; from?: string }[];
   habits: typeof seed.habits; journal: string[]; weightKg: number; heightCm: number; waistCm: number;
   learned: string[]; memories: MemoryEntry[];
   prefs: { dark: boolean; sounds: boolean; haptics: boolean; handDrawn: boolean; hideNumbers: boolean; hideBalances: boolean; glimpses: boolean; followMood: boolean; look: 'mix' | 'places'; notifications: boolean; privateMode: boolean; addback: 'None' | 'Half' | 'All' };

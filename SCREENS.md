@@ -167,34 +167,34 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `snap` | Snap a meal | Full screen | Fuel → camera | `/(flows)/snap` · fullScreenModal |
-| [x] | `confirm` | Confirm the meal | Sheet | after a snap | `/(sheets)/confirm` · formSheet |
-| [x] | `fuel` | Fuel | Push | Body → Fuel | `/plan/body/fuel/fuel` |
-| [x] | `mealresult` | Meal, logged | Push | after confirming | `/plan/body/fuel/mealresult` |
-| [x] | `cook` | What can I cook? | Push | Fuel → What can I cook? | `/plan/body/fuel/cook` |
-| [x] | `mealplan` | A week of meals | Push | Fuel → Week | `/plan/body/fuel/mealplan` |
-| [x] | `sayit` | Say what you ate | Sheet | Fuel → Say it | `/(sheets)/sayit` · formSheet |
-| [x] | `foodday` | A day of food | Push | Fuel → a day | `/plan/body/fuel/foodday` |
-| [x] | `barcode` | Scan a barcode | Full screen | Fuel → barcode | `/(flows)/barcode` · fullScreenModal |
-| [x] | `foodsearch` | Search for a food | Push | Fuel → search | `/plan/body/fuel/foodsearch` |
-| [x] | `fuelhome` | Fuel, at a glance | Push | Body → Fuel | `/plan/body/fuel/fuelhome` |
-| [x] | `fuelgoal` | Your food targets | Push | Fuel → Targets | `/plan/body/fuel/fuelgoal` |
-| [x] | `savedmeals` | Saved meals | Push | Fuel → Saved | `/plan/body/fuel/savedmeals` |
-| [x] | `fuelprogress` | Food and weight, over time | Push | Fuel → Progress | `/plan/body/fuel/fuelprogress` |
-| [x] | `exerciseadd` | Exercise, added back | Push | Fuel → Settings | `/plan/body/fuel/exerciseadd` |
-| [x] | `fuelplan` | Your plan is ready | Full screen | end of food setup | `/(flows)/fuelplan` · fullScreenModal |
-| [x] | `weighin` | Log your weight | Sheet | Fuel → Weight or Today | `/(sheets)/weighin` · formSheet |
-| [x] | `labelscan` | Scan a nutrition label | Full screen | Snap → Label | `/(flows)/labelscan` · fullScreenModal |
-| [x] | `menuscan` | What should I order? | Push | Snap → Menu | `/plan/body/fuel/menuscan` |
-| [x] | `fixwords` | Fix it in your own words | Sheet | a logged meal → Fix | `/(sheets)/fixwords` · formSheet |
-| [x] | `nutrients` | Everything you ate today | Push | Fuel → Nutrients | `/plan/body/fuel/nutrients` |
-| [x] | `describeexercise` | Describe a workout | Sheet | Fuel or Load → + Activity | `/(sheets)/describeexercise` · formSheet |
-| [x] | `weekbudget` | Your week, not just today | Push | Fuel → Week | `/plan/body/fuel/weekbudget` |
-| [x] | `mealtiming` | Meals and your sleep | Push | Fuel → Insights | `/plan/body/fuel/mealtiming` |
-| [x] | `foodquality` | Food quality | Push | Fuel → Insights | `/plan/body/fuel/foodquality` |
-| [x] | `alcohol` | Alcohol | Push | Fuel → Alcohol | `/plan/body/fuel/alcohol` |
-| [x] | `quicklog` | Log in two taps | Sheet | + on Fuel | `/(sheets)/quicklog` · formSheet |
-| [x] | `importfood` | Bring your history | Push | Fuel → Settings → Import | `/plan/body/fuel/importfood` |
+| [x] | `snap` | Snap a meal **V26** | Full screen | Fuel → camera | `/(flows)/snap` · fullScreenModal |
+| [x] | `confirm` | Confirm the meal **V26** | Sheet | after a snap | `/(sheets)/confirm` · formSheet |
+| [x] | `fuel` | Fuel **V26** | Push | Body → Fuel | `/plan/body/fuel/fuel` |
+| [x] | `mealresult` | Meal, logged **V26** | Push | after confirming | `/plan/body/fuel/mealresult` |
+| [x] | `cook` | What can I cook? **V26** | Push | Fuel → What can I cook? | `/plan/body/fuel/cook` |
+| [x] | `mealplan` | A week of meals **V26** | Push | Fuel → Week | `/plan/body/fuel/mealplan` |
+| [x] | `sayit` | Say what you ate **V26** | Sheet | Fuel → Say it | `/(sheets)/sayit` · formSheet |
+| [x] | `foodday` | A day of food **V26** | Push | Fuel → a day | `/plan/body/fuel/foodday` |
+| [x] | `barcode` | Scan a barcode **V26** | Full screen | Fuel → barcode | `/(flows)/barcode` · fullScreenModal |
+| [x] | `foodsearch` | Search for a food **V26** | Push | Fuel → search | `/plan/body/fuel/foodsearch` |
+| [x] | `fuelhome` | Fuel, at a glance **V26** | Push | Body → Fuel | `/plan/body/fuel/fuelhome` |
+| [x] | `fuelgoal` | Your food targets **V26** | Push | Fuel → Targets | `/plan/body/fuel/fuelgoal` |
+| [x] | `savedmeals` | Saved meals **V26** | Push | Fuel → Saved | `/plan/body/fuel/savedmeals` |
+| [x] | `fuelprogress` | Food and weight, over time **V26** | Push | Fuel → Progress | `/plan/body/fuel/fuelprogress` |
+| [x] | `exerciseadd` | Exercise, added back **V26** | Push | Fuel → Settings | `/plan/body/fuel/exerciseadd` |
+| [x] | `fuelplan` | Your plan is ready **V26** | Full screen | end of food setup | `/(flows)/fuelplan` · fullScreenModal |
+| [x] | `weighin` | Log your weight **V26** | Sheet | Fuel → Weight or Today | `/(sheets)/weighin` · formSheet |
+| [x] | `labelscan` | Scan a nutrition label **V26** | Full screen | Snap → Label | `/(flows)/labelscan` · fullScreenModal |
+| [x] | `menuscan` | What should I order? **V26** | Push | Snap → Menu | `/plan/body/fuel/menuscan` |
+| [x] | `fixwords` | Fix it in your own words **V26** | Sheet | a logged meal → Fix | `/(sheets)/fixwords` · formSheet |
+| [x] | `nutrients` | Everything you ate today **V26** | Push | Fuel → Nutrients | `/plan/body/fuel/nutrients` |
+| [x] | `describeexercise` | Describe a workout **V26** | Sheet | Fuel or Load → + Activity | `/(sheets)/describeexercise` · formSheet |
+| [x] | `weekbudget` | Your week, not just today **V26** | Push | Fuel → Week | `/plan/body/fuel/weekbudget` |
+| [x] | `mealtiming` | Meals and your sleep **V26** | Push | Fuel → Insights | `/plan/body/fuel/mealtiming` |
+| [x] | `foodquality` | Food quality **V26** | Push | Fuel → Insights | `/plan/body/fuel/foodquality` |
+| [x] | `alcohol` | Alcohol **V26** | Push | Fuel → Alcohol | `/plan/body/fuel/alcohol` |
+| [x] | `quicklog` | Log in two taps **V26** | Sheet | + on Fuel | `/(sheets)/quicklog` · formSheet |
+| [x] | `importfood` | Bring your history **V26** | Push | Fuel → Settings → Import | `/plan/body/fuel/importfood` |
 
 ## Plan · Body · Habits (3)
 

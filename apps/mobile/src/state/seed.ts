@@ -108,7 +108,7 @@ export const seedMeal: MealItem[] = [
   { name: 'Rice', grams: 150, kcal: 195, protein: 4, carbs: 43, fat: 0, fibre: 1, confidence: .8 },
   { name: 'Avocado', grams: 50, kcal: 80, protein: 1, carbs: 4, fat: 7, fibre: 3, confidence: .75 },
   { name: 'Edamame', grams: 40, kcal: 48, protein: 5, carbs: 4, fat: 2, fibre: 2, confidence: .9 },
-  { name: 'Egg', grams: 50, kcal: 72, protein: 7, carbs: 0, fat: 5, fibre: 0, confidence: .9 },
+  { name: 'Egg', grams: 50, kcal: 70, protein: 7, carbs: 0, fat: 5, fibre: 0, confidence: .9 },
 ];
 export type SeedHabit = { id: string; name: string; cue: string; last14: (boolean | undefined)[]; day?: number; automaticity?: number; source?: string; shortCue?: string; autoComplete?: boolean };
 export const seedHabitStrength = { name: 'Morning walk', strength: 71, beforeMiss: 73, day: 38, typicalDays: 66 };
@@ -132,7 +132,7 @@ export const seed = {
     zones: [{ name: 'Zone 5', range: '176–190', minutes: 8 }, { name: 'Zone 4', range: '162–175', minutes: 22 }, { name: 'Zone 3', range: '148–161', minutes: 41 }, { name: 'Zone 2', range: '134–147', minutes: 164 }, { name: 'Zone 1', range: '120–133', minutes: 58 }],
     stages: [{ stage: 'light' as const, minutes: 65 }, { stage: 'deep' as const, minutes: 90 }, { stage: 'rem' as const, minutes: 44 }, { stage: 'awake' as const, minutes: 10 }, { stage: 'light' as const, minutes: 153 }, { stage: 'rem' as const, minutes: 68 }],
   },
-  fuel: { kcal: 2300, targetWeight: 70, pace: .5, protein: 140, carbs: 260, fat: 75, fibre: 30, eaten: 1060, burned: 600, mealFit: 8.4, loggedMealTotals: { kcal: 705, protein: 49, carbs: 62, fat: 28, fibre: 9 }, macros: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Carbs', value: 150, max: 260, unit: 'g' }, { label: 'Fat', value: 48, max: 75, unit: 'g' }],
+  fuel: { kcal: 2300, targetWeight: 70, pace: .5, protein: 140, carbs: 260, fat: 75, fibre: 30, eaten: 1060, burned: 600, mealFit: 8.4, macros: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Carbs', value: 150, max: 260, unit: 'g' }, { label: 'Fat', value: 48, max: 75, unit: 'g' }],
     savedMeals: [{ name: 'Usual breakfast', detail: 'Yoghurt, berries, oats', kcal: 420 }, { name: 'Salmon rice bowl', detail: 'From Itsu', kcal: 705 }, { name: 'Chicken wrap', detail: 'Homemade', kcal: 560 }, { name: 'Protein shake', detail: 'Whey + oat milk', kcal: 240 }],
     nutrients: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Fibre', value: 21, max: 30, unit: 'g' }, { label: 'Sugar', value: 48, max: 90, unit: 'g' }, { label: 'Salt', value: 4.1, max: 6, unit: 'g' }, { label: 'Saturated fat', value: 14, max: 20, unit: 'g' }, { label: 'Iron', value: 9.2, max: 14.8, unit: 'mg' }, { label: 'Calcium', value: 820, max: 700, unit: 'mg' }, { label: 'Vitamin D', value: 3, max: 10, unit: 'µg' }],
   },
@@ -165,8 +165,8 @@ export const seedHousing = compareRentAndBuy(rentBuyInputs);
 export const rebateTask = TASK_CATALOG.find(t => /rebate|P87|overpaid/i.test(t.title + t.shortTitle)) ?? TASK_CATALOG[0];
 
 /** Distinct local diary entries; selection never aliases the latest logged meal. */
+/** Today's diary in the sample life: breakfast and the photographed lunch, 1,060 kcal (`seed.fuel.eaten`). */
 export const seedDiaryMeals = [
-  { id: 'seed-breakfast', name: 'Yoghurt, berries, oats', at: '08:10', items: [{ name: 'Yoghurt, berries, oats', grams: 300, kcal: 420, protein: 24, carbs: 54, fat: 12, fibre: 6, confidence: .8 }] },
-  { id: 'seed-lunch', name: 'Salmon rice bowl', at: '12:40', items: [{ name: 'Salmon rice bowl', grams: 450, ...seed.fuel.loggedMealTotals, confidence: .8 }] },
-  { id: 'seed-snack', name: 'Apple and peanut butter', at: '16:00', items: [{ name: 'Apple and peanut butter', grams: 200, kcal: 285, protein: 8, carbs: 32, fat: 15, fibre: 6, confidence: .8 }] },
+  { id: 'seed-breakfast', name: 'Yoghurt, berries, oats', at: '08:10', via: 'saved' as const, from: 'Usual breakfast', items: [{ name: 'Yoghurt, berries, oats', grams: 300, kcal: 420, protein: 30, carbs: 48, fat: 9, fibre: 7, confidence: .8 }] },
+  { id: 'seed-lunch', name: 'Salmon rice bowl', at: '12:40', via: 'photo' as const, items: seedMeal.map(item => ({ ...item })) },
 ];

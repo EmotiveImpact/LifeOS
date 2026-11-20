@@ -18,6 +18,7 @@ import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
 import { seed } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
+import { useFuelDay } from '@/state/fuel';
 import { lighterDay } from '@/state/today';
 import {
   clock, cycle as cycleData, drivers, dur, forecast as forecastData, journalEffects, journalLogged, journalTags, liveWorkout, load, pattern, readiness, signals as signalData,
@@ -51,7 +52,7 @@ const rhrTag = rhrDelta < -1 ? 'Better' : rhrDelta > 1 ? 'Higher' : 'Usual';
 export function BodyV26() {
   const nav = useNavigation(), { data, choose } = useSeed(), t = useTokens();
   const r = readinessWords(), best = readiness.today >= Math.max(...readiness.week);
-  const f = seed.fuel, hide = !!data.prefs.hideNumbers || data.profile.age < 18;
+  const fuel = useFuelDay(), hide = !!data.prefs.hideNumbers || data.profile.age < 18;
   const done = data.habits.filter(x => x.last14[13]).length;
   const share = () => { void Share.share({ message: `Readiness ${readiness.today}. Slept ${dur(sleep.last)} of ${dur(sleep.need)}. Load ${load.today} of ${load.target.join('–')}.` }); };
   return (
@@ -91,8 +92,8 @@ export function BodyV26() {
       <SectionHead title="Fuel" link="Log food" onLink={() => nav.go('snap')} />
       {hide
         ? <PhotoCard source={photos.food} height={176} title="Balanced" sub="Regular meals and variety" onPress={() => nav.go('fuel')} />
-        : <PhotoCard source={photos.food} height={176} chips={[`${Math.round(f.eaten / f.kcal * 100)}% of today`]} chipRight={`${(f.kcal - f.eaten).toLocaleString('en-GB')} left`}
-            title={f.eaten.toLocaleString('en-GB')} titleSuffix={`of ${f.kcal.toLocaleString('en-GB')} kcal`} sub={f.macros.map(m => `${m.label} ${Math.max(0, m.max - m.value)}${m.unit} left`).join(' · ')} onPress={() => nav.go('fuel')} />}
+        : <PhotoCard source={photos.food} height={176} chips={[`${Math.round(fuel.eaten / fuel.budget * 100)}% of today`]} chipRight={`${fuel.left.toLocaleString('en-GB')} left`}
+            title={fuel.eaten.toLocaleString('en-GB')} titleSuffix={`of ${fuel.budget.toLocaleString('en-GB')} kcal`} sub={fuel.macros.map(m => `${m.label} ${Math.max(0, m.max - m.value)}${m.unit} left`).join(' · ')} onPress={() => nav.go('fuel')} />}
       <SectionHead title="Tonight" />
       <Box pad={space.md} onPress={() => nav.go('sleepplan')} accessibilityLabel={`Tonight, in bed by ${clock(sleep.tonight.bed)}`}>
         <Between style={{ alignItems: 'center' }}>
