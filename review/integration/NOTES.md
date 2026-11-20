@@ -32,9 +32,9 @@ No merge conflicts. Phase 20 added routes, so the typed route file needs regener
 |---|---|---|---|
 | 20 Nov, ~19:30 UTC | `phase-21-api-auth` (fast-forward) | af82517 | 25 API tests on Postgres 16, root `bun test`, API and app typecheck, iOS and Android bundles |
 | 20 Nov, ~19:45 UTC | `v26-owner-answers` (fast-forward) | see `review/owner-answers/NOTES.md` | app typecheck, root `bun test`, iOS, Android and web bundles |
-| 20 Nov, ~20:20 UTC | `phase-22-sync` (fast-forward) | 3b1972d | 514 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
+| 20 Nov, ~19:50 UTC | `phase-22-sync` (fast-forward) | 3b1972d | 514 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
 | 20 Nov, ~19:55 UTC | `claude/project-thread-8i27bq` (merge, nav bar and Talk) | f4f9b53 | 514 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
-| 20 Nov, ~20:40 UTC | `phase-23-files-push-account` (fast-forward) | ca591df | 529 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
+| 20 Nov, ~20:05 UTC | `phase-23-files-push-account` (fast-forward) | ca591df | 529 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
 
 ## Screenshots
 
