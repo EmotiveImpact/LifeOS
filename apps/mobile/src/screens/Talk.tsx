@@ -1,83 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+/**
+ * Talk's chapter. Every screen is the V26 build in `v26/talk.tsx`; this switch keeps the routes' entry point.
+ */
 import { useLocalSearchParams } from 'expo-router';
-import { BigMic, Button, Card, ChangeSummary, ChatIsland, ChipGroup, Composer, FileCard, FilingTray, LifeOrb, LifeReply, RecordRow, SearchField, StatusPill, Text, Ticks, Transcript, TwoTone, UserBubble, Waveform, feedback, space, type Area } from '@/design';
-import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
-import { useSeed } from '@/state/SeedProvider';
-import { money, seed } from '@/state/seed';
-import { ai } from '@/services/ai';
-import { voice } from '@/services/voice';
-import { useBrainConversation, newConversation } from '@/services/useBrainConversation';
-import { pickAttachment, removeAttachmentCopy } from '@/services/attachments';
-import { extractStatements, type Message } from '@life/brain';
-import { Image } from 'react-native';
-import { ConversationAttachments } from './ConversationAttachments';
-import { BrainMessage } from './BrainMessage';
 import { ParentStateContent } from './States';
-import { Heading, Input, LocalNotice, Rows, Screen, layout } from './Screen';
+import { Screen } from './Screen';
+import { AskV26, AttachV26, ChatHistoryV26, ChatV26, EditFiledV26, ScanV26, TalkV26, UnderstoodV26 } from './v26/talk';
 
 export function TalkScreen({ screen }: { screen: ScreenKey }) {
-  const nav = useNavigation(), { data, set, update, flag, draft, engine, confirmRecords } = useSeed(), params = useLocalSearchParams<{ setup?: string; question?: string; state?: string }>();
-  const [text, setText] = useState(params.question ?? ''), [listening, setListening] = useState(false), [transcript, setTranscript] = useState(''), [thinking, setThinking] = useState(false), [query, setQuery] = useState('');
-  const conversation = useBrainConversation();
-  const [error, setError] = useState(''), [picking, setPicking] = useState(false);
-  const firstQuestion = useRef(false);
-  const mounted = useRef(true);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; void voice.stop(); }; }, []);
-  const [editLabel, setEditLabel] = useState('Council tax'), [amount, setAmount] = useState(String(seed.finance.councilTaxAnnual / 12)), [due, setDue] = useState('1st of each month');
-  const transcriptWords = transcript.split(/(27|London|two flatmates|self-employed|overpaid tax|eleven weeks|heart referral|buy a place)/).filter(Boolean).map(text => ({ text: text.trim(), area: ({ '27': 'you', London: 'you', 'two flatmates': 'home', 'self-employed': 'work', 'overpaid tax': 'money', 'eleven weeks': 'health', 'heart referral': 'health', 'buy a place': 'goal' } as Record<string, Area>)[text] }));
-  const ask = async (question: string) => {
-    if (!question.trim() || conversation.thinking || conversation.pending) return;
-    setText(''); await conversation.send(question);
-  };
-  useEffect(() => { if (params.question && screen === 'chat' && !firstQuestion.current) { firstQuestion.current = true; void ask(params.question); } }, [params.question, screen]);
-  const startVoice = async () => {
-    setError('');
-    if (listening) { const final = await voice.stop(); if (final) setTranscript(final); setListening(false); return; }
-    try { const started = await voice.start((words, final, failure) => { if (!mounted.current) return; setTranscript(words); if (final || failure) setListening(false); if (failure) setError(failure); }); if (mounted.current) setListening(started); }
-    catch (failure) { if (mounted.current) { setListening(false); setError(failure instanceof Error ? failure.message : 'The microphone could not start. Type instead.'); } }
-  };
-  const review = async () => { const final = await voice.stop(); const words = (final || transcript).trim(); setTranscript(words); setListening(false); if (!words) return; const proposed = await ai.talk(words); set({ proposals: proposed.data }); flag('records-confirmed', false); nav.go('understood', params.setup ? { setup: '1' } : undefined); };
-  const addAttachment = async (kind: 'camera' | 'photos' | 'files') => {
-    if (picking) return; setPicking(true); setError('');
-    const targetId = data.brain.activeConversationId;
-    if ((data.brain.conversations.find(thread => thread.id === targetId)?.attachments.length ?? 0) >= 5) { setPicking(false); setError('Remove an attachment before adding another.'); return; }
-    try {
-      const attachment = await pickAttachment(kind);
-      if (!attachment) return;
-      update(state => {
-        const existing = state.brain.conversations.find(thread => thread.id === targetId);
-        const target = existing ?? newConversation();
-        if (target.attachments.length >= 5) return state;
-        const next = { ...target, attachments: [...target.attachments, attachment], updatedAt: new Date().toISOString() };
-        return { ...state, brain: { ...state.brain, activeConversationId: next.id, conversations: existing ? state.brain.conversations.map(thread => thread.id === next.id ? next : thread) : [...state.brain.conversations, next] } };
-      });
-      nav.close();
-    } catch (failure) { setError(failure instanceof Error ? failure.message : 'The attachment could not be added.'); }
-    finally { setPicking(false); }
-  };
-  if (screen === 'talk') return <Screen screen={screen} footer={<View style={{ gap: space.sm }}><Waveform active={listening} /><FilingTray counts={extractStatements(transcript).reduce((counts, proposal) => ({ ...counts, [proposal.area]: (counts[proposal.area] ?? 0) + 1 }), {} as Partial<Record<Area, number>>)} /><View style={[layout.row, { justifyContent: 'center' }]}><Button variant="secondary" label="Start again" onPress={() => { void voice.stop(); setTranscript(''); setListening(false); }} /><BigMic live={listening} onPress={startVoice} /><Button variant="secondary" label="Type instead" onPress={() => nav.replace('chat')} /></View>{transcript ? <Button label="Review what life understood" onPress={review} /> : null}</View>}><Text variant="callout" tone="ink2">{listening ? 'Listening…' : 'Tap the mic and talk about your life'}</Text>{transcript ? <View style={{ height: space.xxxl * 5 }}><Transcript words={transcriptWords} revealed={transcriptWords.length} /></View> : <View style={{ minHeight: 180 }} />}<Input label="Your words" value={transcript} onChange={setTranscript} multiline placeholder="You can type here too…" />{error ? <Text variant="callout" tone="ink2">{error}</Text> : null}<LocalNotice text="Review before filing. Speech only starts if this build has an available on-device recogniser." /></Screen>;
-  if (screen === 'understood') return <Screen screen={screen} footer={<><Button label={data.flags['records-confirmed'] ? 'Saved to your life' : 'Looks right'} disabled={!data.proposals.some(record => record.status !== 'removed')} onPress={() => { confirmRecords(); flag('records-confirmed', true); feedback.file(); if (params.setup) nav.replace('where'); else nav.home(); }} /><Button variant="link" label="Keep talking" onPress={() => nav.replace('talk')} /></>}><Text variant="callout" tone="ink2">From your words</Text><TwoTone segments={[{ text: 'Here’s what I ', tone: 'quiet' }, { text: 'understood. ' }, { text: 'Remove anything I got wrong.', tone: 'quiet' }]} /><Card>{data.proposals.map((r, i) => <RecordRow key={r.id} area={r.area} badge={r.area === 'money' ? '£' : r.area === 'home' ? (typeof r.value === 'number' ? String(r.value) : '·') : r.area === 'work' ? 'ST' : r.area === 'health' ? '!' : '·'} label={r.label} destination={r.area === 'you' ? 'You' : r.area === 'goal' ? 'Goals' : r.area[0].toUpperCase() + r.area.slice(1)} removed={r.status === 'removed'} onToggleRemove={() => set({ proposals: data.proposals.map(v => v.id === r.id ? { ...v, status: v.status === 'removed' ? 'proposed' : 'removed' } : v) })} />)}</Card><ChangeSummary>{`${data.proposals.filter(r => r.status !== 'removed').length} things ready to file. Your plan only changes after you confirm.`}</ChangeSummary></Screen>;
-  if (screen === 'chat' && params.state === 'aidown') return <Screen screen={screen}><ParentStateContent kind="aidown" /></Screen>;
-  if (screen === 'chat') return <Screen screen={screen} flowCenter={<Text variant="title">life</Text>} action={{ kind: 'icon', icon: 'ellipsis-horizontal', label: 'Your conversations', onPress: () => nav.go('chathistory') }} footer={<>
-    <ConversationAttachments attachments={conversation.current?.attachments ?? []} onRemove={async attachment => { try { await removeAttachmentCopy(attachment); conversation.declineNetwork(); update(state => ({ ...state, brain: { ...state.brain, conversations: state.brain.conversations.map(thread => thread.id === conversation.current?.id ? { ...thread, attachments: thread.attachments.filter(file => file.id !== attachment.id) } : thread) } })); } catch { setError('The attachment could not be removed yet. It remains listed so you can retry.'); } }} />
-    {conversation.thinking ? <Button variant="link" label="Stop" onPress={conversation.stop} /> : null}
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}><ChipGroup wrap={false} options={['What’s urgent?', 'How am I doing?', 'My money'].map(value => ({ value, label: value }))} value={null} onChange={v => void ask(v)} /></ScrollView>
-    <Composer value={text} onChangeText={setText} onTalk={() => nav.go('talk')} onSend={() => void ask(text.trim() || 'Read the attached text')} onAttach={() => nav.go('attach')} placeholder="Message life" disabled={conversation.thinking || !!conversation.pending} hasAttachments={!!conversation.current?.attachments.length} />
-  </>}>
-    <ChatIsland expanded={conversation.thinking} state={conversation.thinking ? 'thinking' : 'ring'} label={conversation.thinking ? 'Working on your message…' : 'life'} />
-    {!conversation.current?.messages.length ? <Heading title="What’s on your mind?" sub="Ask about your plan, tell life something to remember, or attach a document. Changes are reviewed before they’re saved." /> : conversation.current.messages.map(message => <BrainMessage key={message.id} message={message} onReview={() => { conversation.review(message.proposals ?? []); flag('records-confirmed', false); nav.go('understood'); }} />)}
-    {conversation.pending ? <Card style={{ gap: space.sm }}><Text variant="title">Use a model outside this phone?</Text><Text variant="body" tone="ink2">{`This sends your message, ${conversation.pending.request.history.length} recent conversation turns, ${conversation.pending.request.context.facts.length} matched facts, ${conversation.pending.request.context.memories.length} memories and text from ${conversation.pending.request.attachments.filter(file => file.text).length} attachments to the life API and its configured model. Original photos and file paths are not sent.`}</Text><Button label="Allow for this message" onPress={() => void conversation.allowNetwork()} /><Button variant="link" label="Keep it on this phone" onPress={conversation.declineNetwork} /></Card> : null}
-    {error ? <Text variant="callout" tone="ink2">{error}</Text> : null}
-    <LocalNotice text={data.prefs.privateMode ? 'Private mode · no off-phone AI requests' : 'Saved on this phone · engine answers and confirmed memory work without a model. Some existing profile data is still sample data.'} />
-  </Screen>;
-  if (screen === 'ask') {
-    const sole = engine.structures.soleTrader.netTakeHomeAnnual, ltd = engine.structures.director.netTakeHomeAnnual;
-    return <Screen screen={screen} footer={<Composer value={text} onChangeText={setText} onTalk={() => nav.go('talk')} onSend={() => nav.go('chat', { question: text })} placeholder="Ask a follow-up…" />}><UserBubble text="Should I go limited company or stay a sole trader?" /><LifeReply segments={[{ text: 'At your ', tone: 'quiet' }, { text: `${money(data.profile.annualIncome)} profit, ` }, { text: 'the take-home difference is about ', tone: 'quiet' }, { text: `${money(Math.abs(ltd - sole))} a year. ` }, { text: 'A company also has extra administration and accounting costs. Check those before choosing.', tone: 'quiet' }]} /><Rows rows={[{ title: 'Sole trader', value: money(sole) }, { title: 'Limited company', value: money(ltd) }, { title: `Take-home per year · ${engine.income.taxYear}`, value: 'Engine estimate' }]} /><FileCard prompt="Save to Work as a decision to revisit if profit grows?" savedText="Saved to Work" onSave={() => set({ records: [...data.records, { id: `decision-${Date.now()}`, kind: 'decision', area: 'work', label: 'Review sole trader vs limited company when profit grows', source: { type: 'chat', at: new Date().toISOString() }, status: 'confirmed' }] })} /><Text variant="callout" tone="ink2">Estimate, not tax advice.</Text></Screen>;
+  const params = useLocalSearchParams<{ state?: string }>();
+  switch (screen) {
+    case 'talk': return <TalkV26 />;
+    case 'understood': return <UnderstoodV26 />;
+    case 'ask': return <AskV26 />;
+    case 'attach': return <AttachV26 />;
+    case 'scan': return <ScanV26 />;
+    case 'chat': return params.state === 'aidown' ? <Screen screen={screen}><ParentStateContent kind="aidown" /></Screen> : <ChatV26 />;
+    case 'chathistory': return <ChatHistoryV26 />;
+    default: return <EditFiledV26 />;
   }
-  if (screen === 'attach') return <Screen screen={screen} flowCenter={<Text variant="title">Attach</Text>}><Rows rows={[{ title: 'Scan a letter', sub: 'Take a photo; review the text before filing', icon: 'document-text-outline', onPress: () => void addAttachment('camera') }, { title: 'Camera', icon: 'camera-outline', onPress: () => void addAttachment('camera') }, { title: 'Photos', icon: 'images-outline', onPress: () => void addAttachment('photos') }, { title: 'Files', sub: 'Text, PDF or image', icon: 'folder-outline', onPress: () => void addAttachment('files') }, { title: 'How I’m feeling', sub: 'Opens the pulse', icon: 'sparkles-outline', to: 'pulse' }]} />{picking ? <Text variant="callout" tone="ink2">Choosing an attachment…</Text> : null}{error ? <Text variant="body" tone="ink2">{error}</Text> : null}<LocalNotice text="Attachments stay on this phone. A file that cannot be read is marked unread—not replaced with a sample result." /></Screen>;
-  if (screen === 'scan') return <Screen screen={screen} footer={<><Button label={data.flags['direct-debit-preview'] ? 'Saved locally for later' : 'Save direct debit reminder'} onPress={() => flag('direct-debit-preview', true)} /><Button variant="secondary" label="Ask life about this letter" onPress={() => nav.go('chat', { question: 'Explain my council tax letter' })} /></>}><Card style={{ gap: space.sm }}><View style={layout.between}><View><Text variant="headline">Council tax bill</Text><Text variant="callout" tone="ink2">Lambeth · sample saved letter</Text></View><StatusPill kind="done" label="Read" /></View><Rows rows={[{ title: 'Amount', value: money(seed.finance.councilTaxAnnual, 2) }, { title: 'Due', value: '1 Dec 2026 · 10 instalments' }, { title: 'Band', value: 'C' }, { title: 'Account', value: 'LBL-7741-0092' }]} /></Card><TwoTone size="headline" segments={data.profile.householdSize === 1 ? [{ text: 'You’re billed as a shared household, but you told me you ', tone: 'quiet' }, { text: 'live alone. ' }, { text: 'You may qualify for ', tone: 'quiet' }, { text: '25% off.' }] : [{ text: 'You share with other adults, so ', tone: 'quiet' }, { text: 'no single-person discount. ' }, { text: 'If you become the only adult living here, check whether you qualify for ', tone: 'quiet' }, { text: '25% off.' }]} /><Rows rows={[{ title: `${money(seed.finance.councilTaxAnnual / 10, 2)} a month from 1 Dec`, sub: '→ Money · add to your cash plan', to: 'editfiled' }, { title: 'Watch for a household change', sub: '→ Home · life will remind you', to: 'household' }]} /><LocalNotice text="Sample letter · no camera, OCR, bank link or direct debit is connected." /></Screen>;
-  if (screen === 'chathistory') return <Screen screen={screen} title="Your conversations" footer={<Button label="New conversation" onPress={() => { conversation.newThread(); nav.go('chat'); }} />}><SearchField value={query} onChangeText={setQuery} placeholder="Search conversations" />{data.brain.conversations.length ? <Rows rows={data.brain.conversations.filter(thread => `${thread.title} ${thread.messages.map(message => message.text).join(' ')}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).map(thread => ({ title: thread.title, sub: new Date(thread.updatedAt).toLocaleDateString('en-GB'), value: `${thread.messages.filter(message => message.role === 'user').length} messages`, onPress: () => { conversation.openThread(thread.id); nav.go('chat'); } }))} /> : <Heading title="No conversations yet" sub="Your chats will appear here after you send a message." />}</Screen>;
-  return <Screen screen={screen} title="Filed from chat" footer={<><Button label="Save" onPress={() => { set({ records: [...data.records.filter(r => r.id !== 'council-edited'), { id: 'council-edited', kind: 'fact', area: 'money', label: `${editLabel} · ${money(Number(amount) || 0)} a month · ${due}`, value: Number(amount) || 0, source: { type: 'chat', at: new Date().toISOString() }, status: 'confirmed' }] }); feedback.file(); nav.close(); }} /><Button variant="link" label={data.flags['council-unfiled'] ? 'Undo unfile' : 'Unfile this'} onPress={() => { flag('council-unfiled'); set({ records: data.records.map(r => r.id === 'council-edited' ? { ...r, status: data.flags['council-unfiled'] ? 'confirmed' : 'removed' } : r) }); }} /></>}><Text variant="callout" tone="ink2">You said</Text><Text variant="statement">{`“…and the council tax is ${money(seed.finance.councilTaxAnnual / 12)} a month, due on the 1st.”`}</Text><Input label="What" value={editLabel} onChange={setEditLabel} /><Input label="Amount per month" value={amount} onChange={setAmount} numeric /><Input label="Due" value={due} onChange={setDue} /><Rows rows={[{ title: 'Filed in', value: 'Money → Bills' }]} /></Screen>;
 }

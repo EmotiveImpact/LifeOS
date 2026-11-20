@@ -113,10 +113,12 @@ export type StatusPillProps = {
   onPhoto?: boolean;
   /** V26 chip: a 14pt icon before the label. */
   icon?: GlyphName;
+  /** V26 chip: a 6pt dot before the label, in this colour (an area colour, or ember for the one thing that matters). */
+  dot?: string;
   style?: StyleProp<ViewStyle>;
 };
 
-export function StatusPill({ kind = 'neutral', label, onAtmosphere: onAtmos, size = 'pill', onPhoto, icon, style }: StatusPillProps) {
+export function StatusPill({ kind = 'neutral', label, onAtmosphere: onAtmos, size = 'pill', onPhoto, icon, dot: chipDot, style }: StatusPillProps) {
   const t = useTokens();
   if (size === 'chip') {
     const bg = onPhoto ? photo.onPhoto : kind === 'live' ? t.emberTint : kind === 'done' ? t.gainTint : t.surface2;
@@ -124,6 +126,7 @@ export function StatusPill({ kind = 'neutral', label, onAtmosphere: onAtmos, siz
     return (
       <View style={[styles.chip, { backgroundColor: bg }, style]}>
         {icon ? <Ionicons name={icon} size={14} color={fg} /> : null}
+        {chipDot ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: chipDot }} /> : null}
         <Text variant="micro" numberOfLines={1} style={{ color: fg }}>{label}</Text>
       </View>
     );

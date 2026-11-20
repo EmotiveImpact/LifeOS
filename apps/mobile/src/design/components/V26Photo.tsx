@@ -2,6 +2,7 @@ import { Children, type ReactNode } from 'react';
 import { StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { type GlyphName } from '../Icon';
 import { Press } from '../Press';
 import { Text } from '../Text';
 import { useTokens } from '../theme';
@@ -22,9 +23,15 @@ export type PhotoCardProps = {
   /** Quieter text after the title, on the same line ("of 2,300 kcal"). */
   titleSuffix?: string;
   sub?: string;
-  /** Paper chips along the top: the first ones on the left, `chipRight` on the right. */
-  chips?: string[];
-  chipRight?: string;
+  /** Paper chips along the top: the first ones on the left, `chipRight` on the right. A chip can carry an icon, a dot or the orb. */
+  chips?: (string | PhotoChipSpec)[];
+  chipRight?: string | PhotoChipSpec;
+  /** Something other than a chip at the top right (a paper round button). */
+  topRight?: ReactNode;
+  /** A quiet line above the title ("For now,"). */
+  lead?: string;
+  /** Anything under the copy (a week of dots, a meter). */
+  children?: ReactNode;
   /** Card height in points. The board uses 230 for a hero, 150–190 in a grid of two. */
   height?: number;
   /** `lg` 24pt title (a hero), `md` 20pt (a grid of two), `sm` 16pt (small grid tiles). */
@@ -35,21 +42,31 @@ export type PhotoCardProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+export type PhotoChipSpec = { label: string; icon?: GlyphName; dot?: string; orb?: boolean };
+
+function PhotoChip({ chip }: { chip: string | PhotoChipSpec }) {
+  if (typeof chip === 'string') return <StatusPill size="chip" onPhoto label={chip} />;
+  if (chip.orb) return <View style={styles.orbChip}><LifeOrb size={14} color={photo.ink} /><Text variant="micro" style={{ color: photo.ink }} numberOfLines={1}>{chip.label}</Text></View>;
+  return <StatusPill size="chip" onPhoto label={chip.label} icon={chip.icon} dot={chip.dot} />;
+}
+
 /** A photograph card: chips on a top line, copy low on the card fade. Radius 24, `cardShadow`, no border, no panel. */
-export function PhotoCard({ source, title, titleSuffix, sub, chips, chipRight, height = 230, size = 'lg', focal, onPress, accessibilityLabel, style }: PhotoCardProps) {
+export function PhotoCard({ source, title, titleSuffix, sub, chips, chipRight, topRight, lead, children, height = 230, size = 'lg', focal, onPress, accessibilityLabel, style }: PhotoCardProps) {
   const t = useTokens();
   const body = <>
     <PhotoFill source={source} focal={focal} />
     <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
     <View style={styles.topline}>
-      <View style={styles.chips}>{chips?.map(c => <StatusPill key={c} size="chip" onPhoto label={c} />)}</View>
-      {chipRight ? <StatusPill size="chip" onPhoto label={chipRight} /> : null}
+      <View style={styles.chips}>{chips?.map((c, i) => <PhotoChip key={i} chip={c} />)}</View>
+      {chipRight ? <PhotoChip chip={chipRight} /> : topRight ?? null}
     </View>
     <View style={{ gap: size === 'lg' ? 0 : 2 }}>
+      {lead ? <Text variant="callout" tone="paper2">{lead}</Text> : null}
       <Text variant={size === 'lg' ? 'heading' : size === 'md' ? 'headline' : 'title'} tone="paper" numberOfLines={2}>
         {title}{titleSuffix ? <Text variant="body" tone="paper">{` ${titleSuffix}`}</Text> : null}
       </Text>
       {sub ? <Text variant="callout" tone="paper2" numberOfLines={2}>{sub}</Text> : null}
+      {children}
     </View>
   </>;
   const box: ViewStyle = { height, borderRadius: radius.photo, overflow: 'hidden', backgroundColor: t.surface2, paddingTop: 14, paddingHorizontal: space.md, paddingBottom: space.md, justifyContent: 'space-between' };
@@ -138,16 +155,20 @@ export function useAreaTint(area: Area): { accent: string; tint: string } {
  */
 export function TintCard({ area, children, padding = space.cardPad, onPress, accessibilityLabel, style }: { area: Area; children: ReactNode; padding?: number; onPress?: () => void; accessibilityLabel?: string; style?: StyleProp<ViewStyle> }) {
   const t = useTokens();
-  const box: ViewStyle = { backgroundColor: t.surface, borderRadius: radius.lg, padding, ...cardShadow(t.scheme) };
-  const wash = <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius.lg, backgroundColor: tint[t.scheme][area] }]} />;
+  // Flattened so a caller's paddings and radius win over the defaults on web too, and the wash follows the card's radius.
+  const own = StyleSheet.flatten(style) ?? {};
+  const r = typeof own.borderRadius === 'number' ? own.borderRadius : radius.lg;
+  const box: ViewStyle = { backgroundColor: t.surface, borderRadius: r, padding, ...cardShadow(t.scheme), ...own };
+  const wash = <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: r, backgroundColor: tint[t.scheme][area] }]} />;
   return onPress
-    ? <Press haptic="open" onPress={onPress} accessibilityLabel={accessibilityLabel} style={[box, style]}>{wash}{children}</Press>
-    : <View style={[box, style]}>{wash}{children}</View>;
+    ? <Press haptic="open" onPress={onPress} accessibilityLabel={accessibilityLabel} style={box}>{wash}{children}</Press>
+    : <View style={box}>{wash}{children}</View>;
 }
 
 const styles = StyleSheet.create({
   topline: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.xs },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, flexShrink: 1 },
+  orbChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 10, borderRadius: radius.full, backgroundColor: photo.onPhoto, alignSelf: 'flex-start' },
   full: { flex: 1, overflow: 'hidden' },
   photoBar: { height: componentSize.topBarV26, paddingHorizontal: space.gutter, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: space.xs },

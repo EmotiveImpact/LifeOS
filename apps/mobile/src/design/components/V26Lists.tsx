@@ -4,6 +4,7 @@ import { Icon, type GlyphName } from '../Icon';
 import type { FeedbackKind } from '../feedback';
 import { Press } from '../Press';
 import { Text } from '../Text';
+import { RichText } from '../RichText';
 import { useTokens } from '../theme';
 import { cardShadow, componentSize, radius, space, type } from '../tokens';
 import { RoundButton } from './V26Chrome';
@@ -176,6 +177,8 @@ export type V26RowProps = {
   thumb?: ImageSourcePropType;
   thumbFocal?: Focal;
   date?: { day: string | number; month: string };
+  /** Any other leading piece (a numbered well, a tick, a drag grip). */
+  lead?: ReactNode;
   /** Quiet words on the right ("Sat", "15 days"), or a figure with `endStrong`. */
   end?: string;
   endStrong?: boolean;
@@ -189,11 +192,11 @@ export type V26RowProps = {
 };
 
 /** A list row: 64pt, a 40pt icon well (or a 48pt thumb or date box), title and line, something quiet on the right. No dividers. */
-export function V26Row({ title, sub, icon, thumb, thumbFocal, date, end, endStrong, right, chevron, onPress, haptic = 'open', style }: V26RowProps) {
+export function V26Row({ title, sub, icon, thumb, thumbFocal, date, lead, end, endStrong, right, chevron, onPress, haptic = 'open', style }: V26RowProps) {
   const t = useTokens();
   const showChev = chevron ?? (!!onPress && !end && !right);
   const body = <>
-    {thumb ? <Thumb source={thumb} focal={thumbFocal} /> : date ? <DateBox day={date.day} month={date.month} /> : icon ? <IconWell icon={icon} /> : null}
+    {lead ?? (thumb ? <Thumb source={thumb} focal={thumbFocal} /> : date ? <DateBox day={date.day} month={date.month} /> : icon ? <IconWell icon={icon} /> : null)}
     <View style={{ flex: 1, minWidth: 0 }}>
       <Text variant="rowTitle" numberOfLines={2}>{title}</Text>
       {sub ? <Text variant="callout" tone="ink2" numberOfLines={2}>{sub}</Text> : null}
@@ -260,6 +263,7 @@ export function Ruler({ pct, bars = 36, style }: { pct: number; bars?: number; s
 
 /* ───────────────────────── SpineTimeline (board `.tl`) ───────────────────────── */
 
+/** `text` may brace the words that matter: `{This is the gap.} Three steps fit inside it.` */
 export type SpineItem = { when: string; text: string; state: 'done' | 'now' | 'later'; children?: ReactNode };
 
 /** A spine of small dots (never a line): done in ink, now in ember, later in surface3; later words in ink2. 22pt apart. */
@@ -268,7 +272,7 @@ export function SpineTimeline({ items, style }: { items: SpineItem[]; style?: St
   return (
     <View style={[{ gap: 22 }, style]}>
       {items.map((it, i) => (
-        <View key={`${i}-${it.when}`} style={{ paddingLeft: 26 }} accessible accessibilityLabel={`${it.when}. ${it.text}${it.state === 'now' ? '. Now' : it.state === 'done' ? '. Done' : ''}`}>
+        <View key={`${i}-${it.when}`} style={{ paddingLeft: 26 }} accessible accessibilityLabel={`${it.when}. ${it.text.replace(/[{}]/g, '')}${it.state === 'now' ? '. Now' : it.state === 'done' ? '. Done' : ''}`}>
           {i < items.length - 1 ? (
             <View pointerEvents="none" style={styles.spine}>
               {Array.from({ length: 40 }, (_, k) => <View key={k} style={{ width: 3.2, height: 3.2, borderRadius: 1.6, backgroundColor: t.surface3 }} />)}
@@ -276,7 +280,7 @@ export function SpineTimeline({ items, style }: { items: SpineItem[]; style?: St
           ) : null}
           <View style={[styles.spineDot, { backgroundColor: it.state === 'done' ? t.ink : it.state === 'now' ? t.ember : t.surface3 }]} />
           <Text variant="micro" tone="ink2" style={{ paddingVertical: 6 }}>{it.when}</Text>
-          <Text variant="body" tone={it.state === 'later' ? 'ink2' : 'ink'} style={{ marginTop: 2 }}>{it.text}</Text>
+          <RichText text={it.text} tone={it.state === 'later' ? 'ink2' : 'ink'} strong style={{ marginTop: 2 }} />
           {it.children}
         </View>
       ))}

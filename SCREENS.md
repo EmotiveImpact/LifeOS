@@ -6,6 +6,8 @@
 
 Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the board in light and dark
 
+V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 board (`review/v26/board.html`, BUILD_V26.md Track A). The tick column still records the V23 build.
+
 
 ## First open (14)
 
@@ -30,32 +32,32 @@ Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `today` | Today (home) | Tab | tab bar | `/(tabs)/today` |
-| [x] | `nudge` | Nudge | Card / notification | Today or Lock Screen | component on Today / anywhere |
-| [x] | `pulse` | Pulse | Sheet | Today check-in | `/(sheets)/pulse` · formSheet |
-| [x] | `checkin` | Checking in | Sheet | Today | `/(sheets)/checkin` · formSheet |
-| [x] | `customise` | Customise Today | Sheet | Today → edit | `/(sheets)/customise` · formSheet |
-| [x] | `routines` | Your routines | Push | Today → routines | `/today/routines` |
-| [x] | `why` | Why am I seeing this? | Sheet | “Why am I seeing this?” on any card | `/(sheets)/why` · formSheet |
-| [x] | `calendar` | Calendar-aware day | Push | Today → day strip | `/today/calendar` |
-| [x] | `morningbrief` | Morning brief | Sheet | first open of the day | `/(sheets)/morningbrief` · formSheet |
-| [x] | `evening` | Close the day | Sheet | evening notification or Today | `/(sheets)/evening` · formSheet |
-| [x] | `inbox` | From life | Push | bell on Today | `/today/inbox` |
-| [x] | `search` | Search everything | Overlay | pull down on Today | overlay on Today |
-| [x] | `focus` | Focus session | Full screen | Today or a calendar gap | `/(flows)/focus` · fullScreenModal |
+| [x] | `today` | Today (home) **V26** | Tab | tab bar | `/(tabs)/today` |
+| [x] | `nudge` | Nudge **V26** | Card / notification | Today or Lock Screen | component on Today / anywhere |
+| [x] | `pulse` | Pulse **V26** | Sheet | Today check-in | `/(sheets)/pulse` · formSheet |
+| [x] | `checkin` | Checking in **V26** | Sheet | Today | `/(sheets)/checkin` · formSheet |
+| [x] | `customise` | Customise Today **V26** | Sheet | Today → edit | `/(sheets)/customise` · formSheet |
+| [x] | `routines` | Your routines **V26** | Push | Today → routines | `/today/routines` |
+| [x] | `why` | Why am I seeing this? **V26** | Sheet | “Why am I seeing this?” on any card | `/(sheets)/why` · formSheet |
+| [x] | `calendar` | Calendar-aware day **V26** | Push | Today → day strip | `/today/calendar` |
+| [x] | `morningbrief` | Morning brief **V26** | Sheet | first open of the day | `/(sheets)/morningbrief` · formSheet |
+| [x] | `evening` | Close the day **V26** | Sheet | evening notification or Today | `/(sheets)/evening` · formSheet |
+| [x] | `inbox` | From life **V26** | Push | bell on Today | `/today/inbox` |
+| [x] | `search` | Search everything **V26** | Overlay | pull down on Today | overlay on Today |
+| [x] | `focus` | Focus session **V26** | Full screen | Today or a calendar gap | `/(flows)/focus` · fullScreenModal |
 
 ## Talk and file (8)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `talk` | Talk | Full screen | hold the Talk button | `/(flows)/talk` · fullScreenModal |
-| [x] | `understood` | Understood | Sheet | after Talk | `/(sheets)/understood` · formSheet |
-| [x] | `ask` | Ask, then file | Full screen | Chat → a question | `/(flows)/ask` · fullScreenModal |
-| [x] | `attach` | Attach | Full screen | + in Chat | `/(flows)/attach` · fade (owner feedback) |
-| [x] | `scan` | Letter, understood | Full screen | + → Scan a letter | `/(flows)/scan` · fullScreenModal |
-| [x] | `chat` | Chat | Full screen | tap the Talk button | `/(flows)/chat` · fullScreenModal |
-| [x] | `chathistory` | Your conversations | Push | Chat → ⋯ | `/talk/chathistory` |
-| [x] | `editfiled` | Edit what life filed | Sheet | tap any filed item | `/(sheets)/editfiled` · formSheet |
+| [x] | `talk` | Talk **V26** | Full screen | hold the Talk button | `/(flows)/talk` · fullScreenModal |
+| [x] | `understood` | Understood **V26** | Sheet | after Talk | `/(sheets)/understood` · formSheet |
+| [x] | `ask` | Ask, then file **V26** | Full screen | Chat → a question | `/(flows)/ask` · fullScreenModal |
+| [x] | `attach` | Attach **V26** | Full screen | + in Chat | `/(flows)/attach` · fade (owner feedback) |
+| [x] | `scan` | Letter, understood **V26** | Full screen | + → Scan a letter | `/(flows)/scan` · fullScreenModal |
+| [x] | `chat` | Chat **V26** | Full screen | tap the Talk button | `/(flows)/chat` · fullScreenModal |
+| [x] | `chathistory` | Your conversations **V26** | Push | Chat → ⋯ | `/talk/chathistory` |
+| [x] | `editfiled` | Edit what life filed **V26** | Sheet | tap any filed item | `/(sheets)/editfiled` · formSheet |
 
 ## Tab 2 · Plan (11)
 

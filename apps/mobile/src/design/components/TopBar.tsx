@@ -12,12 +12,14 @@ import { RoundButton } from './V26Chrome';
  * controls over the actual image, never an opaque light-theme background. */
 export type TopBarAction =
   | { kind: 'icon'; icon: GlyphName; label: string; onPress: () => void; badge?: boolean }
-  | { kind: 'text'; label: string; onPress: () => void };
+  | { kind: 'text'; label: string; onPress: () => void }
+  /** V26: anything small in the bar's right slot (a chip such as "Free 13:40 to 14:00"). */
+  | { kind: 'node'; node: ReactNode };
 /** `look: 'v26'` draws the board's bars (52pt, round 40pt buttons, the orb on root). Leave it unset for the V23 bars. */
 type BarLook = { look?: 'v26' };
 export type TopBarProps = BarLook & (
   | { kind: 'root'; eyebrow?: string; title: string; /** V26: the quiet words after the title ("Mon 16 Nov"). */ sub?: string; actions?: TopBarAction[]; avatar?: ReactNode; onImage?: boolean }
-  | { kind: 'push'; title?: string; action?: TopBarAction; onBack: () => void; /** V26: a close cross in place of the back arrow. */ closeIcon?: boolean; onImage?: boolean }
+  | { kind: 'push'; title?: string; /** V26: something other than words in the middle (the orb and "life" on Chat). */ titleNode?: ReactNode; action?: TopBarAction; onBack: () => void; /** V26: a close cross in place of the back arrow. */ closeIcon?: boolean; onImage?: boolean }
   | { kind: 'sheet'; title: string; action?: TopBarAction; onClose: () => void; onImage?: boolean }
   | { kind: 'flow'; center?: ReactNode; step?: string; action?: TopBarAction; onClose: () => void; /** V26 text bar: the words on the left ("Back"). */ closeLabel?: string; closeIcon?: GlyphName; onImage?: boolean });
 export const TOP_BAR_HEIGHT = { root: 72, push: 60, sheet: 76, flow: 60 } as const;
@@ -106,8 +108,8 @@ function TopBarV26(props: TopBarProps) {
   const bar = (
     <View style={[styles.v26, { backgroundColor: bg }]}>
       <View style={{ minWidth: sideWidth, alignItems: 'flex-start' }}>{left}</View>
-      <View pointerEvents="none" style={styles.center}>
-        {props.title ? <Text variant="title" tone={onImage ? 'paper' : 'ink'} accessibilityRole="header" numberOfLines={1}>{props.title}</Text> : null}
+      <View pointerEvents={props.kind === 'push' && props.titleNode ? 'box-none' : 'none'} style={styles.center}>
+        {props.kind === 'push' && props.titleNode ? props.titleNode : props.title ? <Text variant="title" tone={onImage ? 'paper' : 'ink'} accessibilityRole="header" numberOfLines={1}>{props.title}</Text> : null}
       </View>
       <View onLayout={e => setSideWidth(Math.max(componentSize.round, e.nativeEvent.layout.width))} style={{ minWidth: componentSize.round, alignItems: 'flex-end' }}>{right}</View>
     </View>
@@ -122,12 +124,14 @@ function TopBarV26(props: TopBarProps) {
 }
 
 function ActionV26({ action, onImage }: { action: TopBarAction; onImage?: boolean }) {
+  if (action.kind === 'node') return <>{action.node}</>;
   if (action.kind === 'text') return <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label} hitSlop={10} style={styles.v26Txt}><Text variant="bodyMedium" tone={onImage ? 'paper' : 'ink2'} numberOfLines={1}>{action.label}</Text></Press>;
   return <RoundButton icon={action.icon} label={action.label} onPress={action.onPress} dot={action.badge} onPhoto={onImage} />;
 }
 
 function ActionButton({ action, onImage }: { action: TopBarAction; onImage?: boolean }) {
   const t = useTokens();
+  if (action.kind === 'node') return <>{action.node}</>;
   if (action.kind === 'text') return <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label} style={styles.text}><Text variant="callout" tone={onImage ? 'paper' : 'ink'} numberOfLines={1}>{action.label}</Text></Press>;
   return <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label} style={[styles.icon, { backgroundColor: onImage ? palette.dark.surface : t.surface }]}>
     <Ionicons name={action.icon} size={componentSize.icon} color={onImage ? t.paper : t.ink} />
