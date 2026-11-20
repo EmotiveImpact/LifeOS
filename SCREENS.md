@@ -63,65 +63,65 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `plan` | Plan | Tab | tab bar | `/(tabs)/plan` |
-| [x] | `mission` | Mission | Push | any mission | `/plan/mission` |
-| [x] | `draft` | Draft message | Sheet | a mission step | `/(sheets)/draft` · formSheet |
-| [x] | `ttk` | Things to know | Push | Plan → Things to know | `/plan/ttk` |
-| [x] | `history` | Missions history | Push | Missions → Cleared | `/plan/history` |
+| [x] | `plan` | Plan **V26** | Tab | tab bar | `/(tabs)/plan` |
+| [x] | `mission` | Mission **V26** | Push | any mission | `/plan/mission` |
+| [x] | `draft` | Draft message **V26** | Sheet | a mission step | `/(sheets)/draft` · formSheet |
+| [x] | `ttk` | Things to know **V26** | Push | Plan → Things to know | `/plan/ttk` |
+| [x] | `history` | Missions history **V26** | Push | Missions → Cleared | `/plan/history` |
 | ⏸ | `doitforme` | **Parked, don't build.** Do it for me | Sheet | “Do it for me” on a step or bill | `/(sheets)/doitforme` · formSheet |
-| [x] | `missions` | All missions | Push | Plan → Missions | `/plan/missions` |
-| [x] | `newgoal` | Add something | Sheet | + on Plan | `/(sheets)/newgoal` · formSheet |
-| [x] | `areahome` | Area: Home | Push | Plan → Home | `/plan/areahome` |
-| [x] | `areahealth` | Area: Health | Push | Plan → Health | `/plan/areahealth` |
-| [x] | `areawork` | Area: Work | Push | Plan → Work | `/plan/areawork` |
+| [x] | `missions` | All missions **V26** | Push | Plan → Missions | `/plan/missions` |
+| [x] | `newgoal` | Add something **V26** | Sheet | + on Plan | `/(sheets)/newgoal` · formSheet |
+| [x] | `areahome` | Area: Home **V26** | Push | Plan → Home | `/plan/areahome` |
+| [x] | `areahealth` | Area: Health **V26** | Push | Plan → Health | `/plan/areahealth` |
+| [x] | `areawork` | Area: Work **V26** | Push | Plan → Work | `/plan/areawork` |
 
 ## Your Chief Aim (4)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `aimnew` | Write your Aim | Full screen | setup or Plan → Aim | `/(flows)/aimnew` · fullScreenModal |
-| [x] | `aim` | Your Aim | Push | Aim pinned on Plan | `/plan/aim/aim` |
-| [x] | `gambit` | This month's gambit | Push | Aim → this month | `/plan/aim/gambit` |
-| [x] | `glimpse` | A glimpse, earned | Full screen | earned, on Today | `/(flows)/glimpse` · fullScreenModal |
+| [x] | `aimnew` | Write your Aim **V26** | Full screen | setup or Plan → Aim | `/(flows)/aimnew` · fullScreenModal |
+| [x] | `aim` | Your Aim **V26** | Push | Aim pinned on Plan | `/plan/aim/aim` |
+| [x] | `gambit` | This month's gambit **V26** | Push | Aim → this month | `/plan/aim/gambit` |
+| [x] | `glimpse` | A glimpse, earned **V26** | Full screen | earned, on Today | `/(flows)/glimpse` · fullScreenModal |
 
 ## Plan · Money (8)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `money` | Money | Push | Money area | `/plan/money/money` |
-| [x] | `subs` | Subscriptions | Push | Money → Subscriptions | `/plan/money/subs` |
-| [x] | `area` | Area: Money | Push | Plan → Money | `/plan/money/area` |
-| [x] | `txn` | A payment | Push | Money → a payment | `/plan/money/txn` |
-| [x] | `bill` | A bill | Push | Money → a bill | `/plan/money/bill` |
-| [x] | `budget` | Budget | Push | Money → Budget | `/plan/money/budget` |
-| [x] | `networth` | Net worth | Push | Money → Net worth | `/plan/money/networth` |
-| [x] | `connectbank` | Connect your bank | Full screen | Money → Connect | `/(flows)/connectbank` · fullScreenModal |
+| [x] | `money` | Money **V26** | Push | Money area | `/plan/money/money` |
+| [x] | `subs` | Subscriptions **V26** | Push | Money → Subscriptions | `/plan/money/subs` |
+| [x] | `area` | Area: Money **V26** | Push | Plan → Money | `/plan/money/area` |
+| [x] | `txn` | A payment **V26** | Push | Money → a payment | `/plan/money/txn` |
+| [x] | `bill` | A bill **V26** | Push | Money → a bill | `/plan/money/bill` |
+| [x] | `budget` | Budget **V26** | Push | Money → Budget | `/plan/money/budget` |
+| [x] | `networth` | Net worth **V26** | Push | Money → Net worth | `/plan/money/networth` |
+| [x] | `connectbank` | Connect your bank **V26** | Full screen | Money → Connect | `/(flows)/connectbank` · fullScreenModal |
 
 ## Plan · Documents and renewals (3)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `vault` | Documents and renewals | Push | Plan → Documents | `/plan/documents/vault` |
-| [x] | `docdetail` | Passport | Push | Documents → a document | `/plan/documents/docdetail` |
-| [x] | `renewal` | Renewal: car insurance | Push | Documents or Today, when it’s time | `/plan/documents/renewal` |
+| [x] | `vault` | Documents and renewals **V26** | Push | Plan → Documents | `/plan/documents/vault` |
+| [x] | `docdetail` | Passport **V26** | Push | Documents → a document | `/plan/documents/docdetail` |
+| [x] | `renewal` | Renewal: car insurance **V26** | Push | Documents or Today, when it’s time | `/plan/documents/renewal` |
 
 ## The toolkit (13)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `cashplan` | 30-day cash plan | Push | Toolkit | `/plan/tools/cashplan` |
-| [x] | `taxcheck` | Tax & NI check | Push | Toolkit or Money | `/plan/tools/taxcheck` |
-| [x] | `income` | Income & structure | Push | Toolkit or Work | `/plan/tools/income` |
-| [x] | `rentbuy` | Rent vs buy | Push | Toolkit or Home | `/plan/tools/rentbuy` |
-| [x] | `blood` | Bloodwork reader | Push | Toolkit or Health | `/plan/tools/blood` |
-| [x] | `protect` | Protection review | Push | Toolkit | `/plan/tools/protect` |
-| [x] | `growth` | Growth path | Push | Toolkit | `/plan/tools/growth` |
-| [x] | `bedrooms` | Your next home: bedrooms | Push | Toolkit or Home | `/plan/tools/bedrooms` |
-| [x] | `buffer` | How big a buffer? | Push | Toolkit or Money | `/plan/tools/buffer` |
-| [x] | `unlock` | Locked tool | Sheet | a locked tool | `/(sheets)/unlock` · formSheet |
-| [x] | `decisions` | Bigger decisions | Push | Toolkit → Bigger decisions | `/plan/tools/decisions` |
-| [x] | `tools` | All tools | Push | Plan → Toolkit | `/plan/tools/tools` |
-| [x] | `healthstack` | Health stack | Push | Toolkit or Health | `/plan/tools/healthstack` |
+| [x] | `cashplan` | 30-day cash plan **V26** | Push | Toolkit | `/plan/tools/cashplan` |
+| [x] | `taxcheck` | Tax & NI check **V26** | Push | Toolkit or Money | `/plan/tools/taxcheck` |
+| [x] | `income` | Income & structure **V26** | Push | Toolkit or Work | `/plan/tools/income` |
+| [x] | `rentbuy` | Rent vs buy **V26** | Push | Toolkit or Home | `/plan/tools/rentbuy` |
+| [x] | `blood` | Bloodwork reader **V26** | Push | Toolkit or Health | `/plan/tools/blood` |
+| [x] | `protect` | Protection review **V26** | Push | Toolkit | `/plan/tools/protect` |
+| [x] | `growth` | Growth path **V26** | Push | Toolkit | `/plan/tools/growth` |
+| [x] | `bedrooms` | Your next home: bedrooms **V26** | Push | Toolkit or Home | `/plan/tools/bedrooms` |
+| [x] | `buffer` | How big a buffer? **V26** | Push | Toolkit or Money | `/plan/tools/buffer` |
+| [x] | `unlock` | Locked tool **V26** | Sheet | a locked tool | `/(sheets)/unlock` · formSheet |
+| [x] | `decisions` | Bigger decisions **V26** | Push | Toolkit → Bigger decisions | `/plan/tools/decisions` |
+| [x] | `tools` | All tools **V26** | Push | Plan → Toolkit | `/plan/tools/tools` |
+| [x] | `healthstack` | Health stack **V26** | Push | Toolkit or Health | `/plan/tools/healthstack` |
 
 ## Body (35)
 

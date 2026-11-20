@@ -130,6 +130,8 @@ export const type = {
   numeralL: { fontFamily: fonts.sansSemibold, fontSize: 32, lineHeight: 36, letterSpacing: -1.1, fontVariant: ['tabular-nums'] as ('tabular-nums')[] },
   /** Board v17 quick-lesson tax-code picture. Not a general display size. */
   diagramCode: { fontFamily: fonts.sansSemibold, fontSize: 44, lineHeight: 48, letterSpacing: -1.32, fontVariant: ['tabular-nums'] as ('tabular-nums')[] },
+  /** V26: the one big figure set low on a photograph (board `BIG`, 44/48): a balance, a bill, a countdown. */
+  numeralPhoto: { fontFamily: fonts.sansSemibold, fontSize: 44, lineHeight: 48, letterSpacing: -1.32, fontVariant: ['tabular-nums'] as ('tabular-nums')[] },
   /** V26: the two-tone briefing. Medium weight; bright words in `ink`, the rest in `ink2` (use `TwoTone size="display"`). */
   display: { fontFamily: fonts.sansMedium, fontSize: 34, lineHeight: 39, letterSpacing: -1.1 },
   welcome: { fontFamily: fonts.sansSemibold, fontSize: 46, lineHeight: 48, letterSpacing: -2.07 },

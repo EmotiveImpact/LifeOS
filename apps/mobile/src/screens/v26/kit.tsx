@@ -305,6 +305,112 @@ export function SheetHandle() {
   );
 }
 
+/* ───────────────────────── Plan chapter pieces ───────────────────────── */
+
+type PhotoChipLike = string | { label: string; icon?: GlyphName; dot?: string };
+const PaperChip = ({ chip }: { chip: PhotoChipLike }) => typeof chip === 'string'
+  ? <StatusPill size="chip" onPhoto label={chip} />
+  : <StatusPill size="chip" onPhoto label={chip.label} icon={chip.icon} dot={chip.dot} />;
+
+/**
+ * A photograph carrying one big figure low on it (board `BIG` on a `.pcard`): chips on the top line, a quiet line above
+ * the figure, pence smaller beside it, one line under it.
+ */
+export function BigPhoto({ source, focal, height, chip, chipRight, topLeft, line, figure, pence, after, sub, onPress, style }: {
+  source: ImageSourcePropType; focal?: Focal; height: number; chip?: PhotoChipLike; chipRight?: PhotoChipLike; topLeft?: ReactNode;
+  line?: string; figure: string; pence?: string; after?: string; sub?: string; onPress?: () => void; style?: StyleProp<ViewStyle>;
+}) {
+  const t = useTokens();
+  const label = [typeof chip === 'string' ? chip : chip?.label, line, `${figure}${pence ? `.${pence}` : ''}${after ?? ''}`, sub].filter(Boolean).join(', ');
+  const inner = <>
+    <PhotoFill source={source} focal={focal} />
+    <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
+    <View style={styles.bigTop}>{topLeft ?? (chip ? <PaperChip chip={chip} /> : <View />)}{chipRight ? <PaperChip chip={chipRight} /> : null}</View>
+    <View style={{ paddingHorizontal: space.cardPad, paddingBottom: 18 }}>
+      {line ? <Text variant="callout" style={{ color: photo.onPhoto2 }}>{line}</Text> : null}
+      <Text variant="numeralPhoto" numberOfLines={1} adjustsFontSizeToFit style={{ color: photo.onPhoto }}>
+        {figure}{pence ? <Text variant="heading" style={{ color: photo.onPhoto }}>{`.${pence}`}</Text> : null}{after ? <Text variant="headline" style={{ color: photo.onPhoto2 }}>{after}</Text> : null}
+      </Text>
+      {sub ? <Text variant="callout" style={{ color: photo.onPhoto2, marginTop: 2 }}>{sub}</Text> : null}
+    </View>
+  </>;
+  const box: StyleProp<ViewStyle> = [styles.big, { height, backgroundColor: t.surface2, ...cardShadow(t.scheme) }, style];
+  return onPress
+    ? <Press haptic="open" onPress={onPress} accessibilityLabel={label} style={box}>{inner}</Press>
+    : <View accessible accessibilityLabel={label} style={box}>{inner}</View>;
+}
+
+/** Cards resting behind the one in front (board `.stack` + `.peek`): their names peek above it, nearest last. */
+export function PeekStack({ peeks, children, style }: { peeks: { left: string; right?: string; onPress?: () => void }[]; children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const t = useTokens();
+  return (
+    <View style={[{ paddingTop: 44 }, style]}>
+      {peeks.slice(-2).map((p, i, all) => {
+        const near = i === all.length - 1 && all.length > 1;
+        const look = [styles.peek, near ? { left: space.tile, right: space.tile, top: 22, backgroundColor: t.surface2 } : { backgroundColor: t.surface3 }];
+        const words = <><Text variant="micro" tone={near ? 'ink2' : 'quiet'} numberOfLines={1} style={{ flexShrink: 1 }}>{p.left}</Text>{p.right ? <Text variant="micro" tone={near ? 'ink2' : 'quiet'}>{p.right}</Text> : null}</>;
+        return p.onPress
+          ? <Press key={p.left} haptic="open" onPress={p.onPress} accessibilityLabel={`${p.left}${p.right ? `, ${p.right}` : ''}`} style={look}>{words}</Press>
+          : <View key={p.left} style={look}>{words}</View>;
+      })}
+      <View style={{ position: 'relative' }}>{children}</View>
+    </View>
+  );
+}
+
+/** A small key under a chart (board `.legend`): a dot and a word each. */
+export function Legend({ items, style }: { items: { label: string; color: string }[]; style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }, style]}>
+      {items.map(i => <View key={i.label} style={styles.micro}><View style={[styles.legendDot, { backgroundColor: i.color }]} /><Text variant="callout" tone="ink2">{i.label}</Text></View>)}
+    </View>
+  );
+}
+
+/** Figures in even columns (board `.cols`): a micro label, the figure, a quiet line. */
+export function Cols({ items, style }: { items: { small: string; value: string; sub?: string; tone?: Tone }[]; style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[{ flexDirection: 'row', gap: space.xs }, style]}>
+      {items.map(c => (
+        <View key={c.small} style={{ flex: 1, minWidth: 0 }} accessible accessibilityLabel={[c.small, c.value, c.sub].filter(Boolean).join(' ')}>
+          <Text variant="micro" tone="ink2">{c.small}</Text>
+          <Text variant="headline" tone={c.tone} numberOfLines={1} adjustsFontSizeToFit style={{ marginTop: 2, fontVariant: ['tabular-nums'] }}>{c.value}</Text>
+          {c.sub ? <Text variant="callout" tone="ink2">{c.sub}</Text> : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** A shelf of small photographs that scrolls sideways (board `.hscroll` of `.ptile`). */
+export function Shelf({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[{ marginHorizontal: -space.gutter }, style]} contentContainerStyle={{ paddingHorizontal: space.gutter, gap: space.tile, paddingBottom: space.xxs }}>
+      {children}
+    </ScrollView>
+  );
+}
+
+/** One small photograph with its name low on it (board `.ptile`). */
+export function PhotoTile({ source, focal, title, meta, metaIcon, width = 112, height = 150, onPress }: { source: ImageSourcePropType; focal?: Focal; title: string; meta?: string; metaIcon?: GlyphName; width?: number; height?: number; onPress?: () => void }) {
+  const t = useTokens();
+  const inner = <>
+    <PhotoFill source={source} focal={focal} />
+    <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
+    <View style={{ paddingHorizontal: space.sm, paddingVertical: space.tile }}>
+      <Text variant="buttonCompact" style={{ color: photo.onPhoto }}>{title}</Text>
+      {meta ? <View style={[styles.micro, { gap: space.xxs, marginTop: 3 }]}>{metaIcon ? <Icon name={metaIcon} size={14} color={photo.onPhoto2} /> : null}<Text variant="micro" style={{ color: photo.onPhoto2 }}>{meta}</Text></View> : null}
+    </View>
+  </>;
+  const box = [styles.ptile, { width, height, backgroundColor: t.surface2, ...cardShadow(t.scheme) }];
+  return onPress ? <Press haptic="open" onPress={onPress} accessibilityLabel={[title, meta].filter(Boolean).join(', ')} style={box}>{inner}</Press> : <View style={box}>{inner}</View>;
+}
+
+/** A plain white card (board `.card`): surface, shadow, the card radius. */
+export function Box({ children, pad = space.cardPad, onPress, accessibilityLabel, style }: { children: ReactNode; pad?: number; onPress?: () => void; accessibilityLabel?: string; style?: StyleProp<ViewStyle> }) {
+  return <Card padding={pad} onPress={onPress} accessibilityLabel={accessibilityLabel} style={style}>{children}</Card>;
+}
+
 const styles = StyleSheet.create({
   eyebrow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   micro: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -314,4 +420,9 @@ const styles = StyleSheet.create({
   tick: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   round: { width: componentSize.round, height: componentSize.round, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   photoBar: { height: componentSize.topBarV26, paddingHorizontal: space.gutter, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  big: { borderRadius: radius.photo, overflow: 'hidden', justifyContent: 'space-between' },
+  bigTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: space.md },
+  peek: { position: 'absolute', left: space.lg, right: space.lg, top: 0, height: 60, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, paddingVertical: 7, paddingHorizontal: space.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: space.xs },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  ptile: { borderRadius: radius.tile, overflow: 'hidden', justifyContent: 'flex-end' },
 });

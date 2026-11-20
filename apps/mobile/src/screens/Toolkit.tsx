@@ -1,103 +1,25 @@
-import { useState } from 'react';
-import { View } from 'react-native';
-import { compareUKBusinessStructures } from '@life/core/finance';
-import { compareRentAndBuy } from '@life/core/housing';
-import { getProtectionChecklist, LAB_GUIDES, interpretLabResult } from '@life/core/engine';
-import { Button, CapsuleMeter, Card, Checklist, ChipGroup, CountStepper, LabRange, MoneyFigure, SearchField, Slider, StatusPill, Text, Ticks, ToolTile, TwoTone, feedback, areaColors, radius, space, useTokens } from '@/design';
-import { useNavigation } from '@/navigation/useNavigation';
+/**
+ * The toolkit. Every screen is the V26 build in `v26/toolkit.tsx`; this switch keeps the routes' entry point.
+ */
 import type { ScreenKey } from '@/navigation/screens';
-import { useSeed } from '@/state/SeedProvider';
-import { money, moneyCompact, rentBuyInputs, seed, seedTaxClaim, seedLabResults, seedLabMarkerPositions } from '@/state/seed';
-import type { LabMarkerId, LabResult } from '@life/core/types';
-import { Heading, Input, LocalNotice, Rows, Screen, Section, layout } from './Screen';
-import { toolkit } from './Plan';
-import { TeachOffer } from './Teach';
+import {
+  BedroomsV26, BloodV26, BufferV26, CashplanV26, DecisionsV26, GrowthV26, HealthstackV26, IncomeV26, ProtectV26, RentbuyV26, TaxcheckV26, ToolsV26, UnlockV26,
+} from './v26/toolkit';
 
 export function ToolkitScreen({ screen }: { screen: ScreenKey }) {
-  const nav = useNavigation(), tokens = useTokens(), { data, set, choose, flag, engine } = useSeed();
-  const [toolQuery, setToolQuery] = useState('');
-  const [profit, setProfit] = useState(Number(data.choices['structure-profit'] ?? seed.finance.structureProfit)), [bedrooms, setBedrooms] = useState(Number(data.choices.bedrooms ?? 2)), [months, setMonths] = useState(Number(data.choices['buffer-months'] ?? seed.finance.bufferMonths)), [price, setPrice] = useState(rentBuyInputs.price * Number(data.choices.bedrooms ?? 2) / 2), [rent, setRent] = useState(rentBuyInputs.rentMonthly), [marker, setMarker] = useState<LabMarkerId>('bw-vitd'), [labValue, setLabValue] = useState('38'), [labUnit, setLabUnit] = useState('nmol/L');
-  const [labLow, setLabLow] = useState(''), [labHigh, setLabHigh] = useState(''), [labError, setLabError] = useState('');
-  const [labs, setLabs] = useState<Partial<Record<LabMarkerId, LabResult>>>({ ...seedLabResults, ...data.profile.health?.labResults });
-  const structure = compareUKBusinessStructures({ ...data.profile, annualIncome: profit }), housing = compareRentAndBuy({ ...rentBuyInputs, price, deposit: price * .1, rentMonthly: rent }), hidden = data.prefs.hideBalances;
-  const [cashIncome, setCashIncome] = useState(Number(data.choices['cashplan-income'] ?? seed.finance.cashplan.comingIn));
-  const essentials = seed.finance.expenses.reduce((a, b) => a + b.amount, 0), net = cashIncome, tax = seed.finance.cashplan.taxSetAside, safe = net - essentials - tax, balance = Math.floor(seed.finance.balance);
-  const lockedKey = (data.choices['unlock-tool'] ?? 'rentbuy') as ScreenKey, locked = toolkit.find(v => v.title === data.choices['unlock-tool-title']) ?? toolkit.find(v => v.key === lockedKey) ?? toolkit[6];
-  if (screen === 'cashplan') return <Screen screen={screen} title="30-day cash plan" footer={<Button label={data.profile.runway ? 'Cash plan saved' : 'Save my cash plan'} onPress={() => { set({ profile: { ...data.profile, needsCashRunway: false, runway: { balance, expectedIncome: net, essentialBills: essentials + tax, dueSoonLabel: 'Next 30 days', followUpLabel: 'Review on payday', netRunway: balance + net - essentials - tax, updatedAt: new Date().toISOString() } } }); feedback.file(); }} />}>
-    <View style={{ gap: space.xs }}><Text variant="callout" tone="ink2">Safe to spend this month</Text><MoneyFigure value={safe} decimals={0} hidden={hidden} align="left" /><Text variant="callout" tone="ink2">{safe < 0 ? `You’re ${hidden ? '••••' : money(Math.abs(safe))} short. Review income and bills below.` : `Buffer covers ${(balance / essentials).toFixed(1)} months of essentials`}</Text></View>
-    <View style={{ gap: space.sm }}><Text variant="title">Adjust income</Text><View style={[layout.between, { flexWrap: 'wrap' }]}><Text variant="body">Coming in</Text><Text variant="title">{hidden ? '••••' : money(net)}</Text></View><Slider value={net} min={0} max={5000} step={10} onChange={value => { setCashIncome(value); choose('cashplan-income', String(value)); }} accessibilityLabel="Coming in" /></View>
-    <Section title="Already accounted for"><Rows rows={[{ title: 'Essential bills', sub: 'Rent, council tax, utilities, phone', value: hidden ? '••••' : money(essentials) }, { title: 'Tax set-aside', sub: 'For your Self Assessment', value: hidden ? '••••' : money(tax) }, { title: 'Cash now', sub: 'Everyday + buffer', value: hidden ? '••••' : money(balance) }]} /></Section>
-    <View style={{ gap: space.sm }}><View style={[layout.between, { flexWrap: 'wrap' }]}><Text variant="title">Next 30 days</Text><Text variant="callout" tone="ink2">Payday and bills</Text></View><Ticks count={30} filled={16} /><View style={layout.between}><Text variant="callout" tone="ink2">16 Nov</Text><Text variant="callout" tone="ink2">16 Dec</Text></View></View>
-  </Screen>;
-  if (screen === 'taxcheck') return <Screen screen={screen} title="Tax & NI" footer={<Button label="Check if it’s worth filling" onPress={() => { flag('ni-reviewed', true); set({ profile: { ...data.profile, taxReviewed: true } }); nav.go('chat', { question: 'How do I check gaps in my National Insurance record?' }); }} />}>
-    <Text variant="body" tone="ink2">Check against your Personal Tax Account.</Text>
-    <Card style={{ gap: space.sm }}><Text variant="callout" tone="ink2">2024/25 · P800 overpayment</Text><MoneyFigure value={seedTaxClaim.refund} decimals={0} size="l" hidden={hidden} align="left" /><Text variant="body" tone="ink2">Potential refund from your sample P800 and work expenses.</Text><Button variant="secondary" label={data.flags['tax-details'] ? 'Hide explanation' : 'Review the overpayment'} onPress={() => flag('tax-details')} /></Card>
-    {data.flags['tax-details'] ? <TeachOffer /> : null}
-    <Section title="Previous years"><Rows rows={[{ title: '2023/24', sub: 'Settled', value: 'OK' }, { title: '2022/23', sub: 'Settled', value: 'OK' }]} /></Section>
-    <View style={{ gap: space.sm }}><Text variant="title">National Insurance record</Text><Text variant="callout" tone="ink2">{`${seed.finance.niRecord.years} qualifying years · ${seed.finance.niRecord.targetYears} needed`}</Text><Ticks count={seed.finance.niRecord.targetYears} filled={seed.finance.niRecord.years} /><Text variant="body" tone="ink2">{`There’s 1 gap (${seed.finance.niRecord.gapYear}). Filling it costs roughly ${money(seed.finance.niRecord.indicativeCost)} and could add about ${money(seed.finance.niRecord.indicativeAnnualPension)} a year to your State Pension, for life.`}</Text><Text variant="body" tone="ink2">Check the exact cost and whether it improves your forecast with HMRC before paying.</Text></View>
-    <LocalNotice text="Sample P800 and NI record. The refund uses the existing annual PAYE/expense engine; no HMRC record or NI quote has been verified." /><Text variant="callout" tone="ink2">Estimate, not tax advice.</Text>
-  </Screen>;
-  if (screen === 'income') {
-    const sole = structure.soleTrader.netTakeHomeAnnual, company = structure.director.netTakeHomeAnnual;
-    const afterFees = sole - (company - seed.finance.accountantFees);
-    return <Screen screen={screen} title="Income & structure">
-      <View style={{ gap: space.sm }}><View style={[layout.between, { flexWrap: 'wrap' }]}><Text variant="callout" tone="ink2">Annual profit</Text><Text variant="title">{hidden ? '••••' : money(profit)}</Text></View><Slider value={profit} min={20000} max={120000} step={5000} onChange={value => { setProfit(value); choose('structure-profit', String(value)); }} accessibilityLabel="Annual profit" /></View>
-      <TwoTone size="headline" segments={[{ text: 'After fees, ', tone: 'quiet' }, { text: afterFees >= 0 ? 'staying a sole trader ' : 'a limited company ' }, { text: 'keeps about ', tone: 'quiet' }, { text: `${hidden ? '••••' : money(Math.abs(afterFees))} more.` }]} />
-      <View style={{ gap: space.sm }}><Text variant="title">Take-home per year</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.lg }}>{[{ label: 'Sole trader', value: sole, color: tokens.ink2 }, { label: 'Limited company', value: company, color: areaColors[tokens.scheme].work }].map(option => <View key={option.label} style={{ flex: 1, minWidth: space.xxxl * 3, gap: space.sm }}><Text variant="callout" tone="ink2">{option.label}</Text><Text variant="headline">{hidden ? '••••' : money(option.value)}</Text><CapsuleMeter size="bar" value={option.value / Math.max(1, sole, company)} color={option.color} /></View>)}</View><Text variant="callout" tone="ink2">{`Tax year ${engine.income.taxYear} · before ~${money(seed.finance.accountantFees)} accountant fees for a company`}</Text></View>
-      <Button variant="secondary" label="Ask about the trade-offs" onPress={() => nav.go('ask')} />
-      <Text variant="body" tone="ink2">An estimate from life’s engine, not tax advice. life suggests speaking to an accountant before switching.</Text>
-    </Screen>;
+  switch (screen) {
+    case 'cashplan': return <CashplanV26 />;
+    case 'taxcheck': return <TaxcheckV26 />;
+    case 'income': return <IncomeV26 />;
+    case 'rentbuy': return <RentbuyV26 />;
+    case 'blood': return <BloodV26 />;
+    case 'protect': return <ProtectV26 />;
+    case 'growth': return <GrowthV26 />;
+    case 'bedrooms': return <BedroomsV26 />;
+    case 'buffer': return <BufferV26 />;
+    case 'unlock': return <UnlockV26 />;
+    case 'decisions': return <DecisionsV26 />;
+    case 'tools': return <ToolsV26 />;
+    default: return <HealthstackV26 />;
   }
-  if (screen === 'rentbuy') {
-    const renting = housing?.rentingInvestments ?? 0, buying = housing?.buyerWealth ?? 0, high = Math.max(1, renting, buying);
-    return <Screen screen={screen} title="Rent vs buy">
-      {housing && housing.cashShortfall > 0 ? <Card style={{ gap: space.sm }}><Text variant="title">Not yet: the upfront cash comes first</Text><Text variant="body" tone="ink2">{`You need ${hidden ? '••••' : moneyCompact(housing.cashNeeded)} and have ${hidden ? '••••' : money(Math.floor(seed.finance.balance))}. A Lifetime ISA adds 25% to what you save.`}</Text><Button label="Plan" onPress={() => nav.go('aimnew')} /></Card> : null}
-      <TwoTone size="headline" segments={[{ text: `Over ${rentBuyInputs.years} years, buying a `, tone: 'quiet' }, { text: `${hidden ? '••••' : moneyCompact(price)} flat ` }, { text: 'leaves you about ', tone: 'quiet' }, { text: `${hidden ? '••••' : money(Math.abs(housing?.buyingAdvantage ?? 0))} ${housing && housing.buyingAdvantage >= 0 ? 'better' : 'worse'} off ` }, { text: 'than renting and investing the difference.', tone: 'quiet' }]} />
-      <Rows rows={[{ title: 'Mortgage payment', sub: `${hidden ? '••••' : moneyCompact(price * .9)} at ${rentBuyInputs.mortgageRatePct}% over ${rentBuyInputs.termYears} years`, value: `${hidden ? '••••' : money(housing?.payment ?? 0)}/mo` }, { title: 'Cash needed', sub: '10% deposit + costs', value: hidden ? '••••' : money(housing?.cashNeeded ?? 0) }, { title: 'Your rent today', sub: `Rising ${rentBuyInputs.rentGrowthPct}% a year in the model`, value: `${hidden ? '••••' : money(rent)}/mo` }]} />
-      <Card style={{ gap: space.sm }}><View style={[layout.between, { flexWrap: 'wrap' }]}><Text variant="callout" tone="ink2">{`Wealth after ${rentBuyInputs.years} years`}</Text><StatusPill label="Engine model" /></View><View style={[layout.row, { alignItems: 'flex-end' }]}>{[{ label: 'Rent + invest', value: renting }, { label: 'Buy', value: buying }].map((item, i) => <View key={item.label} style={{ flex: 1, gap: space.xs, alignItems: 'center' }}><Text variant="title">{hidden ? '••••' : moneyCompact(item.value)}</Text><View style={{ width: '100%', height: Math.max(4, item.value / high * 122), borderRadius: radius.chart, backgroundColor: i ? areaColors[tokens.scheme].home : tokens.surface3 }} /><Text variant="callout" tone="ink2">{item.label}</Text></View>)}</View></Card>
-      <Text variant="callout" tone="ink2">Estimate. Prices, rates and returns can change. Guidance, not financial advice.</Text>
-    </Screen>;
-  }
-  if (screen === 'blood') return <Screen screen={screen} title="Bloodwork">
-    <Text variant="callout" tone="ink2">Health · 3 Nov</Text><Heading title="Your results" sub={`${LAB_GUIDES.filter(guide => labs[guide.id]).length} markers from your last test.`} />
-    {LAB_GUIDES.filter(guide => labs[guide.id]).map(guide => {
-      const result = labs[guide.id]!, interpretation = interpretLabResult(guide.id, data.profile.health ?? {}, result);
-      const sample = !data.profile.health?.labResults?.[guide.id] && result.value === seedLabResults[guide.id]?.value && result.unit === seedLabResults[guide.id]?.unit;
-      const label = interpretation.status === 'check' ? 'Discuss with GP' : interpretation.labRange === 'within' ? 'In range' : 'Reference not supplied';
-      return <Card key={guide.id} style={{ gap: space.sm }}><View style={[layout.between, { flexWrap: 'wrap', alignItems: 'flex-start' }]}><Text variant="title" style={{ flex: 1, minWidth: space.xxxl * 3 }}>{guide.name}</Text><StatusPill label={label} /></View><Text variant="numeralL">{result.value}<Text variant="callout" tone="ink2">{` ${result.unit}`}</Text></Text><LabRange value={result.value} unit={result.unit} low={result.referenceLow} high={result.referenceHigh} previewPosition={sample ? seedLabMarkerPositions[guide.id] : undefined} /><Text variant="body" tone="ink2">{interpretation.nextStep}</Text></Card>;
-    })}
-    <Button variant="secondary" label="Add a result" onPress={() => flag('add-lab')} />
-    {data.flags['add-lab'] ? <Card style={{ gap: space.sm }}>
-      <ChipGroup options={LAB_GUIDES.map(guide => ({ value: guide.id, label: guide.name }))} value={marker} onChange={id => { const current = labs[id]; setMarker(id); setLabValue(current ? String(current.value) : ''); setLabUnit(current?.unit ?? LAB_GUIDES.find(guide => guide.id === id)!.units[0]); setLabLow(current?.referenceLow === undefined ? '' : String(current.referenceLow)); setLabHigh(current?.referenceHigh === undefined ? '' : String(current.referenceHigh)); setLabError(''); }} />
-      <Input label="Value from your report" value={labValue} onChange={setLabValue} numeric /><Input label="Unit" value={labUnit} onChange={setLabUnit} />
-      <Input label="Reference lower bound (optional)" value={labLow} onChange={setLabLow} numeric /><Input label="Reference upper bound (optional)" value={labHigh} onChange={setLabHigh} numeric />
-      <Text variant="callout" tone="ink2">Use the interval and units printed on your report. Leave a bound blank if the report does not supply it.</Text>
-      {labError ? <Text variant="callout" tone="ink2">{labError}</Text> : null}
-      <Button variant="secondary" label="Save result" onPress={() => {
-        const value = Number(labValue), low = labLow.trim() === '' ? undefined : Number(labLow), high = labHigh.trim() === '' ? undefined : Number(labHigh);
-        const guide = LAB_GUIDES.find(guide => guide.id === marker)!;
-        if (labValue.trim() === '' || !Number.isFinite(value) || value < 0 || low !== undefined && !Number.isFinite(low) || high !== undefined && !Number.isFinite(high) || low !== undefined && high !== undefined && low >= high || !guide.units.some(unit => unit === labUnit)) { setLabError('Check the value, unit and reference bounds against your report.'); return; }
-        const result: LabResult = { value, unit: labUnit, ...(low === undefined ? {} : { referenceLow: low }), ...(high === undefined ? {} : { referenceHigh: high }) };
-        const next = { ...labs, [marker]: result }; setLabs(next); set({ profile: { ...data.profile, health: { ...data.profile.health!, labResults: { ...data.profile.health?.labResults, [marker]: result } } } }); flag('add-lab', false); setLabError(''); feedback.file();
-      }} />
-    </Card> : null}
-    <Text variant="callout" tone="ink2">life explains results, it doesn’t diagnose. Always check with your GP.</Text>
-  </Screen>;
-  if (screen === 'protect') { const policies = getProtectionChecklist(data.profile); return <Screen screen={screen} title="Protection"><Text variant="callout" tone="ink2">Level 4 · your downside</Text><Heading title="Protect what you’ve built" sub="Four checks, about 20 minutes in total." /><Checklist items={policies.map(p => ({ label: p.name, sub: p.whyNeeded, done: p.inPlace, meta: p.inPlace ? 'Done' : 'To do' }))} onToggle={i => { const id = policies[i].id, ids = data.profile.protectedPolicyIds; set({ profile: { ...data.profile, protectedPolicyIds: ids.includes(id) ? ids.filter(v => v !== id) : [...ids, id] } }); }} /><Text variant="callout" tone="ink2">General guidance, not regulated financial advice.</Text></Screen>; }
-  if (screen === 'growth') return <Screen screen={screen} title="Growth path"><TwoTone size="headline" segments={[{ text: 'You’ve kept your payday sweep for ', tone: 'quiet' }, { text: '3 months. ' }, { text: 'Next: ', tone: 'quiet' }, { text: 'raise your rate.' }]} /><Card style={{ gap: space.sm }}><View style={[layout.between, { flexWrap: 'wrap', alignItems: 'flex-start' }]}><Text variant="title" style={{ flex: 1, minWidth: space.xxxl * 3 }}>This week’s check-in</Text><StatusPill label="Due Sun" /></View><Text variant="body">What did you do this week that future-you will thank you for?</Text><ChipGroup options={['Saved more', 'Learned something', 'Rested properly'].map(v => ({ value: v, label: v }))} value={data.choices['growth-checkin'] ?? null} onChange={v => choose('growth-checkin', v)} /></Card><Section title="Lessons" meta="2 of 6"><Rows rows={[{ title: 'Pricing your work', value: '6 min', to: 'idea' }, { title: 'Asking for a rate rise', value: '5 min', to: 'idea' }, { title: 'Building a second income', value: '8 min', to: 'idea' }]} /></Section><Button variant="secondary" label="Knocked off course? Reset in 3 steps" onPress={() => nav.go('focus')} /></Screen>;
-  if (screen === 'bedrooms') return <Screen screen={screen} title="Rent vs buy" footer={<Button label="Use this" onPress={() => { choose('bedrooms', String(bedrooms)); nav.replace('rentbuy'); }} />}><CountStepper value={bedrooms} onChange={setBedrooms} min={1} max={8} glyph="doors" question="How many bedrooms do you need?" consequence={n => `${n}-bed in South London: around ${money(rentBuyInputs.price * n / 2)}. Deposit at 10%: ${money(rentBuyInputs.price * n / 2 * .1)}. (Illustrative.)`} /></Screen>;
-  if (screen === 'buffer') return <Screen screen={screen} title="30-day cash plan" footer={<Button label="Set my target" onPress={() => { choose('buffer-months', String(months)); feedback.file(); nav.close(); }} />}><CountStepper value={months} onChange={setMonths} min={1} max={12} glyph="dots" question="How many months of essentials do you want saved?" consequence={n => `Target ${money(essentials * n)}. At ${money(seed.finance.bufferSavingMonthly)} a month, you get there in ${Math.ceil(Math.max(0, essentials * n - seed.finance.balance) / seed.finance.bufferSavingMonthly)} months.`} /></Screen>;
-  if (screen === 'unlock') return <Screen screen={screen} title="Plan" footer={<><Button label="Show me the steps" onPress={() => nav.replace('levels')} /><Button variant="link" label="Open it early anyway" onPress={() => { flag(`unlocked-${locked.key}`, true); nav.replace(locked.key); }} /></>}><Heading title={`${locked.title} opens at level ${locked.level}`} sub="It’s most useful once your buffer and tax are sorted, because the numbers depend on them. Two steps to go:" /><Checklist items={engine.level.toAdvance.slice(0, 2).map(v => ({ label: v.label, done: v.done }))} onToggle={i => nav.go(i === 0 ? 'taxcheck' : 'mission')} /></Screen>;
-  if (screen === 'decisions') return <Screen screen={screen} title="Bigger decisions"><Text variant="body" tone="ink2">One at a time, when you have the room for it.</Text>{[{ title: 'Rent vs buy', level: 3, sub: 'Run the real numbers for your first home', lens: 'Housel · room for error', to: 'rentbuy' as const }, { title: 'Sole trader or limited?', level: 3, sub: 'See which keeps more of your profit', lens: 'Munger · invert', to: 'income' as const }, { title: 'Protect your income', level: 4, sub: 'Cover for when you can’t work', lens: 'Taleb · remove what can ruin you', to: 'protect' as const }, { title: 'Second income stream', level: 4, sub: 'Turn a skill into something that earns while you sleep', lens: 'Naval · leverage', to: 'growth' as const }].map(v => {
-    const locked = v.level > engine.level.currentLevel && !data.flags[`unlocked-${v.to}`];
-    return <Card key={v.title} onPress={() => { if (locked) { choose('unlock-tool', v.to); choose('unlock-tool-title', v.title); nav.go('unlock'); } else nav.go(v.to); }} style={{ gap: space.sm }}><View style={[layout.between, { flexWrap: 'wrap', alignItems: 'flex-start' }]}><Text variant="title" style={{ flex: 1, minWidth: space.xxxl * 3 }}>{v.title}</Text><StatusPill label={locked ? `Level ${v.level}` : 'Open'} /></View><Text variant="body" tone="ink2">{v.sub}</Text><Text variant="callout" tone="ink2">{v.lens}</Text></Card>;
-  })}</Screen>;
-  if (screen === 'tools') {
-    const keys: ScreenKey[] = ['cashplan', 'taxcheck', 'subs', 'healthstack', 'income', 'rentbuy', 'blood', 'protect'];
-    const list = keys.map(key => toolkit.find(tool => tool.key === key)!);
-    const unlocked = list.filter(tool => tool.level <= engine.level.currentLevel || data.flags[`unlocked-${tool.key}`]).length;
-    const matching = list.filter(tool => tool.title.toLowerCase().includes(toolQuery.toLowerCase()));
-    return <Screen screen={screen} title="Your toolkit" action={{ kind: 'icon', icon: 'search', label: 'Search tools', onPress: () => flag('search-tools') }}><Text variant="callout" tone="ink2">{`${unlocked} unlocked · ${list.length - unlocked} more as you level up`}</Text>{data.flags['search-tools'] ? <SearchField value={toolQuery} onChangeText={setToolQuery} placeholder="Search tools" /> : null}<View style={layout.grid}>{matching.map(tool => <View key={tool.title} style={{ width: '48%', flexGrow: 1, gap: space.xxs }}><ToolTile title={tool.title} icon={tool.icon} locked={tool.level > engine.level.currentLevel && !data.flags[`unlocked-${tool.key}`]} level={tool.level} onPress={() => { if (tool.level <= engine.level.currentLevel || data.flags[`unlocked-${tool.key}`]) nav.go(tool.key); else { choose('unlock-tool', tool.key); choose('unlock-tool-title', tool.title); nav.go('unlock'); } }} /><Text variant="callout" tone="ink2">{tool.level <= engine.level.currentLevel || data.flags[`unlocked-${tool.key}`] ? 'Open' : `Level ${tool.level}`}</Text></View>)}</View>{!matching.length ? <Text variant="body" tone="ink2">No tools match that search. Try another name.</Text> : null}<Rows rows={[{ title: 'Bigger decisions', to: 'decisions' }]} /></Screen>;
-  }
-  return <Screen screen={screen} title="Health stack"><Rows rows={[{ title: 'Vitamin D', sub: '1,000 IU · morning · Oct–Mar' }, { title: 'Creatine', sub: '5 g · any time' }, { title: 'Iron', sub: 'Your last test was low', value: 'Talk to GP', to: 'blood' }]} /><Section title="Timing"><Text variant="body" tone="ink2">Take iron away from tea or coffee: they reduce how much you absorb.</Text></Section><Section title="Worth knowing"><Text variant="body">Your diet already covers B12 and omega-3 most days.</Text></Section><Text variant="callout" tone="ink2">Wellness information, not medical advice. Check medicines with a pharmacist.</Text><LocalNotice text="Example plan from the board, not a personalised supplement recommendation or an interaction check." /></Screen>;
 }
