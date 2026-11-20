@@ -1,7 +1,8 @@
 name: CI
 
-# Every push and pull request: the app's typecheck and the engine, brain and
-# data tests (including the crisis-language case set). The iOS and Android
+# Every push and pull request: the app's and the API's typechecks and the
+# engine, brain, data and API tests (including the crisis-language case set and
+# the API's row-level security tests, against a throwaway Postgres). The iOS and Android
 # bundles run on pull requests, pushes to master and manual runs only, to keep
 # Actions minutes down on this private repository. No secrets are used.
 
@@ -37,6 +38,14 @@ jobs:
     name: Typecheck and tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16.15-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -51,10 +60,18 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Install Bun (pinned)
         run: npm install --global bun@1.4.4
+      - name: Install pinned API dependencies
+        working-directory: apps/api
+        run: bun install --frozen-lockfile --ignore-scripts
       - name: Typecheck the app, engine and brain
         working-directory: apps/mobile
         run: npm run typecheck
-      - name: Engine, brain and data tests
+      - name: Typecheck the API
+        working-directory: apps/api
+        run: bun run typecheck
+      - name: Engine, brain, data and API tests
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
         run: bun test tests/
 
   bundles:

@@ -102,18 +102,21 @@ export type FieldProps = {
   onChangeText?: (text: string) => void;
   onPress?: () => void;
   keyboardType?: 'default' | 'numeric' | 'email-address' | 'decimal-pad' | 'phone-pad';
+  /** For a sign-in code: the keyboard offers the code from Messages or Mail. */
+  autoComplete?: 'email' | 'one-time-code';
+  maxLength?: number;
   style?: StyleProp<ViewStyle>;
 };
 
 /** A white field with a micro label over its value. No border; the shadow sets it off the page. Placeholder in quiet. */
-export function Field({ label, value, placeholder = '', onChangeText, onPress, keyboardType, style }: FieldProps) {
+export function Field({ label, value, placeholder = '', onChangeText, onPress, keyboardType, autoComplete, maxLength, style }: FieldProps) {
   const t = useTokens();
   const box: ViewStyle = { backgroundColor: t.surface, borderRadius: radius.button, paddingVertical: space.tile, paddingHorizontal: space.md, ...cardShadow(t.scheme) };
   const head = <Text variant="micro" tone="ink2">{label}</Text>;
   if (onChangeText) return (
     <View style={[box, style]}>
       {head}
-      <TextInput maxFontSizeMultiplier={1.3} value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor={t.inkQuiet} keyboardType={keyboardType} accessibilityLabel={label} selectionColor={t.ember}
+      <TextInput maxFontSizeMultiplier={1.3} value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor={t.inkQuiet} keyboardType={keyboardType} autoComplete={autoComplete} textContentType={autoComplete === 'one-time-code' ? 'oneTimeCode' : autoComplete === 'email' ? 'emailAddress' : undefined} autoCapitalize={autoComplete ? 'none' : undefined} maxLength={maxLength} accessibilityLabel={label} selectionColor={t.ember}
         style={[type.greeting, { color: t.ink, marginTop: 2, paddingVertical: 1.5, paddingHorizontal: 0 }]} />
     </View>
   );

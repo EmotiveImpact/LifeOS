@@ -21,7 +21,8 @@ import {
 import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
-import { auth, health, records } from '@/services/local';
+import { health, records } from '@/services/local';
+import { problemWords, sendCode, signInWith, verifyCode } from '@/services/account';
 import { voice } from '@/services/voice';
 import {
   CHILDLINE, CITIES, DESTINATIONS, HEALTH_TYPES, TELL_TOPICS, WORK, birthDate, birthDateProblem, longDate, needsSupport, nextAfterConsent, planFound, useAgeCheck,
@@ -647,32 +648,71 @@ export function MeasuresetupV26() {
 /* ───────────────────────── Save your progress (a sheet) ───────────────────────── */
 
 export function SigninV26() {
-  const nav = useNavigation(), { data, flag } = useSeed();
-  const [email, setEmail] = useState(''), [asking, setAsking] = useState(false), [busy, setBusy] = useState(false);
+  const nav = useNavigation(), { data, flag, joinAccount } = useSeed();
+  const [step, setStep] = useState<'ways' | 'email' | 'code'>('ways');
+  const [email, setEmail] = useState(''), [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false), [problem, setProblem] = useState<string | null>(null);
   const android = Platform.OS === 'android';
+  const emailOk = /^\S+@\S+\.\S+$/.test(email.trim());
   const finish = () => { flag('signin-asked', true); nav.close(); };
-  const signIn = async (provider: 'apple' | 'google' | 'email') => {
-    if (provider === 'email' && !asking) { setAsking(true); return; }
-    if (provider === 'email' && !/^\S+@\S+\.\S+$/.test(email.trim())) return;
-    setBusy(true);
-    try { await auth.signIn(provider); flag('signed-in-preview', true); feedback.primary(); } finally { setBusy(false); }
-    finish();
+  // Saving progress keeps what was set up on this phone and merges it into the account.
+  const signedIn = async (result: { mode: 'account' | 'local-preview'; data: { userId: string } }) => {
+    if (result.mode === 'account') await joinAccount(result.data.userId, { restore: false });
+    flag(result.mode === 'account' ? 'signed-in' : 'signed-in-preview', true); feedback.primary(); finish();
   };
+  const go = (next: typeof step) => { setProblem(null); setStep(next); };
+  const askCode = async () => {
+    if (!emailOk || busy) return;
+    setBusy(true); setProblem(null);
+    const sent = await sendCode(email);
+    setBusy(false);
+    if (sent.ok) { setCode(''); setStep('code'); feedback.select(); } else { setProblem(problemWords[sent.problem]); feedback.warn(); }
+  };
+  const checkCode = async () => {
+    if (busy) return;
+    setBusy(true); setProblem(null);
+    const result = await verifyCode(email, code);
+    setBusy(false);
+    if (result.ok) await signedIn(result); else { setProblem(problemWords[result.problem]); feedback.warn(); }
+  };
+  const withProvider = async (provider: 'apple' | 'google') => {
+    if (busy) return;
+    setBusy(true); setProblem(null);
+    const result = await signInWith(provider);
+    setBusy(false);
+    if (result.ok) { await signedIn(result); return; }
+    setProblem(problemWords[result.problem]);
+    if (result.problem === 'not-ready') setStep('email');
+  };
+  const note = problem ? <Callout style={{ marginTop: space.sm }}>{problem}</Callout> : null;
   return (
     <Page screen="signin" bar={{ kind: 'sheet', title: 'Save your progress' }}>
-      <Statement s="{Keep your plan safe.} Sign in so it survives a new phone." />
-      <Body s="life never posts anything and never sells your data." style={{ marginTop: space.xs }} />
-      {asking ? <>
-        <Field label="Your email" value={email} placeholder="you@example.com" onChangeText={setEmail} keyboardType="email-address" style={{ marginTop: space.lg }} />
-        <Btn label="Continue with email" disabled={busy || !/^\S+@\S+\.\S+$/.test(email.trim())} onPress={() => { void signIn('email'); }} style={{ marginTop: space.sm }} />
-        <QuietLink label="Back to other ways" onPress={() => setAsking(false)} style={{ marginTop: space.sm }} />
-      </> : <>
-        <Btn label={android ? 'Continue with Google' : 'Continue with Apple'} disabled={busy} onPress={() => { void signIn(android ? 'google' : 'apple'); }} style={{ marginTop: space.lg }} />
-        <Micro center style={{ marginTop: space.md }}>OR CONTINUE WITH</Micro>
-        <View style={[styles.inline, { gap: space.xs, marginTop: space.xs }]}>
-          {android ? null : <View style={{ flex: 1 }}><Btn label="Google" ghost disabled={busy} onPress={() => { void signIn('google'); }} /></View>}
-          <View style={{ flex: 1 }}><Btn label="Email" ghost disabled={busy} onPress={() => { void signIn('email'); }} /></View>
+      {step === 'code' ? <>
+        <Statement s={`{Check your email.} We sent a six-digit code to ${email.trim()}.`} />
+        <Field label="Code" value={code} placeholder="123456" onChangeText={text => setCode(text.replace(/\D/g, '').slice(0, 6))} keyboardType="numeric" autoComplete="one-time-code" maxLength={6} style={{ marginTop: space.lg }} />
+        <Btn label="Sign in" disabled={busy || code.length !== 6} onPress={() => { void checkCode(); }} style={{ marginTop: space.sm }} />
+        {note}
+        <View style={[styles.inline, { justifyContent: 'center', gap: space.lg, marginTop: space.sm }]}>
+          <QuietLink label="Send a new code" onPress={() => { void askCode(); }} />
+          <QuietLink label="Change email" onPress={() => go('email')} />
         </View>
+      </> : <>
+        <Statement s="{Keep your plan safe.} Sign in so it survives a new phone." />
+        <Body s="life never posts anything and never sells your data." style={{ marginTop: space.xs }} />
+        {step === 'email' ? <>
+          <Field label="Your email" value={email} placeholder="you@example.com" onChangeText={setEmail} keyboardType="email-address" autoComplete="email" style={{ marginTop: space.lg }} />
+          <Btn label="Send me a code" disabled={busy || !emailOk} onPress={() => { void askCode(); }} style={{ marginTop: space.sm }} />
+          {note}
+          <QuietLink label="Back to other ways" onPress={() => go('ways')} style={{ marginTop: space.sm }} />
+        </> : <>
+          <Btn label={android ? 'Continue with Google' : 'Continue with Apple'} disabled={busy} onPress={() => { void withProvider(android ? 'google' : 'apple'); }} style={{ marginTop: space.lg }} />
+          {note}
+          <Micro center style={{ marginTop: space.md }}>OR CONTINUE WITH</Micro>
+          <View style={[styles.inline, { gap: space.xs, marginTop: space.xs }]}>
+            {android ? null : <View style={{ flex: 1 }}><Btn label="Google" ghost disabled={busy} onPress={() => { void withProvider('google'); }} /></View>}
+            <View style={{ flex: 1 }}><Btn label="Email" ghost disabled={busy} onPress={() => go('email')} /></View>
+          </View>
+        </>}
       </>}
       <QuietLink label={data.onboardingDone ? 'Not now' : 'Not now, keep it on this phone'} ink onPress={finish} style={{ marginTop: 18 }} />
     </Page>

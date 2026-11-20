@@ -462,20 +462,20 @@ export function SubscriptionV26() {
   if (!plus) return (
     <Page screen="subscription" bar={{ kind: 'push', title: 'life Plus' }} footer={<Btn label="See life Plus" onPress={() => nav.go('plus')} />}>
       <Display flush style={{ marginTop: space.xxs }} s="You’re on the {free plan}. Everything free {stays free}." />
-      <Statement s={`life Plus adds {@grid every tool} at every level, {@repeat your routines}, {@book unlimited Teach me} and {@shield Private mode}, for ${money(plusPrice.annual)} a year.`} style={{ marginTop: space.lg }} />
+      <Statement s={`life Plus adds {@grid every tool} at every level, {@repeat your routines}, {@book unlimited Teach me} and {@shield Private mode}, for ${money(plusPrice.annual, 2)} a year.`} style={{ marginTop: space.lg }} />
     </Page>
   );
   return (
     <Page screen="subscription" bar={{ kind: 'push', title: 'life Plus' }}
       footer={<View style={{ gap: space.xs }}>
-        <Btn ghost label={`Switch to monthly · ${money(plusPrice.monthly)} a month`} onPress={() => nav.go('plus')} />
+        <Btn ghost label={`Switch to monthly · ${money(plusPrice.monthly, 2)} a month`} onPress={() => nav.go('plus')} />
         <QuietLink label="Cancel life Plus" onPress={() => { flag('plus-cancelled', true); feedback.select(); }} />
         <Micro center>One tap, then managed by the App Store</Micro>
       </View>}>
       <PhotoCard source={photos.gotit} focal={{ y: 0.37 }} height={200} chips={['Active']} title="Your life Plus" sub="Yearly plan" />
-      <Between style={{ alignItems: 'flex-end', marginTop: space.lg }}>
-        <Figure value={money(plusPrice.annual)} unit="a year" />
-        <Chip label={`${money(plusPrice.perMonth)} a month · saves ${plusPrice.save}%`} style={{ marginBottom: 10 }} />
+      <Between style={{ alignItems: 'flex-end', flexWrap: 'wrap', columnGap: space.sm, rowGap: space.xs, marginTop: space.lg }}>
+        <Figure value={money(plusPrice.annual, 2)} unit="a year" />
+        <Chip label={`${money(plusPrice.perMonth, 2)} a month · saves ${plusPrice.save}%`} style={{ marginBottom: 10 }} />
       </Between>
       <Card style={{ marginTop: space.md }}>
         <Between><Micro>RENEWS</Micro><Text variant="title">{plusPrice.renews}</Text></Between>
@@ -492,7 +492,7 @@ export function SubscriptionV26() {
 export function PlusV26() {
   const t = useTokens(), nav = useNavigation(), { flag } = useSeed();
   const [plan, setPlan] = useState<'annual' | 'monthly'>('annual');
-  const line = plan === 'annual' ? `${money(plusPrice.annual)} a year · ${money(plusPrice.perMonth)} a month` : `${money(plusPrice.monthly)} a month · ${money(plusPrice.monthly * 12)} a year`;
+  const line = plan === 'annual' ? `${money(plusPrice.annual, 2)} a year · ${money(plusPrice.perMonth, 2)} a month` : `${money(plusPrice.monthly, 2)} a month · ${money(plusPrice.monthly * 12, 2)} a year`;
   return (
     <Page screen="plus" bar={{ kind: 'flow', left: 'Back', leftIcon: 'back', action: { kind: 'text', label: 'Skip', onPress: nav.close } }}
       footer={<View style={{ gap: space.xs }}>

@@ -11,7 +11,5 @@ export interface HealthService { connect(source: string): Promise<LocalResult<{ 
 export const health: HealthService = { connect: async source => local({ source, granted: ['sleep', 'heart_rate', 'workouts', 'steps'] }) };
 export interface FoodService { readPhoto(uri?: string): Promise<LocalResult<MealItem[]>>; }
 export const food: FoodService = { readPhoto: async () => local(seedMeal) };
-export interface AuthService { signIn(provider: 'apple' | 'google' | 'email'): Promise<LocalResult<{ name: string }>>; }
-export const auth: AuthService = { signIn: async () => local({ name: 'Ama' }) };
 export interface RecordRepository { propose(text: string): Promise<{ data: FiledRecord[]; mode: 'rules' }>; }
 export const records: RecordRepository = { propose: async text => ({ data: screenWords(text).proposals.map(proposal => proposalRecord(proposal, 'talk')), mode: 'rules' }) };

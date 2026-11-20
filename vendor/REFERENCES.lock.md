@@ -28,7 +28,7 @@
 | [software-mansion/react-native-executorch](https://github.com/software-mansion/react-native-executorch/tree/35458b8c4253) | ⚠️ unclear | main | `35458b8c4253` | 2026-11-12 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |
 | [Nozbe/WatermelonDB](https://github.com/Nozbe/WatermelonDB/tree/5c463222ecd7) | MIT | master | `5c463222ecd7` | 2025-08-11 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |
 | [powersync-ja/powersync-js](https://github.com/powersync-ja/powersync-js/tree/770a4f652361) | Apache-2.0 | main | `770a4f652361` | 2026-11-09 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |
-| [better-auth/better-auth](https://github.com/better-auth/better-auth/tree/8382ce613f04) | MIT | main | `8382ce613f04` | 2026-11-14 | Installed as a dependency | Pin the exact version in `apps/mobile/package.json` when installed (no `^`). |
+| [better-auth/better-auth](https://github.com/better-auth/better-auth/tree/8382ce613f04) | MIT | main | `8382ce613f04` | 2026-11-14 | Installed as a dependency | Server only: **`1.7.25`**, exact, in `apps/api/package.json` (Phase 21). The phone talks to it over plain `fetch`, with no client library. |
 | [Shopify/react-native-skia](https://github.com/Shopify/react-native-skia/tree/20ecc57a203b) | MIT | main | `20ecc57a203b` | 2026-11-15 | Installed as a dependency | Expo-pinned package **`2.14.0`**, exact, installed with user approval; full Fenny renderer. |
 | [necolas/react-native-web](https://github.com/necolas/react-native-web/tree/e5f5751c69cbd9cd03fed40d880ad9fbb00d8f2b) | MIT | package 0.21.4 | `e5f5751c69cbd9cd03fed40d880ad9fbb00d8f2b` | 2026-11-16 | Development-only dependency | **`0.21.4`**, exact; user-approved Expo localhost preview adapter. Commit verified from npm package metadata. |
 
@@ -46,6 +46,21 @@ These packages are specified by `SYSTEM_DESIGN.md` §2. The Expo versions match 
 ## Release plumbing pins (20 Nov 2026)
 - `expo-updates@58.0.22` (MIT), the version SDK 58's `bundledNativeModules.json` expects, for over-the-air updates. npm integrity `sha512-ceGlQ+C1fKX+cOEd4tg+/IP0YNdPrRYBScLUoNaV5f9ABEUypsWNTfruFDkBeKv1YdbDLdGahyXhDk2B8Fa+Zg==`.
 - CI installs `bun@1.4.4` from npm (the version the tests were written against) and uses the same SHA-pinned `actions/checkout` and `actions/setup-node` as the TestFlight workflow.
+
+## API package pins (Phase 21, 20 Nov 2026)
+The server in `apps/api` (SYSTEM_DESIGN §4: Neon Postgres, Drizzle, Better Auth, zod). Exact versions; npm integrity from `apps/api/bun.lock`. `better-auth` stays at 1.7.25 to match the 14 Nov pin above, although 1.7.27 came out on 20 Nov.
+
+| Package | Exact version | Licence | npm integrity |
+|---|---|---|---|
+| `better-auth` | `1.7.25` | MIT | `sha512-OglRnzasyXpZHMceZBW76tQRbS6lSJhqkxm0l/7db1qJ415ecD1YkKHgOUCvmPbVDLJiB4/fumD2vw2hf+1VCQ==` |
+| `drizzle-orm` | `0.45.4` | Apache-2.0 | `sha512-NiM1YZpJ2UxyeE67DpDDZ+Tsw4YLX3trSlkNT7Tm9eKoUNb1LvaAaQzXgYQsWs+AQ9TUmmwMmBOCXuqqxUWKKQ==` (same as the phone) |
+| `@neondatabase/serverless` | `1.2.1` | MIT | `sha512-PI2JjuyEFE7oZDTkV/s6WP4KEceCwnjQHClfunhysuIATtvcVTBLdA4UgHTnJo7C0mkK+OZ6U7SV1NDnYa0HgA==` |
+| `zod` | `4.6.7` | MIT | `sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==` |
+| `drizzle-kit` (dev) | `0.31.11` | MIT | `sha512-YCYqxTLIB2OCqf6w9/Vef13baBVbwQIPcbT4Y56AfO6B9ajZhDhD8Jkveg/hJvT/iuMloKD/IYYkyMMNhr7Kqg==` |
+| `@types/bun` (dev) | `1.4.4` | MIT | `sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ==` |
+| `typescript` (dev) | `6.0.3` | Apache-2.0 | `sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==` |
+
+CI's API tests run against the `postgres:16.15-alpine` image, pinned by digest in `.github/workflows/ci.yml`.
 
 ## Brain / attachment package pins (16 Nov 2026)
 - Expo SDK 58 pins: `expo-asset@58.0.21`, `expo-document-picker@58.0.5`, `expo-image-picker@58.0.10`, `expo-file-system@58.0.14` (MIT). npm integrity: `apps/mobile/package-lock.json`.

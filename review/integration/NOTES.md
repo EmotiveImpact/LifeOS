@@ -26,6 +26,14 @@ No merge conflicts. Phase 20 added routes, so the typed route file needs regener
 - `expo-updates` is configured (`runtimeVersion` from the fingerprint, check on load) but needs an EAS project before updates can be published (decision 8).
 - Root `tsc -b` needs the root workspace installed (`npm install` at the repository root); the mobile app keeps its own `node_modules`.
 
+## Later merges
+
+| When | Branch | Commit | Checks |
+|---|---|---|---|
+| 20 Nov, ~19:30 UTC | `phase-21-api-auth` (fast-forward) | af82517 | 25 API tests on Postgres 16, root `bun test`, API and app typecheck, iOS and Android bundles |
+| 20 Nov, ~19:45 UTC | `v26-owner-answers` (fast-forward) | see `review/owner-answers/NOTES.md` | app typecheck, root `bun test`, iOS, Android and web bundles |
+| 20 Nov, ~20:20 UTC | `phase-22-sync` (fast-forward) | 3b1972d | 514 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
+
 ## Screenshots
 
 `privacy`, `privacy-yes`, `consent-from-settings`, `profile`, `recap-share` (light).

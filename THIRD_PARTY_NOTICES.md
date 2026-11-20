@@ -36,5 +36,12 @@ Copyright (c) 2015-present 650 Industries, Inc. (aka Expo). https://github.com/e
 - **Expo Asset 58.0.21, Expo Document Picker 58.0.5, Expo Image Picker 58.0.10, Expo File System 58.0.14 — MIT.** Copyright (c) 2015-present 650 Industries, Inc. (aka Expo). https://github.com/expo/expo . Exact SDK pins and integrity are in `apps/mobile/package-lock.json`; licences remain in the installed packages.
 - **Google ML Kit Text Recognition 16.0.1 (Android native dependency).** Used for the on-device OCR pipeline specified in SPEC §2.2, not copied source. Distributed under Google's ML Kit SDK terms: https://developers.google.com/ml-kit/terms . Preserve SDK notices in native distributions. Its model is bundled, not a cloud OCR call.
 
+## API server (Phase 21)
+Dependencies of `apps/api`, not copied source. Exact pins and integrity are in `vendor/REFERENCES.lock.md`; each licence text ships in its installed package.
+- **Better Auth 1.7.25 — MIT.** Copyright (c) 2024 - present, Bereket Engida. https://github.com/better-auth/better-auth
+- **Drizzle ORM 0.45.4 — Apache-2.0** (as above) and **Drizzle Kit 0.31.11 — MIT** (development only). Drizzle Team. https://github.com/drizzle-team/drizzle-orm
+- **Neon serverless driver 1.2.1 — MIT.** Copyright (c) 2022 - 2025 Neon Inc. https://github.com/neondatabase/serverless
+- **Zod 4.6.7 — MIT.** Copyright (c) 2025 Colin McDonnell. https://github.com/colinhacks/zod
+
 ## Libraries
 Add each installed MIT / Apache-2.0 library here with its copyright line when it's added to `package.json` (Phase 1b onwards).
