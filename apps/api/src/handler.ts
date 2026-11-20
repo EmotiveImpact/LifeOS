@@ -1,7 +1,8 @@
 import { createApi } from './app';
 import { createAuth } from './auth';
 import { assertRowSecurity, neonDb } from './db/client';
-import { readEnv } from './env';
+import { readEnv, wearableApps } from './env';
+import { sealer } from './seal';
 import { modelsFromEnv } from './models/registry';
 import { storageFromEnv } from './storage';
 
@@ -25,7 +26,7 @@ export function handler(request: Request): Promise<Response> {
       apple: env.APPLE_CLIENT_ID ? { clientId: env.APPLE_CLIENT_ID, clientSecret: env.APPLE_CLIENT_SECRET, appBundleIdentifier: env.APPLE_APP_BUNDLE_IDENTIFIER } : undefined,
       google: env.GOOGLE_CLIENT_ID ? { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } : undefined,
     });
-    return createApi({ db, auth, corsOrigins: origins, storage: storageFromEnv(env), graceDays: env.ACCOUNT_GRACE_DAYS, jobsSecret: env.JOBS_SECRET, ai: { models: modelsFromEnv(env) } });
+    return createApi({ db, auth, corsOrigins: origins, storage: storageFromEnv(env), graceDays: env.ACCOUNT_GRACE_DAYS, jobsSecret: env.JOBS_SECRET, ai: { models: modelsFromEnv(env) }, wearables: { apps: wearableApps(env), publicUrl: env.PUBLIC_URL ?? env.BETTER_AUTH_URL, sealer: await sealer(env.TOKEN_KEY), stateKey: env.TOKEN_KEY } });
   })();
   return built.then(serve => serve(request));
 }

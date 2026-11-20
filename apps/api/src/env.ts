@@ -36,6 +36,13 @@ const schema = z.object({
   OPENAI_API_KEY: unsetIfBlank(z.string().min(10).optional()),
   /** Gemini API key: trial data only. Real people's data goes through Google Cloud's EU endpoint (owner decision). */
   GEMINI_API_KEY: unsetIfBlank(z.string().min(10).optional()),
+  /** WHOOP and Oura developer apps (decision 8). Each pair switches that wearable on in `src/wearables.ts`. */
+  WHOOP_CLIENT_ID: unsetIfBlank(z.string().min(1).optional()),
+  WHOOP_CLIENT_SECRET: unsetIfBlank(z.string().min(1).optional()),
+  OURA_CLIENT_ID: unsetIfBlank(z.string().min(1).optional()),
+  OURA_CLIENT_SECRET: unsetIfBlank(z.string().min(1).optional()),
+  /** The API's public address for wearable sign-in redirects; BETTER_AUTH_URL when unset. */
+  PUBLIC_URL: unsetIfBlank(z.string().url().optional()),
   PORT: z.coerce.number().int().positive().default(8787),
 });
 
@@ -48,4 +55,12 @@ export function readEnv(source: Record<string, string | undefined> = process.env
     throw new Error(`The API can't start. Missing or invalid settings: ${names.join(', ')}`);
   }
   return parsed.data;
+}
+
+/** The wearable apps that have both an id and a secret. */
+export function wearableApps(env: Env) {
+  return {
+    ...(env.WHOOP_CLIENT_ID && env.WHOOP_CLIENT_SECRET ? { whoop: { clientId: env.WHOOP_CLIENT_ID, clientSecret: env.WHOOP_CLIENT_SECRET } } : {}),
+    ...(env.OURA_CLIENT_ID && env.OURA_CLIENT_SECRET ? { oura: { clientId: env.OURA_CLIENT_ID, clientSecret: env.OURA_CLIENT_SECRET } } : {}),
+  };
 }
