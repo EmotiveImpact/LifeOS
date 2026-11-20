@@ -11,6 +11,9 @@ describe('nothing yet', () => {
     expect(b).toMatchObject({ daysWithData: 0, lastDate: null, readinessWeek: [null, null, null, null, null, null, null], normal: null, against: null, sleep: null, load: null, stress: null, steps: null });
     expect(b.readiness).toEqual({ status: 'calibrating', daysWithData: 0, daysNeeded: 14 });
     expect(b.signals.signals).toEqual([]);
+    expect(b.week).toHaveLength(7);
+    expect(b.week[6]).toBe(TODAY);
+    expect(b.readings.hrv).toEqual([null, null, null, null, null, null, null]);
   });
   test('nine days: readiness is still learning, but last night’s sleep shows', () => {
     const b = bodyToday({ days: makeDays(9, steady), today: TODAY });
@@ -34,6 +37,8 @@ describe('readiness against your normal', () => {
     expect(b.against).toBe('within');
     expect(b.readinessWeek.every(v => typeof v === 'number')).toBe(true);
     expect(b.readinessWeek[6]).toBe(b.readiness.status === 'ready' ? b.readiness.score : -1);
+    expect(b.readings.hrv.every(v => typeof v === 'number')).toBe(true);
+    expect(b.readings.restingHr[6]).toBe(Math.round(days[days.length - 1].restingHr!));
   });
   test('a stale reading never becomes today’s score', () => {
     const b = bodyToday({ days: days.slice(0, 57), today: TODAY });

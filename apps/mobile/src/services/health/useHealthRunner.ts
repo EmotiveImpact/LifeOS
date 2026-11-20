@@ -5,6 +5,7 @@
  */
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
+import type { Preferred } from '@life/core';
 import { useSeed } from '@/state/SeedProvider';
 import { readHealthConsent } from '@/state/firstopen';
 import { apiConfigured } from '../brain';
@@ -24,6 +25,10 @@ let problems: WearableProblem[] = [];
 /** What the last wearable read reported, for Devices ("Connect WHOOP again"). */
 export const lastWearableProblems = () => problems;
 
+/** The source picked for a measure in Sources ("health-prefer-sleep"), which wins whenever it has a reading. */
+export const preferredSources = (choices: Record<string, string>): Preferred =>
+  Object.fromEntries(Object.entries(choices).filter(([k, v]) => k.startsWith('health-prefer-') && v).map(([k, v]) => [k.slice('health-prefer-'.length), v])) as Preferred;
+
 export function useHealthRunner() {
   const { data, update, hydrated } = useSeed();
   const latest = useRef(data), running = useRef(false);
@@ -41,7 +46,7 @@ export function useHealthRunner() {
     running.current = true;
     try {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-      const result = await ingestHealth(d.health, { readers, allowed: allowedTypes(consent.types, d.choices), now, timeZone, age: d.profile.age || undefined });
+      const result = await ingestHealth(d.health, { readers, allowed: allowedTypes(consent.types, d.choices), now, timeZone, age: d.profile.age || undefined, preferred: preferredSources(d.choices) });
       // The yes may have been withdrawn while reading: nothing read is kept then.
       update(c => (readHealthConsent(c) ? { ...c, health: result.state } : c));
     } finally { running.current = false; }

@@ -73,6 +73,10 @@ export interface BodyToday {
   stress: BodyStress | null;
   signals: BodySignals;
   steps: number | null;
+  /** The last 7 dates, oldest first, that every week list here lines up with. */
+  week: DateKey[];
+  /** The readings behind readiness for the same 7 days; null where there was none. */
+  readings: { hrv: (number | null)[]; restingHr: (number | null)[]; respiratoryRate: (number | null)[]; steps: (number | null)[] };
 }
 
 const hasReading = (d: DailyHealth) =>
@@ -88,6 +92,8 @@ export function bodyToday(input: { days: readonly DailyHealth[]; today: DateKey 
   const recent = days.filter(d => d.date >= from && hasReading(d));
   const week = lastWeek(today);
   const todayRow = byDate.get(today);
+  const pickWeek = (pick: (d: DailyHealth) => number | undefined, dp: number) =>
+    week.map(date => { const row = byDate.get(date), v = row ? pick(row) : undefined; return isNum(v) ? round(v, dp) : null; });
 
   // Sleep need, then 60 days of scores, then the need again with those scores.
   const nights = days.filter(d => isNum(d.sleep?.asleepMinutes)).map(d => ({ date: d.date, asleepMinutes: d.sleep!.asleepMinutes }));
@@ -151,5 +157,10 @@ export function bodyToday(input: { days: readonly DailyHealth[]; today: DateKey 
     sleep, load, stress,
     signals: bodySignals(days, today),
     steps: isNum(todayRow?.steps) ? todayRow.steps : null,
+    week,
+    readings: {
+      hrv: pickWeek(d => d.hrv, 0), restingHr: pickWeek(d => d.restingHr, 0),
+      respiratoryRate: pickWeek(d => d.respiratoryRate, 1), steps: pickWeek(d => d.steps, 0),
+    },
   };
 }
