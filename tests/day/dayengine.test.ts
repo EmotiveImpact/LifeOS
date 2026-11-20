@@ -83,6 +83,15 @@ describe('what can be a move today', () => {
 });
 
 describe('what you chose comes first', () => {
+  test('with nothing learned yet, a long step you chose still beats a habit you didn’t', () => {
+    for (let seed = 0; seed < 50; seed++) {
+      const plan = planToday([
+        { id: 'call', kind: 'people', title: 'Call Grandma Efua', minutes: 20, demanding: true, chosen: true },
+        { id: 'habit', kind: 'habit', title: 'In bed by 22:50' },
+      ], { now: at(TODAY, 9), timeZone: LDN, learning: { state: {}, random: dayRandom(`day-${seed}`) } });
+      expect(plan.next?.id).toBe('call');
+    }
+  });
   test('a step from your own plan beats a similar move you didn’t choose, and says why', () => {
     const plan = planToday([
       { id: 'a', kind: 'admin', title: 'Something life found', minutes: 5 },

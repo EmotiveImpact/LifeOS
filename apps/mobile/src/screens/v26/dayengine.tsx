@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { NUDGE_WINDOW, freeGaps, gapFor, instantAt, localDate, localMinutes, type Busy, type CandidateSource, type DayPlan, type MoveKind, type PlannedMove } from '@life/core';
+import { NUDGE_WINDOW, daysBetween, freeGaps, gapFor, instantAt, localDate, localMinutes, type Busy, type CandidateSource, type DayPlan, type MoveKind, type PlannedMove } from '@life/core';
 import { Press, RoundButton, Text, feedback, photos, space, useTokens, type MoveCard } from '@/design';
 import { busyTimes, calendarSupported } from '@/services/calendar';
 import { deviceTimeZone } from '@/state/loops';
@@ -13,6 +13,9 @@ import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
 import { learnedNote, useDayPlan } from '@/state/dayplan';
 import { stepRoute, useLoops } from '@/state/loops';
+import { kindOf } from '@/state/people';
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 import { Body, Btn, Callout, Display, Eyebrow, Micro, Page, RowsCard, Row, Statement, Thumb } from './kit';
 
 const KIND_PHOTO: Record<MoveKind, PhotoName> = {
@@ -180,3 +183,18 @@ const styles = StyleSheet.create({
   block: { flex: 1, borderRadius: 14, paddingVertical: space.xs, paddingHorizontal: 14, justifyContent: 'flex-start' },
   gap: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm, paddingLeft: 14 },
 });
+
+/** Coming up on a real account: birthdays and anniversaries from Your people in the next 60 days. */
+export function useComingUp(): { id: string; day: number; month: string; title: string; end: string }[] {
+  const { data } = useSeed();
+  const tz = deviceTimeZone(), now = Date.now(), today = localDate(now, tz);
+  return data.people.flatMap(p => {
+    const m = /^(\d{1,2}) ([A-Za-z]+)$/.exec(p.date ?? ''), month = m ? MONTHS.indexOf(m[2]) : -1;
+    if (!m || month < 0 || kindOf(p) === 'memorial') return [];
+    const year = Number(today.slice(0, 4)), key = (y: number) => `${y}-${String(month + 1).padStart(2, '0')}-${String(Number(m[1])).padStart(2, '0')}`;
+    const date = key(year) >= today ? key(year) : key(year + 1), days = daysBetween(today, date);
+    if (days > 60) return [];
+    const first = p.name.split(' ')[0];
+    return [{ id: p.id, day: Number(m[1]), month: m[2].slice(0, 3), title: kindOf(p) === 'anniversary' ? 'Your anniversary' : `${first}’s birthday`, end: days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days`, days }];
+  }).sort((a, b) => a.days - b.days).slice(0, 3).map(({ days: _d, ...r }) => r);
+}

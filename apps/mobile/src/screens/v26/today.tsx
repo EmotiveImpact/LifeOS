@@ -3,7 +3,8 @@
  * The feeling check rises as a drawer on the first open of the day; today's moves follow it as a deck.
  */
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Modal, ScrollView, StyleSheet, TextInput, View, type ImageSourcePropType } from 'react-native';
+import { Linking, Modal, Platform, ScrollView, StyleSheet, TextInput, View, type ImageSourcePropType } from 'react-native';
+import type { BodyToday } from '@life/core';
 import { SafeAreaProvider, SafeAreaView, initialWindowMetrics } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,7 +27,8 @@ import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
 import { levelPlan } from '@/state/you';
 import { NudgeV26, TodayLoops } from './loops';
 import { SHOW_SAMPLES } from '@/state/sample';
-import { CalendarRealV26, WhyRealV26, moveCard, useRealMoves } from './dayengine';
+import { CalendarRealV26, WhyRealV26, moveCard, useComingUp, useRealMoves } from './dayengine';
+import { since, useBodyToday } from '@/state/health';
 
 // Plan ahead and Get unstuck live with the other core-loop screens; the Today chapter still exports them.
 export { EveningV26, NudgeV26 } from './loops';
@@ -96,6 +98,32 @@ function metricValue(name: MetricName, hideNumbers: boolean): { value: string; s
     case 'Body signals': return { value: 'In range', sub: 'Nothing unusual' };
   }
 }
+/**
+ * The same tile on a real account (Phase 29): the engine's number from this phone's readings, or a dash and what it
+ * needs. Never the sample's figures.
+ */
+function realMetricValue(name: MetricName, body: BodyToday | null): { value: string; scale?: string; sub?: string } {
+  const last = (xs: (number | null)[] | undefined) => [...(xs ?? [])].reverse().find((x): x is number => typeof x === 'number') ?? null;
+  const none = (sub: string) => ({ value: '–', sub });
+  if (!body) return none('No reading yet');
+  switch (name) {
+    case 'Readiness': {
+      const r = body.readiness;
+      if (r.status === 'ready') return { value: String(r.score), scale: '/100', sub: r.score >= 67 ? 'Well recovered' : r.score >= 34 ? 'Steady' : 'Take it easier' };
+      return none(r.status === 'calibrating' ? `Learning you · ${r.daysWithData} of ${r.daysNeeded} days` : 'Needs heart readings');
+    }
+    case 'Sleep': return body.sleep?.last ? { value: hm(body.sleep.last.asleepMinutes), scale: `/${Math.round(body.sleep.need.minutes / 60)}h`, sub: body.sleep.debt.minutes > 0 ? `${hm(body.sleep.debt.minutes)} short this week` : 'No sleep debt' } : none('No night yet');
+    case 'Load': return body.load ? { value: String(Math.round(body.load.today * 10) / 10), scale: '/21', sub: body.load.today < body.load.sweetSpot.low ? 'Below today’s range' : body.load.today > body.load.sweetSpot.high ? 'Above today’s range' : 'In today’s range' } : none('Needs heart rate');
+    case 'Stress': { const n = body.stress?.now; return typeof n === 'number' ? { value: String(n), scale: '/3', sub: n < 1.5 ? 'Low' : n < 2.2 ? 'Medium' : 'High' } : none('Needs heart rate'); }
+    case 'HRV': { const v = last(body.readings.hrv); return v !== null ? { value: String(Math.round(v)), sub: 'ms' } : none('No reading yet'); }
+    case 'Resting heart rate': { const v = last(body.readings.restingHr); return v !== null ? { value: String(Math.round(v)), sub: 'bpm' } : none('No reading yet'); }
+    case 'Steps': return body.steps !== null ? { value: body.steps.toLocaleString('en-GB'), sub: 'so far today' } : none('None yet today');
+    case 'Body signals': return body.daysWithData ? { value: body.signals.illness ? 'Take it easy' : 'In range', sub: body.signals.illness ? 'A few signals are off' : 'Nothing unusual' } : none('No reading yet');
+    case 'Fuel': return none('');
+  }
+}
+const healthApp = Platform.OS === 'android' ? 'Health Connect' : 'Apple Health';
+
 const METRIC_DOT: Partial<Record<MetricName, 'health' | 'work' | 'home' | 'goal' | 'you'>> = { Readiness: 'health', Sleep: 'work', Fuel: 'home', Load: 'goal', Stress: 'you' };
 const METRIC_TO: Record<MetricName, ScreenKey> = { Readiness: 'readiness', Sleep: 'sleep', Fuel: 'fuel', Load: 'strain', Stress: 'stress', HRV: 'hrv', 'Resting heart rate': 'trends', Steps: 'body', 'Body signals': 'signals' };
 
@@ -146,6 +174,8 @@ export function TodayV26() {
   // The same four names as Your levels, so Today and that page never disagree.
   const levelName = levelPlan[Math.max(0, Math.min(levelPlan.length - 1, level - 1))].name;
   const fuel = useFuelDay();
+  const body = useBodyToday();
+  const comingUp = useComingUp();
   const aimPct = Math.round(seed.finance.deposit / seed.finance.depositGoal * 100);
 
   return (
@@ -191,10 +221,10 @@ export function TodayV26() {
       )}
       </>}
 
-      <SectionHead title="Body" link="Apple Health · 6 min ago" onLink={() => nav.go('body')} />
+      <SectionHead title="Body" link={SHOW_SAMPLES ? 'Apple Health · 6 min ago' : data.health.lastRead ? `${healthApp} · ${since(data.health.lastRead)}` : 'Connect'} onLink={() => nav.go(SHOW_SAMPLES || data.health.lastRead ? 'body' : 'devices')} />
       <TileGrid>
         {metrics.visible.map(name => {
-          const v = metricValue(name, data.prefs.hideNumbers);
+          const v = SHOW_SAMPLES ? metricValue(name, data.prefs.hideNumbers) : realMetricValue(name, body);
           if (name === 'Fuel') return (
             <V26Tile key={name} wide label="Fuel" dot="home" scale={budgetScale(fuel)} value={data.prefs.hideNumbers ? 'Balanced' : fuel.eaten.toLocaleString('en-GB')} meter={fuelShare(fuel)} onPress={() => nav.go('fuel')}
               parts={macroParts(fuel)} />
@@ -211,18 +241,25 @@ export function TodayV26() {
         </View>
       ) : null}
 
+      {SHOW_SAMPLES ? <>
       <SectionHead title="Coming up" link="Calendar" onLink={() => nav.go('calendar')} />
       <RowsCard>
         <Row date={{ day: 18, month: 'Nov' }} title="Kofi’s birthday" sub="Turning 31 · running vest idea" end="Sat" onPress={() => nav.go('person')} />
         <Row date={{ day: '01', month: 'Dec' }} title="Council tax" sub={`${money(councilTax.amount)} · Direct Debit`} end={`${councilTax.days} days`} onPress={() => nav.go('bill')} />
         <Row date={{ day: 12, month: 'Jan' }} title="Car MOT due" sub="Book from 12 Dec" end="8 weeks" onPress={() => nav.go('renewal')} />
       </RowsCard>
+      </> : comingUp.length ? <>
+      <SectionHead title="Coming up" link="Calendar" onLink={() => nav.go('calendar')} />
+      <RowsCard>
+        {comingUp.map(c => <Row key={c.id} date={{ day: c.day, month: c.month }} title={c.title} end={c.end} onPress={() => nav.go('people')} />)}
+      </RowsCard>
+      </> : null}
 
-      <Press haptic="open" onPress={() => nav.go('aim')} accessibilityLabel={`Your Aim, ${aimPct}% there`} style={[styles.aim, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+      <Press haptic="open" onPress={() => nav.go('aim')} accessibilityLabel={SHOW_SAMPLES ? `Your Aim, ${aimPct}% there` : 'Your Aim'} style={[styles.aim, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
         <Thumb source={photos.keyshome} />
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Micro>{`Your Aim · ${aimPct}% there`}</Micro>
-          <Text variant="title" style={{ marginTop: 2 }} numberOfLines={2}>{data.aim ? `Own a two-bed flat by ${data.aim.when}` : 'Choose your Aim'}</Text>
+          <Micro>{SHOW_SAMPLES ? `Your Aim · ${aimPct}% there` : 'Your Aim'}</Micro>
+          <Text variant="title" style={{ marginTop: 2 }} numberOfLines={2}>{!data.aim ? 'Choose your Aim' : SHOW_SAMPLES ? `Own a two-bed flat by ${data.aim.when}` : `${data.aim.what.charAt(0).toUpperCase()}${data.aim.what.slice(1)} by ${data.aim.when}`}</Text>
         </View>
         <Icon name="chev" size={componentSize.iconXs} color={t.inkQuiet} />
       </Press>
