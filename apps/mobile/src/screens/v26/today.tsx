@@ -17,7 +17,7 @@ import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { isOnLocalDay, useLocalDay } from '@/state/day';
 import { money, seed, seedTaxClaim } from '@/state/seed';
-import { useFuelDay } from '@/state/fuel';
+import { budgetScale, fuelShare, macroParts, useFuelDay } from '@/state/fuel';
 import { TODAY_MOVES, councilTax, dayShape, heavyCount, heavyWeek, hm, lighterDay, moveOrder, payday, readDecisions, todayBrief } from '@/state/today';
 import {
   Body, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, PhotoBackdrop, QuietLink, Row, RowsCard, Sp, Statement, Thumb, Between,
@@ -183,8 +183,8 @@ export function TodayV26() {
         {metrics.visible.map(name => {
           const v = metricValue(name, data.prefs.hideNumbers);
           if (name === 'Fuel') return (
-            <V26Tile key={name} wide label="Fuel" dot="home" scale={`/${fuel.budget.toLocaleString('en-GB')} kcal`} value={data.prefs.hideNumbers ? 'Balanced' : fuel.eaten.toLocaleString('en-GB')} meter={Math.min(1, fuel.eaten / fuel.budget)} onPress={() => nav.go('fuel')}
-              parts={fuel.macros.map(m => ({ label: m.label, value: `${Math.max(0, m.max - m.value)}${m.unit} left` }))} />
+            <V26Tile key={name} wide label="Fuel" dot="home" scale={budgetScale(fuel)} value={data.prefs.hideNumbers ? 'Balanced' : fuel.eaten.toLocaleString('en-GB')} meter={fuelShare(fuel)} onPress={() => nav.go('fuel')}
+              parts={macroParts(fuel)} />
           );
           return <V26Tile key={name} label={name} dot={METRIC_DOT[name]} scale={v.scale} value={v.value} sub={v.sub} onPress={() => nav.go(METRIC_TO[name])} />;
         })}

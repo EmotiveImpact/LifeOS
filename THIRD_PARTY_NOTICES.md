@@ -45,3 +45,8 @@ Dependencies of `apps/api`, not copied source. Exact pins and integrity are in `
 
 ## Libraries
 Add each installed MIT / Apache-2.0 library here with its copyright line when it's added to `package.json` (Phase 1b onwards).
+
+## Food (Phase 27)
+- **React Native VisionCamera 5.2.4 (MIT).** Copyright (c) Marc Rousavy. https://github.com/mrousavy/react-native-vision-camera . The iPhone camera for barcodes. Installed as a dependency, not copied source.
+- **React Native Nitro Image 0.15.2 (MIT).** Copyright (c) Marc Rousavy. https://github.com/mrousavy/react-native-nitro-image . Required by VisionCamera, and used to make meal and label photos small before they're sent.
+- **Open Food Facts: data under the Open Database Licence (ODbL) 1.0, product images under CC BY-SA.** https://world.openfoodfacts.org . Product names and nutrition are looked up by barcode at the moment you scan and are not copied into life's code or database. Every screen that shows them credits Open Food Facts and the licence.

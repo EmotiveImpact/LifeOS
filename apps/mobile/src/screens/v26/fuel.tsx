@@ -2,7 +2,11 @@
  * Fuel, restyled to the V26 board (`fuel.js`, `core.js` mealresult): the camera, the honesty step, the hub, a meal,
  * the day, quick logging, saved meals, search, the barcode, the label, the menu, saying it and fixing it in words.
  * Every meal on screen is its photograph. The day is worked out from the diary (`state/fuel.ts`), so a meal logged
- * here moves Today and Body too. Recognition and the food database are Track B; their figures are samples.
+ * here moves Today and Body too.
+ *
+ * Phase 27: a photo of a plate or a label is read by Life's vision model (`useFoodReading`) after an OK for that
+ * photo; a barcode is looked up in Open Food Facts (`services/food.ts`), scanned live on iPhone or typed anywhere.
+ * Nothing is logged until the person checks it. The sample life keeps the board's bowl, carton and granola.
  */
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, TextInput, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
@@ -11,7 +15,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import {
-  ActionMenu, Badge, Icon, LifeOrb, LifeSays, PhotoCard, PhotoFill, PhotoGrid, PickRow, Press, RoundButton, Ruler, SectionHead, SegmentedV26,
+  ActionMenu, Badge, DecisionDrawer, Icon, LifeOrb, LifeSays, PhotoCard, PhotoFill, PhotoGrid, PickRow, Press, RoundButton, Ruler, SectionHead, SegmentedV26,
   SliderV26, SpineTimeline, StatusPill, Text, TileGrid, TintCard, V26Tile, cardShadow, feedback, fonts, photo, photoScrims, photos, radius,
   space, useTokens, type Focal, type GlyphName,
 } from '@/design';
@@ -24,9 +28,13 @@ import {
   barcode, clock, dayKey, fixDefault, foods, itemCrops, label as labelData, leftWords, mealSlot, mealTotals, menu, often, quick, savedItems,
   sayit, shareWords, snapTags, useFuelDay, type DiaryMeal, type FuelDay, type MealVia,
 } from '@/state/fuel';
+import { FOOD_FACTS_CREDIT, itemsFromReading, labelProduct, mealFit, mealShare, portionNutrition, slotAt, type FoodProduct } from '@life/core';
 import { food } from '@/services/local';
 import { pickAttachment } from '@/services/attachments';
+import { lookupBarcode } from '@/services/food';
+import { useFoodReading, type ReadingStep } from '@/services/useFoodReading';
 import { voice } from '@/services/voice';
+import { BarcodeCamera, scansCodes } from './scanner';
 import { Between, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Figure, Micro, Page, PhotoRound, PhotoTile, QuietLink, Row, RowsCard, SheetHandle, Shelf, Sp, Statement, drawerStyle, two, useDrawerPhoto } from './kit';
 
 /* ───────────────────────── Shared pieces ───────────────────────── */
@@ -212,50 +220,92 @@ function ItemThumb({ name, photoUri, sample }: { name: string; photoUri?: string
 
 /* ───────────────────────── 1. Snap a meal ───────────────────────── */
 
+/** The sheet's words while a photo is with Life: asking first, reading, or what went wrong. Null when idle. */
+function ReadingSheet({ state, what, onAllow, onLeave, onSelf }: { state: ReadingStep; what: 'plate' | 'label'; onAllow: () => void; onLeave: () => void; onSelf: () => void }) {
+  if (state.step === 'ask') return (
+    <DecisionDrawer title={`Send this ${what === 'plate' ? 'photo' : 'label'} to Life’s AI?`} safeBottom={false}
+      sub="Only the photo goes, made small, to the Life API and its model. It isn’t kept. You check everything before it’s logged."
+      leave={{ label: 'Keep it here', onPress: onLeave }} confirm={{ label: 'Send the photo', icon: 'arrowUp', onPress: onAllow }} />
+  );
+  if (state.step === 'preparing' || state.step === 'reading') return (
+    <>
+      <View style={styles.saysRow}><LifeOrb size={20} state="searching" /><Text variant="body" style={{ flex: 1 }}>{what === 'plate' ? 'Reading your plate…' : 'Reading the label…'}</Text></View>
+      <Callout style={{ marginTop: space.xs }}>Portions are estimates. You can adjust them next.</Callout>
+    </>
+  );
+  if (state.step === 'failed') return (
+    <>
+      <Body s={state.message} tone="ink" style={{ marginTop: space.md }} />
+      <Btn label={what === 'plate' ? 'Add the parts yourself' : 'Add it yourself'} onPress={onSelf} style={{ marginTop: space.md }} />
+      <QuietLink label="Try another photo" onPress={onLeave} style={{ marginTop: space.xs }} />
+    </>
+  );
+  return null;
+}
+
 export function SnapV26() {
-  const nav = useNavigation(), { set, choose } = useSeed();
+  const nav = useNavigation(), { data, set, choose } = useSeed(), reading = useFoodReading();
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const seen = seedMeal.filter(i => snapTags[i.name]);
+  const chosen = data.choices['meal-photo'] || '';
+  // A real reading when Life's AI is reachable; the sample life's bowl otherwise.
+  const sampleBowl = SHOW_SAMPLES && !!reading.why;
+  const { state } = reading;
+  useEffect(() => {
+    if (state.step !== 'done' || !state.data.items?.length) return;
+    set({ meal: itemsFromReading(state.data.items) });
+    reading.reset();
+    nav.go('confirm');
+  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
   const take = async (kind: 'camera' | 'photos') => {
-    if (busy) return;
+    if (busy || state.step === 'reading' || state.step === 'preparing') return;
     setError(''); setBusy(true);
     try {
       const shot = await pickAttachment(kind);
       if (!shot) return;
-      const items = SHOW_SAMPLES ? (await food.readPhoto()).data : [];
       choose('editing-meal', ''); choose('meal-photo', shot.uri);
-      set({ meal: items.map(i => ({ ...i })) });
-      nav.go('confirm');
+      if (sampleBowl) { set({ meal: (await food.readPhoto()).data.map(i => ({ ...i })) }); nav.go('confirm'); return; }
+      await reading.start('plate', shot.uri);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'The camera didn’t open. You can choose a photo instead.');
     } finally { setBusy(false); }
   };
+  const bySelf = () => { reading.reset(); set({ meal: [] }); nav.go('confirm'); };
   const words = seen.map(i => i.name.toLowerCase());
   const list = words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}` : words[0];
+  const sheet = <ReadingSheet state={state} what="plate" onAllow={reading.allow} onLeave={reading.reset} onSelf={bySelf} />;
   return (
     <Page screen="snap" scroll={false} bar={{ kind: 'none' }} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
-      backdrop={SHOW_SAMPLES ? (
+      backdrop={SHOW_SAMPLES && state.step === 'idle' ? (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <PhotoFill source={photos.food} focal={{ x: .47, y: .47, zoom: 1.5 }} />
           <LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} />
           {seen.map(i => <Tag key={i.name} label={i.name} em={`~${i.grams}g`} style={{ position: 'absolute', left: `${snapTags[i.name].left * 100}%`, top: `${snapTags[i.name].top * 100}%` }} />)}
         </View>
+      ) : state.step !== 'idle' && chosen ? (
+        // The photo being asked about or read stays in view behind the sheet.
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <PhotoFill source={{ uri: chosen }} />
+          <LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} />
+        </View>
       ) : <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: photo.ink }]} />}
-      bottom={
+      bottom={state.step === 'ask' ? sheet : (
         <CamSheet>
-          {error ? <Body s={error} tone="ink" style={{ marginTop: space.md }} /> : (
-            <View style={styles.saysRow}>
-              <LifeOrb size={20} state="searching" />
-              <Text variant="body" style={{ flex: 1 }}>{SHOW_SAMPLES ? `Life sees ${seen.length} things so far: ${list}.` : 'Tap the shutter to take a photo of your plate.'}</Text>
-            </View>
+          {error ? <Body s={error} tone="ink" style={{ marginTop: space.md }} /> : state.step !== 'idle' ? sheet : (
+            <>
+              <View style={styles.saysRow}>
+                <LifeOrb size={20} state="searching" />
+                <Text variant="body" style={{ flex: 1 }}>{sampleBowl ? `Life sees ${seen.length} things so far: ${list}.` : 'Tap the shutter to take a photo of your plate.'}</Text>
+              </View>
+              <Callout style={{ marginTop: space.xs }}>{reading.why && !SHOW_SAMPLES ? reading.why : 'Portions are estimates. You can adjust them next.'}</Callout>
+            </>
           )}
-          <Callout style={{ marginTop: space.xs }}>Portions are estimates. You can adjust them next.</Callout>
         </CamSheet>
-      }>
-      <CamBar label={busy ? 'Opening the camera…' : 'Hold steady'} />
+      )}>
+      <CamBar label={busy ? 'Opening the camera…' : state.step === 'reading' || state.step === 'preparing' ? 'Reading…' : 'Hold steady'} />
       <View style={{ flex: 1 }}>
         <Corners style={{ left: 14, right: 14, top: 8, bottom: 8 }} />
-        {!SHOW_SAMPLES ? <View style={styles.centre}><Text variant="body" style={{ color: photo.onPhoto2 }} align="center">The camera opens when you tap the shutter.</Text></View> : null}
+        {!SHOW_SAMPLES && state.step === 'idle' ? <View style={styles.centre}><Text variant="body" style={{ color: photo.onPhoto2 }} align="center">The camera opens when you tap the shutter.</Text></View> : null}
       </View>
       <View style={{ paddingHorizontal: space.gutter, paddingBottom: 18 }}>
         <Modes active="snap" />
@@ -316,7 +366,7 @@ export function ConfirmV26() {
             <Text variant="headline">{hide ? (total.protein >= 25 ? 'Good source' : 'Some') : `${Math.round(total.protein)}g`}</Text>
           </View>
         </View>
-        <View style={[styles.wrapRow, { marginTop: space.xs }]}><Chip label="Estimate" tone="q" /><Text variant="callout" tone="ink2">Adjust anything that looks off.</Text></View>
+        <View style={[styles.wrapRow, { marginTop: space.xs }]}><Chip label="Estimate" tone="q" /><Text variant="callout" tone="ink2">{data.meal.some(i => i.needsFigures) ? 'Parts with no figures yet are left out of the total.' : 'Adjust anything that looks off.'}</Text></View>
         <View style={{ flexShrink: 1, minHeight: 0, marginTop: space.xs, marginBottom: space.md }}>
           {data.meal.length ? (
             <ScrollItems>
@@ -328,7 +378,7 @@ export function ConfirmV26() {
                       <ItemThumb name={item.name} photoUri={photoUri} sample={sampleBowl} />
                       <View style={{ flex: 1, minWidth: 0 }}>
                         <Text variant="rowTitle" numberOfLines={1}>{item.name}</Text>
-                        <Text variant="callout" tone="ink2">{hide ? 'Portion estimate' : `${n(item.kcal)} kcal`}</Text>
+                        <Text variant="callout" tone="ink2">{item.needsFigures ? 'No figures yet' : hide ? 'Portion estimate' : `${n(item.kcal)} kcal`}</Text>
                       </View>
                       <Press haptic="select" onPress={() => setOpen(on ? null : i)} accessibilityLabel={`${item.name}, ${Math.round(item.grams)} grams. Change portion`}
                         style={[styles.gramChip, { backgroundColor: on ? t.ink : t.surface2 }]}>
@@ -353,7 +403,7 @@ export function ConfirmV26() {
                 <SoftChip icon="search" label="Search for a food" onPress={() => nav.go('foodsearch', { add: '1' })} />
                 <SoftChip icon="mic" label="Say it" onPress={() => nav.go('sayit', { add: '1' })} />
               </View>
-              <Callout style={{ marginTop: space.md }}>Reading the food in a photo comes with the next update. Until then, you add the parts yourself.</Callout>
+              <Callout style={{ marginTop: space.md }}>Life adds up the parts you add. Nothing is logged until you say so.</Callout>
             </View>
           )}
         </View>
@@ -387,6 +437,12 @@ function WordCols({ items }: { items: { small: string; value: string; sub?: stri
 function DayBelow({ day, words }: { day: FuelDay; words: boolean }) {
   const pct = day.budget ? Math.min(100, Math.round(day.eaten / day.budget * 100)) : 0;
   const p = Math.round(day.totals.protein), fb = Math.round(day.totals.fibre), w = day.waterMl / 1000, wt = day.targets.waterMl / 1000;
+  if (!day.ready) return (
+    <>
+      <Text variant="headline">{words ? 'Logged so far today' : `${n(day.eaten)} kcal so far`}</Text>
+      <Cols style={{ marginTop: 14 }} items={[{ small: 'Protein', value: words ? (p >= 25 ? 'Some' : 'A little') : `${p}g` }, { small: 'Fibre', value: words ? (fb >= 10 ? 'Some' : 'A little') : `${fb}g` }, { small: 'Water', value: `${w.toFixed(1)} L`, sub: `of ${wt.toFixed(1)} L` }]} />
+    </>
+  );
   return (
     <>
       <Between>
@@ -416,9 +472,12 @@ export function FuelV26() {
   return (
     <Page screen="fuel" bar={{ kind: 'push', action: { kind: 'node', node: <Chip label={words ? 'Show numbers' : 'Hide numbers'} icon={words ? 'eye' : 'eyeOff'} onPress={() => { pref('hideNumbers', !words); feedback.select(); }} /> } }}>
       <Eyebrow>Fuel · today</Eyebrow>
-      <Display s={words
+      {day.ready ? <Display s={words
         ? `{${leftWords(day.left, day.budget)}} of today’s energy is still to come. ${proteinLine(day.totals.protein, day.targets.protein)}`
-        : `{${n(day.left)} kcal} left today. ${proteinLine(day.totals.protein, day.targets.protein)}`} />
+        : `{${n(day.left)} kcal} left today. ${proteinLine(day.totals.protein, day.targets.protein)}`} /> : <>
+        <Display s="{Add your height and weight} and Life works out your targets. What you log still counts." />
+        <Btn label="Add them in Body" ghost fit onPress={() => nav.go('measures')} style={{ marginTop: space.md }} />
+      </>}
       {latest ? (
         pic ? (
           <HeroMeal pic={pic} small={`${mealSlot(latest.at)} · ${latest.at}`} title={latest.name} sub={kcalLine(latest, rest.length ? 'The biggest meal so far' : 'Your first meal today')} onPress={() => open(latest.id)}>
@@ -463,7 +522,7 @@ export function FuelV26() {
         <Row icon="food" title="Food quality" sub="Plants and how processed" onPress={() => nav.go('foodquality')} />
         <Row icon="water" title="Alcohol" sub="Units this week" onPress={() => nav.go('alcohol')} />
         <Row icon="fitness" title="Exercise, added back" sub={`${shareName(day.share)} of what your watch counts`} onPress={() => nav.go('exerciseadd')} />
-        <Row icon="gear" title="Your targets" sub={`${n(day.target)} kcal · ${day.targets.protein}g protein`} onPress={() => nav.go('fuelgoal')} />
+        <Row icon="gear" title="Your targets" sub={day.ready ? `${n(day.target)} kcal · ${day.targets.protein}g protein` : 'Needs your height and weight'} onPress={() => nav.go(day.ready ? 'fuelgoal' : 'measures')} />
         <Row icon="arrowDown" title="Bring your history" sub="From another app" onPress={() => nav.go('importfood')} />
       </RowsCard>
       <Callout style={{ marginTop: space.md }}>Targets come from your details and activity. Calorie features are for adults only.</Callout>
@@ -510,13 +569,22 @@ export function MealresultV26() {
     </Page>
   );
   const tt = mealTotals(meal.items), hide = day.hide;
-  const pct = (v: number, of: number) => `${Math.round(v / of * 100)}%`;
+  const pct = (v: number, of: number) => (of > 0 ? `${Math.round(v / of * 100)}%` : undefined);
   const leftAfter = preview ? day.left - tt.kcal : day.left;
   const fits = tt.kcal <= (preview ? day.left : day.left + tt.kcal);
-  const score = /salmon/i.test(meal.name) ? seed.fuel.mealFit : null;
+  // How well it fits your day (SPEC §3.5b): the engine's score against this meal's share of what was left before it.
+  // The sample life keeps the board's 8.4 for its bowl.
+  const fit = day.plan && day.ready ? (() => {
+    const [hh, mm] = meal.at.split(':').map(Number);
+    const before = day.diary.filter(m => m.id !== meal.id && m.at < meal.at).reduce((a, m) => { const x = mealTotals(m.items); return { kcal: a.kcal + x.kcal, protein: a.protein + x.protein, fibre: a.fibre + x.fibre }; }, { kcal: 0, protein: 0, fibre: 0 });
+    const share = mealShare({ targets: { kcal: day.budget, protein: day.targets.protein, fibre: day.targets.fibre }, eatenBefore: before, slot: slotAt((hh || 0) * 60 + (mm || 0)) });
+    return mealFit({ kcal: tt.kcal, protein: tt.protein, carbs: tt.carbs, fat: tt.fat, fibre: tt.fibre }, share);
+  })() : null;
+  const score = fit ? fit.score.toFixed(1) : !day.plan && /salmon/i.test(meal.name) ? String(seed.fuel.mealFit) : null;
   const proteinShare = tt.protein / day.targets.protein, fibreLeft = day.targets.fibre - day.totals.fibre - (preview ? tt.fibre : 0);
-  const tip = `${proteinShare >= .3 ? 'Strong on protein.' : proteinShare >= .15 ? 'A fair share of protein.' : 'Light on protein; add some at your next meal.'} ${fibreLeft > 8 ? 'Add greens tonight to reach your fibre.' : 'Fibre is on track for today.'}`;
-  const where = preview ? `${preview.detail} · saved meal` : meal.from ? `${meal.from} · saved meal` : meal.via === 'said' ? 'Said in your own words' : meal.via === 'scan' ? 'Scanned' : meal.via === 'photo' ? 'From your photo' : 'Logged';
+  const tip = fit ? fit.tips.map(x => x.text).join(' ')
+    : `${proteinShare >= .3 ? 'Strong on protein.' : proteinShare >= .15 ? 'A fair share of protein.' : 'Light on protein; add some at your next meal.'} ${fibreLeft > 8 ? 'Add greens tonight to reach your fibre.' : 'Fibre is on track for today.'}`;
+  const where = preview ? `${preview.detail} · saved meal` : meal.from ? `${meal.from} · saved meal` : meal.via === 'said' ? 'Said in your own words' : meal.via === 'scan' ? 'Scanned · Open Food Facts' : meal.via === 'label' ? 'From the label' : meal.via === 'photo' ? 'From your photo' : 'Logged';
   const pic = mealPic(meal, 1);
   const bg = pic ? { source: pic.source, focal: !meal.photo && /salmon|rice bowl/i.test(meal.name) ? { x: .38, y: .42 } : pic.focal } : null;
   const isSaved = saved.some(s => s.name === meal.name);
@@ -539,7 +607,7 @@ export function MealresultV26() {
           { label: 'Remove from today', icon: 'trash', destructive: true, onPress: remove },
         ]}>{(open, isOpen) => <OnRound icon="more" label="Meal actions" on={isOpen} onPress={open} />}</ActionMenu>}<PhotoRound icon="close" label="Close" onPress={nav.close} /></View> }}>
       <View style={styles.mealTop}>
-        {!hide ? <View style={styles.fitChip}><Text variant="buttonCompact" style={{ color: fits ? '#0B7A55' : photo.ink }}>{fits ? `Fits today${score ? ` · ${score}` : ''}` : 'A bigger meal than today has room for'}</Text></View> : null}
+        {!hide && day.ready ? <View style={styles.fitChip}><Text variant="buttonCompact" style={{ color: fits ? '#0B7A55' : photo.ink }}>{fits ? `Fits today${score ? ` · ${score}` : ''}` : 'A bigger meal than today has room for'}</Text></View> : null}
         <Text variant="display" style={{ color: photo.onPhoto, marginTop: space.tile }} numberOfLines={2}>{meal.name}</Text>
         <Text variant="callout" style={{ color: photo.onPhoto2 }}>{where}</Text>
       </View>
@@ -547,7 +615,7 @@ export function MealresultV26() {
         <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
         <View style={styles.betweenEnd}>
           {hide ? <Text variant="heading">{tt.protein >= 25 ? 'A filling meal' : 'A lighter meal'}</Text> : <Figure value={n(tt.kcal)} unit="kcal" />}
-          {hide ? null : <Text variant="callout" tone="ink2" style={{ marginBottom: space.xs }}>{preview ? `${n(Math.max(0, leftAfter))} left after this` : `${n(leftAfter)} left today`}</Text>}
+          {hide || !day.ready ? null : <Text variant="callout" tone="ink2" style={{ marginBottom: space.xs }}>{preview ? `${n(Math.max(0, leftAfter))} left after this` : `${n(leftAfter)} left today`}</Text>}
         </View>
         {hide ? <Callout style={{ marginTop: space.sm }}>Numbers are hidden. Protein, fibre and colour matter more than any one figure.</Callout> : <>
           <Cols style={{ marginTop: space.lg }} items={[
@@ -556,7 +624,7 @@ export function MealresultV26() {
             { small: 'Fat', value: `${Math.round(tt.fat)}g`, sub: pct(tt.fat, day.targets.fat) },
             { small: 'Fibre', value: `${Math.round(tt.fibre)}g`, sub: pct(tt.fibre, day.targets.fibre) },
           ]} />
-          <Callout style={{ marginTop: space.xs }}>Percentages are of your day’s targets.</Callout>
+          <Callout style={{ marginTop: space.xs }}>{day.ready ? 'Percentages are of your day’s targets.' : 'Add your height and weight in Body to see these against your own targets.'}</Callout>
         </>}
         <View style={[styles.saysRow, { marginTop: space.md }]}><LifeOrb size={20} /><Text variant="body" style={{ flex: 1 }}>{tip}</Text></View>
         </ScrollView>
@@ -583,7 +651,12 @@ export function FuelhomeV26() {
     <Page screen="fuelhome" bar={{ kind: 'push', action: { kind: 'node', node: <View style={{ flexDirection: 'row', gap: space.xs }}><RoundButton icon="calendar" label="Today’s food" onPress={() => nav.go('foodday')} /><RoundButton icon="add" label="Quick log" onPress={() => nav.go('quicklog')} /></View> } }}
       footer={<View style={{ flexDirection: 'row', gap: space.xs }}><Btn label="Scan" icon="grid" ghost fit onPress={() => nav.go('barcode')} /><View style={{ flex: 1 }}><Btn label="Snap a meal" icon="camera" onPress={() => nav.go('snap')} /></View></View>}>
       <Eyebrow>{`Fuel · ${weekday()}`}</Eyebrow>
-      {hide ? <Display s={`{${leftWords(day.left, day.budget)}} of today’s energy is still to come.`} /> : <Figure value={n(day.left)} unit="kcal left today" style={{ marginTop: 6 }} />}
+      {!day.ready
+        ? hide ? <Display s="{Add your height and weight} and Life works out your targets." /> : <>
+          <Figure value={n(day.eaten)} unit="kcal so far today" style={{ marginTop: 6 }} />
+          <QuietLink center={false} label="Add your height and weight for targets" onPress={() => nav.go('measures')} style={{ marginTop: space.xxs }} />
+        </>
+        : hide ? <Display s={`{${leftWords(day.left, day.budget)}} of today’s energy is still to come.`} /> : <Figure value={n(day.left)} unit="kcal left today" style={{ marginTop: 6 }} />}
       <Cols style={{ marginTop: space.md }} items={[{ small: 'Eaten', value: hide ? 'Regular meals' : n(day.eaten) }, { small: 'Burned', value: hide ? 'Active day' : `+${n(day.added)}` }, { small: 'Water', value: `${(day.waterMl / 1000).toFixed(1)} L` }]} />
       {latest ? <MealCard meal={latest} height={200} size="lg" style={{ marginTop: space.lg }} chips={[`${mealSlot(latest.at)} · ${latest.at}`]} sub={hide ? undefined : `${n(mealTotals(latest.items).kcal)} kcal`} onPress={() => open(latest.id)} /> : null}
       <PhotoGrid style={{ marginTop: latest ? space.sm : space.lg }}>
@@ -595,7 +668,7 @@ export function FuelhomeV26() {
       </PhotoGrid>
       {hide ? null : (
         <TileGrid columns={3} style={{ marginTop: space.sm }}>
-          {day.macros.map(m => <V26Tile key={m.label} label={m.label} value={`${m.value}g`} sub={`of ${m.max}g`} meter={Math.min(1, m.value / m.max)} />)}
+          {day.macros.map(m => <V26Tile key={m.label} label={m.label} value={`${m.value}g`} sub={day.ready && m.max > 0 ? `of ${m.max}g` : 'so far'} meter={day.ready && m.max > 0 ? Math.min(1, m.value / m.max) : undefined} />)}
         </TileGrid>
       )}
     </Page>
@@ -624,8 +697,8 @@ export function FooddayV26() {
     <Page screen="foodday" bar={{ kind: 'push', title: 'Today’s food', action: { kind: 'icon', icon: 'calendar', label: 'Another day', onPress: () => nav.go('fuelprogress') } }}>
       <TintCard area="home" padding={space.md}>
         {hide
-          ? <WordCols items={[{ small: 'Energy', value: shareWords(day.eaten, day.budget) }, { small: 'Protein', value: shareWords(day.totals.protein, day.targets.protein) }, { small: 'Fibre', value: shareWords(day.totals.fibre, day.targets.fibre) }]} />
-          : <Cols items={[{ small: 'Energy', value: n(day.eaten), sub: `of ${n(day.budget)} kcal` }, { small: 'Protein', value: `${Math.round(day.totals.protein)}g`, sub: `of ${day.targets.protein}g` }, { small: 'Fibre', value: `${Math.round(day.totals.fibre)}g`, sub: `of ${day.targets.fibre}g` }]} />}
+          ? <WordCols items={day.ready ? [{ small: 'Energy', value: shareWords(day.eaten, day.budget) }, { small: 'Protein', value: shareWords(day.totals.protein, day.targets.protein) }, { small: 'Fibre', value: shareWords(day.totals.fibre, day.targets.fibre) }] : [{ small: 'Meals', value: `${day.diary.length} logged` }, { small: 'Targets', value: 'Not yet' }]} />
+          : <Cols items={[{ small: 'Energy', value: n(day.eaten), sub: day.ready ? `of ${n(day.budget)} kcal` : 'kcal so far' }, { small: 'Protein', value: `${Math.round(day.totals.protein)}g`, sub: day.ready ? `of ${day.targets.protein}g` : 'so far' }, { small: 'Fibre', value: `${Math.round(day.totals.fibre)}g`, sub: day.ready ? `of ${day.targets.fibre}g` : 'so far' }]} />}
       </TintCard>
       <SpineTimeline items={items} style={{ marginTop: space.xl }} />
       <Callout style={{ marginTop: space.lg }}>Tap a meal to change a portion or swap an item.</Callout>
@@ -793,34 +866,109 @@ export function FoodsearchV26() {
 
 /* ───────────────────────── 10. Scan a barcode ───────────────────────── */
 
+/** A packaged food to log: one of three portions or your own amount, its figures, and where they came from. */
+function ProductSheet({ product, via, onLog }: { product: FoodProduct; via: 'scan' | 'label'; onLog: (item: MealItem) => void }) {
+  const day = useFuelDay();
+  const unit = product.basis;
+  const [pick, setPick] = useState(String(product.portions[1] ?? product.portions[0])), [other, setOther] = useState(product.portions[1] ?? 100);
+  const amount = pick === 'Other' ? other : Number(pick);
+  const figures = portionNutrition(product.per100, amount);
+  const name = product.brand && !product.name.toLowerCase().includes(product.brand.toLowerCase()) ? `${product.name}, ${product.brand}` : product.name;
+  const item: MealItem = { name, ...figures, confidence: via === 'scan' ? 1 : .95 };
+  const p = product.per100;
+  const read = [p.fat !== undefined ? `fat ${g1(p.fat)} g${p.saturatedFat !== undefined ? ` (saturates ${g1(p.saturatedFat)} g)` : ''}` : '', `carbohydrate ${g1(p.carbs)} g${p.sugars !== undefined ? ` (sugars ${g1(p.sugars)} g)` : ''}`, `protein ${g1(p.protein)} g`, p.salt !== undefined ? `salt ${g1(p.salt)} g` : ''].filter(Boolean).join(', ');
+  return (
+    <>
+      <Eyebrow style={{ marginTop: space.xs }}>{`${name}, ${amount} ${unit}`}</Eyebrow>
+      <View style={styles.betweenEnd}>
+        {day.hide ? <Text variant="headline">A usual portion</Text> : <Figure value={n(figures.kcal)} unit="kcal" style={{ marginTop: space.xxs }} />}
+        {day.hide ? null : <Text variant="callout" tone="ink2" style={{ marginBottom: space.xs }}>{`${n(p.kcal)} kcal per 100 ${unit}`}</Text>}
+      </View>
+      <SegmentedV26 options={[...product.portions.map(v => ({ value: String(v), label: `${v} ${unit}` })), { value: 'Other', label: 'Other' }]} value={pick} onChange={v => { setPick(v); feedback.select(); }} style={{ marginTop: space.sm }} />
+      {pick === 'Other' ? <View style={{ marginTop: space.sm }}><SliderV26 value={other} min={5} max={Math.max(500, (product.servingAmount ?? 0) * 3)} step={5} onChange={setOther} accessibilityLabel={`Portion in ${unit === 'ml' ? 'millilitres' : 'grams'}`} /></View> : null}
+      <Btn label={day.hide ? 'Log it' : `Log ${n(figures.kcal)} kcal`} onPress={() => onLog(item)} style={{ marginTop: space.sm }} />
+      <Callout style={{ marginTop: space.tile }}>{via === 'scan' ? `Per 100 ${unit}: ${read}. ${FOOD_FACTS_CREDIT}` : `Read from your photo, per 100 ${unit}: ${read}. Check it against the pack.`}</Callout>
+    </>
+  );
+}
+
+type Lookup = { step: 'idle' } | { step: 'looking'; code: string } | { step: 'found'; product: FoodProduct } | { step: 'missing'; code: string; name: string | null } | { step: 'failed'; message: string };
+
 export function BarcodeV26() {
-  const nav = useNavigation(), day = useFuelDay(), log = useLogMeal();
+  const nav = useNavigation(), t = useTokens(), day = useFuelDay(), log = useLogMeal();
   const [ml, setMl] = useState(250);
-  const p = barcode.per100, k = ml / 100;
-  const kcal = p.kcal * k;
-  const item: MealItem = { name: barcode.food, grams: ml, kcal, protein: p.protein * k, carbs: p.carbs * k, fat: p.fat * k, fibre: p.fibre * k, confidence: 1 };
-  const next = () => { const i = barcode.portions.indexOf(ml); setMl(barcode.portions[(i + 1) % barcode.portions.length]); feedback.select(); };
+  const [typed, setTyped] = useState(''), [lookup, setLookup] = useState<Lookup>({ step: 'idle' });
+  const asking = useRef<AbortController | null>(null);
+  useEffect(() => () => asking.current?.abort(), []);
+  const find = async (code: string) => {
+    asking.current?.abort();
+    const stop = new AbortController(); asking.current = stop;
+    setLookup({ step: 'looking', code });
+    try {
+      const read = await lookupBarcode(code, stop.signal);
+      if (stop.signal.aborted) return;
+      if (read.found && read.product) { feedback.complete(); setLookup({ step: 'found', product: read.product }); }
+      else setLookup({ step: 'missing', code: read.code, name: read.found ? read.name : null });
+    } catch (e) {
+      if (!stop.signal.aborted) setLookup({ step: 'failed', message: e instanceof Error ? e.message : 'That didn’t work. Try again.' });
+    }
+  };
+  const logIt = (item: MealItem) => { log({ name: item.name, items: [item], via: 'scan' }); nav.replace('mealresult'); };
+  if (SHOW_SAMPLES && lookup.step === 'idle' && !typed) {
+    const p = barcode.per100, k = ml / 100;
+    const kcal = p.kcal * k;
+    const item: MealItem = { name: barcode.food, grams: ml, kcal, protein: p.protein * k, carbs: p.carbs * k, fat: p.fat * k, fibre: p.fibre * k, confidence: 1 };
+    const next = () => { const i = barcode.portions.indexOf(ml); setMl(barcode.portions[(i + 1) % barcode.portions.length]); feedback.select(); };
+    return (
+      <Page screen="barcode" scroll={false} bar={{ kind: 'none' }} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
+        backdrop={<View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <View style={[StyleSheet.absoluteFill, { bottom: undefined, height: '74%' }]}><PhotoFill source={photos.label} focal={{ x: .513, y: .95, zoom: 1.5 }} /></View>
+          <TopBand />
+          <Corners ink style={{ left: '43%', top: '41%', width: 140, height: 96 }} /><Tag ink icon="check" label="Found" style={{ position: 'absolute', left: '50%', top: '36.5%' }} />
+        </View>}
+        bottom={
+          <CamSheet>
+            <Row thumb={photos.label} thumbFocal={{ x: .51, y: .6, zoom: 2.2 }} title={barcode.name} sub={day.hide ? `${ml} ml` : `${ml} ml · ${n(kcal)} kcal · ${g1(item.protein)}g protein`} style={{ marginTop: space.xs }} />
+            <PickRow label="Portion" value={`${ml} ml`} set onPress={next} style={{ marginTop: space.xxs }} />
+            <Btn label={day.hide ? 'Log it' : `Log ${n(kcal)} kcal`} onPress={() => logIt(item)} style={{ marginTop: space.sm }} />
+            <Callout style={{ marginTop: space.sm }}>{FOOD_FACTS_CREDIT}</Callout>
+          </CamSheet>
+        }>
+        <CamBar label="Point at the barcode" />
+        <View style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: space.gutter, paddingBottom: 18 }}><Modes active="barcode" /></View>
+      </Page>
+    );
+  }
+  const typedOk = /^\d{8,14}$/.test(typed.replace(/\s+/g, ''));
   return (
     <Page screen="barcode" scroll={false} bar={{ kind: 'none' }} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
-      backdrop={<View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <View style={[StyleSheet.absoluteFill, { bottom: undefined, height: '74%' }]}><PhotoFill source={photos.label} focal={{ x: .513, y: .95, zoom: 1.5 }} /></View>
+      backdrop={<View style={[StyleSheet.absoluteFill, { backgroundColor: photo.ink }]}>
+        {scansCodes ? <BarcodeCamera active={lookup.step === 'idle' || lookup.step === 'failed'} onCode={code => void find(code)} /> : null}
         <TopBand />
-        {SHOW_SAMPLES ? <><Corners ink style={{ left: '43%', top: '41%', width: 140, height: 96 }} /><Tag ink icon="check" label="Found" style={{ position: 'absolute', left: '50%', top: '36.5%' }} /></> : null}
       </View>}
       bottom={
         <CamSheet>
-          {SHOW_SAMPLES ? <>
-            <Row thumb={photos.label} thumbFocal={{ x: .51, y: .6, zoom: 2.2 }} title={barcode.name} sub={day.hide ? `${ml} ml` : `${ml} ml · ${n(kcal)} kcal · ${g1(item.protein)}g protein`} style={{ marginTop: space.xs }} />
-            <PickRow label="Portion" value={`${ml} ml`} set onPress={next} style={{ marginTop: space.xxs }} />
-            <Btn label={day.hide ? 'Log it' : `Log ${n(kcal)} kcal`} onPress={() => { log({ name: barcode.food, items: [item], via: 'scan' }); nav.replace('mealresult'); }} style={{ marginTop: space.sm }} />
-            <Callout style={{ marginTop: space.sm }}>The label comes from Open Food Facts. Foods you’ve scanned before work offline.</Callout>
-          </> : <>
-            <Statement s="Barcode scanning comes with the {next camera update}." style={{ marginTop: space.sm }} />
-            <Btn label="Search instead" icon="search" onPress={() => nav.replace('foodsearch')} style={{ marginTop: space.md }} />
-          </>}
+          {lookup.step === 'found' ? <ProductSheet key={lookup.product.code} product={lookup.product} via="scan" onLog={logIt} />
+            : lookup.step === 'looking' ? <View style={[styles.saysRow, { marginTop: space.sm }]}><LifeOrb size={20} state="searching" /><Text variant="body" style={{ flex: 1 }}>{`Looking up ${lookup.code}…`}</Text></View>
+            : lookup.step === 'missing' ? <>
+              <Statement s={lookup.name ? `{${lookup.name}} is in Open Food Facts, but without its nutrition yet.` : 'That code isn’t in {Open Food Facts} yet.'} style={{ marginTop: space.sm }} />
+              <Btn label="Read the label instead" icon="camera" onPress={() => nav.replace('labelscan')} style={{ marginTop: space.md }} />
+              <QuietLink label="Try another code" onPress={() => { setTyped(''); setLookup({ step: 'idle' }); }} style={{ marginTop: space.xs }} />
+            </>
+            : <>
+              <Text variant="body" style={{ marginTop: space.sm }}>{scansCodes ? 'Point at the barcode, or type the numbers under it.' : 'Type the numbers under the barcode.'}</Text>
+              <View style={[styles.codeRow, { marginTop: space.sm }]}>
+                <TextInput value={typed} onChangeText={v => setTyped(v.replace(/[^\d ]/g, ''))} keyboardType="number-pad" inputMode="numeric" maxLength={18} placeholder="5 000000 000000" placeholderTextColor={t.inkQuiet} selectionColor={t.ember}
+                  accessibilityLabel="Barcode number" maxFontSizeMultiplier={1.3} returnKeyType="search" onSubmitEditing={() => { if (typedOk) void find(typed); }}
+                  style={[styles.codeInput, { backgroundColor: t.surface2, color: t.ink, fontFamily: fonts.sans }]} />
+                <Btn label="Look up" sm fit disabled={!typedOk} onPress={() => void find(typed)} />
+              </View>
+              {lookup.step === 'failed' ? <Body s={lookup.message} tone="ink" style={{ marginTop: space.sm }} /> : null}
+              <Callout style={{ marginTop: space.sm }}>Only the code goes to Open Food Facts, nothing about you.</Callout>
+            </>}
         </CamSheet>
       }>
-      <CamBar label="Point at the barcode" />
+      <CamBar label={lookup.step === 'looking' ? 'Looking it up…' : scansCodes ? 'Point at the barcode' : 'Type the code'} />
       <View style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: space.gutter, paddingBottom: 18 }}><Modes active="barcode" /></View>
     </Page>
   );
@@ -829,42 +977,81 @@ export function BarcodeV26() {
 /* ───────────────────────── 11. Scan a nutrition label ───────────────────────── */
 
 export function LabelscanV26() {
-  const nav = useNavigation(), day = useFuelDay(), log = useLogMeal();
+  const nav = useNavigation(), day = useFuelDay(), log = useLogMeal(), reading = useFoodReading();
   const [pick, setPick] = useState<string>('45 g'), [other, setOther] = useState(80);
-  const grams = pick === 'Other' ? other : Number.parseInt(pick, 10);
-  const p = labelData.per100, k = grams / 100, kcal = p.kcal * k;
-  const item: MealItem = { name: labelData.name, grams, kcal, protein: p.protein * k, carbs: p.carbs * k, fat: p.fat * k, fibre: p.fibre * k, confidence: .95 };
-  return (
-    <Page screen="labelscan" scroll={false} bar={{ kind: 'none' }} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
-      backdrop={<View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <View style={[StyleSheet.absoluteFill, { bottom: undefined, height: '78%' }]}><PhotoFill source={photos.label} focal={{ x: .554, y: .617, zoom: 1.75 }} /></View>
-        <TopBand />
-        {SHOW_SAMPLES ? <>
+  const [shot, setShot] = useState(''), [error, setError] = useState('');
+  const sample = SHOW_SAMPLES && !!reading.why && !shot;
+  const { state } = reading;
+  const product = state.step === 'done' && state.data.label ? labelProduct(state.data.label) : null;
+  const logIt = (item: MealItem) => { log({ name: item.name, items: [item], via: 'label', photo: shot || undefined }); nav.replace('mealresult'); };
+  const take = async (kind: 'camera' | 'photos') => {
+    setError('');
+    try {
+      const picked = await pickAttachment(kind);
+      if (!picked) return;
+      setShot(picked.uri);
+      await reading.start('label', picked.uri);
+    } catch (e) { setError(e instanceof Error ? e.message : 'The camera didn’t open. You can choose a photo instead.'); }
+  };
+  if (sample) {
+    const grams = pick === 'Other' ? other : Number.parseInt(pick, 10);
+    const p = labelData.per100, k = grams / 100, kcal = p.kcal * k;
+    const item: MealItem = { name: labelData.name, grams, kcal, protein: p.protein * k, carbs: p.carbs * k, fat: p.fat * k, fibre: p.fibre * k, confidence: .95 };
+    return (
+      <Page screen="labelscan" scroll={false} bar={{ kind: 'none' }} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
+        backdrop={<View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <View style={[StyleSheet.absoluteFill, { bottom: undefined, height: '78%' }]}><PhotoFill source={photos.label} focal={{ x: .554, y: .617, zoom: 1.75 }} /></View>
+          <TopBand />
           <Corners style={{ left: '17%', top: '12.5%', width: 232, height: 388 }} />
           <Tag ink label="Energy" em={`${p.kcal} kcal`} style={{ position: 'absolute', left: '24.5%', top: '20%' }} />
           <Tag ink label="Carbohydrate" em={`${p.carbs} g`} style={{ position: 'absolute', left: '24.5%', top: '30.2%' }} />
           <Tag ink label="Protein" em={`${p.protein} g`} style={{ position: 'absolute', left: '24.5%', top: '40.4%' }} />
-        </> : null}
-      </View>}
-      bottom={
-        <CamSheet>
-          {SHOW_SAMPLES ? <>
+        </View>}
+        bottom={
+          <CamSheet>
             <View style={[styles.betweenEnd, { marginTop: space.xs }]}>
               <View><Eyebrow>{`${labelData.name}, ${grams} g`}</Eyebrow>{day.hide ? <Text variant="headline">A usual bowl</Text> : <Figure value={n(kcal)} unit="kcal" style={{ marginTop: space.xxs }} />}</View>
               {day.hide ? null : <Text variant="callout" tone="ink2" style={{ marginBottom: space.xs }}>{`${p.kcal} kcal per 100 g`}</Text>}
             </View>
             <SegmentedV26 options={[...labelData.portions.map(v => ({ value: `${v} g`, label: `${v} g` })), { value: 'Other', label: 'Other' }]} value={pick} onChange={v => { setPick(v); feedback.select(); }} style={{ marginTop: space.sm }} />
             {pick === 'Other' ? <View style={{ marginTop: space.sm }}><SliderV26 value={other} min={10} max={150} step={5} onChange={setOther} accessibilityLabel="Portion in grams" /></View> : null}
-            <Btn label={day.hide ? 'Log it' : `Log ${n(kcal)} kcal`} onPress={() => { log({ name: labelData.name, items: [item], via: 'label' }); nav.replace('mealresult'); }} style={{ marginTop: space.sm }} />
+            <Btn label={day.hide ? 'Log it' : `Log ${n(kcal)} kcal`} onPress={() => logIt(item)} style={{ marginTop: space.sm }} />
             <Callout style={{ marginTop: space.tile }}>{`Read on your phone, per 100 g: fat ${p.fat} g (saturates ${p.saturates} g), carbohydrate ${p.carbs} g (sugars ${p.sugars} g), protein ${p.protein} g, salt ${p.salt} g.`}</Callout>
-          </> : <>
-            <Statement s="Reading labels comes with the {next camera update}." style={{ marginTop: space.sm }} />
-            <Btn label="Add it yourself" onPress={() => nav.replace('quicklog')} style={{ marginTop: space.md }} />
-          </>}
+          </CamSheet>
+        }>
+        <CamBar label="Reading the label…" />
+        <View style={{ flex: 1 }} />
+      </Page>
+    );
+  }
+  const sheet = <ReadingSheet state={state} what="label" onAllow={reading.allow} onLeave={() => { reading.reset(); setShot(''); }} onSelf={() => nav.replace('quicklog')} />;
+  return (
+    <Page screen="labelscan" scroll={false} bar={{ kind: 'none' }} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
+      backdrop={<View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        {shot ? <View style={[StyleSheet.absoluteFill, { bottom: undefined, height: '70%' }]}><PhotoFill source={{ uri: shot }} /></View> : <View style={[StyleSheet.absoluteFill, { backgroundColor: photo.ink }]} />}
+        <TopBand />
+      </View>}
+      bottom={state.step === 'ask' ? sheet : (
+        <CamSheet>
+          {product ? <ProductSheet product={product} via="label" onLog={logIt} />
+            : state.step === 'done' ? <>
+              <Body s="That photo didn’t show a nutrition label Life could read. Try again with the table flat and in focus." tone="ink" style={{ marginTop: space.md }} />
+              <QuietLink label="Try another photo" onPress={() => { reading.reset(); setShot(''); }} style={{ marginTop: space.xs }} />
+            </>
+            : state.step !== 'idle' ? sheet
+            : <>
+              {error ? <Body s={error} tone="ink" style={{ marginTop: space.md }} /> : <Statement s="Photograph the {nutrition table} on the pack, flat and in focus." style={{ marginTop: space.sm }} />}
+              <Callout style={{ marginTop: space.xs }}>{reading.why ?? 'Life reads the figures per 100 g. You check them before anything is logged.'}</Callout>
+              <View style={{ flexDirection: 'row', gap: space.xs, marginTop: space.md }}>
+                <Btn label="Choose a photo" ghost fit onPress={() => void take('photos')} />
+                <View style={{ flex: 1 }}><Btn label="Take a photo" icon="camera" disabled={!!reading.why} onPress={() => void take('camera')} /></View>
+              </View>
+              {reading.why ? <QuietLink label="Add it yourself" onPress={() => nav.replace('quicklog')} style={{ marginTop: space.xs }} /> : null}
+            </>}
         </CamSheet>
-      }>
-      <CamBar label="Reading the label…" />
-      <View style={{ flex: 1 }} />
+      )}>
+      <CamBar label={state.step === 'reading' || state.step === 'preparing' ? 'Reading the label…' : 'Point at the label'} />
+      <View style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: space.gutter, paddingBottom: 18 }}>{shot ? null : <Modes active="labelscan" />}</View>
     </Page>
   );
 }
@@ -1064,6 +1251,8 @@ const styles = StyleSheet.create({
   handle: { width: 36, height: 5, borderRadius: 3, alignSelf: 'center', marginTop: space.xs },
   saysRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.tile, marginTop: space.md },
   centre: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xxl },
+  codeRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  codeInput: { flex: 1, minWidth: 0, height: 48, borderRadius: radius.lg, paddingHorizontal: space.md, fontSize: 18, letterSpacing: 1 },
   panel: { flex: 1, minHeight: 0, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: space.lg },
   sheetTitle: { height: 52, flexDirection: 'row', alignItems: 'center', gap: space.xs },
   betweenEnd: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: space.sm },

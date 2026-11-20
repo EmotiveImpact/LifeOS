@@ -18,7 +18,7 @@ import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
 import { seed } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
-import { useFuelDay } from '@/state/fuel';
+import { fuelShare, macroParts, useFuelDay } from '@/state/fuel';
 import { lighterDay } from '@/state/today';
 import {
   clock, cycle as cycleData, drivers, dur, forecast as forecastData, journalEffects, journalLogged, journalTags, liveWorkout, load, pattern, readiness, signals as signalData,
@@ -96,8 +96,8 @@ export function BodyV26() {
       <SectionHead title="Fuel" link="Log food" onLink={() => nav.go('snap')} />
       {hide
         ? <PhotoCard source={photos.food} height={176} title="Balanced" sub="Regular meals and variety" onPress={() => nav.go('fuel')} />
-        : <PhotoCard source={photos.food} height={176} chips={[`${Math.round(fuel.eaten / fuel.budget * 100)}% of today`]} chipRight={`${fuel.left.toLocaleString('en-GB')} left`}
-            title={fuel.eaten.toLocaleString('en-GB')} titleSuffix={`of ${fuel.budget.toLocaleString('en-GB')} kcal`} sub={fuel.macros.map(m => `${m.label} ${Math.max(0, m.max - m.value)}${m.unit} left`).join(' · ')} onPress={() => nav.go('fuel')} />}
+        : <PhotoCard source={photos.food} height={176} chips={[fuel.ready ? `${Math.round(fuelShare(fuel) * 100)}% of today` : 'No target yet']} chipRight={fuel.ready ? `${fuel.left.toLocaleString('en-GB')} left` : undefined}
+            title={fuel.eaten.toLocaleString('en-GB')} titleSuffix={fuel.ready ? `of ${fuel.budget.toLocaleString('en-GB')} kcal` : 'kcal so far'} sub={macroParts(fuel).map(m => `${m.label} ${m.value}`).join(' · ')} onPress={() => nav.go('fuel')} />}
       <SectionHead title="Tonight" />
       <Box pad={space.md} onPress={() => nav.go('sleepplan')} accessibilityLabel={`Tonight, in bed by ${clock(sleep.tonight.bed)}`}>
         <Between style={{ alignItems: 'center' }}>

@@ -1,10 +1,15 @@
 /**
  * Fuel: the day worked out from the meals in your diary, and the figures only the V26 board has (`fuel.js`).
  * Today, Body and Fuel all read `useFuelDay`, so a meal logged anywhere moves every screen that shows food.
- * Food recognition, the food database and label reading are Track B: until then the figures below are samples,
- * and real accounts (no sample life) start the day with an empty diary.
+ *
+ * Targets (Phase 27): a real account's come from the engine (`planTargets` in `@life/core`): the food_target row
+ * (goal, pace, target weight, exercise added back), the body profile and the health days as evidence. The sample
+ * life keeps the board's figures, as Edem asked, unless real health readings have arrived. Real accounts start the
+ * day with an empty diary and no sample exercise.
  */
-import { useSeed } from './SeedProvider';
+import { activeToday, dayBudget, planTargets, type BodyProfileRow, type FoodTargetRow, type PlanTargets } from '@life/core';
+import { hasRealHealth } from '@/services/health/consent';
+import { useSeed, type SeedData } from './SeedProvider';
 import { seed, seedDiaryMeals, type MealItem } from './seed';
 import { SHOW_SAMPLES } from './sample';
 import { load } from './body';
@@ -13,6 +18,25 @@ export type Totals = { kcal: number; protein: number; carbs: number; fat: number
 /** How a meal reached the diary. */
 export type MealVia = 'photo' | 'said' | 'scan' | 'search' | 'saved' | 'quick' | 'menu' | 'label' | 'plan';
 export type DiaryMeal = { id: string; name: string; at: string; items: MealItem[]; day?: string; photo?: string; via?: MealVia; from?: string };
+
+/** The food_target row as the phone keeps it (choices and prefs, projected to the table by `data/projection.ts`). */
+export const foodTargetRow = (data: Pick<SeedData, 'choices' | 'prefs'>): FoodTargetRow => ({
+  goal: data.choices['fuel-goal'] ?? null,
+  target_weight: data.choices['target-weight'] ? Number(data.choices['target-weight']) : null,
+  pace: data.choices['fuel-pace'] ? Number(data.choices['fuel-pace']) : null,
+  exercise_addback: data.prefs.addback ?? null,
+});
+/** The body profile as the phone keeps it. */
+export const bodyProfileRow = (data: Pick<SeedData, 'choices' | 'profile' | 'heightCm' | 'weightKg'>): BodyProfileRow => ({
+  age: data.profile.age, sexAtBirth: data.choices['sex-at-birth'] ?? null, heightCm: data.heightCm, weightKg: data.weightKg, activity: data.choices.activity ?? null,
+});
+/** Whether Fuel's targets come from the engine: always on a real account, and on the sample life once real readings arrive. */
+export const engineTargets = (data: Pick<SeedData, 'choices' | 'health'>) => !SHOW_SAMPLES || hasRealHealth(data);
+/** The engine's targets for this person, from what the phone stores. */
+export function usePlanTargets(): PlanTargets {
+  const { data } = useSeed();
+  return planTargets({ record: foodTargetRow(data), profile: bodyProfileRow(data), days: data.health.days, today: dayKey(), health: data.profile.health });
+}
 
 const ZERO: Totals = { kcal: 0, protein: 0, carbs: 0, fat: 0, fibre: 0 };
 export const mealTotals = (items: MealItem[]): Totals => items.reduce((a, b) => ({ kcal: a.kcal + b.kcal, protein: a.protein + b.protein, carbs: a.carbs + b.carbs, fat: a.fat + b.fat, fibre: a.fibre + b.fibre }), ZERO);
@@ -51,25 +75,49 @@ export function useFuelDay() {
     .sort((a, b) => a.at.localeCompare(b.at));
   const totals = diary.reduce((a, m) => { const t = mealTotals(m.items); return { kcal: a.kcal + t.kcal, protein: a.protein + t.protein, carbs: a.carbs + t.carbs, fat: a.fat + t.fat, fibre: a.fibre + t.fibre }; }, ZERO);
   const f = seed.fuel;
-  const target = Number(data.choices['fuel-kcal'] ?? f.kcal) || f.kcal;
+  const real = engineTargets(data);
+  const plan = real ? planTargets({ record: foodTargetRow(data), profile: bodyProfileRow(data), days: data.health.days, today, health: data.profile.health }) : null;
+  /** False when a real account has no targets yet (details missing); screens then ask for them instead of showing zeros. */
+  const ready = !plan || plan.available;
   const described = data.choices['described-day'] === today ? Number(data.choices['described-kcal'] ?? 0) || 0 : 0;
-  const watch = SHOW_SAMPLES ? f.burned : 0;
-  const burned = watch + described;
   const share = data.prefs.addback === 'All' ? 1 : data.prefs.addback === 'Half' ? .5 : 0;
-  const added = Math.round(burned * share);
+  let target: number, watch: number, added: number;
+  if (plan) {
+    target = plan.available ? plan.kcal : 0;
+    const active = activeToday(data.health.days, today);
+    watch = active.kcal;
+    // Only activity above your usual day comes back when what you use already counts it (measured or from Load).
+    const back = plan.available ? dayBudget({ target, uses: plan.uses, activeToday: watch, addBack: plan.addBack }) : { budget: 0, added: 0 };
+    added = back.added + Math.round(described * share);
+  } else {
+    target = Number(data.choices['fuel-kcal'] ?? f.kcal) || f.kcal;
+    watch = SHOW_SAMPLES ? f.burned : 0;
+    added = Math.round((watch + described) * share);
+  }
+  const burned = watch + described;
   const budget = target + added;
   const eaten = Math.round(totals.kcal);
   const left = Math.max(0, budget - eaten);
   const waterMl = Number(data.choices['water-ml'] ?? (SHOW_SAMPLES ? seed.health.waterMl : 0)) || 0;
-  const targets = { protein: f.protein, carbs: f.carbs, fat: f.fat, fibre: f.fibre, waterMl: engine.targets.waterMl };
+  // No targets yet on a real account means none at all, never the sample life's.
+  const targets = plan
+    ? plan.available ? { protein: plan.protein, carbs: plan.carbs, fat: plan.fat, fibre: plan.fibre, waterMl: plan.waterMl } : { protein: 0, carbs: 0, fat: 0, fibre: 0, waterMl: engine.targets.waterMl }
+    : { protein: f.protein, carbs: f.carbs, fat: f.fat, fibre: f.fibre, waterMl: engine.targets.waterMl };
   const macros = [
     { label: 'Protein', value: Math.round(totals.protein), max: targets.protein, unit: 'g' },
     { label: 'Carbs', value: Math.round(totals.carbs), max: targets.carbs, unit: 'g' },
     { label: 'Fat', value: Math.round(totals.fat), max: targets.fat, unit: 'g' },
   ];
-  return { today, diary, totals, eaten, target, watch, described, burned, share, added, budget, left, waterMl, targets, macros, hide: !!data.prefs.hideNumbers };
+  return { today, diary, totals, eaten, target, watch, described, burned, share, added, budget, left, waterMl, targets, macros, hide: !!data.prefs.hideNumbers, plan, ready };
 }
 export type FuelDay = ReturnType<typeof useFuelDay>;
+/** How much of today's budget is eaten, 0 to 1; 0 when there is no budget yet. */
+export const fuelShare = (day: Pick<FuelDay, 'eaten' | 'budget'>) => (day.budget > 0 ? Math.min(1, day.eaten / day.budget) : 0);
+/** The small line under a budget, such as "/2,050 kcal", or "kcal so far" before there is a target. */
+export const budgetScale = (day: Pick<FuelDay, 'budget' | 'ready'>) => (day.ready && day.budget > 0 ? `/${day.budget.toLocaleString('en-GB')} kcal` : 'kcal so far');
+/** Each macro as what is left, or as what is eaten before there are targets. */
+export const macroParts = (day: Pick<FuelDay, 'macros' | 'ready'>) =>
+  day.macros.map(m => ({ label: m.label, value: day.ready && m.max > 0 ? `${Math.max(0, m.max - m.value)}${m.unit} left` : `${m.value}${m.unit} eaten` }));
 
 /* ───────────────────────── Board-only figures ───────────────────────── */
 

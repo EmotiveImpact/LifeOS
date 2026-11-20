@@ -14,12 +14,13 @@ import {
   photos, radius, space, useAreaTint, useTokens,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
-import { useSeed } from '@/state/SeedProvider';
+import { planTargets } from '@life/core';
+import { useSeed, type SeedData } from '@/state/SeedProvider';
 import { seed } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { weightDays, weightWeekChange } from '@/state/body';
 import {
-  alcohol as drinks, cook, dayKey, kcalFloor, mealWeek, nutrientsToday, nutrientsWeek, paces, progress, quality, timing, useFuelDay, uses, watchToday, week,
+  alcohol as drinks, bodyProfileRow, cook, dayKey, engineTargets, kcalFloor, mealWeek, nutrientsToday, nutrientsWeek, paces, progress, quality, timing, useFuelDay, uses, watchToday, week,
 } from '@/state/fuel';
 import { pickAttachment } from '@/services/attachments';
 import { Axis, Measure, useWidth } from './bodykit';
@@ -28,6 +29,8 @@ import { mealPic, n, useLogMeal } from './fuel';
 
 const info = (label: string, onPress: () => void) => ({ kind: 'icon' as const, icon: 'info' as const, label, onPress });
 const r1 = (v: number) => Math.round(v * 10) / 10;
+/** A weekly pace in words: "half a kilo" near 0.5, otherwise the kilos. */
+const kiloWords = (kgs: number) => { const k = Math.round(kgs * 100) / 100; return Math.abs(k - .5) < .03 ? 'half a kilo' : `${k} kg`; };
 const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 /** Monday-first index of a date. */
@@ -41,20 +44,36 @@ const ruled = (v: number, max: number) => Math.max(0, Math.min(100, Math.round(v
 /* ───────────────────────── The plan's numbers ───────────────────────── */
 
 type Goal = 'Lose' | 'Keep' | 'Gain';
-/** The daily target from the goal and pace: what your body uses, less 1,000 per kilo a week, never under the floor. */
-export function planFor(goal: Goal, pace: number) {
+export type PlanFigures = {
+  available: true; uses: number; change: number; daily: number; floor: number; floored: boolean; protein: number; fibre: number;
+  /** The pace the target really gives, kg a week, after the floor and the 1% of body weight cap. */
+  pace: number; days: number;
+} | { available: false; reason: 'under-18' | 'missing-details'; missing: string[] };
+/**
+ * The figures for a goal, target weight and pace. A real account (or real readings on the sample life) gets the
+ * engine's (`planTargets`): what your body uses from your profile and health days, the floor, protein and fibre. The
+ * sample life keeps the board's maths: 2,800 used, less 1,000 per kilo a week, never under 1,500.
+ */
+export function figuresFor(data: SeedData, goal: Goal, target: number, pace: number): PlanFigures {
+  const kg = data.weightKg;
+  if (engineTargets(data)) {
+    const t = planTargets({ record: { goal, target_weight: target, pace, exercise_addback: data.prefs.addback ?? null }, profile: bodyProfileRow(data), days: data.health.days, today: dayKey(), health: data.profile.health });
+    if (!t.available) return { available: false, reason: t.reason, missing: t.missing };
+    return { available: true, uses: t.uses.kcal, change: goal === 'Keep' ? 0 : t.kcal - t.uses.kcal, daily: t.kcal, floor: t.floor, floored: t.floored, protein: t.protein, fibre: t.fibre, pace: Math.abs(t.paceKgPerWeek), days: (t.weeksToGoal ?? 0) * 7 };
+  }
   const change = goal === 'Lose' ? -Math.round(pace * 1000) : goal === 'Gain' ? Math.round(pace * 500) : 0;
-  return { change, daily: Math.max(kcalFloor, uses + change) };
+  const days = goal === 'Keep' || !pace ? 0 : Math.round(Math.abs(kg - target) / pace * 7);
+  return { available: true, uses, change, daily: Math.max(kcalFloor, uses + change), floor: kcalFloor, floored: uses + change < kcalFloor, protein: seed.fuel.protein, fibre: seed.fuel.fibre, pace, days };
 }
 export function usePlan() {
   const { data } = useSeed();
-  const goal = (data.choices['fuel-goal'] ?? 'Lose') as Goal;
-  const target = Number(data.choices['target-weight'] ?? seed.fuel.targetWeight);
-  const pace = Number(data.choices['fuel-pace'] ?? seed.fuel.pace);
-  const kg = data.weightKg, gap = Math.abs(kg - target);
-  const days = goal === 'Keep' || !pace ? 0 : Math.round(gap / pace * 7);
+  const goal = (data.choices['fuel-goal'] ?? (SHOW_SAMPLES ? 'Lose' : 'Keep')) as Goal;
+  const target = Number(data.choices['target-weight'] ?? (SHOW_SAMPLES ? seed.fuel.targetWeight : data.weightKg));
+  const pace = Number(data.choices['fuel-pace'] ?? (SHOW_SAMPLES ? seed.fuel.pace : 0.5));
+  const kg = data.weightKg, figures = figuresFor(data, goal, target, pace);
+  const days = figures.available ? figures.days : 0;
   const reach = new Date(Date.now() + days * 86400000);
-  return { goal, target, pace, kg, days, weeks: Math.ceil(days / 7), reach, ...planFor(goal, pace) };
+  return { goal, target, pace, kg, days, weeks: Math.ceil(days / 7), reach, figures, daily: figures.available ? figures.daily : 0 };
 }
 
 /* ───────────────────────── 1. What can I cook? ───────────────────────── */
@@ -196,34 +215,41 @@ function Sum({ parts }: { parts: [string, string][] }) {
 export function FuelgoalV26() {
   const nav = useNavigation(), { data, choose } = useSeed(), plan = usePlan();
   const [goal, setGoal] = useState<Goal>(plan.goal), [target, setTarget] = useState(plan.target), [pace, setPace] = useState(plan.pace);
-  const p = planFor(goal, pace), kg = data.weightKg;
+  const f = figuresFor(data, goal, target, pace), kg = data.weightKg;
   const wrongWay = goal === 'Lose' && target >= kg || goal === 'Gain' && target <= kg;
-  const days = Math.round(Math.abs(kg - target) / pace * 7), reach = new Date(Date.now() + days * 86400000);
-  const protein = seed.fuel.protein, perKg = r1(protein / kg);
+  const days = f.available ? f.days : 0, reach = new Date(Date.now() + days * 86400000);
+  const slower = f.available && goal !== 'Keep' && f.pace < pace - 0.01;
   return (
     <Page screen="fuelgoal" bar={{ kind: 'push', title: 'Targets' }}
-      footer={<Btn label="See my plan" disabled={wrongWay} onPress={() => { choose('fuel-goal', goal); choose('target-weight', String(target)); choose('fuel-pace', String(pace)); nav.go('fuelplan'); }} />}>
+      footer={<Btn label="See my plan" disabled={wrongWay || !f.available} onPress={() => { choose('fuel-goal', goal); choose('target-weight', String(target)); choose('fuel-pace', String(pace)); nav.go('fuelplan'); }} />}>
       <SegmentedV26 options={(['Lose', 'Keep', 'Gain'] as const).map(v => ({ value: v, label: v }))} value={goal} onChange={v => { setGoal(v); feedback.select(); }} />
       {goal !== 'Keep' ? <>
         <Eyebrow style={{ justifyContent: 'center', marginTop: space.xl }}>Target weight</Eyebrow>
         <BigStepper value={target} unit="kg" onChange={setTarget} label="target weight" />
         <Eyebrow style={{ justifyContent: 'center', marginTop: space.xl }}>Pace</Eyebrow>
         <WheelPicker options={paces.map(x => x.kg === pace ? `${x.label} · ${x.kg} kg a week` : x.label)} value={Math.max(0, paces.findIndex(x => x.kg === pace))} onChange={i => setPace(paces[i].kg)} label="Pace" style={{ marginTop: space.xs }} />
-        <Callout center style={{ marginTop: space.sm }}>{wrongWay ? `Your target is ${goal === 'Lose' ? 'above' : 'below'} your weight now (${kg.toFixed(1)} kg).` : `About ${Math.ceil(days / 7)} weeks, so ${roughly(reach)}.`}</Callout>
+        <Callout center style={{ marginTop: space.sm }}>{wrongWay ? `Your target is ${goal === 'Lose' ? 'above' : 'below'} your weight now (${kg.toFixed(1)} kg).` : days ? `About ${Math.ceil(days / 7)} weeks, so ${roughly(reach)}.` : 'Life works out how long once your details are in.'}</Callout>
       </> : <Statement s={`Keep about {${kg.toFixed(1)} kg}, with targets that match what your body uses.`} style={{ marginTop: space.xl }} />}
-      <TintCard area="home" style={{ marginTop: space.xl }}>
-        <Micro>The maths</Micro>
-        <View style={{ marginTop: space.sm }}>
-          {p.change ? <Sum parts={[[n(uses), 'what your body uses'], [p.change < 0 ? '−' : '+', ''], [n(Math.abs(p.change)), 'for your pace'], ['=', ''], [n(p.daily), 'daily calories']]} />
-            : <Sum parts={[[n(uses), 'what your body uses'], ['=', ''], [n(p.daily), 'daily calories']]} />}
-        </View>
-        <Callout style={{ marginTop: space.md }}>{`Your body uses about ${n(uses)} a day, from your height, weight, age and activity. ${goal === 'Lose' ? `${n(Math.abs(p.change))} less loses about ${pace === .5 ? 'half a kilo' : `${pace} kg`} a week.` : goal === 'Gain' ? `${n(p.change)} more gains about ${pace} kg a week, gently.` : 'Eating about that keeps you steady.'}`}</Callout>
-      </TintCard>
-      <TileGrid style={{ marginTop: space.sm }}>
-        <V26Tile label="Protein" scale={`${perKg} g per kg`} value={String(protein)} unit="g" />
-        <V26Tile label="Fibre" scale="a day" value={String(seed.fuel.fibre)} unit="g" />
-      </TileGrid>
-      <Callout style={{ marginTop: space.md }}>{`Targets never go below a healthy floor (${n(kcalFloor)} a day), and pace is capped at three quarters of a kilo a week.`}</Callout>
+      {f.available ? <>
+        <TintCard area="home" style={{ marginTop: space.xl }}>
+          <Micro>The maths</Micro>
+          <View style={{ marginTop: space.sm }}>
+            {f.change ? <Sum parts={[[n(f.uses), 'what your body uses'], [f.change < 0 ? '−' : '+', ''], [n(Math.abs(f.change)), 'for your pace'], ['=', ''], [n(f.daily), 'daily calories']]} />
+              : <Sum parts={[[n(f.uses), 'what your body uses'], [f.uses === f.daily ? '=' : '≈', ''], [n(f.daily), 'daily calories']]} />}
+          </View>
+          <Callout style={{ marginTop: space.md }}>{`Your body uses about ${n(f.uses)} a day, from your height, weight, age and activity. ${goal === 'Lose' ? `${n(Math.abs(f.change))} less loses about ${kiloWords(f.pace)} a week.` : goal === 'Gain' ? `${n(f.change)} more gains about ${kiloWords(f.pace)} a week, gently.` : 'Eating about that keeps you steady.'}${slower ? ' That’s slower than the pace you picked, so your target stays safe.' : ''}`}</Callout>
+        </TintCard>
+        <TileGrid style={{ marginTop: space.sm }}>
+          <V26Tile label="Protein" scale={`${r1(f.protein / kg)} g per kg`} value={String(f.protein)} unit="g" />
+          <V26Tile label="Fibre" scale="a day" value={String(f.fibre)} unit="g" />
+        </TileGrid>
+        <Callout style={{ marginTop: space.md }}>{engineTargets(data) ? `Targets never go below a healthy floor (${n(f.floor)} a day for you), and pace is capped at about 1% of your weight a week.` : `Targets never go below a healthy floor (${n(f.floor)} a day), and pace is capped at three quarters of a kilo a week.`}</Callout>
+      </> : f.reason === 'under-18' ? (
+        <Callout style={{ marginTop: space.xl }}>Calorie targets are for adults, so Life shows how you’re eating without them.</Callout>
+      ) : <>
+        <Statement s={`Add your {${f.missing.join(' and ')}} and Life works out the maths for you.`} style={{ marginTop: space.xl }} />
+        <Btn label="Add them in Body" ghost fit onPress={() => nav.go('measures')} style={{ marginTop: space.md }} />
+      </>}
     </Page>
   );
 }
@@ -244,8 +270,8 @@ function WeekDots({ count, end, w }: { count: number; end: string; w: number }) 
 
 export function FuelplanV26() {
   const nav = useNavigation(), { choose, flag } = useSeed(), plan = usePlan();
-  const keep = plan.goal === 'Keep';
-  const paceWords = plan.pace === .5 ? 'half a kilo' : plan.pace === .25 ? 'a quarter of a kilo' : 'three quarters of a kilo';
+  const keep = plan.goal === 'Keep', f = plan.figures, pace = f.available ? f.pace : plan.pace;
+  const paceWords = Math.abs(pace - .5) < .03 ? 'half a kilo' : Math.abs(pace - .25) < .03 ? 'a quarter of a kilo' : Math.abs(pace - .75) < .03 ? 'three quarters of a kilo' : `${Math.round(pace * 100) / 100} kg`;
   return (
     <Page screen="fuelplan" bar={{ kind: 'photo' }} contentStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingBottom: space.sm }}
       backdrop={<View pointerEvents="none" style={StyleSheet.absoluteFill}><PhotoFill source={photos.sky} focal={{ x: .37, y: 0, zoom: 2.9 }} settle /><LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} /></View>}
@@ -255,7 +281,7 @@ export function FuelplanV26() {
       <Statement onPhoto s={keep ? `You’ll keep about {${plan.kg.toFixed(1)} kg}, eating about what your body uses.` : `At ${paceWords} a week you’d reach {${plan.target} kg} around {${longDate(plan.reach)}}.`} style={{ marginTop: space.sm }} />
       {keep ? null : <Measure height={76} style={{ marginTop: space.xl }} label={`${plan.weeks} weeks from today to ${plan.target} kg, around ${longDate(plan.reach)}`}>{w => <WeekDots w={w} count={plan.weeks} end={`${shortDate(plan.reach)} · ${plan.target} kg`} />}</Measure>}
       <View style={[styles.fields, { marginTop: space.lg }]}>
-        {[['Calories', n(plan.daily)], ['Protein', `${seed.fuel.protein} g`], ['Fibre', `${seed.fuel.fibre} g`]].map(([l, v]) => (
+        {[['Calories', n(plan.daily)], ['Protein', `${f.available ? f.protein : seed.fuel.protein} g`], ['Fibre', `${f.available ? f.fibre : seed.fuel.fibre} g`]].map(([l, v]) => (
           <View key={l} style={[styles.field, { backgroundColor: photo.fill }]}><Text variant="micro" style={{ color: photo.onPhoto2 }}>{l}</Text><Text variant="headline" style={{ color: photo.onPhoto }}>{v}</Text></View>
         ))}
       </View>

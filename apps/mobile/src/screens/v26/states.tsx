@@ -18,7 +18,7 @@ import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { useLocalDay } from '@/state/day';
-import { useFuelDay } from '@/state/fuel';
+import { budgetScale, fuelShare, useFuelDay } from '@/state/fuel';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { money, seed } from '@/state/seed';
 import { bufferMonths } from '@/state/plan';
@@ -287,7 +287,7 @@ export function ConnectFailV26() {
     flag('device-retry', true);
   };
   return (
-    <Page screen="body" bar={{ kind: 'push', title: 'Body', action: { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: () => { void Share.share({ message: `Fuel ${fuel.eaten.toLocaleString('en-GB')} of ${fuel.budget.toLocaleString('en-GB')} kcal today. Made with Life.` }); } } }}>
+    <Page screen="body" bar={{ kind: 'push', title: 'Body', action: { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: () => { void Share.share({ message: fuel.ready ? `Fuel ${fuel.eaten.toLocaleString('en-GB')} of ${fuel.budget.toLocaleString('en-GB')} kcal today. Made with Life.` : `Fuel ${fuel.eaten.toLocaleString('en-GB')} kcal so far today. Made with Life.` }); } } }}>
       <Chip label={`${quietDevice.name} · ${quietDevice.last}`} icon="clock" tone="q" />
       <Display s={`{${quietDevice.name}} hasn’t synced {since ${quietDevice.last}.}`} />
       <PhotoCard source={photos.bedroom} focal={{ y: 0.52 }} height={236} size="md" chips={['The fix that usually works']} title={`Open the ${quietDevice.name} app once to send last night’s sleep.`} style={{ marginTop: space.lg }}>
@@ -297,10 +297,10 @@ export function ConnectFailV26() {
         <StaleTile label="Readiness" scale="/100" last={quietDevice.last} />
         <StaleTile label="Sleep" scale={`/${hm(seed.health.sleepNeed)}`} last={quietDevice.last} />
       </TileGrid>
-      <TintCard area="home" onPress={() => nav.go('fuel')} accessibilityLabel={`Fuel, ${fuel.eaten} of ${fuel.budget} kcal. Logged by you, so still up to date.`} style={{ marginTop: space.tile }}>
-        <Between><View style={styles.inline}><Badge icon="food" /><Text variant="callout" tone="ink2">Fuel</Text></View><Text variant="micro" tone="quiet">{`/${fuel.budget.toLocaleString('en-GB')} kcal`}</Text></Between>
+      <TintCard area="home" onPress={() => nav.go('fuel')} accessibilityLabel={`Fuel, ${fuel.eaten} ${fuel.ready ? `of ${fuel.budget} kcal` : 'kcal so far'}. Logged by you, so still up to date.`} style={{ marginTop: space.tile }}>
+        <Between><View style={styles.inline}><Badge icon="food" /><Text variant="callout" tone="ink2">Fuel</Text></View><Text variant="micro" tone="quiet">{budgetScale(fuel)}</Text></Between>
         <Text variant="numeralL" style={{ marginTop: 14 }}>{fuel.eaten.toLocaleString('en-GB')}</Text>
-        <Meter value={fuel.eaten / fuel.budget} />
+        <Meter value={fuelShare(fuel)} />
         <Callout style={{ marginTop: space.tile }}>Logged by you, so still up to date.</Callout>
       </TintCard>
       <Callout style={{ marginTop: space.md }}>Wellness guidance from your own readings, not a diagnosis.</Callout>

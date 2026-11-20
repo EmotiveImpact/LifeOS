@@ -66,7 +66,7 @@ async function refusal(response: Response): Promise<BrainError> {
 /** The life API checks the model's answer and sends it back unrendered; the runtime checks it again here. `relay`
  * lets it add one notice (an allowance running out) or a support signal (this phone shows its own support screen). */
 const networkAdapter: ModelAdapter = {
-  id: 'life-api', location: 'cloud', jobs: ['ask', 'extract', 'draft', 'coach', 'plan-explain', 'lesson', 'analyse', 'showMe', 'read-document', 'remember'], relay: true,
+  id: 'life-api', location: 'cloud', jobs: ['ask', 'extract', 'draft', 'coach', 'plan-explain', 'lesson', 'analyse', 'showMe', 'read-document', 'remember', 'food'], relay: true,
   available: async () => !!endpoint,
   generate: async (request, signal) => {
     const outgoing = prepareExternalRequest(request);

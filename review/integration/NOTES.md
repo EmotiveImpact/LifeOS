@@ -41,6 +41,9 @@ No merge conflicts. Phase 20 added routes, so the typed route file needs regener
 | 20 Nov, ~21:35 UTC | `claude/project-thread-8i27bq` (fast-forward, steady check-in drawer, closing motion on the web, words-only switch, Stabilise) | cde7742 | 604 tests with Postgres, app typecheck, iOS, Android and web bundles |
 | 20 Nov, ~22:00 UTC | `phase-26-health` (fast-forward) | 4f1a269 | 643 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
 | 20 Nov, ~22:15 UTC | `claude/project-thread-txkwqs` (merge, core loops: evening planning, "I've got a few minutes", resume, step recap) | b311f66 | 674 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
+| 20 Nov, ~22:05 UTC | Fix on `v26-integration`: stop tracking two `node_modules` links the core loops merge committed (root `.gitignore` now ignores links too) | e90e1b3 | 674 tests with Postgres, app typecheck |
+| 20 Nov, ~22:20 UTC | `claude/project-thread-8i27bq` (fast-forward, Life as the name, L I F E as the logo) | 3da3bc8 | 674 tests with Postgres, app typecheck, iOS and Android bundles |
+| 20 Nov, ~22:28 UTC | `claude/project-thread-8i27bq` (fast-forward, the orb back at the right of Today, Plan and You, opening From Life) | 272e485 | 674 tests with Postgres, app typecheck, iOS and Android bundles |
 
 ## Screenshots
 
