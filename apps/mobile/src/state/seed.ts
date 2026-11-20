@@ -123,7 +123,7 @@ export const seedYearReview = {
 export const seedLabResults: Partial<Record<LabMarkerId, LabResult>> = { 'bw-vitd': { value: 38, unit: 'nmol/L' }, 'bw-ferritin': { value: 64, unit: 'µg/L' }, 'bw-hba1c': { value: 36, unit: 'mmol/mol' }, 'bw-apob': { value: 1.1, unit: 'g/L' } };
 export const seedLabMarkerPositions: Partial<Record<LabMarkerId, number>> = { 'bw-vitd': 18, 'bw-ferritin': 52, 'bw-hba1c': 40, 'bw-apob': 78 };
 export const seed = {
-  membership: { annual: 48, monthly: 6, annualRenewal: 59.99 },
+  membership: { annual: 79.99, monthly: 7.99, annualRenewal: 79.99 },
   date: SEED_DATE,
   body: { heightCm: 172, weightKg: 74.2, waistCm: 84, bodyFatPct: 22, sexAtBirth: 'Female', activity: 'Active', bp: '118 / 76', bmi: 25.1, waistRatio: .49, rhr: 54, vo2: 44 },
   health: { readiness: 72, sleepMinutes: 430, sleepNeed: 480, sleepDebt: 130, load: 6.2, loadTarget: [11, 14] as [number, number], hrv: 58, hrvBaseline: 52, rhr: 54, resp: 14.8, stress: 1.4, regularity: 78, fitnessAge: 24, loadRatio: 1.12, steps: 8240, waterMl: 1400, forecast: 68,

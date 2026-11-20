@@ -1,6 +1,6 @@
 /**
  * Settings and life Plus: the board's words and figures (`settings-people.js`, `core.js` plus). The price is the
- * seed's membership (owner decision 3 is still open; the board shows £48 a year). Screens read from here.
+ * seed's membership: £7.99 a month or £79.99 a year (Edem, 20 Nov 2026; the board still shows £48). Screens read from here.
  */
 import type { GlyphName } from '@/design';
 import type { ScreenKey } from '@/navigation/screens';
