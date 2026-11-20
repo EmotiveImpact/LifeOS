@@ -417,7 +417,7 @@ export function TopbarsV26() {
   return (
     <Page screen="topbars" bar={{ kind: 'push', title: 'The top bar' }}>
       <Display s="One rule for the top: {how it opened.}" flush style={{ marginTop: space.xxs }} />
-      {spec('ROOT · TODAY, PLAN, YOU', 'Two buttons at most', <TopBar look="v26" kind="root" title="Today" sub={shortDay()} actions={[{ kind: 'icon', icon: 'search', label: 'Search', onPress: none }, { kind: 'icon', icon: 'bell', label: 'From Life', badge: true, onPress: none }]} />)}
+      {spec('ROOT · TODAY, PLAN, YOU', 'Two buttons at most, then the orb', <TopBar look="v26" kind="root" title="Today" sub={shortDay()} actions={[{ kind: 'icon', icon: 'search', label: 'Search', onPress: none }]} orb={{ onPress: none, unread: true }} />)}
       {spec('PUSH', 'Back, title, one smart action or none', <TopBar look="v26" kind="push" title="Readiness" onBack={none} action={{ kind: 'icon', icon: 'info', label: 'How this is worked out', onPress: none }} />)}
       {spec('SHEET', 'A handle, a title, close', <TopBar look="v26" kind="sheet" title="Add something" onClose={none} />)}
       {spec('FULL-SCREEN FLOW', 'Back or close, and a step count', <TopBar look="v26" kind="flow" closeLabel="Back" step="2 of 3" onClose={none} />)}

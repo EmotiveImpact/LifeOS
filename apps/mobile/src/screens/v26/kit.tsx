@@ -19,6 +19,7 @@ import {
 } from '@/design';
 import { screens, type ScreenKey } from '@/navigation/screens';
 import { useNavigation } from '@/navigation/useNavigation';
+import { useSeed } from '@/state/SeedProvider';
 import { setWebExit, takeReturn } from '@/navigation/webExit';
 
 /* ───────────────────────── Copy ───────────────────────── */
@@ -235,8 +236,16 @@ export function PhotoRound({ icon, label, onPress }: { icon: GlyphName; label: s
 
 /* ───────────────────────── The page ───────────────────────── */
 
+/** Today, Plan and You: the page name on the left, its buttons and then the orb on the right. */
+function RootBar({ bar, onImage }: { bar: Extract<Bar, { kind: 'root' }>; onImage: boolean }) {
+  const nav = useNavigation(), { data } = useSeed();
+  const orb = bar.orb === false ? undefined : { onPress: () => nav.go('inbox'), unread: !data.flags['inbox-read'] };
+  return <TopBar look="v26" kind="root" title={bar.title} sub={bar.sub} actions={bar.actions} orb={orb} onImage={onImage} />;
+}
+
 export type Bar =
-  | { kind: 'root'; title: string; sub?: string; actions?: TopBarAction[] }
+  /** The orb sits at the right end and opens "From Life"; `orb: false` leaves it out (a gallery frame). */
+  | { kind: 'root'; title: string; sub?: string; actions?: TopBarAction[]; orb?: false }
   /** Back arrow, or a close cross with `close` (full-screen flows). Leave the title empty when a big heading follows. */
   | { kind: 'push'; title?: string; titleNode?: ReactNode; action?: TopBarAction; close?: boolean }
   /** The sheet's handle and, with a title, its bar and close. */
@@ -314,7 +323,7 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
   // A sheet is only as tall as what's in it (Edem, 20 Nov): a photograph-led sheet draws its own drawer instead.
   const fits = sheet && !backdrop && scroll && !center;
   const fit = useSheetFit(fits);
-  const top = b.kind === 'root' ? <TopBar look="v26" kind="root" title={b.title} sub={b.sub} actions={b.actions} onImage={onPhoto} />
+  const top = b.kind === 'root' ? <RootBar bar={b} onImage={onPhoto} />
     : b.kind === 'push' ? <TopBar look="v26" kind="push" title={b.title} titleNode={b.titleNode} action={b.action} onBack={close} closeIcon={b.close} onImage={onPhoto} />
     : b.kind === 'sheet' ? (b.title ? <TopBar look="v26" kind="sheet" title={b.title} action={b.action} onClose={close} onImage={onPhoto} /> : <SheetHandle />)
     : b.kind === 'flow' ? <TopBar look="v26" kind="flow" closeLabel={b.left ?? 'Back'} closeIcon={b.leftIcon} step={b.step} action={b.action} onClose={close} onImage={onPhoto} />
