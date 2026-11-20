@@ -29,7 +29,9 @@ export type ProposalDetails =
   | { kind: 'document'; document: DocumentKind; event: 'expires' | 'renews' | 'due'; when: When }
   | { kind: 'appointment'; what: string; when: When };
 export type Proposal = { id: string; field: Field; label: string; area: Area; quote: string; value: string | number; details?: ProposalDetails };
-export type Attachment = { id: string; name: string; mime: string; uri: string; size: number; text?: string; status: 'ready' | 'needs-reader' | 'failed'; error?: string };
+/** `data` is a photo itself (base64 JPEG, PNG or WebP, already made small on the phone), only for jobs that read a
+ * photo (`food`). It goes to the model for that one request and is never stored. */
+export type Attachment = { id: string; name: string; mime: string; uri: string; size: number; text?: string; data?: string; status: 'ready' | 'needs-reader' | 'failed'; error?: string };
 export type Message = { id: string; role: 'user' | 'life'; text: string; at: string; sources?: Source[]; proposals?: Proposal[]; route?: string; error?: boolean; attachmentIds?: string[]; detail?: string };
 export type Conversation = { id: string; title: string; createdAt: string; updatedAt: string; messages: Message[]; attachments: Attachment[] };
 export type BrainState = { version: 1; conversations: Conversation[]; activeConversationId: string | null; confirmedRecordIds: string[] };

@@ -1,9 +1,10 @@
-import { count, postJson, settle, systemPrompt, userPrompt } from './prompt';
+import { count, photosOf, postJson, settle, systemPrompt, userPrompt } from './prompt';
 import type { ModelSpec, ProviderModel, ProviderOptions } from './types';
 
 /**
  * OpenAI through the Responses API. `store: false` so OpenAI keeps no copy of the conversation for later turns;
- * JSON mode for the answer; reasoning effort per job. Output tokens include the reasoning tokens, as billed.
+ * JSON mode for the answer; reasoning effort per job. Output tokens include the reasoning tokens, as billed. A meal or
+ * label photo goes as an input image (a data URL), so nothing is uploaded to OpenAI's file store.
  */
 export function openaiModel(spec: ModelSpec, options: ProviderOptions): ProviderModel {
   const send = options.fetch ?? ((input: string, init?: RequestInit) => fetch(input, init));
@@ -11,10 +12,11 @@ export function openaiModel(spec: ModelSpec, options: ProviderOptions): Provider
   return {
     spec,
     async call(request, signal) {
+      const photos = photosOf(request);
       const body = {
         model: spec.model,
         instructions: systemPrompt(),
-        input: [{ role: 'user', content: userPrompt(request) }],
+        input: [{ role: 'user', content: photos.length ? [{ type: 'input_text', text: userPrompt(request) }, ...photos.map(p => ({ type: 'input_image', image_url: `data:${p.mime};base64,${p.data}` }))] : userPrompt(request) }],
         max_output_tokens: spec.maxOutputTokens,
         store: false,
         text: { format: { type: 'json_object' } },

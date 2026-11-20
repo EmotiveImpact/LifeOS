@@ -15,6 +15,8 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const fail = (status: number, code: string) => json({ error: code }, status);
 
 const uuid = z.string().uuid();
+/** The largest `/ai/run` body: one photo of up to 2.8 million base64 characters, plus the words and context. */
+const MAX_AI_BODY = 3_500_000;
 /** The calling phone, from the `life-device` header: sync skips its own changes when it pulls. */
 const deviceOf = (request: Request) => { const id = request.headers.get('life-device'); return id && uuid.safeParse(id).success ? id : null; };
 const ForgetBody = z.object({ table: z.string(), ids: z.array(uuid).min(1).max(MAX_PUSH) });
@@ -121,6 +123,8 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       return json(await closeAccount(db, storage, principal.userId, now(), graceDays));
     },
     'POST /ai/run': async (request, principal) => {
+      // One small photo at most (a meal or a label), so anything far bigger is refused before it is read.
+      if (Number(request.headers.get('content-length') ?? 0) > MAX_AI_BODY) return fail(413, 'TOO_LARGE');
       const reply = await runAi(db, principal.userId, await readJson(request), ai, now(), request.signal);
       const response = json(reply.body, reply.status);
       for (const [name, value] of Object.entries(reply.headers ?? {})) response.headers.set(name, value);

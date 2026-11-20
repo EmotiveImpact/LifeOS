@@ -1,4 +1,4 @@
-import { count, postJson, settle, systemPrompt, userPrompt } from './prompt';
+import { count, photosOf, postJson, settle, systemPrompt, userPrompt } from './prompt';
 import type { ModelSpec, ProviderModel, ProviderOptions } from './types';
 
 const BLOCKED = new Set(['SAFETY', 'RECITATION', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII', 'LANGUAGE', 'OTHER']);
@@ -16,7 +16,7 @@ export function googleModel(spec: ModelSpec, options: ProviderOptions): Provider
     async call(request, signal) {
       const body = {
         systemInstruction: { parts: [{ text: systemPrompt() }] },
-        contents: [{ role: 'user', parts: [{ text: userPrompt(request) }] }],
+        contents: [{ role: 'user', parts: [...photosOf(request).map(p => ({ inlineData: { mimeType: p.mime, data: p.data } })), { text: userPrompt(request) }] }],
         generationConfig: { responseMimeType: 'application/json', maxOutputTokens: spec.maxOutputTokens },
       };
       const sent = await postJson('Google', send, url, { 'x-goog-api-key': options.apiKey }, body, signal);

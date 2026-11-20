@@ -1,7 +1,7 @@
 import { desc, gte, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
-  BASE_TIERS, BrainError, CONSENT_POLICY_VERSION, TIERS, activeGrants, detectCrisis, parseTierTable, planRoute, runBrain,
+  BASE_TIERS, BrainError, CONSENT_POLICY_VERSION, MAX_PHOTO_CHARS, TIERS, activeGrants, assertRequest, detectCrisis, parseTierTable, planRoute, runBrain,
   type ConsentGrant, type Job, type ModelAdapter, type Request as BrainRequest, type RouteLimits, type Tier, type TierTable,
 } from '../../../packages/brain/src/index.ts';
 import type { Db } from './db/client';
@@ -25,6 +25,9 @@ import tiersFile from './tiers.json';
  * 6. The answer is checked by the brain's own rules (numbers only from facts, no claimed actions, proposals grounded
  *    in the person's words) and sent back unrendered, for the phone to check again.
  * 7. Every billed call is written to the ledger, including refused and rejected ones.
+ *
+ * A meal or label photo rides in the request itself (base64, made small on the phone), goes to the vision model for
+ * that one call and is never written anywhere: not to storage, the ledger or a log.
  */
 
 export type Allowance = { calls: number; per: 'day' | 'month' };
@@ -72,7 +75,7 @@ const RequestBody = z.object({
     sample: z.boolean(),
   }),
   history: z.array(z.object({ role: z.enum(['user', 'life']), text: z.string().max(12000) })).max(20),
-  attachments: z.array(z.object({ id, name: z.string().max(200), mime: z.string().max(100), uri: z.string().max(2000), size: z.number().int().min(0), text: z.string().max(40000).optional(), status: z.enum(['ready', 'needs-reader', 'failed']), error: z.string().max(500).optional() })).max(5),
+  attachments: z.array(z.object({ id, name: z.string().max(200), mime: z.string().max(100), uri: z.string().max(2000), size: z.number().int().min(0), text: z.string().max(40000).optional(), data: z.string().max(MAX_PHOTO_CHARS).regex(/^[A-Za-z0-9+/]+={0,2}$/).optional(), status: z.enum(['ready', 'needs-reader', 'failed']), error: z.string().max(500).optional() })).max(5),
   privateMode: z.boolean(),
   consent: z.object({ requestId: z.string().max(120), locations: z.array(z.enum(['device', 'server', 'cloud'])).max(3) }).nullable(),
 });
@@ -123,6 +126,8 @@ export async function runAi(db: Db, userId: string, raw: unknown, ai: AiOptions 
   const parsed = RequestBody.safeParse(raw);
   if (!parsed.success) return refuse(400, 'BAD_REQUEST');
   const request: BrainRequest = { ...parsed.data, grants: [] };
+  // A photo only for a job that reads one, one at a time, small (the brain's own rule, checked here as well).
+  try { assertRequest(request); } catch (error) { return failed(error); }
   // 2. Private mode never leaves the phone: if it got here, nothing runs.
   if (request.privateMode) return refuse(409, 'PRIVATE_MODE', 'Private mode is on, so this stays on your phone. Nothing was sent to a model.');
   if (!ai?.models.length) return refuse(503, 'AI_NOT_CONFIGURED', 'No model is connected for this question yet. Your message is saved, but I won’t invent a reply.');
