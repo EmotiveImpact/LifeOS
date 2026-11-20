@@ -100,7 +100,10 @@ export function TalkV26() {
   const review = async () => {
     stopStream.current?.();
     const words = mode === 'live' ? (await voice.stop()) || chunks.map(c => c.text).join('') : '';
-    const proposals = mode === 'live' ? (await ai.talk(words)).data : sampleProposals();
+    const said = mode === 'live' ? await ai.talk(words) : null;
+    // Distress always goes to support, never to filing (BUILD_V26 review focus 5).
+    if (said?.support) { set({ proposals: [] }); nav.replace('support'); return; }
+    const proposals = said ? said.data : sampleProposals();
     set({ proposals });
     setEnded(true);
     setPhase('review');
@@ -210,7 +213,9 @@ export function UnderstoodV26() {
   const sendFix = async () => {
     const words = fix.trim();
     if (!words) return;
-    const extra = (await ai.talk(words)).data;
+    const said = await ai.talk(words);
+    if (said.support) { setFix(''); nav.go('support'); return; }
+    const extra = said.data;
     set({ proposals: [...data.proposals.filter(p => !extra.some(e => e.id === p.id)), ...extra] });
     setFix('');
     feedback.file();

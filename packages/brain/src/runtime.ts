@@ -2,6 +2,8 @@ import { BrainError, tierFor, type ModelAdapter, type Request, type Result, type
 import { assertRequest, evidenceText, renderFacts, validateOutput } from './policy.ts';
 import { extractStatements } from './extract.ts';
 import { isMemoryOverview, retrieveMemories } from './memory.ts';
+import { detectCrisis, supportResponse, type CrisisSignal } from './safety.ts';
+import { renderData } from './jobs.ts';
 
 function localAnswer(request: Request): Result | null {
   const text = request.text.toLowerCase();
@@ -9,8 +11,6 @@ function localAnswer(request: Request): Result | null {
   // every unrelated message. Reading/extracting it is an explicit action.
   const proposals = extractStatements(request.job === 'extract' || /\b(?:read|extract|attachment|document|file)\b/i.test(request.text) ? evidenceText(request) : request.text);
   const result = (answer: string, sources: Source[] = [], detail?: string): Result => ({ answer, detail, sources, proposals, route: { location: 'rules', model: 'life-rules', tier: tierFor(request.job) }, notices: request.context.sample ? ['Some saved profile information is sample data. Confirmed changes replace the corresponding sample fields.'] : [] });
-  // Immediate signposting does not depend on an available model or network.
-  if (/\b(?:kill myself|end my life|hurt myself|suicid(?:e|al)|want to die|don[’']?t want to (?:be alive|live)|not worth living)\b/i.test(request.text)) return { ...result('If you might act on this now, call your local emergency number or go to the nearest emergency department. In the UK, call 999 for immediate danger, or Samaritans on 116 123 to talk now. Please reach out to someone you trust who can stay with you.'), proposals: [] };
   if (request.job === 'extract') return result(proposals.length ? 'Review what I picked out before it changes your records or plan.' : 'I could not safely identify a fact to file. Try an explicit statement, or start with “Remember that…”.');
   if (!['ask', 'coach', 'plan-explain'].includes(request.job)) return null;
   if (proposals.length && !/\?/.test(request.text)) return result('I’ve picked out changes for you to review. Nothing is filed until you confirm.');
@@ -30,7 +30,17 @@ function localAnswer(request: Request): Result | null {
   return null;
 }
 
+/** The fixed support reply: no model, no filing, no sample-data notice. */
+function supportResult(request: Request, crisis: CrisisSignal): Result {
+  const safety = supportResponse(crisis);
+  return { answer: safety.answer, detail: safety.detail, sources: [], proposals: [], route: { location: 'rules', model: 'life-safety', tier: tierFor(request.job) }, notices: [], safety };
+}
+
 export async function runBrain(request: Request, adapters: ModelAdapter[] = [], signal?: AbortSignal): Promise<Result> {
+  // Immediate signposting comes before validation, models and the network,
+  // so a long or malformed message in distress still gets support.
+  const crisis = typeof request?.text === 'string' ? detectCrisis(request.text) : null;
+  if (crisis) return supportResult(request, crisis);
   assertRequest(request);
   if (signal?.aborted) throw new BrainError('CANCELLED', 'Stopped. Nothing was filed.');
   const local = localAnswer(request);
@@ -56,7 +66,7 @@ export async function runBrain(request: Request, adapters: ModelAdapter[] = [], 
       const output = validateOutput(raw, request);
       const availableSources = [...request.context.facts.map(f => f.source), ...request.context.memories.map(m => m.source)];
       const sources = [...new Map(output.citations.map(id => availableSources.find(source => source.id === id)!).map(source => [source.id, source])).values()];
-      return { answer: renderFacts(output.answer, request), detail: output.detail ? renderFacts(output.detail, request) : undefined, sources, proposals: output.proposals, data: output.data, route: { location: adapter.location, model: adapter.id, tier: tierFor(request.job) }, notices: request.context.sample ? ['The context includes clearly labelled sample data.'] : [] };
+      return { answer: renderFacts(output.answer, request), detail: output.detail ? renderFacts(output.detail, request) : undefined, sources, proposals: output.proposals, data: output.data === undefined ? undefined : renderData(output.data, text => renderFacts(text, request)), route: { location: adapter.location, model: adapter.id, tier: tierFor(request.job) }, notices: request.context.sample ? ['The context includes clearly labelled sample data.'] : [] };
     } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
   }
   if (needsConsent) throw new BrainError('CONSENT_REQUIRED', 'This needs a model outside your phone. Review what will be sent first.');

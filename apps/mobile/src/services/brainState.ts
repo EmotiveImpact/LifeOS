@@ -3,7 +3,9 @@ import type { SeedData } from '@/state/SeedProvider';
 import type { FiledRecord, MemoryCategory } from '@/state/seed';
 import type { UserProfile } from '@life/core/types';
 
-const ids: Record<Proposal['field'], string> = { age: 'age', location: 'location', household: 'home', work: 'work', income: 'income', rent: 'rent', goal: 'aim', note: '' };
+// Profile facts replace one known record each; notes and the record kinds
+// (bills, dates, people, documents, appointments) keep their own ids.
+const ids: Record<Proposal['field'], string> = { age: 'age', location: 'location', household: 'home', work: 'work', income: 'income', rent: 'rent', goal: 'aim', note: '', bill: '', subscription: '', date: '', person: '', document: '', appointment: '' };
 export function proposalRecord(proposal: Proposal, source: 'talk' | 'chat' | 'document', at = new Date().toISOString()): FiledRecord & { brainField: Proposal['field'] } {
   let profilePatch: Partial<UserProfile> | undefined;
   if (proposal.field === 'age') profilePatch = { age: Number(proposal.value) };

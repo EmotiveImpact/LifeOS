@@ -5,3 +5,6 @@ export * from './policy.ts';
 export * from './runtime.ts';
 export * from './lesson.ts';
 export * from './voice.ts';
+export * from './safety.ts';
+export * from './proposals.ts';
+export * from './jobs.ts';
