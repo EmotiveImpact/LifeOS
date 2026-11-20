@@ -136,7 +136,7 @@ export function TalkV26() {
       bottom={bottom}
       footer={phase === 'listening' ? <View style={{ alignItems: 'center', gap: space.tile }}>
         <View style={styles.controls}>
-          <RoundButton icon="more" label="Type instead" onPress={() => nav.replace('chat')} />
+          <RoundButton icon="keyboard" label="Type instead" onPress={() => nav.replace('chat')} />
           <RoundButton icon="stop" size="xl" solid label="Stop and review" haptic="primary" onPress={() => { void review(); }} />
           <RoundButton icon={paused ? 'play' : 'pause'} label={paused ? 'Carry on' : 'Pause'} onPress={() => setPaused(p => !p)} />
         </View>
@@ -408,7 +408,7 @@ export function ChatV26() {
     </Press>
   );
   return (
-    <Page screen="chat" bar={{ kind: 'push', titleNode: title, close: true, action: { kind: 'icon', icon: 'more', label: 'Your conversations', onPress: () => nav.go('chathistory') } }}
+    <Page screen="chat" bar={{ kind: 'push', titleNode: title, close: true, action: { kind: 'icon', icon: 'clock', label: 'Your conversations', onPress: () => nav.go('chathistory') } }}
       footer={<>
         <ConversationAttachments attachments={conversation.current?.attachments ?? []} onRemove={async attachment => {
           try { await removeAttachmentCopy(attachment); conversation.declineNetwork(); update(s => ({ ...s, brain: { ...s.brain, conversations: s.brain.conversations.map(c => c.id === conversation.current?.id ? { ...c, attachments: c.attachments.filter(f => f.id !== attachment.id) } : c) } })); }

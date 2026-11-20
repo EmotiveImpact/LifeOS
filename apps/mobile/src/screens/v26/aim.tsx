@@ -7,7 +7,7 @@ import { ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  DotGrid, Icon, LifeOrb, PhotoFill, Press, RoundButton, Ruler, SectionHead, SegmentedV26, StatusPill, Text, feedback, fonts, photoScrims, photos, radius,
+  ActionMenu, DotGrid, Icon, LifeOrb, PhotoFill, Press, RoundButton, Ruler, SectionHead, SegmentedV26, StatusPill, Text, feedback, fonts, photoScrims, photos, radius,
   space, useTokens, type DotCell,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
@@ -122,7 +122,11 @@ export function AimV26() {
     <Page screen="aim" scroll={false} backdrop={<PhotoBackdrop source={photos.keyshome} focal={{ x: 0.7, y: 0 }} fade={false} />}
       bar={{ kind: 'photo', left: <PhotoRound icon="back" label="Back" onPress={nav.close} />, right: <View style={styles.acts}>
         <PhotoRound icon="arrowUp" label="Share" onPress={() => { void Share.share({ message: statement }); }} />
-        <PhotoRound icon="more" label="More" onPress={() => flag('aim-actions')} />
+        <ActionMenu items={[
+          { label: 'Edit your Aim', sub: 'life keeps the history', icon: 'edit', onPress: () => nav.go('aimnew') },
+          { label: 'This month’s gambit', icon: 'spark', onPress: () => nav.go('gambit') },
+          { label: 'See a glimpse', sub: 'What it will feel like', icon: 'eye', onPress: () => nav.go('glimpse') },
+        ]}>{open => <PhotoRound icon="more" label="Aim actions" onPress={open} />}</ActionMenu>
       </View> }}
       contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
       <View style={styles.aimHead}>
@@ -132,11 +136,6 @@ export function AimV26() {
       <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingTop: 392 }}>
         <View style={[styles.sheet, { backgroundColor: t.canvas }]}>
           <View style={[styles.handle, { backgroundColor: t.surface3 }]} />
-          {data.flags['aim-actions'] ? <RowsCard style={{ marginBottom: space.md }}>
-            <Row icon="doc" title="Edit your Aim" sub="Life keeps the history" onPress={() => nav.go('aimnew')} />
-            <Row icon="spark" title="This month’s gambit" onPress={() => nav.go('gambit')} />
-            <Row icon="eye" title="See a glimpse" sub="What it will feel like" onPress={() => nav.go('glimpse')} />
-          </RowsCard> : null}
           <Between style={{ alignItems: 'flex-end' }}>
             <Figure value={money(seed.finance.deposit)} />
             <Text variant="callout" tone="ink2" style={{ marginBottom: space.tile, textAlign: 'right' }}>{`of ${money(seed.finance.depositGoal)} · `}<Text variant="callout">{`${p}%`}</Text></Text>
@@ -185,7 +184,7 @@ export function GambitV26() {
   const sentence = `I want to ${g.a} and ${g.b} this month.`;
   const month = new Date().toLocaleDateString('en-GB', { month: 'long' });
   return (
-    <Page screen="gambit" bar={{ kind: 'push', action: { kind: 'icon', icon: 'more', label: 'Your Aim', onPress: () => nav.go('aim') } }}
+    <Page screen="gambit" bar={{ kind: 'push', action: { kind: 'text', label: 'Your Aim', onPress: () => nav.go('aim') } }}
       footer={<Btn label={data.profile.monthlyGambit === sentence ? 'Committed · see you on check-in' : 'Commit to this'} onPress={() => { set({ profile: { ...data.profile, monthlyGambit: sentence } }); choose('gambit-k', String(k)); choose('gambit-checkin', time); feedback.file(); nav.close(); }} />}>
       <View style={[styles.photoStatement, { backgroundColor: t.surface2 }]}>
         <PhotoFill source={photos[g.photo]} focal={g.focal} />

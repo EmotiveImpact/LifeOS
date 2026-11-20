@@ -119,7 +119,7 @@ export function SubsV26() {
   };
   const cancelled = s.all.filter(x => x.cancelled);
   return (
-    <Page screen="subs" bar={{ kind: 'push', title: 'Subscriptions', action: { kind: 'icon', icon: 'more', label: 'Show cancelled', onPress: () => flag('subs-show-cancelled') } }}>
+    <Page screen="subs" bar={{ kind: 'push', title: 'Subscriptions', action: { kind: 'text', label: data.flags['subs-show-cancelled'] ? 'Hide cancelled' : 'Show cancelled', onPress: () => flag('subs-show-cancelled') } }}>
       <Eyebrow>Checked every quarter</Eyebrow>
       {s.unused.length
         ? <Display s={`{${show(s.unusedMonthly * 12, 2)} a year} goes on ${word(s.unused.length).toLowerCase()} ${s.unused.length === 1 ? 'thing' : 'things'} you {haven’t used} in 60 days.`} />
@@ -171,7 +171,7 @@ export function AreaMoneyV26() {
   const rebateOpen = !data.completed.includes('uk-hmrc-tax-code');
   const openMission = (id: string) => { set({ selectedMission: id }); nav.go('mission'); };
   return (
-    <Page screen="area" bar={{ kind: 'push', action: { kind: 'icon', icon: 'more', label: 'Why these show here', onPress: () => nav.go('why') } }}>
+    <Page screen="area" bar={{ kind: 'push', action: { kind: 'icon', icon: 'info', label: 'Why these show here', onPress: () => nav.go('why') } }}>
       <View style={styles.rowLine}><View style={[styles.dot, { backgroundColor: accent }]} /><Text variant="callout" tone="ink2">Money · how strong</Text></View>
       <Display s={`{Building.} Buffer at {${bufferMonths.toFixed(1)} months}, tax {up to date}, ${rebateOpen ? '{1 rebate} in progress' : '{rebate} cleared'}.`} />
       <SectionHead title="Missions" link={`${rebateOpen ? 2 : 1} active`} />
@@ -210,7 +210,7 @@ export function TxnV26() {
   const accent = useAreaTint('money').accent, t = useTokens();
   const split2 = !!data.flags['payment-split'];
   return (
-    <Page screen="txn" bar={{ kind: 'push', title: 'Payment', action: { kind: 'icon', icon: 'more', label: 'Change the category', onPress: () => flag('txn-category-edit') } }}
+    <Page screen="txn" bar={{ kind: 'push', title: 'Payment', action: { kind: 'text', label: data.flags['txn-category-edit'] ? 'Done' : 'Edit', onPress: () => flag('txn-category-edit') } }}
       footer={<Btn label={split2 ? 'Split saved · undo' : 'Split with Sam'} icon="people" onPress={() => flag('payment-split')} />}>
       <View style={[styles.strip, { backgroundColor: t.surface2 }]}><PhotoFill source={picture} focal={{ y: 0.36 }} /></View>
       <View style={{ alignItems: 'center', marginTop: space.md }}>
@@ -246,7 +246,7 @@ export function BillV26() {
   const [whole, pence] = split(f.councilTaxMonthly);
   const t = useTokens();
   return (
-    <Page screen="bill" bar={{ kind: 'push', title: 'Council tax', action: { kind: 'icon', icon: 'more', label: 'Why this shows here', onPress: () => nav.go('why') } }}>
+    <Page screen="bill" bar={{ kind: 'push', title: 'Council tax', action: { kind: 'icon', icon: 'info', label: 'Why this shows here', onPress: () => nav.go('why') } }}>
       <BigPhoto source={photos.letter} focal={{ y: 0.64 }} height={240} topLeft={<View style={styles.paperDate}><Text variant="title" style={{ color: photo.ink }}>01</Text><Text variant="micro" style={{ color: photo.ink }}>DEC</Text></View>}
         chipRight={`In ${due} days`} figure={hidden ? '£••••' : whole} pence={hidden ? undefined : pence} sub="a month · Direct Debit · due 1st" style={{ marginTop: space.xxs }} />
       <Box style={{ marginTop: space.sm }}>
@@ -438,13 +438,12 @@ export function DocDetailV26() {
   const renewMonths = 7;
   const cells: DotCell[] = months !== undefined ? Array.from({ length: Math.max(1, months) }, (_, k) => (k >= months - renewMonths ? 'on' : '')) : [];
   return (
-    <Page screen="docdetail" bar={{ kind: 'push', title: doc.name, action: { kind: 'icon', icon: 'more', label: 'Document actions', onPress: () => flag('document-actions') } }}>
+    <Page screen="docdetail" bar={{ kind: 'push', title: doc.name, action: { kind: 'menu', label: 'Document actions', items: [
+      { label: 'Scan a new copy', icon: 'camera', onPress: () => nav.go('scan') },
+      removed ? { label: 'Undo removal', icon: 'repeat', onPress: () => flag(`document-removed-${doc.id}`, false) } : { label: 'Remove this copy', icon: 'trash', destructive: true, onPress: () => flag(`document-removed-${doc.id}`, true) },
+    ] } }}>
       <BigPhoto source={passport ? photos.passport : photos.letter} focal={{ y: passport ? 1 : 0.6 }} height={300} chip={`Expires ${doc.expires}`} chipRight={removed ? undefined : { label: 'Copy saved', icon: 'check' }}
         figure={months !== undefined ? `${months} months` : doc.expires} sub={months !== undefined ? `left on your ${doc.name.toLowerCase()}. ${months > renewMonths ? 'Nothing to do yet.' : 'Time to renew.'}` : 'The date life keeps for you.'} style={{ marginTop: space.xxs }} />
-      {data.flags['document-actions'] ? <RowsCard style={{ marginTop: space.sm }}>
-        <Row icon="camera" title="Scan a new copy" onPress={() => nav.go('scan')} />
-        <Row icon={removed ? 'repeat' : 'trash'} title={removed ? 'Undo removal' : 'Remove this copy'} onPress={() => flag(`document-removed-${doc.id}`, !removed)} />
-      </RowsCard> : null}
       {months !== undefined ? <Box style={{ marginTop: space.sm }}>
         <Between><Text variant="title">The countdown</Text><Text variant="callout" tone="ink2">one dot a month</Text></Between>
         <DotGrid cells={cells} columns={Math.max(cells.length, 12)} style={{ marginTop: space.md }} label={`${months} months left, renew in the last ${renewMonths}`} />
@@ -476,7 +475,7 @@ export function RenewalV26() {
   ];
   const looking = !!data.flags['renew-look'];
   return (
-    <Page screen="renewal" bar={{ kind: 'push', action: { kind: 'icon', icon: 'more', label: 'Why this shows here', onPress: () => nav.go('why') } }}
+    <Page screen="renewal" bar={{ kind: 'push', action: { kind: 'icon', icon: 'info', label: 'Why this shows here', onPress: () => nav.go('why') } }}
       footer={<>
         <Btn label={looking ? 'life looks from 22 Jan' : 'Compare quotes'} icon={looking ? 'check' : 'search'} onPress={() => { flag('renew-look'); feedback.select(); }} />
         <Callout center>Guidance, not advice. Nothing switches without you.</Callout>

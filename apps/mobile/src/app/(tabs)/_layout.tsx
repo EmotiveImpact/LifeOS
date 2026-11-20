@@ -4,9 +4,11 @@ import { Dock, componentSize } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 export default function TabsLayout() {
   const router = useRouter(), nav = useNavigation();
-  // Main navigation stays in one place; scrolling never hides it.
+  // Main navigation stays in one place; scrolling never hides it. Edem (20 Nov) chose the steady full-width bar with
+  // every label showing over the V26 floating pill. Talk opens the voice screen that files what you say as you speak
+  // (the first time, via the microphone primer); hold it to type instead.
   // Full-screen tasks live outside this tab group and retain their own close/back.
-  return <Tabs screenOptions={{ headerShown: false, animation: 'fade' }} tabBar={({ state }) => <Dock variant="float" active={state.routes[state.index].name} items={[{ key: 'today', label: 'Today', icon: color => <Ionicons name="home-outline" size={componentSize.navIcon} color={color} /> }, { key: 'plan', label: 'Plan', icon: color => <Ionicons name="layers-outline" size={componentSize.navIcon} color={color} /> }, { key: 'you', label: 'You', icon: color => <Ionicons name="person-outline" size={componentSize.navIcon} color={color} /> }, { key: 'talk', label: 'Talk', icon: color => <Ionicons name="mic-outline" size={componentSize.navIcon} color={color} />, onLongPress: () => nav.go('talk') }]} onChange={key => { if (key === 'talk') router.push('/(flows)/chat' as Href); else router.navigate(`/(tabs)/${key}` as Href); }} />}>
+  return <Tabs screenOptions={{ headerShown: false, animation: 'fade' }} tabBar={({ state }) => <Dock active={state.routes[state.index].name} items={[{ key: 'today', label: 'Today', icon: color => <Ionicons name="home-outline" size={componentSize.navIcon} color={color} /> }, { key: 'plan', label: 'Plan', icon: color => <Ionicons name="layers-outline" size={componentSize.navIcon} color={color} /> }, { key: 'you', label: 'You', icon: color => <Ionicons name="person-outline" size={componentSize.navIcon} color={color} /> }, { key: 'talk', label: 'Talk', icon: color => <Ionicons name="mic-outline" size={componentSize.navIcon} color={color} />, onLongPress: () => nav.go('chat') }]} onChange={key => { if (key === 'talk') nav.go('talk'); else router.navigate(`/(tabs)/${key}` as Href); }} />}>
     <Tabs.Screen name="today" options={{ title: 'Today' }} />
     <Tabs.Screen name="plan" options={{ title: 'Plan' }} />
     <Tabs.Screen name="you" options={{ title: 'You' }} />
