@@ -24,7 +24,7 @@ import {
 } from './kit';
 import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
 import { levelPlan } from '@/state/you';
-import { NudgeV26, TodayLoops } from './loops';
+import { TodayLoops } from './loops';
 
 // Plan ahead and Get unstuck live with the other core-loop screens; the Today chapter still exports them.
 export { EveningV26, NudgeV26 } from './loops';
@@ -226,9 +226,6 @@ export function TodayV26() {
           {/* The scrim fades; the drawer rises from the bottom edge like a native sheet. */}
           <Appear rise={120}><FeelingDrawer initial={mood ?? 'calm'} onClose={() => { if (!mood) choose('pulse-skipped-day', day); setDrawer(false); }} onSet={m => { logMood(m); decide(''); setDrawer(false); }} /></Appear>
         </SafeAreaProvider>
-      </Modal>
-      <Modal visible={params.nudge === '1'} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => nav.replace('today')}>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}><NudgeV26 onClose={() => nav.replace('today')} /></SafeAreaProvider>
       </Modal>
       <Modal visible={searching} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => setSearching(false)}>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}><SearchV26 onClose={() => setSearching(false)} /></SafeAreaProvider>
