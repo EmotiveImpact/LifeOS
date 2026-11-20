@@ -111,13 +111,13 @@ describe('local SQLite repositories', () => {
 describe('offline sync and export/delete', () => {
   test('without a transport it stays offline and retains operations', async () => {
     const { store } = await fixture(); await store.repos.record.put({ kind: 'fact' });
-    expect(await store.sync()).toEqual({ status: 'offline', pending: 1 });
+    expect(await store.sync()).toEqual({ status: 'offline', pending: 1, applied: 0 });
   });
   test('acknowledgements clear only sent IDs; cursor is persisted with pulls', async () => {
     const { store } = await fixture(); await store.repos.record.put({ kind: 'fact' });
     const cursors: (string | null)[] = [];
     const transport = { push: async (_user: string, ops: OutboxOp[]) => ({ acknowledged: ops.map(o => o.id) }), pull: async (_user: string, cursor: string | null) => { cursors.push(cursor); return { changes: [], cursor: 'next' }; } };
-    expect(await store.sync(transport)).toEqual({ status: 'synced', pending: 0 }); await store.sync(transport); expect(cursors).toEqual([null, 'next']);
+    expect(await store.sync(transport)).toEqual({ status: 'synced', pending: 0, applied: 0 }); await store.sync(transport); expect(cursors).toEqual([null, 'next']);
   });
   test('transport failure never discards the outbox', async () => {
     const { store } = await fixture(); await store.repos.record.put({ kind: 'fact' });

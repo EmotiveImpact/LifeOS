@@ -1,65 +1,34 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Platform, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { settledTranscript } from '@life/brain';
-import { LIFE_DESTINATIONS } from '@life/core/engine';
-import { BigMic, Button, CalendarDay, Card, ChipGroup, ChoiceCard, ControlRow, LifeOrb, NotificationPreview, PhotoChip, Press, Segmented, StatusPill, Text, Ticks, Toggle, TwoTone, feedback, radius, space, useTokens } from '@/design';
-import { useNavigation } from '@/navigation/useNavigation';
-import type { ScreenKey } from '@/navigation/screens';
-import { useSeed } from '@/state/SeedProvider';
-import { money, seed } from '@/state/seed';
-import { auth, health, records } from '@/services/local';
-import { voice } from '@/services/voice';
+/**
+ * First open. Every screen is the V26 build in `v26/firstopen.tsx`; this switch keeps the routes' entry point.
+ * "Signed out" (welcome or signin with ?state=signedout) is the V26 state screen in `v26/states.tsx`.
+ */
 import { useLocalSearchParams } from 'expo-router';
-import { ParentStateContent } from './States';
-import { Heading, Input, LocalNotice, Rows, Screen, layout } from './Screen';
+import type { ScreenKey } from '@/navigation/screens';
+import {
+  AgecheckV26, BuildingV26, CalprimerV26, CamprimerV26, DevicesetupV26, FirstmoveV26, HealthconsentV26, HealthprimerV26, MeasuresetupV26,
+  MicprimerV26, NotifprimerV26, QuestionV26, SigninV26, TellV26, WelcomeV26, WhereV26,
+} from './v26/firstopen';
+import { SignedOutV26 } from './v26/states';
 
-const destinations = [
-  ['Clear the chaos', 'Get on top of bills, tax and anything overdue', 'fix-stabilize'],
-  ['Buy my first home', 'Deposit, schemes and when you could buy', 'buy-home'],
-  ['Launch or grow a business', 'Structure, funding and tax set-asides', 'launch-business'],
-  ['Get healthier', 'Checkups, referrals and daily routines', 'health-longevity'],
-  ['Earn more', 'Skills, pay rises and a better next move', 'level-up-career'],
-];
 export function OnboardingScreen({ screen }: { screen: ScreenKey }) {
-  const t = useTokens(), nav = useNavigation(), { data, set, pref, flag, choose, engine } = useSeed();
-  const params = useLocalSearchParams<{ state?: string; next?: string }>();
-  const [selected, setSelected] = useState(data.profile.destination as string), [device, setDevice] = useState(data.choices['setup-device'] ?? 'phone'), [city, setCity] = useState(data.profile.city), [units, setUnits] = useState<'Metric' | 'Imperial'>('Metric'), [listening, setListening] = useState(false), [transcript, setTranscript] = useState(''), [email, setEmail] = useState('');
-  const [voiceError, setVoiceError] = useState('');
-  useEffect(() => () => { void voice.stop(); }, []);
-  const toggleVoice = async () => {
-    setVoiceError('');
-    try {
-      if (listening) { const final = await voice.stop(); if (final) setTranscript(final); setListening(false); return; }
-      const started = await voice.start((text, final, error) => { setTranscript(text); if (final || error) setListening(false); if (error) setVoiceError(error); });
-      setListening(started);
-    } catch (error) { setListening(false); setVoiceError(error instanceof Error ? error.message : 'Speech could not start. Type instead.'); }
-  };
-  const done = () => { set({ onboardingDone: true }); nav.home(); };
-  const saveArea = () => { set({ profile: { ...data.profile, city: city.trim() || 'London' } }); nav.go('measuresetup'); };
-  if (screen === 'welcome') return <Screen screen={screen} image={require('../../assets/images/scenes/b-welcome.jpg')} footer={<><Button label="Get started" onAtmosphere onPress={() => nav.go('question')} /><Button variant="link" onAtmosphere label="I already have an account" onPress={() => nav.go('signin')} /></>}>
-    <View style={{ minHeight: 460, gap: space.lg, paddingTop: space.xxl }}><LifeOrb size={40} color={t.paper} /><Text variant="welcome" tone="paper">{'Life,\nhandled.'}</Text><TwoTone size="welcomeStatement" onAtmosphere segments={[{ text: 'life finds ', tone: 'quiet' }, { text: 'what you’re owed, ' }, { text: 'what’s ', tone: 'quiet' }, { text: 'due ' }, { text: 'and what’s ', tone: 'quiet' }, { text: 'next.' }]} /></View>
-  </Screen>;
-  if (screen === 'question') return <Screen screen={screen} progress={0} step="01 / 03" footer={<><Button label="Next: where you live" onPress={() => { const found = LIFE_DESTINATIONS.find(v => v.id === selected); set({ profile: { ...data.profile, destination: found?.id ?? data.profile.destination } }); nav.go('where'); }} /><Button variant="link" label="Or just tell life" onPress={() => nav.go('tell')} /></>}>
-    <TwoTone segments={[{ text: 'What would make the biggest difference ' }, { text: 'this year?', tone: 'quiet' }]} />
-    <View style={{ gap: space.xs }}>{destinations.map(([title, description, id]) => <Press key={id} onPress={() => setSelected(id)} accessibilityRole="radio" accessibilityState={{ selected: selected === id }} accessibilityLabel={title}><Card style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: selected === id ? t.surface2 : t.surface }}><Ionicons name={selected === id ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={selected === id ? t.ink : t.ink2} /><View style={{ flex: 1, gap: space.xxs }}><Text variant="title">{title}</Text><Text variant="callout" tone="ink2">{description}</Text></View></Card></Press>)}</View>
-  </Screen>;
-  if (screen === 'tell') return <Screen screen={screen} footer={<><View style={{ alignItems: 'center', gap: space.sm }}><BigMic live={listening} onPress={toggleVoice} /><Text variant="callout" tone="ink2">Tap to start talking · or type instead</Text></View>{transcript ? <Button label="Review what life understood" onPress={async () => { const words = settledTranscript(transcript, await voice.stop()); setListening(false); setTranscript(words); if (!words) return; const result = await records.propose(words); set({ proposals: result.data }); flag('records-confirmed', false); nav.go('understood', { setup: '1' }); }} /> : null}</>}>
-    <Text variant="callout" tone="ink2">Faster than questions</Text><Heading title="Tell life about you, in your own words." sub="Talk for a minute and life will set itself up. You’ll see everything it understood before anything is saved." />
-    <Rows rows={['Where you live and who with', 'What you do for work', 'Anything worrying you about money', 'Health things you’ve been putting off', 'Where you want to be in a few years'].map(title => ({ title }))} />
-    <Input value={transcript} onChange={setTranscript} label="Your words" multiline placeholder="Tell life about you…" />{voiceError ? <Text variant="callout" tone="ink2">{voiceError}</Text> : null}<LocalNotice text="Your words are reviewed before filing. If on-device speech is unavailable, type instead." />
-  </Screen>;
-  if (screen === 'where') return <Screen screen={screen} progress={1} step="02 / 03" footer={<Button label="Next: your body" onPress={saveArea} />}><Heading title="Where do you live?" sub="Your area sets council tax, your NHS trust, local schemes and what homes cost." /><Input label="Search a town or postcode" value={city} onChange={setCity} /><ChipGroup options={['London', 'Manchester', 'Birmingham', 'Leeds', 'Glasgow', 'Bristol', 'Cardiff', 'Belfast'].map(v => ({ value: v, label: v }))} value={city} onChange={setCity} /><Text variant="callout" tone="ink2">Only your area is stored, never your exact address.</Text></Screen>;
-  if (screen === 'measuresetup') return <Screen screen={screen} step="04 / 07" footer={<><Button label="Continue" onPress={() => nav.go('devicesetup')} /><Button variant="link" label="Skip for now" onPress={() => nav.go('devicesetup')} /></>}><Heading title="Your body, in three numbers" sub="So food targets and health ranges fit you, not an average person." /><Segmented options={['Metric', 'Imperial'].map(v => ({ value: v as 'Metric' | 'Imperial', label: v }))} value={units} onChange={setUnits} />{([{ key: 'heightCm', title: 'Height', unit: units === 'Metric' ? 'cm' : 'in', factor: units === 'Metric' ? 1 : 1 / 2.54 }, { key: 'weightKg', title: 'Weight', unit: units === 'Metric' ? 'kg' : 'lb', factor: units === 'Metric' ? 1 : 2.20462 }, { key: 'waistCm', title: 'Waist (optional)', unit: units === 'Metric' ? 'cm' : 'in', factor: units === 'Metric' ? 1 : 1 / 2.54 }] as const).map(v => <Card key={v.key}><View style={layout.between}><View style={{ gap: space.xxs }}><Text variant="callout" tone="ink2">{v.title}</Text><Text variant="numeralL">{Math.round(data[v.key] * v.factor)}<Text variant="callout" tone="ink2">{` ${v.unit}`}</Text></Text></View><View style={layout.row}>{[-1, 1].map(delta => <Press key={delta} onPress={() => set({ [v.key]: Math.max(1, data[v.key] + delta / v.factor) })} accessibilityLabel={`${delta > 0 ? 'Increase' : 'Decrease'} ${v.title}`} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: t.surface2, borderRadius: 12 }}><Text variant="headline">{delta > 0 ? '+' : '−'}</Text></Press>)}</View></View></Card>)}</Screen>;
-  if (screen === 'devicesetup') return <Screen screen={screen} step="05 / 07" footer={<Button label="Continue" onPress={() => { choose('setup-device', device); nav.go(device === 'phone' ? 'notifprimer' : 'healthprimer'); }} />}><Heading title="Do you wear anything?" sub="life reads sleep, heart rate and workouts from it. You can add more later." />{[['Apple Watch', 'via Apple Health'], ['Oura ring', 'Oura account'], ['WHOOP', 'WHOOP account'], ['Garmin, Fitbit, Polar…', 'via Apple Health or Health Connect'], ['Just my phone', 'Steps and sleep estimates']].map(([title, description]) => <ChoiceCard key={title} title={title} description={description} selected={device === (title === 'Just my phone' ? 'phone' : title)} onPress={() => setDevice(title === 'Just my phone' ? 'phone' : title)} />)}<LocalNotice /></Screen>;
-  if (screen === 'building') return <Screen screen={screen} footer={<Button label="See my plan" onPress={() => nav.replace('firstmove')} />}><LifeOrb size={56} state="searching" /><TwoTone segments={[{ text: 'Found ', tone: 'quiet' }, { text: `${engine.tasks.length} things ` }, { text: 'to set up, with a clear first move.', tone: 'quiet' }]} /><Ticks count={40} filled={40} /><Rows rows={[{ title: 'Your tax record', sub: `HMRC · ${engine.income.taxYear}`, value: 'Rules matched' }, { title: 'Council tax discounts', sub: `${data.profile.city} · your household`, value: 'Rules matched' }, { title: 'NHS waiting times', sub: 'Cardiology · sample referral', value: 'Review' }, { title: 'Schemes you qualify for', sub: `${engine.tasks.length} matched to your answers`, value: 'Found' }, { title: 'Your monthly costs', sub: 'Rent, bills, subscriptions', value: 'Mapped' }]} /><LocalNotice text="Calculated on this phone from your answers and sample records." /></Screen>;
-  if (screen === 'firstmove') return <Screen screen={screen} image={require('../../assets/images/scenes/learn-gotit.jpg')} imageHeight={360} footer={<><Button label="Do it now" onPress={() => { set({ onboardingDone: true }); nav.go('lessonready'); }} /><Button variant="link" label="Go to Today" onPress={done} /></>}><View style={{ minHeight: space.xxxl * 4, justifyContent: 'flex-end', gap: space.sm }}><PhotoChip><Text variant="callout" tone="paper">Your first move</Text></PhotoChip><Heading tone="paper" title="Start with two minutes" /></View><Card style={{ gap: space.sm }}><Text variant="headline">Check your tax code</Text><Text variant="body" tone="ink2">Your payslip shows an emergency code. You might be owed money.</Text><Ticks count={10} filled={1} /></Card></Screen>;
-
-  if (screen === 'signin' && params.state === 'signedout') return <Screen screen={screen}><ParentStateContent kind="signedout" /></Screen>;
-  if (screen === 'signin') return <Screen screen={screen} title="Keep your plan safe" footer={<>{(['apple', 'google', 'email'] as const).map((provider, i) => <Button key={provider} variant={i === 0 ? 'primary' : 'secondary'} label={`Preview ${provider === 'email' ? 'email' : provider === 'apple' ? 'Apple' : 'Google'} sign-in`} onPress={async () => { if (provider === 'email' && !email) { flag('email-entry', true); return; } await auth.signIn(provider); flag('signed-in-preview', true); done(); }} />)}<Button variant="link" label="Not now, keep it on this phone" onPress={done} /></>}><LifeOrb size={44} /><Text variant="body" tone="ink2">Sign in so your plan survives a new phone. life never posts anything and never sells your data.</Text>{data.flags['email-entry'] ? <Input label="Your email" value={email} onChange={setEmail} /> : null}<LocalNotice text="Local preview · sign-in is not connected yet. Your plan stays on this phone." /></Screen>;
-  if (screen === 'healthprimer') return <Screen screen={screen} footer={<><Button label="Continue with sample readings" onPress={async () => { await health.connect(Platform.OS === 'android' ? 'Health Connect' : 'Apple Health'); flag('health-connected', true); flag(`device-${Platform.OS === 'android' ? 'Health Connect' : 'Apple Health'}`, true); if (params.next === 'devices' || params.next === 'body') nav.close(); else nav.go('notifprimer'); }} /><Button variant="link" label="Not now" onPress={() => { choose('health-permission', 'declined'); if (params.next === 'devices' || params.next === 'body') nav.close(); else nav.go('notifprimer'); }} /></>}><Heading title="Plan around how you actually slept" sub={`Connect ${Platform.OS === 'android' ? 'Health Connect' : 'Apple Health'} and Today gets lighter after a bad night, and harder when you’re ready for it.`} /><Card>{[{ title: 'Sleep', sub: 'For your sleep need, debt and bedtime', key: 'sleep', enabled: true }, { title: 'Heart rate and HRV', sub: 'For your readiness score', key: 'heart', enabled: true }, { title: 'Workouts and steps', sub: 'For your load', key: 'workouts', enabled: true }, { title: 'Food and water', sub: 'Only if you log them elsewhere', key: 'food', enabled: false }].map(item => <ControlRow key={item.key} label={item.title} sub={item.sub}><Toggle value={data.choices[`health-primer-${item.key}`] ? data.choices[`health-primer-${item.key}`] === 'on' : item.enabled} onChange={enabled => choose(`health-primer-${item.key}`, enabled ? 'on' : 'off')} accessibilityLabel={item.title} /></ControlRow>)}</Card><Text variant="callout" tone="ink2">Stays on your phone. Never in iCloud, never for ads. Change it any time in Settings.</Text><LocalNotice /></Screen>;
-  if (screen === 'notifprimer') return <Screen screen={screen} footer={<><Button label="Preview nudges" onPress={() => { pref('notifications', true); nav.go('aimnew'); }} /><Button variant="link" label="Not now" onPress={() => nav.go('aimnew')} /></>}><Heading title="Can life tap you on the shoulder?" sub="One nudge a day at most, only when it’s worth it. Never between 9pm and 8am." /><NotificationPreview body="You’ve got 20 free minutes. Finish the P87 and your rebate starts moving." /><Rows rows={[{ title: 'Quiet hours', value: '21:00–08:00' }, { title: 'Deadlines under 24 hours', value: 'On' }]} /><LocalNotice /></Screen>;
-  if (screen === 'micprimer') return <Screen screen={screen} footer={<><Button label="Allow the microphone" onPress={async () => { setVoiceError(''); try { await voice.requestPermission(); flag('mic-preview', true); nav.replace('talk'); } catch (error) { setVoiceError(error instanceof Error ? error.message : 'Microphone access is unavailable.'); } }} /><Button variant="link" label="I’ll type instead" onPress={() => { choose('mic-permission', 'declined'); nav.replace('chat'); }} /></>}><LifeOrb size={96} state="listening" /><Heading title="Talk to life, out loud" sub="life only listens while you’re talking to it. Your voice becomes text on your phone where it can, and the recording is never kept." />{voiceError ? <Text variant="callout" tone="ink2">{voiceError}</Text> : null}<LocalNotice text="Speech starts only after permission and an available on-device recogniser. No sample transcript is substituted." /></Screen>;
-  if (screen === 'camprimer') return <Screen screen={screen} footer={<Button label="Preview the camera" onPress={() => { flag('camera-preview', true); nav.replace((['snap', 'barcode', 'labelscan', 'scan'] as string[]).includes(params.next ?? '') ? params.next as ScreenKey : 'snap'); }} />}><Heading title="Snap it, and life reads it" /><Rows rows={[{ title: 'Meals', sub: 'Calories and protein in a snap' }, { title: 'Letters and payslips', sub: 'Dates, amounts, what to do' }, { title: 'Barcodes', sub: 'Exact food labels' }]} /><Text variant="callout" tone="ink2">Photos are read, then deleted unless you keep them.</Text><LocalNotice /></Screen>;
-  return <Screen screen={screen} footer={<><Button label="Preview calendar view" onPress={() => { flag('calendar-preview', true); nav.replace('calendar'); }} /><Button variant="link" label="Not now" onPress={() => { choose('calendar-permission', 'declined'); nav.close(); }} /></>}><Heading title="Nudges that fit your day" sub="life looks at when you’re busy, never at what the meeting is about, and never changes your calendar." /><CalendarDay blocks={[{ at: '09:00', title: 'Design review' }, { at: '13:40', title: '20 free minutes · nudge here', free: true }, { at: '14:00', title: 'Deep work' }]} /><LocalNotice /></Screen>;
+  const { state } = useLocalSearchParams<{ state?: string }>();
+  if (state === 'signedout' && (screen === 'signin' || screen === 'welcome')) return <SignedOutV26 />;
+  switch (screen) {
+    case 'welcome': return <WelcomeV26 />;
+    case 'agecheck': return <AgecheckV26 />;
+    case 'question': return <QuestionV26 />;
+    case 'tell': return <TellV26 />;
+    case 'building': return <BuildingV26 />;
+    case 'where': return <WhereV26 />;
+    case 'healthconsent': return <HealthconsentV26 />;
+    case 'healthprimer': return <HealthprimerV26 />;
+    case 'notifprimer': return <NotifprimerV26 />;
+    case 'micprimer': return <MicprimerV26 />;
+    case 'camprimer': return <CamprimerV26 />;
+    case 'devicesetup': return <DevicesetupV26 />;
+    case 'firstmove': return <FirstmoveV26 />;
+    case 'measuresetup': return <MeasuresetupV26 />;
+    case 'signin': return <SigninV26 />;
+    default: return <CalprimerV26 />;
+  }
 }

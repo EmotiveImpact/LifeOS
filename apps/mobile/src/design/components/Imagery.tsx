@@ -133,6 +133,6 @@ const styles = StyleSheet.create({
   // absolute insets: the card then clips a corner rather than a cover crop.
   photo: { width: '100%', height: '100%' },
   card: { borderRadius: radius.lg, overflow: 'hidden' },
-  cardBody: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, gap: 6 },
+  cardBody: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: space.lg, gap: space.xxs },
   chip: { alignSelf: 'flex-start', height: 24, paddingHorizontal: 9, borderRadius: 7, backgroundColor: '#0D0E10', justifyContent: 'center' },
 });

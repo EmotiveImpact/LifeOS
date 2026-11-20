@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import {fileURLToPath} from 'node:url';
+const here=path.dirname(fileURLToPath(import.meta.url));
+const source=fs.readFileSync(path.join(here,'life-complete-board-v21.html'),'utf8');
+let html=source.replace('<title>life · v21 · considered throughout</title>','<title>life · V22 · one considered language</title>');
+const css=fs.readFileSync(path.join(here,'visual-board-v22.css'),'utf8');
+const styleEnd=html.lastIndexOf('</style>')+8;
+if(styleEnd<8)throw new Error('Board styles absent');
+html=html.slice(0,styleEnd)+'\n<style>'+css+'</style>'+html.slice(styleEnd);
+const hook='\nrenderMoodCards();\nsyncTheme();';
+const reports=Object.fromEntries(['money','body','personal'].map(domain=>[domain,JSON.parse(fs.readFileSync(path.join(here,`v22-${domain}-report.json`),'utf8'))]));
+const scope={domains:Object.fromEntries(Object.entries(reports).map(([domain,report])=>[domain,{changed: Array.isArray(report.changedKeys)?report.changedKeys:Object.keys(report.changedKeys),retained:Array.isArray(report.retainedKeys)?report.retainedKeys.map(k=>typeof k==='string'?k:k.key):Object.keys(report.retainedKeys)}])),limits:Object.values(reports).flatMap(report=>report.limits)};
+if(!html.includes(hook))throw new Error('Board hook absent');
+html=html.replace(hook,'\nwindow.__V22_IMPLEMENTATION='+JSON.stringify(scope)+';\n'+fs.readFileSync(path.join(here,'visual-board-v22.js'),'utf8')+hook);
+for(const [i,m]of [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].entries())new vm.Script(m[1],{filename:`v22-${i}`});
+const output=path.join(here,'life-complete-board-v22.html');fs.writeFileSync(output,html);console.log(JSON.stringify({output,bytes:Buffer.byteLength(html),source:'v21 unchanged',status:'V22 seven design/implementation passes; local Expo app updated, not a signed native build'}));

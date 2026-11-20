@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import { AppState, useColorScheme } from 'react-native';
 import { Uniwind } from 'uniwind';
 import { setFeedbackPrefs } from '@/design/feedback';
 import { engineSnapshot, seed, seedAim, seedMeal, seedPeople, seedProfile, seedPulseLog, seedRecords, seedKnownRecords, seedKnowledge, type ChiefAim, type FiledRecord, type MealItem, type MemoryEntry, seedMemoryCategories } from './seed';
@@ -9,13 +9,14 @@ import type { ProjectionStorage } from './persistence.types';
 import type { UserProfile } from '@life/core/types';
 import { emptyBrainState, type BrainState } from '@life/brain';
 import { confirmBrainRecords } from '@/services/brainState';
+import { currentTransport } from '@/services/syncTransport';
 
 export type SeedData = {
   brain: BrainState;
   profile: UserProfile; onboardingDone: boolean; aim: ChiefAim | null; records: FiledRecord[]; proposals: FiledRecord[]; knowledge: typeof seedKnowledge;
   completed: string[]; missionSteps: Record<string, boolean>; selectedMission: string;
   pulseLog: { at: string; moodId: string; x: number; y: number }[];
-  people: typeof seedPeople; meal: MealItem[]; mealLogged: boolean; meals: { id: string; name: string; at: string; items: MealItem[] }[];
+  people: typeof seedPeople; meal: MealItem[]; mealLogged: boolean; meals: { id: string; name: string; at: string; items: MealItem[]; day?: string; photo?: string; via?: 'photo' | 'said' | 'scan' | 'search' | 'saved' | 'quick' | 'menu' | 'label' | 'plan'; from?: string }[];
   habits: typeof seed.habits; journal: string[]; weightKg: number; heightCm: number; waistCm: number;
   learned: string[]; memories: MemoryEntry[];
   prefs: { dark: boolean; sounds: boolean; haptics: boolean; handDrawn: boolean; hideNumbers: boolean; hideBalances: boolean; glimpses: boolean; followMood: boolean; look: 'mix' | 'places'; notifications: boolean; privateMode: boolean; addback: 'None' | 'Half' | 'All' };
@@ -37,7 +38,21 @@ type SeedContextValue = {
   pref: <K extends keyof SeedData['prefs']>(key: K, value: SeedData['prefs'][K]) => void;
   flag: (key: string, value?: boolean) => void; choose: (key: string, value: string) => void; draft: (key: string, value: string) => void;
   confirmRecords: () => void; engine: ReturnType<typeof engineSnapshot>;
+  /**
+   * After sign-in, then sync and reload. `restore` (Welcome back, on a phone with nothing of its own) clears this
+   * phone first so the account's life comes back whole; otherwise this phone's things merge into the account.
+   */
+  joinAccount: (accountId: string, options: { restore: boolean }) => Promise<{ setUp: boolean }>;
+  /** Pushes and pulls now (also runs when the app comes to the front and a few seconds after each change). */
+  syncNow: () => Promise<void>;
 };
+/** Fills in anything a saved projection lacks from the defaults. */
+function hydrate(loaded: unknown): SeedData {
+  if (loaded !== null && (typeof loaded !== 'object' || Array.isArray(loaded))) throw new Error('Invalid local projection');
+  const saved = (loaded ?? {}) as Partial<SeedData>;
+  return { ...initial, ...saved, memories: (saved.memories ?? initial.memories).map(memory => ({ ...memory, category: memory.category ?? seedMemoryCategories[memory.id] })), prefs: { ...initial.prefs, ...saved.prefs }, knowledge: { ...initial.knowledge, ...saved.knowledge, areas: { ...initial.knowledge.areas, ...saved.knowledge?.areas } } };
+}
+const SYNC_AFTER_CHANGE_MS = 3000;
 const Context = createContext<SeedContextValue | null>(null);
 
 export function SeedProvider({ children }: { children: ReactNode }) {
@@ -47,6 +62,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
   const storage = useRef<ProjectionStorage | null>(null), writes = useRef<Promise<void>>(Promise.resolve());
   const latest = useRef(data), lastQueued = useRef(''), revision = useRef(0), committed = useRef(0);
   const resetting = useRef<true | SeedData | null>(null);
+  const needsReload = useRef(false), syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   latest.current = data;
 
   useEffect(() => {
@@ -62,13 +78,11 @@ export function SeedProvider({ children }: { children: ReactNode }) {
         await opened.save(latest.current);
         committed.current = revision.current;
       }
-      const loaded = await opened.load();
-      if (loaded !== null && (typeof loaded !== 'object' || Array.isArray(loaded))) throw new Error('Invalid local projection');
-      const saved = (loaded ?? {}) as Partial<SeedData>;
-      const next: SeedData = { ...initial, ...saved, memories: (saved.memories ?? initial.memories).map(memory => ({ ...memory, category: memory.category ?? seedMemoryCategories[memory.id] })), prefs: { ...initial.prefs, ...saved.prefs }, knowledge: { ...initial.knowledge, ...saved.knowledge, areas: { ...initial.knowledge.areas, ...saved.knowledge?.areas } } };
+      const next = hydrate(await opened.load());
       if (!active) return;
       lastQueued.current = JSON.stringify(next);
       latest.current = next; setData(next); setStorageMode(opened.mode); setHydrated(true);
+      void syncNow();
     })().catch(() => { if (active) setStorageError(true); });
     return () => {
       active = false; storage.current = null;
@@ -94,8 +108,37 @@ export function SeedProvider({ children }: { children: ReactNode }) {
     writes.current = writes.current.then(async () => {
       await target.save(snapshot);
       committed.current = version;
+      if (needsReload.current) await reload(target);
     }).catch(() => setStorageError(true));
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => { void syncNow(); }, SYNC_AFTER_CHANGE_MS);
   }, [data, hydrated, storageError]);
+
+  // Sync whenever the app comes back to the front.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', state => { if (state === 'active') void syncNow(); });
+    return () => { subscription.remove(); if (syncTimer.current) clearTimeout(syncTimer.current); };
+  }, []);
+
+  /** Shows what sync brought in. Waits if the person has unsaved changes, so nothing they just did is lost. */
+  async function reload(target: ProjectionStorage, force = false) {
+    if (!force && revision.current !== committed.current) { needsReload.current = true; return; }
+    needsReload.current = false;
+    const next = hydrate(await target.load());
+    if (storage.current !== target) return;
+    latest.current = next; setData(next);
+  }
+  /** The network part runs beside the local saves, never in their queue, so a slow connection can't hold up a save. */
+  async function syncNow() {
+    const target = storage.current;
+    if (!target || target.mode !== 'sqlite' || resetting.current) return;
+    try {
+      const transport = await currentTransport();
+      if (!transport) return;
+      const { applied } = await target.sync(transport);
+      if (applied > 0) writes.current = writes.current.then(() => reload(target)).catch(() => {});
+    } catch { /* Offline or signed out: the outbox keeps everything for the next try. */ }
+  }
 
   const engine = useMemo(() => engineSnapshot(data.profile, data.completed), [data.profile, data.completed]);
   const value: SeedContextValue = {
@@ -120,6 +163,16 @@ export function SeedProvider({ children }: { children: ReactNode }) {
       const fromBrain = accepted.some(record => 'brainField' in record);
       return { ...d, brain: confirmedBrain.brain, memories: confirmedBrain.memories, records, proposals: [], knowledge: { ...d.knowledge, overall: fromBrain ? d.knowledge.overall : Math.max(d.knowledge.overall, 81), areas: fromBrain ? d.knowledge.areas : Object.fromEntries(Object.entries(d.knowledge.areas).map(([area, value]) => [area, Math.min(98, value + Math.max(0, 81 - d.knowledge.overall))])) as typeof seedKnowledge.areas, recordCount: d.knowledge.recordCount + accepted.filter(record => !d.records.some(existing => existing.id === record.id && existing.status === 'confirmed')).length }, profile: accepted.reduce((profile, record) => ({ ...profile, ...record.profilePatch }), d.profile) };
     }),
+    joinAccount: async (accountId, { restore }) => {
+      await writes.current;
+      const target = storage.current;
+      if (!target || target.mode !== 'sqlite') return { setUp: latest.current.onboardingDone };
+      await target.adoptAccount(accountId, restore);
+      try { const transport = await currentTransport(); if (transport) await target.sync(transport); } catch { /* Pulled next time. */ }
+      await (writes.current = writes.current.then(() => reload(target, true)));
+      return { setUp: latest.current.onboardingDone };
+    },
+    syncNow,
     reset: async () => {
       if (!storage.current || resetting.current) return false;
       resetting.current = true;

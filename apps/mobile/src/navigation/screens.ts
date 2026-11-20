@@ -8,6 +8,14 @@ export const screens = {
     "route": "/(flows)/onboarding/welcome",
     "chapter": "First open"
   },
+  "agecheck": {
+    "key": "agecheck",
+    "title": "Your date of birth",
+    "kind": "Full screen",
+    "from": "Welcome (18+ check, gap list)",
+    "route": "/(flows)/onboarding/agecheck",
+    "chapter": "First open"
+  },
   "question": {
     "key": "question",
     "title": "One question at a time",
@@ -46,6 +54,14 @@ export const screens = {
     "kind": "Sheet",
     "from": "after the plan is built",
     "route": "/(sheets)/signin",
+    "chapter": "First open"
+  },
+  "healthconsent": {
+    "key": "healthconsent",
+    "title": "Your health data",
+    "kind": "Full screen",
+    "from": "setup, Body or Settings (consent, gap list)",
+    "route": "/(flows)/onboarding/healthconsent",
     "chapter": "First open"
   },
   "healthprimer": {
@@ -1693,15 +1709,15 @@ export const screens = {
     "title": "Widgets and Live Activity",
     "kind": "Home / Lock Screen",
     "from": "iOS",
-    "route": null,
+    "route": "/outside/widgets",
     "chapter": "Outside the app"
   },
   "sharecard": {
     "key": "sharecard",
     "title": "Weekly recap, shared",
-    "kind": "Share sheet",
+    "kind": "Sheet",
     "from": "Weekly recap → Share",
-    "route": null,
+    "route": "/(sheets)/sharecard",
     "chapter": "Outside the app"
   },
   "watch": {
@@ -1709,7 +1725,7 @@ export const screens = {
     "title": "Watch companion",
     "kind": "Watch",
     "from": "Apple Watch / Wear OS",
-    "route": null,
+    "route": "/outside/watch",
     "chapter": "Outside the app"
   },
   "lockpush": {
@@ -1717,7 +1733,7 @@ export const screens = {
     "title": "Notifications",
     "kind": "Notification",
     "from": "Lock Screen",
-    "route": null,
+    "route": "/outside/lockpush",
     "chapter": "Outside the app"
   },
   "androidwidget": {
@@ -1725,7 +1741,7 @@ export const screens = {
     "title": "Android widgets",
     "kind": "Home screen",
     "from": "Android",
-    "route": null,
+    "route": "/outside/androidwidget",
     "chapter": "Outside the app"
   },
   "siri": {
@@ -1733,7 +1749,7 @@ export const screens = {
     "title": "Siri and Shortcuts",
     "kind": "Voice",
     "from": "Siri / Assistant",
-    "route": null,
+    "route": "/outside/siri",
     "chapter": "Outside the app"
   },
   "orb": {
@@ -1741,7 +1757,7 @@ export const screens = {
     "title": "The orb, evolving",
     "kind": "Component",
     "from": "everywhere",
-    "route": "@/design",
+    "route": "/outside/orb",
     "chapter": "The orb and motion"
   },
   "topbars": {
@@ -1749,7 +1765,7 @@ export const screens = {
     "title": "The top bar, everywhere",
     "kind": "Component",
     "from": "everywhere",
-    "route": "@/design",
+    "route": "/outside/topbars",
     "chapter": "The orb and motion"
   },
   "orbnext": {
@@ -1757,7 +1773,7 @@ export const screens = {
     "title": "Orb states, next",
     "kind": "Component",
     "from": "everywhere",
-    "route": "@/design",
+    "route": "/outside/orbnext",
     "chapter": "The orb and motion"
   }
 } as const;

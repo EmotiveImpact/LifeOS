@@ -1,0 +1,148 @@
+/* v20 shell: one clear reading order, compact groups, fixed original chrome. */
+.v20-shell{overscroll-behavior:none}
+.v20-shell .scroll{overscroll-behavior-y:none;scroll-padding-top:20px}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system)>.pinned{position:absolute;inset:0 0 auto;z-index:44;background:var(--bg)}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system)>.pinned.clear{background:transparent}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system)>.pinned .tb{position:relative}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .tb.push.scrolled{box-shadow:none}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .sq,
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .ic{box-shadow:none!important}
+
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .card{border:0!important;border-radius:20px;box-shadow:var(--shadow)!important}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .li{gap:12px;padding:12px 0;box-shadow:none!important}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .li+.li{box-shadow:none!important}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .v20-shell-row .t-body{font-size:15px;line-height:20px}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .v20-shell-row .t-callout{font-size:13px;line-height:16px}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .v20-shell-section-head{padding:12px 0 8px!important}
+.v20-shell:not(.v20-shell--outside):not(.v20-shell--system) .v20-shell-section-head .t-title3{font-size:15px;line-height:20px}
+
+.v20-shell .v20-shell-body{gap:20px!important;padding-left:20px;padding-right:20px}
+.v20-shell .v20-shell-intro{display:flex;flex-direction:column;gap:8px}
+.v20-shell .v20-shell-intro>.ic,
+.v20-shell .v20-shell-intro>.sqb{margin-bottom:4px}
+.v20-shell .v20-shell-lead{font-size:24px!important;line-height:32px!important;letter-spacing:-.022em}
+.v20-shell .v20-shell-help{max-width:340px;font-size:13px;line-height:20px}
+.v20-shell .v20-shell-section-stack,
+.v20-shell .v20-shell-settings-group{display:flex;flex-direction:column;gap:8px}
+.v20-shell .v20-shell-section-stack{padding:0;border-radius:20px;background:var(--surface);box-shadow:var(--shadow)}
+.v20-shell .v20-shell-section-stack>.card{margin:0;border-radius:14px!important;background:transparent!important;box-shadow:none!important}
+.v20-shell .v20-shell-actions{display:flex;flex-direction:column;gap:8px;padding-top:4px}
+.v20-shell .v20-shell-actions>.btn{margin:0}
+.v20-shell .v20-shell-fixed-actions{gap:8px!important;padding:12px 20px 24px!important;background:var(--bg)}
+.v20-shell .v20-shell-fixed-actions>.btn{min-height:48px}
+.v20-shell .v20-shell-action{min-height:48px}
+
+/* Setup: headline, reason, choice, then one action. */
+.v20-shell--start .v20-shell-body{gap:20px!important}
+.v20-shell--start .v20-shell-intro{gap:12px}
+.v20-shell--start .v20-shell-intro>.t-title1{font-size:32px;line-height:36px;letter-spacing:-.03em}
+.v20-shell--start .v20-shell-intro>.t-body{font-size:15px;line-height:24px}
+.v20-shell--start .v20-shell-section-stack{gap:8px;background:transparent;box-shadow:none}
+.v20-shell--start .v20-shell-section-stack>.card{background:var(--surface)!important;box-shadow:var(--shadow)!important}
+.v20-shell--start .v20-shell-body>.card,
+.v20-shell--start .v20-shell-body>.v20-shell-section{padding:16px}
+.v20-shell--key-question .v20-shell-body,
+.v20-shell--key-where .v20-shell-body,
+.v20-shell--key-measuresetup .v20-shell-body{padding-top:24px!important}
+.v20-shell--key-healthprimer .v20-shell-body{padding-top:24px!important;padding-bottom:120px}
+.v20-shell--key-notifprimer .v20-shell-body,
+.v20-shell--key-micprimer .v20-shell-body,
+.v20-shell--key-calprimer .v20-shell-body{padding-top:24px!important;padding-bottom:112px}
+.v20-shell--key-devicesetup .v20-shell-body{padding-top:20px!important;padding-bottom:112px}
+.v20-shell--key-building .v20-shell-body{gap:16px!important}
+.v20-shell--key-building .v20-shell-lead{font-size:24px!important;line-height:32px!important}
+.v20-shell--key-signin .v20-shell-body{gap:16px!important}
+
+/* Talk: the conversation is the surface; filing and actions sit below it. */
+.v20-shell--talk .v20-shell-body{gap:20px!important}
+.v20-shell--talk .v20-shell-intro{gap:8px}
+.v20-shell--talk .v20-shell-section-stack{gap:8px}
+.v20-shell--key-chat .v20-shell-chat-thread{top:108px!important;bottom:112px!important;gap:12px!important;overflow-y:auto!important;overscroll-behavior-y:none}
+.v20-shell--key-chat .v20-shell-chat-thread>.card{border-radius:20px!important;box-shadow:none!important;padding:12px 16px!important}
+.v20-shell--key-chat .v20-shell-chat-composer{gap:8px!important}
+.v20-shell--key-chat [data-sg]+.row{height:52px!important;border-radius:20px!important;background:var(--surface)!important;padding:0 8px!important}
+.v20-shell--key-chathistory .scroll>.pad.col.rel{gap:4px!important;padding-top:12px!important;padding-bottom:8px}
+.v20-shell--key-chathistory .scroll>.pad.col:not(.rel){gap:16px!important;padding-top:8px!important}
+.v20-shell--key-understood .v20-shell-body{padding-top:16px!important}
+.v20-shell--key-editfiled .v20-shell-body{gap:16px!important;padding-top:16px!important}
+.v20-shell--key-editfiled .v20-shell-actions{padding-top:4px}
+
+/* Settings: compact rows live in a few calm groups, never a stack of equal boxes. */
+.v20-shell--settings .v20-shell-body{gap:20px!important;padding-top:16px!important;padding-bottom:40px}
+.v20-shell--settings .v20-shell-settings-group{gap:8px}
+.v20-shell--settings .v20-shell-settings-group>.card{margin:0}
+.v20-shell--settings .v20-shell-section-stack{gap:0;background:var(--surface);box-shadow:var(--shadow)}
+.v20-shell--settings .v20-shell-section-stack>.card{padding-top:4px!important;padding-bottom:4px!important}
+.v20-shell--settings .v20-shell-body>.card{padding:4px 16px!important}
+.v20-shell--settings .v20-shell-body>.card.row{padding:16px!important}
+.v20-shell--settings .v20-shell-row{min-height:52px}
+.v20-shell--settings .segm{border-radius:12px;padding:4px;gap:4px}
+.v20-shell--settings .segm button{min-height:40px;border-radius:12px;font-size:13px}
+.v20-shell--key-settings .v20-shell-settings-group:first-child>.card:first-child{padding:16px!important}
+.v20-shell--key-settings .v20-shell-settings-group:last-child{margin-top:4px}
+.v20-shell--key-ondevice .v20-shell-help,
+.v20-shell--key-yourai .v20-shell-help,
+.v20-shell--key-privacy .v20-shell-help,
+.v20-shell--key-aimodels .v20-shell-help{max-width:100%}
+.v20-shell--key-deleteacct .v20-shell-body{gap:20px!important;padding-top:24px!important}
+.v20-shell--key-deleteacct .v20-shell-intro{gap:8px}
+.v20-shell--key-plussuccess .v20-shell-body{gap:16px!important}
+
+/* Today and You details: one lead signal, then evidence, then the action. */
+.v20-shell--today .v20-shell-body,
+.v20-shell--you .v20-shell-body{gap:20px!important;padding-top:16px!important;padding-bottom:40px}
+.v20-shell--today .v20-shell-lead,
+.v20-shell--you .v20-shell-lead{font-size:24px!important;line-height:32px!important}
+.v20-shell--today .v20-shell-section-stack,
+.v20-shell--you .v20-shell-section-stack{gap:0}
+.v20-shell--today .v20-shell-actions,
+.v20-shell--you .v20-shell-actions{padding-top:4px}
+.v20-shell--key-profile .v20-shell-body>.row:first-child{gap:16px!important;padding:4px 0 8px}
+.v20-shell--key-profile .v20-shell-body>.row:first-child .t-title2{font-size:20px;line-height:24px}
+.v20-shell--key-memory .scroll>.pad.col.rel{gap:4px!important;padding-top:12px!important;padding-bottom:8px}
+.v20-shell--key-memory .scroll>.pad.col:not(.rel){gap:16px!important;padding-top:8px!important}
+.v20-shell--key-calendar .v20-shell-body>.t-statement{max-width:350px}
+.v20-shell--key-calendar .v20-shell-section{padding:16px!important}
+.v20-shell--key-inbox .v20-shell-section,
+.v20-shell--key-routines .v20-shell-section,
+.v20-shell--key-knows .v20-shell-section{padding:4px 16px!important}
+.v20-shell--key-evening .v20-shell-body,
+.v20-shell--key-checkin .v20-shell-body{gap:16px!important}
+
+/* Empty, loading and recovery states keep context visible and put recovery last. */
+.v20-shell--states .v20-shell-body{gap:20px!important;padding-top:24px!important;padding-bottom:40px}
+.v20-shell--states .v20-shell-intro{gap:8px}
+.v20-shell--states .v20-shell-intro>.t-title1{font-size:32px;line-height:36px}
+.v20-shell--states .v20-shell-recovery{padding:16px!important;background:var(--surface)!important}
+.v20-shell--states .v20-shell-actions{padding-top:4px}
+.v20-shell--key-offline .v20-shell-body>.row[style*="box-shadow"]{padding:12px 16px!important;border-radius:14px!important;background:var(--surface)!important;box-shadow:none!important}
+.v20-shell--key-offline .v20-shell-body>.card[style*="box-shadow"]{box-shadow:var(--shadow)!important}
+.v20-shell--key-loadingtoday .v20-shell-body{gap:16px!important}
+.v20-shell--key-emptytoday .v20-shell-body,
+.v20-shell--key-emptyplan .v20-shell-body,
+.v20-shell--key-emptybody .v20-shell-body{gap:20px!important}
+.v20-shell--key-permdenied .v20-shell-body,
+.v20-shell--key-syncissue .v20-shell-body,
+.v20-shell--key-aidown .v20-shell-body,
+.v20-shell--key-forceupdate .v20-shell-body,
+.v20-shell--key-signedout .v20-shell-body{min-height:calc(100% - 80px);justify-content:center;padding-top:20px!important;padding-bottom:24px}
+.v20-shell--key-connectfail .v20-shell-body,
+.v20-shell--key-support .v20-shell-body{gap:16px!important;padding-top:20px!important}
+.v20-shell--key-support .v20-shell-section{padding:4px 16px!important}
+
+/* Preserved geometry: only typography and surrounding rhythm change. */
+.v20-shell-preserved-geometry{overscroll-behavior:none}
+.v20-shell--key-welcome .pad.col.on-img{gap:12px!important}
+.v20-shell--key-talk .tray{border-radius:20px}
+.v20-shell--key-talk .talk-foot{gap:16px}
+.v20-shell--key-pulse .pad.col.rel{gap:16px!important}
+.v20-shell--key-focus .pad.col[style*="bottom:"]{gap:8px!important}
+.v20-shell--outside .pad.col.rel{gap:16px!important}
+.v20-shell--system .pad.col,
+.v20-shell--system .pad.col.rel{gap:16px!important}
+.v20-shell--system .t-title2{font-size:20px;line-height:24px}
+.v20-shell--system .t-body{font-size:15px;line-height:20px}
+
+@media (prefers-reduced-motion:reduce){
+  .v20-shell *{scroll-behavior:auto!important}
+}

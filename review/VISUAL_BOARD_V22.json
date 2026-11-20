@@ -1,0 +1,30 @@
+{
+  "version": "V22",
+  "artifact": "life-complete-board-v22.html",
+  "status": "Local design/UI implementation; not production complete or a signed native build",
+  "passes": ["First homepage shown", "Shared language and image-aware chrome", "Daily lifecycle and real homepage", "Money, actions and documents", "Body, habits, personal and learning", "Integrated verification and fresh review corrections", "Packaging and delivery"],
+  "board": {"originalScreens":221,"normalFlowScreens":205,"specialGeometryRetained":16,"lightGeometryFailures":0,"darkGeometryFailures":0,"imageHeadersWithoutOpaqueCaps":12,"earlierVersionsUntouched":true},
+  "application": {
+    "actualCodeChanged": true,
+    "shared": ["Screen", "TopBar", "Card", "Button", "ListRow", "HabitRow", "Press", "ImageTreatment", "NextMoveCard", "Dock icons"],
+    "daily": ["Current local date and next recurring bill date", "Pulse completion keyed to local day, distinct from skip", "Saved-day receipt returns space", "One confirmed question per day without fabricated score gains", "Five default health signals", "Completed next move does not force a new task", "Foreground/noon/evening/midnight refresh without polling"],
+    "domainReports": ["v22-money-report.json", "v22-body-report.json", "v22-personal-report.json"],
+    "constraints": ["Core engines unchanged", "Existing branch retained", "No commit or push", "No production connection", "No TestFlight upload"]
+  },
+  "verification": {
+    "mobileTypecheck": "passed",
+    "iosJavaScriptExport": "passed; not native compilation",
+    "androidJavaScriptExport": "passed; not native compilation",
+    "actualExpoRoutesChecked": ["today","plan","you","money","readiness","confirm","habits","people","library","settings","chat","question","aim","vault","taxcheck","fuelhome","bigfive","why","gotit","attach"],
+    "routeCheckViewport": "393x852; no horizontal page overflow in the 20 checked views",
+    "photoProof": "Actual Aim page in light/dark: transparent header, loaded photo and no horizontal overflow. Homepage focal crop rechecked after loading.",
+    "pulseSaveReturn": "receipt present and invitation absent after explicit save",
+    "habitTargets": "all three checked rows measure 44pt tall; cell-top range 0px",
+    "knowledgeTarget": "44pt tall",
+    "controlledClockDayHook": "actual transpiled hook tested at 11:55,17:55,23:55; each schedules next boundary in five minutes",
+    "freshReview": "three confirmed integration findings corrected; no additional meal/mission misroute or header/safe-area issue confirmed by static review",
+    "nativeDeviceAcceptance": "not performed"
+  },
+  "bugs": "../bugsandfixes.md",
+  "remaining": ["Per-topic authored learning routes/content", "True per-metric health provenance", "Health/steps/bank/OAuth/NHS/HMRC/notification/cloud-sync integrations", "On-device/external model and voice runtime installation/acceptance", "Adaptive teaching/FSRS, billing, sharing and optional native restrictions", "Signed native compilation and physical-device safe areas, Dynamic Type, Reduce Motion, speech/camera/performance acceptance"]
+}

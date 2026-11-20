@@ -58,3 +58,37 @@ export const voice = {
   },
   stopSpeaking: () => phonon?.stop(),
 };
+
+/** A phrase as it is heard: plain words, or a recognised detail with the area it files into. */
+export type HeardChunk = { text: string; area?: 'you' | 'home' | 'work' | 'money' | 'health' | 'goal'; label?: string };
+
+/**
+ * The board's talk, phrase by phrase. It stands in for the live recogniser wherever none is available (the web
+ * preview, a simulator, a phone without on-device speech), and the Talk screen labels it as a sample.
+ */
+export const SAMPLE_TALK: HeardChunk[] = [
+  { text: 'My rent goes up ' }, { text: 'in March', area: 'home', label: 'Rent up from March' }, { text: '. I found the letter, ' },
+  { text: 'the review is on the 3rd', area: 'home', label: 'Review date · 3 March' }, { text: '. It’s ' },
+  { text: 'Kofi’s birthday on Saturday', area: 'you', label: 'Kofi’s birthday · Sat' }, { text: ' and I still need a card. I’ve been ' },
+  { text: 'sleeping badly this week', area: 'health', label: 'Sleeping badly this week' }, { text: '.' },
+];
+
+/** Plays `SAMPLE_TALK` one phrase every `everyMs` (850 by default, as on the board). Returns a stop function. */
+export function sampleStream(onChunk: (index: number) => void, onDone: () => void, everyMs = 850, from = 0): () => void {
+  let k = from;
+  const timer = setInterval(() => {
+    if (k >= SAMPLE_TALK.length) { clearInterval(timer); onDone(); return; }
+    onChunk(k++);
+  }, everyMs);
+  return () => clearInterval(timer);
+}
+
+/** Splits a live transcript into phrases and marks the ones the extractor recognised, so Talk can light them up. */
+export function chunkTranscript(text: string, recognised: { quote: string; area: HeardChunk['area']; label: string }[]): HeardChunk[] {
+  const pieces = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  return pieces.map((piece, i) => {
+    const hit = recognised.find(r => r.quote.trim() === piece.trim());
+    const spaced = i < pieces.length - 1 ? `${piece} ` : piece;
+    return hit ? { text: spaced, area: hit.area, label: hit.label } : { text: spaced };
+  });
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '../Icon';
 import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Callout, Text } from '../Text';
@@ -9,10 +9,23 @@ import { useCalmMotion, useTokens } from '../theme';
 import { areaColors, radius, springs, type Area } from '../tokens';
 import { DottedOrb } from './Chrome';
 import { TwoTone, type TwoToneSegment } from './Story';
+import { LifeOrb } from './Orb';
+import { RoundButton } from './V26Chrome';
+import { ChatBubble, noteWave } from './V26Lists';
 
 /* ───────────────────────── Waveform + BigMic ───────────────────────── */
 
-export function Waveform({ active, bars = 30 }: { active: boolean; bars?: number }) {
+export function Waveform(props: { active: boolean; bars?: number; /** V26 `note` (board `wave`): the resting 22-bar wave of a voice note, 2pt bars in ink2. */ look?: 'note' }) {
+  if (props.look === 'note') return <NoteWave bars={props.bars ?? 22} />;
+  return <WaveformV23 {...props} />;
+}
+
+function NoteWave({ bars }: { bars: number }) {
+  const t = useTokens();
+  return <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ height: 20, flexDirection: 'row', alignItems: 'center', gap: 2 }}>{noteWave(bars).map((h, i) => <View key={i} style={{ width: 2, height: h, borderRadius: 1, backgroundColor: t.ink2 }} />)}</View>;
+}
+
+function WaveformV23({ active, bars = 30 }: { active: boolean; bars?: number }) {
   const t = useTokens();
   const calm = useCalmMotion();
   const [h, setH] = useState<number[]>(() => Array(bars).fill(4));
@@ -33,8 +46,9 @@ export function Waveform({ active, bars = 30 }: { active: boolean; bars?: number
   );
 }
 
-export function BigMic({ live, onPress }: { live: boolean; onPress: () => void }) {
+export function BigMic({ live, onPress, look }: { live: boolean; onPress: () => void; /** V26 (board `fo-mic`): a 72pt round, surface2 at rest and ink while listening. No ember. */ look?: 'v26' }) {
   const t = useTokens();
+  if (look === 'v26') return <RoundButton icon="mic" size="xl" solid={live} haptic="primary" label={live ? 'Listening. Tap when you’re done' : 'Start talking'} onPress={onPress} />;
   return (
     <Press
       haptic="primary"
@@ -131,8 +145,9 @@ function TrayTile({ area, count }: { area: Area; count: number }) {
 
 /* ───────────────────────── Chat pieces ───────────────────────── */
 
-export function UserBubble({ text }: { text: string }) {
+export function UserBubble({ text, look }: { text: string; /** V26 (board `bubble`): white with a shadow, the bottom-right corner tucked. */ look?: 'v26' }) {
   const t = useTokens();
+  if (look === 'v26') return <ChatBubble text={text} />;
   return (
     <View style={[styles.bubble, { backgroundColor: t.surface2 }]}>
       <Text variant="body">{text}</Text>
@@ -141,11 +156,11 @@ export function UserBubble({ text }: { text: string }) {
 }
 
 /** life never uses a bubble (DESIGN §18): two-tone prose, at most one card, up to 4 chips. */
-export function LifeReply({ segments, card, chips, onChip, thinking }: { segments?: TwoToneSegment[]; card?: ReactNode; chips?: string[]; onChip?: (c: string) => void; thinking?: boolean }) {
+export function LifeReply({ segments, card, chips, onChip, thinking, look }: { segments?: TwoToneSegment[]; card?: ReactNode; chips?: string[]; onChip?: (c: string) => void; thinking?: boolean; /** V26: the one orb family (`LifeOrb`) in place of the dotted orb. */ look?: 'v26' }) {
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <DottedOrb size={20} state={thinking ? 'thinking' : 'idle'} />
+        {look === 'v26' ? <LifeOrb size={20} state={thinking ? 'thinking' : 'ring'} /> : <DottedOrb size={20} state={thinking ? 'thinking' : 'idle'} />}
         <Callout tone="ink2">{thinking ? 'life is thinking…' : 'life'}</Callout>
       </View>
       {segments && !thinking ? <TwoTone segments={segments} size="headline" /> : null}
@@ -211,7 +226,7 @@ export function Composer({ value, onChangeText, onSend, onTalk, onAttach, placeh
           <Ionicons name="add" size={22} color={t.ink2} />
         </Press>
       ) : null}
-      <TextInput
+      <TextInput maxFontSizeMultiplier={1.3}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}

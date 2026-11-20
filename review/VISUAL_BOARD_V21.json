@@ -1,0 +1,19 @@
+{
+  "artifact": "life-complete-board-v21.html",
+  "baseline": "v19 with the original v17 screen library; v20 blanket overrides are not included",
+  "screenCoverage": { "original": 221, "rendered": 221, "individualReviewDecisions": 221, "missingKeys": [] },
+  "implementation": { "normalFlowShells": 205, "purposeBuiltGeometryRetained": 16, "screenSpecificCompositions": 62 },
+  "leadership": "One orchestrator owns shared geometry and integration; four domain specialists supply content-only compositions and per-key review decisions; one independent visual critique follows.",
+  "verified": {
+    "darkGeometry": "221 screens checked; no detected header/content/footer/nav overlap, duplicated content chrome, horizontal page overflow, missing review or protected-control loss",
+    "lightGeometry": "same checks passed across all 221 screens",
+    "customGeometry": "16 camera, live, native-platform, teaching-player and orb surfaces retained; no actionable controls found outside their safe frame",
+    "photos": "29 image instances loaded, zero broken",
+    "rowOverlap": "no overlapping adjacent flex-row content found in the rendered normalised viewports",
+    "interactions": ["Full-size inspector opens and navigates original screen nodes", "Today check-in opens original Pulse and returns after save", "Check-in receipt replaces the invitation", "Meal confirmation scrolls while Log meal remains outside the scroll area", "Income slider updates the original calculated outputs"],
+    "independentVisualReview": "Reviewed the 12-screen gallery samples; navigation-glyph contrast, Aim photo/text separation and sheet underlay name consistency were corrected. This is representative visual review, not proof of subjective perfection on every screen."
+  },
+  "specificFixes": ["No requestAnimationFrame-dependent header padding", "Exactly one header on normal screens", "Deterministic scroll region and action/footer allocation", "Content-sized capped sheets rather than overlapping or mostly-empty fixed layouts", "No duplicate Chat top bar or empty persistent processing island", "Mission action footer moved out of absolute scroll content", "Original photo-band whitespace retained", "Subscription total reconciled to its displayed line items: 91.95, unused 31.98"],
+  "limits": ["Board-only; native app and TestFlight unchanged", "Existing sample scenarios, dates and connection states remain illustrative", "Live integrations, full native accessibility and on-device performance are not established by the board"],
+  "originalBoardsOverwritten": false
+}

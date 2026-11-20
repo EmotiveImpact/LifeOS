@@ -1,0 +1,74 @@
+/* V22: life’s own type, spacing and palette, at the calmer reference’s weight.
+   Content remains in the V21 header/body/footer contract. */
+.v22-screen{--v22-reading:20px;--v22-section:24px;--v22-control:44px}
+.v22-screen .v21-header .v21-topbar{min-height:60px}
+.v22-screen .v21-header .v21-icon-action,.v22-screen .v21-header .sq{width:44px!important;height:44px!important;border-radius:12px;color:var(--text)}
+.v22-screen .v21-header svg{stroke-width:1.6}
+.v22-screen .v21-body .t-title3{font-size:16px;line-height:21px;letter-spacing:-.22px}
+.v22-screen .v21-body .t-body{font-size:15px;line-height:22px;letter-spacing:-.12px}
+.v22-screen .v21-body .t-callout{font-size:13px;line-height:18px}
+.v22-screen .v21-body .card{border-radius:20px}
+.v22-screen .v21-body .btn,.v22-screen .v21-footer .btn{min-height:50px;font-size:15px;line-height:22px;border-radius:14px}
+.v22-screen .v21-body button.chipb{min-height:44px}
+/* Image navigation is part of the photograph, never an opaque page-colour cap. */
+.v22-screen.v22-photo-header>.v21-header{background:transparent!important}
+.v22-screen.v22-photo-header>.v21-header :is(.status,.v21-title,.v21-page-title){color:#F7F8F8!important}
+.v22-screen.v22-photo-header>.v21-header .v21-icon-action,.v22-screen.v22-photo-header>.v21-header .sq{background:#141517!important;color:#F7F8F8!important}
+.v22-screen.v22-photo-header>.t-band{min-height:var(--h);z-index:0}
+/* One editorial spine. Hero and essential context have different weights. */
+.v22-today .v18-feed{gap:16px!important;padding-top:4px!important;padding-bottom:24px!important}
+.v22-today .v18-greeting{font-size:16px;line-height:21px;font-weight:500}
+.v22-today .v19-brief{font-size:24px;line-height:31px;letter-spacing:-.53px;font-weight:500;margin:0}
+.v22-today .v19-mood-prompt{padding:0;background:none;box-shadow:none;border-radius:0;gap:12px}
+.v22-today .v19-mood-prompt .t-title3{font-size:15px;line-height:22px;font-weight:500}
+.v22-today .v19-mood-prompt .chipb{background:var(--surface);padding:10px 14px;border-radius:12px;flex-shrink:0}
+.v22-today .v19-aim{padding:0!important;gap:12px!important;min-height:56px}
+.v22-today .v19-aim>span:first-child{width:44px!important;height:44px!important;border-radius:12px!important}
+.v22-today .v19-aim .t-callout{font-size:13px;line-height:18px}
+.v22-today .v19-aim .t-body{font-size:15px;line-height:22px;font-weight:500}
+.v22-today .v18-next{padding:20px;gap:16px!important;border-radius:20px}
+.v22-today .v19-primary [data-v19-move-photo]{margin:-20px -20px 0}
+.v22-today .v19-primary [data-v19-move-photo] .t-card{height:190px!important;border-radius:20px 20px 0 0}
+.v22-today .v19-primary [data-v19-move-photo] .body{left:20px;right:20px;bottom:20px}
+.v22-today .v19-primary [data-v19-move-photo] .pchip{display:none}
+.v22-next-identity{display:flex;flex-direction:column;gap:4px;color:#F7F8F8}
+.v22-today [data-v19-move-photo] .t-card:after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(8,9,10,.85),rgba(8,9,10,0) 90%);pointer-events:none}
+.v22-today [data-v19-move-photo] .body{z-index:2}
+.v22-today .v22-next-identity .v18-next-label{color:#F7F8F8}
+.v22-next-identity .v18-next-label,.v22-next-identity [data-v19-move-sub]{color:rgba(247,248,248,.8)}
+.v22-next-identity [data-v19-move-title]{color:#F7F8F8}
+.v22-today .v19-primary [data-v19-move-live]{gap:16px!important}
+.v22-today .v18-next-label{font-size:13px;line-height:18px;font-weight:500}
+.v22-today [data-v19-move-title]{font-size:20px!important;line-height:26px!important;font-weight:600;letter-spacing:-.4px}
+.v22-today [data-v19-move-sub]{font-size:13px;line-height:18px}
+.v22-today .v22-next-action{flex-direction:column!important;align-items:stretch!important;gap:16px!important}
+.v22-today .v22-next-action>.col{gap:4px!important}
+.v22-today .v18-continue{min-height:50px!important;width:100%;font-size:15px;line-height:22px;border-radius:14px;justify-content:center!important;gap:8px!important}
+.v22-today .v18-continue svg{width:18px;height:18px}
+.v22-today .v18-snapshot-head{min-height:44px;font-size:16px}
+.v22-today .v18-body-link{font-size:16px!important;line-height:21px;font-weight:600}
+.v22-today .v18-pane[data-v18-pane=body]{padding:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 12px}
+.v22-today .v18-metric{min-width:0;min-height:48px;gap:4px}
+.v22-today .v18-metric .name{font-size:13px;line-height:18px}
+.v22-today .v18-metric .value{font-size:20px;line-height:26px;letter-spacing:-.4px}
+.v22-today .v18-metric .unit{font-size:11px;line-height:16px}
+.v22-today .know{min-height:44px;margin:0;font-size:13px;line-height:18px}
+.v22-today .v18-question>.row .t-title3{font-size:16px}
+.v22-today .v18-question .asked{padding:20px;gap:16px!important}
+.v22-today .v18-question .asked .t-statement{font-size:20px!important;line-height:26px!important}
+.v22-today .v18-other>.t-title3{font-size:16px;line-height:21px;color:var(--text)}
+.v22-today .v19-date-row{min-height:64px;padding:12px 0}
+.v22-today .v19-receipt{min-height:44px;font-size:13px;line-height:18px}
+.v22-today .v19-receipt button{font-size:13px;min-height:44px}
+.v22-today .v19-follow{padding:16px}
+.v22-today .v19-follow strong{font-size:13px;line-height:18px}
+.v22-today .v19-follow small{font-size:11px;line-height:16px}
+.v22-today .v19-quiet-link{font-size:13px;line-height:18px;min-height:44px}
+.v22-screen .v21-bottom-nav button svg{width:22px;height:22px;stroke-width:1.6}
+.v22-screen .v21-bottom-nav button{font-size:11px;line-height:13px}
+/* Motion answers actions. No page-content rise, bounce or endless attention bait. */
+.v22-screen .press{transition:transform 160ms ease,opacity 160ms ease}
+.v22-screen .press:active{transform:scale(.97)!important}
+.v22-screen details[open]>*:not(summary){animation:v22-reveal 160ms ease-out}
+@keyframes v22-reveal{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.v22-screen *{animation:none!important;transition:none!important}}

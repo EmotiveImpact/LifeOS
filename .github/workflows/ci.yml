@@ -1,0 +1,100 @@
+name: CI
+
+# Every push and pull request: the app's and the API's typechecks and the
+# engine, brain, data and API tests (including the crisis-language case set and
+# the API's row-level security tests, against a throwaway Postgres). The iOS and Android
+# bundles run on pull requests, pushes to master and manual runs only, to keep
+# Actions minutes down on this private repository. No secrets are used.
+
+on:
+  push:
+    branches: ['**']
+    paths-ignore:
+      - 'review/**'
+      - 'design-board/**'
+      - 'design-references/**'
+      - '**/*.md'
+  pull_request:
+    paths-ignore:
+      - 'review/**'
+      - 'design-board/**'
+      - 'design-references/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: '1'
+  EXPO_NO_TELEMETRY: '1'
+
+jobs:
+  checks:
+    name: Typecheck and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16.15-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - name: Install pinned app dependencies
+        working-directory: apps/mobile
+        run: npm ci --ignore-scripts
+      - name: Install Bun (pinned)
+        run: npm install --global bun@1.4.4
+      - name: Install pinned API dependencies
+        working-directory: apps/api
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Typecheck the app, engine and brain
+        working-directory: apps/mobile
+        run: npm run typecheck
+      - name: Typecheck the API
+        working-directory: apps/api
+        run: bun run typecheck
+      - name: Engine, brain, data and API tests
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
+        run: bun test tests/
+
+  bundles:
+    name: ${{ matrix.platform }} bundle
+    if: github.event_name != 'push' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ios, android]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - name: Install pinned app dependencies
+        working-directory: apps/mobile
+        run: npm ci --ignore-scripts
+      - name: Export the ${{ matrix.platform }} bundle
+        working-directory: apps/mobile
+        run: npx expo export --platform ${{ matrix.platform }} --output-dir "$RUNNER_TEMP/life-${{ matrix.platform }}"

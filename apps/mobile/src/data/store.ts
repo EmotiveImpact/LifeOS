@@ -1,21 +1,48 @@
-import { importLegacyProjection, loadProjection, commitProjection } from './projection';
+import { adoptAccount, importLegacyProjection, loadProjection, commitProjection } from './projection';
 import { columns, isTable, tableNames, type DataRow, type TableName } from './schema';
 import { migrationSql, migrationVersion } from './migrations';
 import type { SqlDriver, SqlExecutor, SqlValue } from './driver';
 
 export type OutboxOp = { id: string; user_id: string; table: TableName; rowId: string; op: 'upsert' | 'delete'; payload: DataRow; at: string };
 export type RemoteChange = { table: TableName; op: 'upsert' | 'delete'; row: DataRow };
+/** An op the server refused for good (malformed, or naming a row that isn't this person's). It leaves the outbox. */
+export type RejectedOp = { id: string; reason: string };
 export interface SyncTransport {
-  push(userId: string, operations: OutboxOp[]): Promise<{ acknowledged: string[] }>;
-  pull(userId: string, cursor: string | null): Promise<{ changes: RemoteChange[]; cursor: string | null }>;
+  push(userId: string, operations: OutboxOp[]): Promise<{ acknowledged: string[]; rejected?: RejectedOp[] }>;
+  /** `more` asks for another page straight away. */
+  pull(userId: string, cursor: string | null): Promise<{ changes: RemoteChange[]; cursor: string | null; more?: boolean }>;
+  /** Removes the server's copy of some rows without a tombstone reaching other phones (health memories, Phase 22). */
+  forget?(userId: string, table: TableName, ids: string[]): Promise<void>;
 }
+export type SyncResult = { status: 'offline' | 'synced'; pending: number; applied: number };
+
+/** Health memories stay on this phone unless the person turns on "Sync health memories" (owner decision 4, 20 Nov). */
+export const HEALTH_MEMORY_SYNC = 'sync-health-memories';
+export const isHealthMemory = (table: TableName, row: Record<string, unknown>) => {
+  if (table !== 'memory' || !row.source || typeof row.source !== 'object') return false;
+  const source = row.source as Record<string, unknown>;
+  return source.health === true || source.area === 'health' || source.category === 'Body';
+};
+const MAX_PULL_PAGES = 50, KEEP_REJECTED = 50;
 export type Repository = {
   get(id: string): Promise<DataRow | null>;
   list(options?: { includeDeleted?: boolean }): Promise<DataRow[]>;
   put(value: Record<string, unknown> & { id?: string }): Promise<DataRow>;
   remove(id: string): Promise<void>;
 };
-export interface WriteTransaction { put(table: TableName, value: Record<string, unknown> & { id?: string }): Promise<DataRow>; remove(table: TableName, id: string): Promise<void>; local(key: string, value: unknown): Promise<void>; readLocal<T>(key: string): Promise<T | null>; }
+export interface WriteTransaction {
+  put(table: TableName, value: Record<string, unknown> & { id?: string }): Promise<DataRow>;
+  remove(table: TableName, id: string): Promise<void>;
+  local(key: string, value: unknown): Promise<void>;
+  readLocal<T>(key: string): Promise<T | null>;
+  /** Gives a row a new id (signing in moves screen entities to the account's ids). Rows pointing at it follow. */
+  move(table: TableName, from: string, to: string): Promise<void>;
+  has(table: TableName, id: string): Promise<boolean>;
+}
+/** Columns that point at another row, which follow it when it moves. */
+const pointers: Partial<Record<TableName, { column: string; table: TableName }[]>> = {
+  habit: [{ column: 'habit_id', table: 'habit_log' }], person: [{ column: 'person_id', table: 'important_date' }], mission: [{ column: 'mission_id', table: 'mission_step' }],
+};
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const object = (value: unknown): Record<string, unknown> => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Expected a JSON object');
@@ -38,7 +65,7 @@ export class LifeDataStore {
   readonly repos: Record<TableName, Repository>;
   readonly areas: Record<string, Partial<Record<TableName, Repository>>>;
   private lastStamp = 0;
-  private syncFlight: Promise<{ status: 'offline' | 'synced'; pending: number }> | null = null;
+  private syncFlight: Promise<SyncResult> | null = null;
   constructor(readonly driver: SqlDriver, readonly userId: string, private readonly makeId: () => string = () => globalThis.crypto.randomUUID(), private readonly clock: () => number = () => Date.now()) {
     if (!userId || userId.length > 200) throw new Error('A local user scope is required');
     this.repos = Object.fromEntries(tableNames.map(table => [table, { get: (id: string) => this.get(table, id), list: (options?: { includeDeleted?: boolean }) => this.list(table, options), put: (value: Record<string, unknown> & { id?: string }) => this.atomic(tx => tx.put(table, value)), remove: (id: string) => this.atomic(tx => tx.remove(table, id)) }])) as Record<TableName, Repository>;
@@ -75,6 +102,7 @@ export class LifeDataStore {
     await tx.run(`INSERT INTO ${quote(table)} (${names.map(quote).join(',')}) VALUES (${names.map(() => '?').join(',')}) ON CONFLICT(id) DO UPDATE SET ${names.filter(n => n !== 'id' && n !== 'user_id').map(n => `${quote(n)}=excluded.${quote(n)}`).join(',')} WHERE ${quote(table)}.user_id = excluded.user_id`, encode(table, row));
   }
   private async enqueue(tx: SqlExecutor, table: TableName, row: DataRow, op: 'upsert' | 'delete') {
+    if (isHealthMemory(table, row) && !await this.readLocal<boolean>(HEALTH_MEMORY_SYNC, tx)) return;
     const payload = op === 'delete' ? { id: row.id, user_id: row.user_id, created_at: row.created_at, updated_at: row.updated_at, deleted_at: row.deleted_at } : row;
     await tx.run('INSERT INTO outbox(id,user_id,table_name,row_id,op,payload,at) VALUES (?,?,?,?,?,?,?)', [this.id(), this.userId, table, row.id, op, JSON.stringify(payload), row.updated_at]);
   }
@@ -102,28 +130,108 @@ export class LifeDataStore {
     await this.writeRaw(tx, table, deleted); await this.enqueue(tx, table, deleted, 'delete');
   }
   async atomic<T>(body: (tx: WriteTransaction) => Promise<T>): Promise<T> {
-    return this.driver.transaction(tx => body({ put: (table, value) => this.put(tx, table, value), remove: (table, id) => this.remove(tx, table, id), local: (key, value) => this.writeLocal(tx, key, value), readLocal: key => this.readLocal(key, tx) }));
+    return this.driver.transaction(tx => body({ put: (table, value) => this.put(tx, table, value), remove: (table, id) => this.remove(tx, table, id), local: (key, value) => this.writeLocal(tx, key, value), readLocal: key => this.readLocal(key, tx), move: (table, from, to) => this.move(tx, table, from, to), has: async (table, id) => { this.check(table); return !!await this.read(tx, table, id); } }));
+  }
+  /**
+   * Moves a row to a new id: the new row is queued for sync, and the old one goes without a tombstone, since only
+   * this phone ever held it (moves happen once, at first sign-in, before anything was pushed). If the new id is
+   * already here (pulled from another phone), the newer of the two is kept.
+   */
+  private async move(tx: SqlExecutor, table: TableName, from: string, to: string) {
+    this.check(table); this.id(to);
+    if (from === to) return;
+    const old = await this.read(tx, table, from);
+    if (!old) return;
+    const there = await this.read(tx, table, to);
+    const owner = (await tx.all(`SELECT user_id FROM ${quote(table)} WHERE id = ?`, [to]))[0];
+    if (owner && owner.user_id !== this.userId) throw new Error('Row ID unavailable');
+    if (!there || there.updated_at < old.updated_at) {
+      const row = { ...old, id: to, updated_at: this.stamp(there?.updated_at && there.updated_at > old.updated_at ? there.updated_at : old.updated_at) } as DataRow;
+      await this.writeRaw(tx, table, row); await this.enqueue(tx, table, row, row.deleted_at ? 'delete' : 'upsert');
+    }
+    for (const p of pointers[table] ?? []) {
+      for (const child of (await tx.all(`SELECT * FROM ${quote(p.table)} WHERE user_id = ? AND ${quote(p.column)} = ?`, [this.userId, from])).map(r => decode(p.table, r))) {
+        const row = { ...child, [p.column]: to, updated_at: this.stamp(child.updated_at) } as DataRow;
+        await this.writeRaw(tx, p.table, row); await this.enqueue(tx, p.table, row, row.deleted_at ? 'delete' : 'upsert');
+      }
+    }
+    await tx.run('DELETE FROM outbox WHERE user_id = ? AND table_name = ? AND row_id = ?', [this.userId, table, from]);
+    await tx.run(`DELETE FROM ${quote(table)} WHERE id = ? AND user_id = ?`, [from, this.userId]);
+  }
+  /**
+   * Restoring onto a phone that has nothing of its own yet: its starter rows and queued ops go, and the next pull
+   * starts from the beginning, so the account's life comes back whole instead of being overwritten by a blank one.
+   */
+  async clearForRestore() {
+    await this.driver.transaction(async tx => {
+      await tx.run('DELETE FROM outbox WHERE user_id = ?', [this.userId]);
+      for (const table of [...tableNames].reverse()) await tx.run(`DELETE FROM ${quote(table)} WHERE user_id = ?`, [this.userId]);
+      await tx.run('DELETE FROM sync_cursor WHERE user_id = ?', [this.userId]);
+      for (const key of ['projection-ids', 'projection-entities', 'projection-habit-logs', 'projection-hashes']) await tx.run('DELETE FROM local_state WHERE user_id = ? AND key = ?', [this.userId, key]);
+    });
   }
   private async writeLocal(tx: SqlExecutor, key: string, value: unknown) { await tx.run('INSERT INTO local_state(user_id,key,value) VALUES (?,?,?) ON CONFLICT(user_id,key) DO UPDATE SET value=excluded.value', [this.userId, key, JSON.stringify(value)]); }
   async readLocal<T>(key: string, tx: SqlExecutor = this.driver): Promise<T | null> { const rows = await tx.all('SELECT value FROM local_state WHERE user_id = ? AND key = ?', [this.userId, key]); return rows[0] ? JSON.parse(String(rows[0].value)) as T : null; }
   async pending() { return (await this.driver.all('SELECT * FROM outbox WHERE user_id = ? ORDER BY at,id', [this.userId])).map(r => ({ id: String(r.id), user_id: String(r.user_id), table: r.table_name as TableName, rowId: String(r.row_id), op: r.op as 'upsert' | 'delete', payload: JSON.parse(String(r.payload)) as DataRow, at: String(r.at) })); }
-  async sync(transport?: SyncTransport) {
-    if (!transport) return { status: 'offline' as const, pending: (await this.pending()).length };
+  async sync(transport?: SyncTransport): Promise<SyncResult> {
+    if (!transport) return { status: 'offline' as const, pending: (await this.pending()).length, applied: 0 };
     if (this.syncFlight) return this.syncFlight;
     this.syncFlight = this.runSync(transport).finally(() => { this.syncFlight = null; });
     return this.syncFlight;
   }
-  private async runSync(transport: SyncTransport) {
+  /** Turns "Sync health memories" on (queues every health memory) or off (stops queuing them and asks the server to forget its copies). */
+  async setHealthMemorySync(on: boolean) {
+    await this.driver.transaction(async tx => {
+      await this.writeLocal(tx, HEALTH_MEMORY_SYNC, on);
+      const rows = (await tx.all('SELECT * FROM memory WHERE user_id = ?', [this.userId])).map(r => decode('memory', r)).filter(r => isHealthMemory('memory', r));
+      if (on) {
+        for (const row of rows) await this.enqueue(tx, 'memory', row, row.deleted_at ? 'delete' : 'upsert');
+        await this.writeLocal(tx, 'forget-pending', null);
+      } else {
+        for (const row of rows) await tx.run('DELETE FROM outbox WHERE user_id = ? AND table_name = ? AND row_id = ?', [this.userId, 'memory', row.id]);
+        const already = await this.readLocal<string[]>('forget-pending', tx) ?? [];
+        await this.writeLocal(tx, 'forget-pending', [...new Set([...already, ...rows.map(r => r.id)])]);
+      }
+    });
+  }
+  private async runSync(transport: SyncTransport): Promise<SyncResult> {
+    const forgetting = await this.readLocal<string[]>('forget-pending');
+    if (forgetting?.length && transport.forget) {
+      for (let i = 0; i < forgetting.length; i += 500) await transport.forget(this.userId, 'memory', forgetting.slice(i, i + 500));
+      await this.driver.transaction(tx => this.writeLocal(tx, 'forget-pending', null));
+    }
     const batch = await this.pending();
     if (batch.length) {
-      const { acknowledged } = await transport.push(this.userId, batch);
+      const { acknowledged, rejected = [] } = await transport.push(this.userId, batch);
       const sent = new Set(batch.map(op => op.id));
       if (!Array.isArray(acknowledged) || acknowledged.some(id => !sent.has(id))) throw new Error('Invalid sync acknowledgement');
-      await this.driver.transaction(async tx => { for (const id of acknowledged) await tx.run('DELETE FROM outbox WHERE id = ? AND user_id = ?', [id, this.userId]); });
+      if (!Array.isArray(rejected) || rejected.some(r => !r || !sent.has(r.id))) throw new Error('Invalid sync rejection');
+      await this.driver.transaction(async tx => {
+        for (const id of acknowledged) await tx.run('DELETE FROM outbox WHERE id = ? AND user_id = ?', [id, this.userId]);
+        if (!rejected.length) return;
+        // A refused op would be refused again forever; keep a short record of it here instead of retrying.
+        const kept = await this.readLocal<(RejectedOp & { table: string; rowId: string })[]>('sync-rejected', tx) ?? [];
+        for (const r of rejected) {
+          const op = batch.find(o => o.id === r.id)!;
+          kept.push({ id: r.id, reason: String(r.reason), table: op.table, rowId: op.rowId });
+          await tx.run('DELETE FROM outbox WHERE id = ? AND user_id = ?', [r.id, this.userId]);
+        }
+        await this.writeLocal(tx, 'sync-rejected', kept.slice(-KEEP_REJECTED));
+      });
     }
+    let applied = 0;
+    for (let page = 0; page < MAX_PULL_PAGES; page++) {
+      const { applied: count, more } = await this.pullOnce(transport);
+      applied += count;
+      if (!more) break;
+    }
+    return { status: 'synced' as const, pending: (await this.pending()).length, applied };
+  }
+  private async pullOnce(transport: SyncTransport) {
     const cursorRow = (await this.driver.all('SELECT cursor FROM sync_cursor WHERE user_id = ?', [this.userId]))[0];
     const response = await transport.pull(this.userId, cursorRow?.cursor == null ? null : String(cursorRow.cursor));
     if (!Array.isArray(response.changes) || response.cursor !== null && typeof response.cursor !== 'string') throw new Error('Invalid sync response');
+    let applied = 0;
     await this.driver.transaction(async tx => {
       const hardDeleted = await this.readLocal<Record<string, string>>('hard-deleted-versions', tx) ?? {};
       // Deferred FKs permit related records to arrive in either order within one pull batch.
@@ -141,10 +249,13 @@ export class LifeDataStore {
         if (change.op === 'delete' && !row.deleted_at) throw new Error('Missing remote tombstone');
         const blank = Object.fromEntries(columns[change.table].map(c => [c.key, null]));
         await this.writeRaw(tx, change.table, { ...blank, ...current, ...row } as DataRow);
+        applied++;
       }
       await tx.run('INSERT INTO sync_cursor(user_id,cursor) VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET cursor=excluded.cursor', [this.userId, response.cursor]);
     });
-    return { status: 'synced' as const, pending: (await this.pending()).length };
+    // Another page only if the server says so and the cursor moved, so a confused server can't loop us.
+    const before = cursorRow?.cursor == null ? null : String(cursorRow.cursor);
+    return { applied, more: response.more === true && response.cursor !== before };
   }
   async exportEverything() {
     return this.driver.transaction(async tx => {
@@ -178,5 +289,6 @@ export class LifeDataStore {
   importLegacyOnce(input: unknown, sourceKey = 'life_track_a_v17') { return importLegacyProjection(this, input, sourceKey); }
   loadProjection<T>() { return loadProjection<T>(this); }
   commitProjection(input: unknown) { return commitProjection(this, input); }
+  adoptAccount(accountId: string, options: { restore: boolean }) { return adoptAccount(this, accountId, options); }
   close() { return this.driver.close(); }
 }

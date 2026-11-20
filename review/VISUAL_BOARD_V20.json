@@ -1,0 +1,22 @@
+{
+  "artifact": "life-complete-board-v20.html",
+  "source": "life-complete-board-v19.html",
+  "sourceV19Sha256": "e25009744a9feb74002bc04a6c89407698d648851b3ae924aa026c3526660097",
+  "originalScreensRendered": 221,
+  "detailScreensWithDomainPass": 218,
+  "structurallyReorganised": 108,
+  "stylingOnlyDetailScreens": 110,
+  "v19EntryScreensRetained": 3,
+  "domains": {
+    "money": { "screens": 34, "structural": 18, "styling": 16 },
+    "body": { "screens": 66, "structural": 52, "styling": 14 },
+    "personal": { "screens": 40, "structural": 7, "styling": 33 },
+    "shell": { "screens": 78, "structural": 31, "styling": 47 }
+  },
+  "preservationErrors": [],
+  "method": "Per-screen synchronous before/after comparison of original control/media/navigation nodes, text-token multiplicity and actual node parent changes; styling is not counted as structural redesign.",
+  "perScreenDetails": "Embedded Exact per-screen change list in the board, backed by window.__V20_AUDIT.records",
+  "representativeScreensShown": ["money", "readiness", "fuel", "habits", "bite", "settings"],
+  "originalBoardsOverwritten": false,
+  "nativeAppOrTestFlightUpdated": false
+}

@@ -1,13 +1,14 @@
 import { useId, type ReactNode } from 'react';
 import { Image, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons, type GlyphName } from '../Icon';
 import { Press } from '../Press';
 import { Callout, Text, Title, type Tone } from '../Text';
 import { useTokens } from '../theme';
 import Svg, { Circle, Defs, Mask, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { fieldMood, type FieldSignal } from '../lightFields';
-import { areaColors, atmospheres, cardShadow, componentSize, onAtmosphere, palette, radius, space, touch, type Domain } from '../tokens';
+import { areaColors, atmospheres, cardShadow, componentSize, onAtmosphere, palette, photo, radius, space, touch, type Domain } from '../tokens';
+import { PickRow } from './V26Lists';
 
 /* ───────────────────────── 1. Atmosphere ───────────────────────── */
 
@@ -100,10 +101,36 @@ export function Card({ variant = 'default', domain = 'admin', padding, style, ch
 
 /* ───────────────────────── 18. StatusPill ───────────────────────── */
 
-export type StatusKind = 'neutral' | 'live' | 'done';
+export type StatusKind = 'neutral' | 'live' | 'done' | 'quiet';
 
-export function StatusPill({ kind = 'neutral', label, onAtmosphere: onAtmos, style }: { kind?: StatusKind; label: string; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
+export type StatusPillProps = {
+  kind?: StatusKind;
+  label: string;
+  onAtmosphere?: boolean;
+  /** V26 chip (board `chip`): 11pt label in a 999 pill. `live` ember, `done` green, `quiet` grey text, `neutral` ink. */
+  size?: 'pill' | 'chip';
+  /** V26 chip on a photograph: paper fill, dark text. */
+  onPhoto?: boolean;
+  /** V26 chip: a 14pt icon before the label. */
+  icon?: GlyphName;
+  /** V26 chip: a 6pt dot before the label, in this colour (an area colour, or ember for the one thing that matters). */
+  dot?: string;
+  style?: StyleProp<ViewStyle>;
+};
+
+export function StatusPill({ kind = 'neutral', label, onAtmosphere: onAtmos, size = 'pill', onPhoto, icon, dot: chipDot, style }: StatusPillProps) {
   const t = useTokens();
+  if (size === 'chip') {
+    const bg = onPhoto ? photo.onPhoto : kind === 'live' ? t.emberTint : kind === 'done' ? t.gainTint : t.surface2;
+    const fg = onPhoto ? photo.ink : kind === 'live' ? t.emberText : kind === 'done' ? t.gain : kind === 'quiet' ? t.ink2 : t.ink;
+    return (
+      <View style={[styles.chip, { backgroundColor: bg }, style]}>
+        {icon ? <Ionicons name={icon} size={14} color={fg} /> : null}
+        {chipDot ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: chipDot }} /> : null}
+        <Text variant="micro" numberOfLines={1} style={{ color: fg }}>{label}</Text>
+      </View>
+    );
+  }
   const bg = onAtmos ? onAtmosphere.glass : kind === 'live' ? t.emberTint : kind === 'done' ? t.gainTint : t.surface2;
   const tone: Tone = onAtmos ? 'paper' : kind === 'live' ? 'ember' : kind === 'done' ? 'gain' : 'ink2';
   const dot = kind === 'live' ? (onAtmos ? onAtmosphere.text : t.ember) : null;
@@ -121,22 +148,26 @@ export function StatusPill({ kind = 'neutral', label, onAtmosphere: onAtmos, sty
 export type ButtonProps = {
   label: string;
   onPress?: () => void;
-  variant?: 'primary' | 'secondary' | 'link';
+  /** `ghost` (V26) is the soft `surface2` button, the same fill as `secondary`. */
+  variant?: 'primary' | 'secondary' | 'ghost' | 'link';
   /** Inverts the primary button to paper-on-ink for use on an atmosphere. */
   onAtmosphere?: boolean;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: GlyphName;
+  iconPosition?: 'leading' | 'trailing';
   disabled?: boolean;
   compact?: boolean;
+  /** V26 slab (board `btn`): `md` 50pt or `sm` 40pt, 18pt icons, full width. Leave unset for the earlier look. */
+  size?: 'md' | 'sm';
   style?: StyleProp<ViewStyle>;
 };
 
 /** DESIGN.md §6.13: one primary per screen. Verb + object labels ("Book appointment"). */
-export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAtmos, icon, disabled, compact = false, style }: ButtonProps) {
+export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAtmos, icon, iconPosition = 'leading', disabled, compact = false, size, style }: ButtonProps) {
   const t = useTokens();
   if (variant === 'link') {
     return (
       <Press haptic="select" onPress={onPress} disabled={disabled} accessibilityLabel={label} style={[styles.link, style]}>
-        <Callout tone={onAtmos ? 'paper' : 'ink'} style={{ textDecorationLine: 'underline' }}>
+        <Callout tone={onAtmos ? 'paper' : 'ink'}>
           {label}
         </Callout>
       </Press>
@@ -152,12 +183,13 @@ export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAt
       disabled={disabled}
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
-      style={[styles.button, { backgroundColor: bg, opacity: disabled ? 0.4 : 1, minHeight: compact ? touch.min : componentSize.button }, style]}
+      style={[styles.button, { backgroundColor: bg, opacity: disabled ? 0.4 : 1, minHeight: size === 'sm' ? componentSize.buttonSm : size === 'md' ? componentSize.button : compact ? touch.min : componentSize.button }, size ? { alignSelf: 'stretch', paddingHorizontal: space.md } : null, style]}
     >
-      {icon ? <Ionicons name={icon} size={18} color={fg} /> : null}
-      <Text variant={compact ? 'buttonCompact' : 'button'} style={{ color: fg }}>
+      {icon && iconPosition === 'leading' ? <Ionicons name={icon} size={size ? componentSize.iconSm : componentSize.icon} color={fg} /> : null}
+      <Text variant={compact || size === 'sm' ? 'buttonCompact' : 'button'} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ color: fg }}>
         {label}
       </Text>
+      {icon && iconPosition === 'trailing' ? <Ionicons name={icon} size={size ? componentSize.iconSm : componentSize.icon} color={fg} /> : null}
     </Press>
   );
 }
@@ -239,10 +271,14 @@ export type ChoiceCardProps = {
   onPress?: () => void;
   /** Revealed on the right half when selected (ref 01). */
   image?: ImageSourcePropType;
+  /** V26 `pick` (board `pick`): a 64pt white row, the title on the left and `value` on the right (quiet until `selected`). */
+  look?: 'pick';
+  value?: string;
 };
 
-export function ChoiceCard({ title, description, selected, onPress, image }: ChoiceCardProps) {
+export function ChoiceCard({ title, description, selected, onPress, image, look, value }: ChoiceCardProps) {
   const t = useTokens();
+  if (look === 'pick') return <PickRow label={title} value={value ?? description ?? ''} set={selected} onPress={onPress} />;
   const filled = selected && !image;
   const onPhoto = selected && !!image;
   const fg: Tone = filled ? 'inverse' : onPhoto ? 'paper' : 'ink';
@@ -286,6 +322,7 @@ export function ChoiceCard({ title, description, selected, onPress, image }: Cho
 
 const styles = StyleSheet.create({
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 28, paddingHorizontal: 12, borderRadius: radius.full, alignSelf: 'flex-start' },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 10, borderRadius: radius.full, alignSelf: 'flex-start' },
   pillDot: { width: 6, height: 6, borderRadius: 3 },
   button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: radius.button, paddingHorizontal: 24, minWidth: 44 },
   link: { minHeight: 44, alignItems: 'center', justifyContent: 'center', alignSelf: 'center', paddingHorizontal: 8 },

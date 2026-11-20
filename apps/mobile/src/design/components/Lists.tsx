@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons, type GlyphName } from '../Icon';
 import { Press } from '../Press';
 import { Callout, Mono, Text, Title } from '../Text';
 import { useTokens } from '../theme';
-import { areaColors, cardShadow, componentSize, radius, space, touch, type Area } from '../tokens';
+import { areaColors, cardShadow, componentSize, fonts, radius, space, touch, type Area } from '../tokens';
 import { Slider } from './Controls';
+import { CapsuleBars } from './V26Data';
+import { CheckRows, V26Row, type V26RowProps } from './V26Lists';
+import { Reading, V26Tile, type ReadingProps, type V26TileProps } from './V26Tiles';
 
 export function useAreaColor(area: Area): string {
   const t = useTokens();
@@ -16,10 +19,19 @@ export function useAreaColor(area: Area): string {
 /* ───────────────────────── ListRow ───────────────────────── */
 
 export type ListRowProps = {
+  /** V26 row (board `row`, `thumbRow`, `dateRow`): 40pt icon well, a photo thumb or a date box, quiet chevron. */
+  look?: 'v26';
   title: string;
   sub?: string;
   /** Ionicon in a 34pt tile on the left. */
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: GlyphName;
+  /** V26: a 48pt photograph on the left. */
+  thumb?: V26RowProps['thumb'];
+  thumbFocal?: V26RowProps['thumbFocal'];
+  /** V26: a 48pt date box on the left. */
+  date?: V26RowProps['date'];
+  /** V26: quiet words on the right ("Sat"). */
+  end?: string;
   /** A 6pt area dot on the left instead of an icon. */
   area?: Area;
   right?: ReactNode;
@@ -29,19 +41,24 @@ export type ListRowProps = {
 };
 
 /** The standard list row. Rows inside a Card get 1px hairline dividers via <RowGroup>. */
-export function ListRow({ title, sub, icon, area, right, chevron, onPress, tone = 'ink' }: ListRowProps) {
+export function ListRow(props: ListRowProps) {
+  if (props.look === 'v26') return <V26Row title={props.title} sub={props.sub} icon={props.icon} thumb={props.thumb} thumbFocal={props.thumbFocal} date={props.date} end={props.end} right={props.right} chevron={props.chevron} onPress={props.onPress} />;
+  return <ListRowV23 {...props} />;
+}
+
+function ListRowV23({ title, sub, icon, area, right, chevron, onPress, tone = 'ink' }: ListRowProps) {
   const t = useTokens();
   const dot = area ? areaColors[t.scheme][area] : null;
   const body = (
     <>
       {icon ? (
         <View style={[styles.icon, { backgroundColor: t.surface2 }]}>
-          <Ionicons name={icon} size={17} color={t.ink} />
+          <Ionicons name={icon} size={componentSize.icon} color={t.ink2} />
         </View>
       ) : null}
       {dot ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dot }} /> : null}
       <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
-        <Text variant="body" tone={tone === 'ember' ? 'ember' : 'ink'} style={{ fontFamily: sub ? 'Inter_500Medium' : 'Inter_400Regular' }}>
+        <Text variant="body" tone={tone === 'ember' ? 'ember' : 'ink'} style={{ fontFamily: fonts.sansMedium }}>
           {title}
         </Text>
         {sub ? <Callout tone="ink2">{sub}</Callout> : null}
@@ -84,8 +101,12 @@ export function RowGroup({ children, header, count }: { children: ReactNode[]; h
 export type CheckItem = { label: string; sub?: string; done: boolean; meta?: string };
 
 /** Square checks (radius 7). Used for "To move up" gates, mission steps, nudge steps, protection checks. */
-export function Checklist({ items, onToggle, header, count }: { items: CheckItem[]; onToggle?: (i: number) => void; header?: string; count?: string }) {
+export function Checklist({ items, onToggle, header, count, look, bare }: { items: CheckItem[]; onToggle?: (i: number) => void; header?: string; count?: string; /** V26 `round`: 26pt round ticks, 16pt lines, done in ink2 without a strike. */ look?: 'round'; /** V26: no card around the lines (they sit inside an accordion or a card already). */ bare?: boolean }) {
   const t = useTokens();
+  if (look === 'round') {
+    const rows = <CheckRows items={items} onToggle={onToggle} />;
+    return bare ? rows : <RowGroup header={header} count={count}>{[rows]}</RowGroup>;
+  }
   return (
     <RowGroup header={header} count={count}>
       {items.map((it, i) => (
@@ -128,19 +149,19 @@ export function NewTag({ level }: { level: number }) {
 }
 
 /** Toolkit tile. Locked tiles are quiet outlines with "L3"; tapping a locked tile offers "Unlock early" (SPEC §5). */
-export function ToolTile({ title, icon, locked, level, onPress }: { title: string; icon: keyof typeof Ionicons.glyphMap; locked?: boolean; level?: number; onPress?: () => void }) {
+export function ToolTile({ title, icon, locked, level, onPress, compact = false }: { title: string; icon: keyof typeof Ionicons.glyphMap; locked?: boolean; level?: number; onPress?: () => void; compact?: boolean }) {
   const t = useTokens();
   return (
     <Press
       haptic={locked ? 'select' : 'open'}
       onPress={onPress}
       accessibilityLabel={locked ? `${title}, unlocks at level ${level}` : title}
-      style={[styles.tool, { backgroundColor: locked ? 'transparent' : t.surface }]}
+      style={[styles.tool, compact ? { minHeight: componentSize.toolCompact, borderRadius: radius.button, padding: space.md, gap: space.sm } : null, { backgroundColor: locked ? 'transparent' : t.surface }]}
     >
-      <View style={[styles.icon, { backgroundColor: t.surface2, opacity: locked ? 0.4 : 1 }]}>
-        <Ionicons name={icon} size={17} color={t.ink} />
-      </View>
-      <Title style={{ fontSize: 15, lineHeight: 19, opacity: locked ? 0.45 : 1 }}>{title}</Title>
+      {compact ? <Ionicons name={icon} size={componentSize.icon} color={t.ink2} /> : <View style={[styles.icon, { backgroundColor: t.surface2, opacity: locked ? 0.4 : 1 }]}>
+        <Ionicons name={icon} size={componentSize.icon} color={t.ink2} />
+      </View>}
+      <Text variant={compact ? 'callout' : 'title'} style={{ opacity: locked ? 0.45 : 1 }}>{title}</Text>
       {locked ? <Text variant="micro" tone="ink2" style={{ position: 'absolute', top: 14, right: 14 }}>{`L${level}`}</Text> : null}
     </Press>
   );
@@ -274,7 +295,17 @@ export function FoodItemRow({ name, grams, defaultGrams, kcalPer100, onChange }:
 /* ───────────────────────── Small charts ───────────────────────── */
 
 /** Bars for trends (sleep, readiness, mood). Optional dashed guide line (e.g. sleep need). */
-export function MiniBars({ values, max, color, height = 64, guide, label }: { values: number[]; max: number; color?: (v: number) => string; height?: number; guide?: number; label?: string }) {
+export type MiniBarsProps =
+  | { look?: undefined; values: number[]; max: number; color?: (v: number) => string; height?: number; guide?: number; label?: string }
+  /** V26 capsule bars (board `bars`): width-aware, the picked day solid, the rest at 20%. */
+  | { look: 'capsule'; values: number[]; labels?: string[]; now?: number; max?: number; color?: string; height?: number; dim?: number; label?: string };
+
+export function MiniBars(props: MiniBarsProps) {
+  if (props.look === 'capsule') return <CapsuleBars values={props.values} labels={props.labels} now={props.now} max={props.max} color={props.color} height={props.height} dim={props.dim} label={props.label} />;
+  return <MiniBarsV23 {...props} />;
+}
+
+function MiniBarsV23({ values, max, color, height = 64, guide, label }: Extract<MiniBarsProps, { look?: undefined }>) {
   const t = useTokens();
   return (
     <View accessibilityRole="image" accessibilityLabel={label ?? `Chart of ${values.length} values`} style={{ height, flexDirection: 'row', alignItems: 'flex-end', gap: 4 }}>
@@ -335,7 +366,20 @@ export function StageBar({ segments, start, end }: { segments: { stage: SleepSta
 }
 
 /** Tappable metric tile used on Body home (Readiness / Sleep / Load / Fuel). */
-export function MetricTile({ label, value, unit, meaning, children, onPress }: { label: string; value: string; unit?: string; meaning?: string; children?: ReactNode; onPress?: () => void }) {
+export type MetricTileProps =
+  | { look?: undefined; label: string; value: string; unit?: string; meaning?: string; children?: ReactNode; onPress?: () => void }
+  /** V26 tile (board `tile`): label with an area dot, its scale, the figure, one line of meaning. */
+  | ({ look: 'v26' } & V26TileProps)
+  /** V26 reading (board `metric`): a figure against your normal with a sparkline. */
+  | ({ look: 'reading' } & ReadingProps);
+
+export function MetricTile(props: MetricTileProps) {
+  if (props.look === 'v26') { const { look: _look, ...rest } = props; return <V26Tile {...rest} />; }
+  if (props.look === 'reading') { const { look: _look, ...rest } = props; return <Reading {...rest} />; }
+  return <MetricTileV23 {...props} />;
+}
+
+function MetricTileV23({ label, value, unit, meaning, children, onPress }: Extract<MetricTileProps, { look?: undefined }>) {
   const t = useTokens();
   return (
     <Press haptic="open" onPress={onPress} accessibilityLabel={`${label} ${value} ${unit ?? ''}`} style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme), gap: 10, flex: 1 }]}>

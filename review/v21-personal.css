@@ -1,0 +1,236 @@
+/* life v21 — personal content only. Shared header, footer, photo bands and renderers are untouched. */
+.v21-personal :is(
+  .v21p-library-syllabus, .v21p-lens-ideas, .v21p-lens-uses, .v21p-lens-books,
+  .v21p-result-list, .v21p-week-outcomes, .v21p-aim-moves,
+  .v21p-gambit-commitment, .v21p-tax-evidence, .v21p-tax-details,
+  .v21p-lesson-syllabus, .v21p-gap-evidence, .v21p-learned-ledger,
+  .v21p-value-row, .v21p-people-directory,
+  .v21p-gift-memory, .v21p-contact-cadence, .v21p-agenda-items,
+  .v21p-measure-group
+) {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.v21-personal :is(
+  .v21p-library, .v21p-lens, .v21p-learning, .v21p-recap,
+  .v21p-aim, .v21p-gambit, .v21p-lesson-ready, .v21p-gaps,
+  .v21p-personality, .v21p-values, .v21p-person, .v21p-dates,
+  .v21p-measures
+) { gap: 24px !important; }
+
+/* Learn: today's photographic idea is followed by an actionable syllabus. */
+.v21-personal .v21p-library-syllabus { gap: 4px !important; }
+.v21-personal .v21p-syllabus-row {
+  min-height: 64px;
+  gap: 12px;
+  padding: 12px 0;
+  text-align: left;
+}
+.v21-personal .v21p-syllabus-row > .lt { min-width: 0; }
+.v21-personal .v21p-identity-mark {
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+}
+.v21-personal .v21p-lenses { gap: 12px !important; }
+.v21-personal .v21p-collections > .tools { gap: 12px; }
+.v21-personal .v21p-collections .tool {
+  min-height: 88px !important;
+  gap: 12px !important;
+  background: var(--surface-2);
+  box-shadow: none;
+}
+.v21-personal .v21p-collections .tool > span:first-child {
+  background: var(--quiet) !important;
+  box-shadow: none !important;
+}
+
+/* A lens: applied context, an open syllabus, then source reading. */
+.v21-personal .v21p-lens-uses { gap: 4px !important; }
+.v21-personal .v21p-lens-uses > .li { min-height: 64px; padding: 12px 0; }
+.v21-personal .v21p-lens-ideas { gap: 4px !important; }
+.v21-personal .v21p-lens-books {
+  padding: 8px 16px !important;
+  background: var(--surface-2) !important;
+  border-radius: 14px !important;
+}
+
+/* Learning impact is evidence first; the original streak remains supporting context. */
+.v21-personal .v21p-result-list { gap: 4px !important; }
+.v21-personal .v21p-result-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  min-height: 72px;
+  padding: 16px 0;
+}
+.v21-personal .v21p-result-row > :last-child { padding-top: 4px; white-space: nowrap; }
+.v21-personal .v21p-support {
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+  padding: 16px !important;
+  gap: 12px !important;
+}
+
+/* Weekly recap: a story, a reflection, then the original measured outcomes. */
+.v21-personal .v21p-reflection {
+  display: block;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text);
+}
+.v21-personal .v21p-week-outcomes { gap: 8px !important; }
+.v21-personal .v21p-week-outcomes > .li { min-height: 56px; padding: 12px 0; gap: 16px; }
+.v21-personal .v21p-week-outcomes > .li > :last-child { flex-shrink: 0; }
+
+/* Aim: photo stays untouched; today's concrete move leads the breakdown. */
+.v21-personal .v21p-aim-moves { gap: 8px !important; }
+.v21-personal .v21p-aim-moves > .li { min-height: 64px; padding: 12px 0; gap: 12px; }
+.v21-personal .v21p-today-move {
+  padding: 16px !important;
+  background: var(--surface-2);
+  border-radius: 14px;
+}
+.v21-personal .v21p-aim-moves > .row { padding-top: 0 !important; }
+
+/* Gambit: commitment, alternatives, then the scheduling detail. */
+.v21-personal .v21p-gambit-commitment { gap: 12px !important; }
+.v21-personal .v21p-gambit-options { gap: 12px !important; }
+.v21-personal .v21p-checkin {
+  gap: 16px !important;
+  padding: 16px !important;
+  background: var(--surface-2) !important;
+  box-shadow: none !important;
+}
+.v21-personal .v21p-checkin-times { gap: 8px !important; }
+.v21-personal .v21p-checkin-times > button { min-height: 44px; }
+
+/* The teaching invitation is an action, no longer hidden inside a diagnostic card. */
+.v21-personal .v21p-teach-offer { gap: 20px !important; }
+.v21-personal .v21p-tax-evidence { gap: 12px !important; }
+.v21-personal .v21p-teach-action {
+  width: 100%;
+  min-height: 72px;
+  padding: 16px !important;
+  gap: 12px !important;
+  background: var(--surface-2) !important;
+  box-shadow: var(--hi) !important;
+  border-radius: 14px !important;
+}
+.v21-personal .v21p-tax-details > .li { padding: 12px 0; min-height: 64px; }
+
+/* Lesson preparation reads like a short syllabus, not another settings card. */
+.v21-personal .v21p-lesson-syllabus { gap: 12px !important; }
+.v21-personal .v21p-lesson-stop {
+  min-height: 64px;
+  padding: 12px 0;
+  gap: 16px;
+}
+.v21-personal .v21p-lesson-stop > .adot { box-shadow: none; }
+
+/* Feedback: do the one useful thing now; read the successes as supporting evidence. */
+.v21-personal .v21p-actionable-gap {
+  gap: 16px !important;
+  padding: 20px !important;
+  background: var(--surface-2) !important;
+}
+.v21-personal .v21p-gap-evidence { gap: 16px !important; }
+
+/* Learned ideas: status takes its own reading line instead of crushing the title. */
+.v21-personal .v21p-learned-ledger { gap: 8px !important; }
+.v21-personal .v21p-learned-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: start;
+  padding: 16px 0;
+}
+.v21-personal .v21p-learned-row > i { margin-top: 8px; }
+.v21-personal .v21p-learned-row > :last-child { grid-column: 2; }
+.v21-personal .v21p-recall-due {
+  padding: 16px;
+  background: var(--surface-2);
+  border-radius: 14px;
+}
+
+/* Personality: the five existing meters retain their exact internal dimensions. */
+.v21-personal .v21p-trait {
+  gap: 12px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.v21-personal .v21p-trait-heading {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.v21-personal .v21p-trait-meaning { color: var(--text-2) !important; }
+
+/* Values: ranking, not five identical settings tiles. */
+.v21-personal .v21p-ranked-values { gap: 8px !important; }
+.v21-personal .v21p-value-row { min-height: 56px; gap: 16px !important; }
+.v21-personal .v21p-leading-value > .t-body { font-size: 20px; line-height: 26px; }
+.v21-personal .v21p-value-meaning { padding: 16px !important; gap: 8px !important; }
+
+/* People: one near-term event, two later dates, then the directory. */
+.v21-personal .v21p-people { gap: 16px !important; }
+.v21-personal .v21p-upcoming {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px !important;
+  overflow: visible !important;
+}
+.v21-personal .v21p-upcoming > .card { padding: 16px !important; gap: 8px !important; min-width: 0; }
+.v21-personal .v21p-next-person {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center !important;
+  min-height: 72px;
+}
+.v21-personal .v21p-person-mark {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+.v21-personal .v21p-people-directory { gap: 8px !important; }
+.v21-personal .v21p-person-row { min-height: 72px; padding: 12px 0; gap: 12px; text-align: left; }
+
+/* Person: identity sits together; memories and contact cadence are distinct readings. */
+.v21-personal .v21p-person { align-items: stretch !important; }
+.v21-personal .v21p-person-identity { flex-direction: row; align-items: center; gap: 16px; }
+.v21-personal .v21p-person-identity > .col { flex: 1; min-width: 0; }
+.v21-personal .v21p-birthday-plan { padding: 16px !important; gap: 8px !important; }
+.v21-personal .v21p-birthday-plan > .li { gap: 12px; min-height: 64px; padding: 12px 0; }
+.v21-personal :is(.v21p-gift-memory, .v21p-contact-cadence) > .li { min-height: 64px; padding: 12px 0; }
+
+/* Dates: open agenda months, with one imminent event given a surface. */
+.v21-personal .v21p-agenda-month { gap: 12px; }
+.v21-personal .v21p-agenda-items { gap: 8px !important; }
+.v21-personal .v21p-agenda-event { min-height: 72px; gap: 16px; padding: 12px 0; }
+.v21-personal .v21p-agenda-event > .tnum {
+  width: 44px !important;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.v21-personal .v21p-next-date {
+  padding: 16px;
+  background: var(--surface-2);
+  border-radius: 14px;
+}
+
+/* Body numbers: preserve every value and caveat; provenance gets a readable line. */
+.v21-personal .v21p-measure-group { display: flex; flex-direction: column; gap: 8px !important; }
+.v21-personal .v21p-measure-group > .t-title3 { padding-bottom: 4px; }
+.v21-personal .v21p-measure-row { min-height: 88px; padding: 12px 0; }
+.v21-personal .v21p-measure-row > .lt { gap: 4px !important; }
+.v21-personal .v21p-measure-source { color: var(--quiet); }

@@ -7,6 +7,7 @@ import { Press } from '../Press';
 import { useCalmMotion, useTokens } from '../theme';
 import { areaColors, cardShadow, componentSize, motion, radius, space } from '../tokens';
 import { RollingNumeral } from './Story';
+import { BandLine, SleepTracks } from './V26Data';
 
 const ACircle = Animated.createAnimatedComponent(Circle);
 export function ProgressRing({ value, max = 100, size = 120, label, display, color }: { value: number; max?: number; size?: number; label?: string; display?: string; color?: string }) {
@@ -37,7 +38,12 @@ export function ScoreBadge({ value, max = 10 }: { value: number; max?: number })
   return <View style={{ width: componentSize.mealScore, height: componentSize.mealScore, borderRadius: radius.score, backgroundColor: t.gainTint, alignItems: 'center', justifyContent: 'center' }}><Text variant="headline" tone="gain">{Math.round(value)}</Text><Text variant="callout" tone="gain">{`/${max}`}</Text></View>;
 }
 /** One time axis, one series, with directly inspectable readings. No dual scales. */
-export function TrendLine({ values, labels, height = 96, band, color, unit = '', label = 'Trend', min, max }: { values: number[]; labels?: string[]; height?: number; band?: [number, number]; color?: string; unit?: string; label?: string; min?: number; max?: number }) {
+export type TrendLineProps = { values: number[]; labels?: string[]; height?: number; band?: [number, number]; color?: string; unit?: string; label?: string; min?: number; max?: number; /** V26 `band` (board `line`): straight segments, your normal as a shaded band, today's dot; width-aware. Needs `band`. */ look?: 'band' };
+export function TrendLine(props: TrendLineProps) {
+  if (props.look === 'band' && props.band) return <BandLine values={props.values} normal={props.band} height={props.height ?? 120} color={props.color} label={props.label} />;
+  return <TrendLineV23 {...props} />;
+}
+function TrendLineV23({ values, labels, height = 96, band, color, unit = '', label = 'Trend', min, max }: TrendLineProps) {
   const t = useTokens(), [selected, setSelected] = useState<number | null>(null), calm = useCalmMotion();
   const lo = min ?? Math.min(...values) - 1, hi = max ?? Math.max(...values) + 1, range = hi - lo || 1;
   const px = (i: number) => 6 + i / Math.max(1, values.length - 1) * 288, py = (v: number) => height - 8 - (v - lo) / range * (height - 16);
@@ -60,7 +66,8 @@ export function ZoneBars({ zones }: { zones: { name: string; range: string; minu
   const t = useTokens(), colors = [t.ember, areaColors[t.scheme].health, t.gain, areaColors[t.scheme].work, t.ink2], max = Math.max(1, ...zones.map(z => z.minutes));
   return <View style={{ gap: space.sm }}>{zones.map((z, i) => <View key={z.name} style={{ gap: space.xxs }}><View style={s.between}><Text variant="body">{z.name}<Text variant="callout" tone="ink2">{`  ${z.range} bpm`}</Text></Text><Text variant="callout" tone="ink2">{`${z.minutes} min`}</Text></View><View style={[s.track, { backgroundColor: t.surface2 }]}><View style={{ height: '100%', width: `${z.minutes / max * 100}%`, backgroundColor: colors[i], borderRadius: radius.full }} /></View></View>)}</View>;
 }
-export function Hypnogram({ segments, start, end }: { segments: { stage: 'awake' | 'rem' | 'light' | 'deep'; minutes: number }[]; start: string; end: string }) {
+export function Hypnogram({ segments, start, end, look, summary }: { segments: { stage: 'awake' | 'rem' | 'light' | 'deep'; minutes: number }[]; start: string; end: string; /** V26 `tracks`: four rails (awake, REM, light, deep) on surface2 with a totals key. */ look?: 'tracks'; /** V26: the line above the rails ("Asleep 7h 10m · 89%"). */ summary?: string }) {
+  if (look === 'tracks') return <SleepTracks segments={segments} start={start} end={end} summary={summary} />;
   const t = useTokens(), levels = { awake: 0, rem: 1, light: 2, deep: 3 }, colors = { awake: t.ember, rem: areaColors[t.scheme].health, light: areaColors[t.scheme].work, deep: t.ink2 }, total = segments.reduce((a, b) => a + b.minutes, 0);
   let x = 0;
   return <View style={{ gap: space.xs }} accessibilityLabel={`Sleep stages from ${start} to ${end}. ${segments.map(v => `${v.stage}, ${v.minutes} minutes`).join('. ')}`}>

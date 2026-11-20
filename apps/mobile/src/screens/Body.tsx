@@ -1,91 +1,67 @@
-import { useEffect, useState } from 'react';
-import { Platform, View } from 'react-native';
-import { Button, BreathPacer, Card, Checklist, ChipGroup, Composer, ControlRow, HabitRow, HonestyBadge, Hypnogram, LifeOrb, LifeReply, MetricRow, MetricTile, MiniBars, ProgressRing, RangeBar, RollingNumeral, Segmented, StageBar, StatusPill, Text, Toggle, Press, TrendLine, TwoTone, UserBubble, ZoneBars, radius, feedback, space, Ticks, useTokens, areaColors, type BreathProtocol } from '@/design';
-import { useNavigation } from '@/navigation/useNavigation';
-import type { ScreenKey } from '@/navigation/screens';
-import { useSeed } from '@/state/SeedProvider';
-import { boardHealth, seed } from '@/state/seed';
-import { health } from '@/services/local';
-import { Heading, Input, LocalNotice, Rows, Screen, Section, layout } from './Screen';
-import { HealthDetails } from './HealthDetails';
+/**
+ * Body's chapter. Every screen is the V26 build in `v26/body.tsx` and `v26/health.tsx`; this switch keeps the routes'
+ * entry point and Body's two states. Real accounts (no sample life) see the empty state until their own readings land.
+ */
 import { useLocalSearchParams } from 'expo-router';
-import { ParentStateContent } from './States';
+import type { ScreenKey } from '@/navigation/screens';
+import { SHOW_SAMPLES } from '@/state/sample';
+import { useSeed } from '@/state/SeedProvider';
+import { healthAllowed } from '@/state/firstopen';
+import { ConnectFailV26, EmptyBodyV26, HealthOffV26 } from './v26/states';
+import {
+  BodyV26, BreatheV26, CoachV26, CycleV26, DetectedV26, DevicesV26, ForecastV26, HrvV26, IllnessV26, InsightsV26, JournalV26, LoadV26, MathV26, ReadinessV26, SignalsV26,
+  SleepplanV26, SleepV26, StressV26, TrendsV26, WorkoutV26,
+} from './v26/body';
+import {
+  BasicsV26, BmiV26, BreathlibV26, CgmV26, FitnessageV26, HealthdigestV26, LoadtrendV26, ProvenanceV26, RegularityV26, SleepnightV26, SourcesV26, StrainV26, WeightV26,
+  WorkoutdetailV26, ZonesV26,
+} from './v26/health';
+
+/** Body pages that read no health data: the breathing exercises and where data comes from. */
+const NO_HEALTH_DATA: ScreenKey[] = ['breathe', 'breathlib', 'devices', 'sources', 'provenance'];
 
 export function BodyScreen({ screen }: { screen: ScreenKey }) {
-  const nav = useNavigation(), { data, set, flag, choose, engine } = useSeed(), [range, setRange] = useState('4 weeks'), [running, setRunning] = useState(false), [elapsed, setElapsed] = useState(0), [wake, setWake] = useState('07:00'), [sleepGoal, setSleepGoal] = useState('Full recovery'), [text, setText] = useState('');
-  const breathProtocol = (data.choices['breath-protocol'] ?? 'Resonance') as BreathProtocol;
-  const breathDuration = breathProtocol === 'Physiological sigh' ? 60 : data.choices['breath-protocol'] === 'Resonance' ? 300 : 120;
-  useEffect(() => { if (screen === 'breathe' && running && elapsed >= breathDuration) { setRunning(false); feedback.complete(); } }, [screen, running, elapsed, breathDuration]);
-  const t = useTokens(), h = seed.health, readout = (n: number) => data.prefs.hideNumbers ? '—' : String(n);
-  useEffect(() => { if (!running) return; const id = setInterval(() => setElapsed(v => v + 1), 1000); return () => clearInterval(id); }, [running]);
-  const info = { kind: 'icon' as const, icon: 'information-circle-outline' as const, label: 'Where this number came from', onPress: () => nav.go('provenance') };
-  const params = useLocalSearchParams<{ state?: string }>();
-  if (screen === 'body' && (params.state === 'emptybody' || params.state === 'connectfail')) return <Screen screen={screen} title="Body"><ParentStateContent kind={params.state} /></Screen>;
-  if (screen === 'body') return <Screen screen={screen} title="Body" action={{ kind: 'icon', icon: 'watch-outline', label: 'Connect devices', onPress: () => nav.go('devices') }}>
-    <Text variant="callout" tone="ink2">{Platform.OS === 'android' ? 'Health Connect' : 'Apple Health'} · sample data</Text>
-    <TwoTone size="headline" segments={[{ text: 'You’re ', tone: 'quiet' }, { text: 'well recovered, ' }, { text: 'but ', tone: 'quiet' }, { text: '2h 40m short on sleep ' }, { text: 'this week. Today: ', tone: 'quiet' }, { text: 'an easy walk and bed by 22:50.' }]} />
-    <Button label="Plan tonight" onPress={() => nav.go('sleepplan')} />
-    <View style={{ gap: space.sm }}>
-      <MetricTile label="Sleep" value="7h 10m" meaning="Need 8h 05m · 2h 40m short this week" onPress={() => nav.go('sleep')} />
-      <View style={[layout.row, { alignItems: 'stretch' }]}>{[{ label: 'Readiness', value: readout(h.readiness), unit: '/100', meaning: 'Above your baseline', to: 'readiness' as const }, { label: 'Load', value: readout(boardHealth.bodyLoad), unit: '/21', meaning: 'In today’s range', to: 'load' as const }].map(metric => <View key={metric.label} style={{ flex: 1, minWidth: 0 }}><MetricTile label={metric.label} value={metric.value} unit={metric.unit} meaning={metric.meaning} onPress={() => nav.go(metric.to)} /></View>)}</View>
-      <Rows rows={[{ title: 'Fuel', sub: data.prefs.hideNumbers || data.profile.age < 18 ? 'Regular meals and variety' : `Of ${seed.fuel.kcal.toLocaleString('en-GB')} so far`, value: data.prefs.hideNumbers || data.profile.age < 18 ? 'Balanced' : `${seed.fuel.eaten.toLocaleString('en-GB')} kcal`, to: 'fuelhome' }]} />
-    </View>
-    <Section title="Habits today" meta={`${data.habits.filter(habit => habit.last14[13]).length} of ${data.habits.length} · All habits`} onPress={() => nav.go('habits')}><Checklist items={data.habits.map(habit => ({ label: habit.name, sub: habit.shortCue ?? habit.cue, done: !!habit.last14[13] }))} onToggle={index => set({ habits: data.habits.map((habit, i) => i === index ? { ...habit, last14: habit.last14.map((done, day) => day === 13 ? !done : done) } : habit) })} /></Section>
-    <View style={[layout.grid, { gap: space.xs }]}>{[{ title: 'Body signals', to: 'signals' as const }, { title: 'Stress', to: 'stress' as const }, { title: 'Breathe', to: 'breathlib' as const }, { title: 'Start workout', to: 'workout' as const }, { title: 'Journal', to: 'journal' as const }, { title: 'Tomorrow', to: 'forecast' as const }, { title: 'Trends', to: 'trends' as const }, { title: 'Snap a meal', to: 'snap' as const }, { title: 'What can I cook?', to: 'cook' as const }, { title: 'Week of meals', to: 'mealplan' as const }, { title: 'Fitness age', to: 'fitnessage' as const }].map(action => <Button key={action.to} compact variant="secondary" label={action.title} onPress={() => nav.go(action.to)} style={{ width: '47%', flexGrow: 1 }} />)}</View>
-    <Rows rows={[{ title: 'Your body numbers', to: 'measures' }, { title: 'Weight', to: 'weight' }, { title: 'Cycle-aware readiness', to: 'cycle' }, { title: 'Your sources', to: 'sources' }, { title: 'Glucose, after meals', to: 'cgm' }, { title: 'Water, sitting and recovery', to: 'basics' }, { title: 'Spotted activity', to: 'detected' }, { title: 'Your body this week', to: 'healthdigest' }]} />
-    <Button variant="secondary" label="Talk to life…" onPress={() => nav.go('coach')} />
-  </Screen>;
-  if (screen === 'devices') return <Screen screen={screen} title="Devices"><Text variant="callout" tone="ink2">Body · connections</Text><Heading title="Bring your data in" sub="life reads only what you allow. Health data stays on your phone, never goes to iCloud and is never used for ads." /><Rows rows={[['Apple Health', 'Sleep, heart, HRV, workouts, steps, food'], ['Health Connect', 'The same on Android phones'], ['WHOOP', 'Recovery, strain, sleep'], ['Oura', 'Readiness, sleep, temperature'], ['Heart-rate strap', 'Standard Bluetooth Heart Rate Profile: Polar, Garmin, Wahoo'], ['Garmin, Fitbit, Samsung and more', 'Through Apple Health or Health Connect'], ['Manual', 'Sleep times, weight, water, workouts']].map(([title, sub]) => ({ title, sub, value: data.flags[`device-${title}`] ? 'Preview on' : title === 'Manual' ? 'Always' : 'Connect', onPress: async () => { if ((title === 'Apple Health' || title === 'Health Connect') && !data.flags['health-connected']) { nav.go('healthprimer', { next: 'devices' }); return; } await health.connect(title); flag(`device-${title}`); } }))} /><Section title="What life can read"><Card>{['Sleep', 'Heart rate and HRV', 'Workouts and steps', 'Food and water', 'Weight'].map(label => <ControlRow key={label} label={label}><Toggle value={!data.flags[`no-health-${label}`]} onChange={v => flag(`no-health-${label}`, !v)} accessibilityLabel={label} /></ControlRow>)}</Card></Section><Text variant="callout" tone="ink2">Disconnect any time. Ask, and life deletes everything it imported.</Text><LocalNotice text="Local preview. No OAuth, HealthKit, Health Connect or Bluetooth connection is made. WHOOP uses only its official API in Track B." /></Screen>;
-  if (screen === 'readiness') return <Screen screen={screen} title="Readiness" action={info}>
-    <LocalNotice text="Sample score · no live health connection. Real scoring begins in Track B." />
-    <View style={{ gap: space.xs, alignItems: 'flex-start' }}><Text variant="callout" tone="ink2">Today</Text><RollingNumeral value={h.readiness} unit="/100" size="xl" /><StatusPill label="High · above your baseline" /></View>
-    <RangeBar value={h.readiness} />
-    <Card style={{ gap: space.md }}><Text variant="title">What to do with it</Text><Text variant="body" tone="ink2">A good day for your harder workout or the bigger decision you’ve been putting off.</Text><Button label="See today’s target load" onPress={() => nav.go('strain')} /></Card>
-    <Section title="Why" meta="vs your 60-day baseline"><Rows rows={[{ title: 'Heart rate variability', sub: `${boardHealth.readinessHrv} ms · baseline ${boardHealth.readinessHrvBaseline}`, value: '▲ better', to: 'hrv' }, { title: 'Resting heart rate', sub: `${h.rhr} bpm · baseline 56`, value: '▼ better', to: 'provenance' }, { title: 'Sleep performance', sub: '89% of what you needed', value: 'ok', to: 'sleep' }, { title: 'Breathing rate', sub: `${boardHealth.readinessRespiration} / min · normal`, value: 'steady', to: 'signals' }]} /></Section>
-    <Section title="Last 30 days" meta="avg 61"><Card><MiniBars values={boardHealth.readinessMonth} max={100} height={70} color={value => value >= 67 ? t.gain : value >= 34 ? t.ink2 : t.ember} label="Readiness over the last 30 days" /></Card></Section>
-    <Rows rows={[{ title: 'Tomorrow’s forecast', to: 'forecast' }, { title: 'How scores work', to: 'math' }]} />
-    <Text variant="callout" tone="ink2">An estimate from your own data (needs 14 days to calibrate). Not a medical measure.</Text>
-  </Screen>;
-  if (screen === 'sleep') return <Screen screen={screen} title="Sleep" action={info}>
-    <Text variant="callout" tone="ink2">{Platform.OS === 'android' ? 'Health Connect' : 'Apple Health'} · sample night</Text>
-    <TwoTone size="headline" segments={[{ text: 'You slept ', tone: 'quiet' }, { text: '7h 10m. ' }, { text: 'You needed about ', tone: 'quiet' }, { text: '8h 05m, ' }, { text: 'so this week’s debt is ', tone: 'quiet' }, { text: '2h 40m.' }]} />
-    <Card style={{ gap: space.md }}><Text variant="callout" tone="ink2">Tonight</Text><Text variant="headline">In bed by 22:50</Text><Text variant="body" tone="ink2">Pays back 40 minutes of debt</Text><Button label="Plan tonight" onPress={() => nav.go('sleepplan')} /><ControlRow label="Remind me at 22:05" sub="Saved locally in this preview"><Toggle value={!!data.flags['bedtime-reminder']} onChange={value => flag('bedtime-reminder', value)} accessibilityLabel="Bedtime reminder" /></ControlRow></Card>
-    <Section title="Last night"><Card onPress={() => nav.go('sleepnight')} accessibilityLabel="See last night’s sleep stages"><StageBar segments={h.stages} start="23:20" end="06:45" /></Card><Rows rows={[{ title: 'Sleep performance', sub: 'Asleep ÷ needed', value: '89%', to: 'provenance' }, { title: 'Consistency', sub: 'Bedtime varies by ±38 min', value: 'Work on it', to: 'regularity' }, { title: 'Fell asleep in', sub: 'From Apple Health', value: '14 min' }]} /></Section>
-    <Section title="Last 7 nights · line = what you needed"><Card><MiniBars values={h.sleepTrend} max={10} guide={8} height={96} label="Sleep hours over seven nights" /></Card></Section>
-    <Rows rows={[{ title: 'Sleep regularity', to: 'regularity' }]} />
-    <Text variant="callout" tone="ink2">Most adults need 7–9 hours (NHS). life learns your own need from mornings you feel rested.</Text>
-  </Screen>;
-  if (screen === 'load') return <Screen screen={screen} title="Load" action={info}>
-    <Text variant="callout" tone="ink2">Today so far · sample activity data</Text>
-    <View style={{ gap: space.md }}><RollingNumeral value={boardHealth.loadDetail} decimals={1} unit="/21" size="xl" /><Rows rows={[{ title: `Today’s sweet spot for readiness ${h.readiness}`, value: `${h.loadTarget[0]}–${h.loadTarget[1]}`, to: 'strain' }]} /><Ticks count={21} filled={Math.round(boardHealth.loadDetail)} /></View>
-    <Section title="What made up today’s load"><Rows rows={[{ title: 'Run · 32 min', sub: '07:10 · from Apple Health', value: '6.1', to: 'workoutdetail' }, { title: 'Walk · 45 min', sub: '12:30', value: '2.3', to: 'workoutdetail' }, { title: 'Everyday movement', sub: `${h.steps.toLocaleString('en-GB')} steps`, value: '3.0', to: 'basics' }]} /></Section>
-    <Section title="Time in heart-rate zones"><Card><ZoneBars zones={h.zones} /></Card></Section>
-    <Rows rows={[{ title: 'Your heart-rate zones', to: 'zones' }, { title: 'Training load trend', to: 'loadtrend' }, { title: 'Add activity', to: 'describeexercise' }]} />
-    <Text variant="callout" tone="ink2">An estimate of effort, not a fitness test.</Text>
-  </Screen>;
-  if (screen === 'trends') return <Screen screen={screen} title="Trends"><LocalNotice text="Sample sleep, readiness and mood history · patterns are illustrative." /><Segmented options={['4 weeks', '3 months'].map(v => ({ value: v, label: v }))} value={range} onChange={setRange} />{[{ title: 'Sleep (hours)', values: range === '4 weeks' ? h.sleepTrend : [...h.sleepTrend, ...h.sleepTrend], max: 9, color: areaColors[t.scheme].work }, { title: 'Readiness', values: range === '4 weeks' ? h.readinessTrend : [...h.readinessTrend, ...h.readinessTrend], max: 100, color: t.gain }, { title: 'Mood (1 = drained, 5 = driven)', values: [3, 4, 2, 3, 4, 5, 4], max: 5, color: areaColors[t.scheme].health }].map(v => <Card key={v.title} style={{ gap: space.sm }}><Text variant="callout" tone="ink2">{v.title}</Text><MiniBars values={v.values} max={v.max} color={() => v.color} label={v.title} /></Card>)}<Section title="Patterns"><Rows rows={[{ title: 'After 7+ hours of sleep', sub: 'Your readiness the next day tends to be 9 points higher', value: 'Pattern' }, { title: 'Mondays', sub: 'You tend to feel drained after short Sunday nights', value: 'Pattern' }, { title: 'Training days', sub: 'Your protein tends to fall short', value: 'Pattern', to: 'fuelhome' }]} /></Section><Text variant="callout" tone="ink2">Patterns, not proof. life looks at your own data only.</Text></Screen>;
-  if (screen === 'hrv') return <Screen screen={screen} title="Heart rate variability" action={info}><Text variant="callout" tone="ink2">Apple Watch via Apple Health · sample overnight data</Text><View style={layout.between}><RollingNumeral value={h.hrv} unit="ms" size="xl" /><HonestyBadge kind="baseline" /></View><Text variant="body" tone="ink2">Above your normal range of 47–56 ms. Higher than usual often means your body has recovered well.</Text><Section title="30 days · shaded = your normal" meta="avg 54"><Card><TrendLine values={[48, 52, 49, 54, 58, 54, 62, 58, 61, h.hrv]} band={[47, 56]} min={40} max={70} unit=" ms" label="Heart rate variability" /></Card></Section><Section title="What moves yours" meta="from your journal"><Rows rows={[{ title: 'Alcohol the night before', sub: '12 nights', value: '−9 ms', to: 'insights' }, { title: 'In bed before 23:00', sub: '18 nights', value: '+6 ms', to: 'insights' }, { title: 'Hard workout the day before', sub: '9 days', value: '−4 ms', to: 'insights' }]} /></Section><Rows rows={[{ title: 'Source', sub: 'Apple Watch via Apple Health · overnight', value: 'SDNN', to: 'provenance' }, { title: 'How it’s calculated', sub: 'Methods and evidence', to: 'math' }]} /><Text variant="callout" tone="ink2">Apple Health reports SDNN; Oura and chest straps give beat-to-beat data for RMSSD. life only compares like with like, against your own baseline.</Text></Screen>;
-  if (screen === 'signals') return <Screen screen={screen} title="Body signals" action={info}>
-    <LocalNotice text="Sample signals · no live health reading." />
-    <Heading variant="headline" title="3 signals are off your normal" sub="This can happen when you’re coming down with something, after alcohol, or after a very hard day. Take it easy today. If you feel unwell, call NHS 111." />
-    <Rows rows={[{ title: 'Skin temperature', sub: '+0.6°C · vs your normal', value: 'Off normal', to: 'provenance' }, { title: 'Breathing rate', sub: '15.9 /min · normal 14.6–15.2', value: 'Off normal', to: 'provenance' }, { title: 'Resting heart rate', sub: '61 bpm · normal 54–57', value: 'Off normal', to: 'provenance' }]} />
-    <Section title="Within your usual range"><Rows rows={[{ title: 'Blood oxygen', sub: '96% · normal 95–98%', value: 'Normal', to: 'provenance' }]} /></Section>
-    <Button variant="secondary" label="Why life made today lighter" onPress={() => nav.go('why')} />
-    <Text variant="callout" tone="ink2">Not a medical device. life compares you only with yourself and never diagnoses.</Text>
-  </Screen>;
-  if (screen === 'stress') return <Screen screen={screen} title="Stress" action={info}>
-    <Text variant="callout" tone="ink2">Right now · sample estimate</Text><Text variant="numeralL">Low</Text><HonestyBadge />
-    <View style={{ gap: space.md }}><Text variant="body" tone="ink2">Heart rate also rises with excitement, caffeine and movement, so treat this as a hint, not a fact.</Text><Button label="Breathe for 2 minutes" onPress={() => nav.go('breathe')} /></View>
-    <Section title="Today · every 30 min" meta="0 calm · 3 high"><Card><TrendLine values={[.2, .4, .3, 1, 1.4, 2.6, 2.3, 1, .6, .4]} min={0} max={3} labels={['08:00', '', '', '', '', '14:00', '', '', '', '20:00']} label="Stress estimate" /></Card></Section>
-    <Rows rows={[{ title: 'Busiest stretch', sub: '13:30–15:00 · high for 52 min', value: 'High' }, { title: 'Time calm today', sub: '6h 10m', value: '62%' }]} />
-  </Screen>;
-  if (screen === 'breathe') return <Screen screen={screen} footer={<Button label={running ? 'Pause' : elapsed >= breathDuration ? 'Start again' : 'Start breathing'} onPress={() => { if (elapsed >= breathDuration) setElapsed(0); setRunning(!running); }} />}><Text variant="callout" tone="ink2" align="center">{`${Math.max(0, Math.floor((breathDuration - elapsed) / 60))}:${String(Math.max(0, (breathDuration - elapsed) % 60)).padStart(2, '0')} · ${running ? 'breathe slowly' : 'tap to start'}`}</Text><BreathPacer protocol={breathProtocol} active={running && elapsed < breathDuration} /><MetricRow items={[{ label: 'Heart rate', value: '72' }, { label: 'Breaths/min', value: '6' }]} /><Text variant="body" tone="ink2">{breathProtocol === 'Box breathing' ? 'In for 4, hold for 4, out for 4, hold for 4.' : breathProtocol === '4-7-8' ? 'In for 4, hold for 7, out slowly for 8.' : breathProtocol === 'Physiological sigh' ? 'Two breaths in through your nose, then one long breath out.' : breathProtocol === 'Heart-rate down' ? 'Breathe in gently, then let your breath out a little more slowly.' : 'In through your nose for 5, out slowly for 5. Live heart rate from Apple Watch or a Bluetooth strap.'}</Text><LocalNotice text="Heart rate is sample data; the breathing pacer works locally." /></Screen>;
-  if (screen === 'journal') { const tags = ['Alcohol', 'Caffeine after 2pm', 'Screens in bed', 'Late meal', 'Morning daylight', 'Hydrated', 'Meditated', 'Travelled', 'Sick or run down']; return <Screen screen={screen} title="Journal" footer={<Button label="Save tonight" onPress={() => { flag('journal-saved', true); feedback.file(); nav.close(); }} />}><Text variant="callout" tone="ink2">Tonight · 10 seconds</Text><Heading title="What happened today?" /><View style={layout.grid}>{tags.map(tag => <Press key={tag} onPress={() => set({ journal: data.journal.includes(tag) ? data.journal.filter(v => v !== tag) : [...data.journal, tag] })} accessibilityRole="checkbox" accessibilityLabel={tag} accessibilityState={{ checked: data.journal.includes(tag) }} style={{ minHeight: 44, paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radius.sm, backgroundColor: data.journal.includes(tag) ? t.ink : t.surface2 }}><Text variant="callout" style={{ color: data.journal.includes(tag) ? t.canvas : t.ink }}>{tag}</Text></Press>)}</View><Input label="+ Add your own" value={text} onChange={setText} /><Button variant="secondary" label="Add tag" onPress={() => { if (text.trim()) set({ journal: [...data.journal, text.trim()] }); setText(''); }} /><Rows rows={[{ title: 'Unlocks insights after 2 weeks', sub: '9 of 14 evenings logged', to: 'insights' }]} /></Screen>; }
-  if (screen === 'insights') return <Screen screen={screen} title="What helps you"><LocalNotice text="Sample journal patterns · no analysis of live health data." /><TwoTone size="headline" segments={[{ text: 'After alcohol, your readiness tends to be ', tone: 'quiet' }, { text: '14 points lower. ' }, { text: 'Getting to bed before 11 adds about ', tone: 'quiet' }, { text: '11.' }]} /><Rows rows={[['In bed before 23:00', '+11', '18 days'], ['Morning daylight', '+6', '22 days'], ['Hydrated', '+4', '25 days'], ['Caffeine after 2pm', '−7', '15 days'], ['Screens in bed', '−5', '20 days'], ['Alcohol', '−14', '12 days']].map(([title, value, sub]) => ({ title, value, sub }))} /><Text variant="callout" tone="ink2">Readiness on the day after, vs days without it. Patterns, not proof.</Text><Button variant="secondary" label="Try an experiment" onPress={() => nav.go('experiment')} /></Screen>;
-  if (screen === 'workout') return <Screen screen={screen} footer={<><Button label={running ? 'Pause' : 'Start workout'} onPress={() => setRunning(!running)} /><Button variant="secondary" label="End workout" onPress={() => { setRunning(false); flag('workout-saved', true); feedback.complete(); nav.replace('workoutdetail'); }} /></>}><Text variant="callout" tone="ink2" align="center">{`Run · ${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`}</Text><Text variant="callout" tone="ink2" align="center">Polar H10 · local preview</Text><View style={{ alignItems: 'center', gap: space.xs }}><RollingNumeral value={148} size="xl" /><Text variant="body" tone="ink2">bpm · Zone 3</Text></View><ZoneBars zones={h.zones} /><Rows rows={[{ title: 'Load so far', sub: `target ${h.loadTarget.join('–')} today`, value: String(h.load) }]} /><LocalNotice text="Sample heart rate and load · no Bluetooth connection or background tracking." /></Screen>;
-  if (screen === 'detected') return <Screen screen={screen} title="Spotted activity"><LocalNotice text="Sample activities · nothing has been detected by a device." /><Text variant="body" tone="ink2">Looks like you moved twice without logging it.</Text>{[{ id: 'run', title: 'Run?', sub: '07:10 · 32 min · avg 148 bpm', load: 6.1, choices: ['Run', 'Walk', 'Gym', 'Other'] }, { id: 'cycle', title: 'Cycle?', sub: '18:20 · 21 min · avg 131 bpm', load: 3.4, choices: ['Cycle', 'Walk', 'Gym', 'Other'] }].map(v => <Card key={v.id} style={{ gap: space.sm }}><View style={layout.between}><Text variant="headline">{v.title}</Text><Text variant="callout" tone="ink2">{`load ${v.load}`}</Text></View><Text variant="callout" tone="ink2">{v.sub}</Text><ChipGroup options={v.choices.map(s => ({ value: s, label: s }))} value={data.choices[`detected-${v.id}`] ?? v.choices[0]} onChange={s => choose(`detected-${v.id}`, s)} /><Button variant="secondary" label={data.flags[`confirmed-${v.id}`] ? 'Confirmed' : 'Confirm'} onPress={() => { flag(`confirmed-${v.id}`, true); feedback.file(); }} /><Button variant="link" label={data.flags[`dismissed-${v.id}`] ? 'Undo dismissal' : 'Not a workout'} onPress={() => flag(`dismissed-${v.id}`)} /></Card>)}</Screen>;
-  if (screen === 'sleepplan') { const need = sleepGoal === 'Full recovery' ? 525 : sleepGoal === 'Enough' ? 485 : 420, wakeMins = Number(wake.split(':')[0]) * 60 + Number(wake.split(':')[1]), bed = (wakeMins - need - 14 + 1440) % 1440, bedtime = `${String(Math.floor(bed / 60)).padStart(2, '0')}:${String(bed % 60).padStart(2, '0')}`; return <Screen screen={screen} title="Plan tonight" footer={<Button label={data.flags['sleep-reminder'] ? 'Reminder saved' : 'Remind me 45 min before'} onPress={() => { flag('sleep-reminder', true); choose('wake', wake); }} />}><Text variant="callout" tone="ink2">I need to wake at</Text><ChipGroup options={['06:30', '07:00', '07:30', '08:00'].map(v => ({ value: v, label: v }))} value={wake} onChange={setWake} /><ChipGroup options={['Full recovery', 'Enough', 'Minimum'].map(v => ({ value: v, label: v }))} value={sleepGoal} onChange={setSleepGoal} /><Rows rows={[{ title: 'Full recovery', sub: 'pays back today’s debt', value: '8h 45m' }, { title: 'Enough', sub: 'your usual need', value: '8h 05m' }, { title: 'Minimum', sub: 'gets you by', value: '7h 00m' }]} /><Card style={{ gap: space.xs, alignItems: 'center' }}><Text variant="callout" tone="ink2">Be in bed by</Text><Text variant="numeralXl">{bedtime}</Text><Text variant="callout" tone="ink2">includes 14 min to fall asleep</Text></Card><LocalNotice text="Planner uses sample sleep need; reminders are saved locally, not scheduled yet." /></Screen>; }
-  if (screen === 'math') return <Screen screen={screen} title="How scores work"><Text variant="body" tone="ink2">Every number in Body compares you with yourself. Badges show how far to trust each one; they change as life checks each score against reference devices.</Text>{[{ name: 'Readiness', baseline: true, text: 'HRV vs your 60-day baseline (40%), resting heart rate (25%), sleep performance (25%), breathing rate (10%). Shown after 14 days.', source: 'HRV time-domain standards (Task Force, 1996)' }, { name: 'HRV', baseline: true, text: 'RMSSD from beat-to-beat data, or SDNN where only that is available; never mixed.', source: 'Task Force, 1996' }, { name: 'Load', text: 'Heart-rate-zone minutes weighted by zone, scaled 0–21.', source: 'Karvonen heart-rate reserve; Edwards TRIMP' }, { name: 'Sleep need', text: 'Your learned baseline + a third of recent debt + a load adjustment.', source: 'Population range 7–9 h (NHS)' }, { name: 'Body signals', baseline: true, text: 'Each signal’s distance from your own normal range.', source: 'Personal baseline z-scores' }, { name: 'Stress', text: 'Heart rate above resting with lower HRV while still.', source: 'Estimate; checked against how you say you felt' }].map(v => <Card key={v.name} style={{ gap: space.sm }}><View style={layout.between}><Text variant="headline">{v.name}</Text><HonestyBadge kind={v.baseline ? 'baseline' : 'estimate'} /></View><Text variant="body" tone="ink2">{v.text}</Text><Text variant="callout" tone="ink2">{`Based on: ${v.source}`}</Text></Card>)}<Text variant="callout" tone="ink2">Not a medical device. Not affiliated with any wearable brand.</Text></Screen>;
-  if (screen === 'coach') return <Screen screen={screen} footer={<Composer value={text} onChangeText={setText} onTalk={() => nav.go('talk')} onSend={() => nav.go('chat', { question: text || 'Why do I feel flat today?' })} placeholder="Ask about your body…" />}><LocalNotice text="Sample conversation and body readings · no live health analysis." /><UserBubble text="Why do I feel flat today?" /><LifeReply segments={[{ text: 'Three things line up: ', tone: 'quiet' }, { text: '5h 50m of sleep, ' }, { text: 'a late caffeine tag, and your skin temperature is up ', tone: 'quiet' }, { text: '0.6°C. ' }, { text: 'Keep today light.', tone: 'quiet' }]} /><Rows rows={[{ title: 'Sleep', sub: '5h 50m · need 8h 05m', value: 'Low', to: 'sleep' }, { title: 'Readiness', sub: '41 · below your normal', value: 'Low', to: 'readiness' }, { title: 'Body signals', sub: '3 off normal', value: 'Watch', to: 'signals' }]} /><ChipGroup options={['Make today lighter', 'Plan tonight’s sleep', 'Am I getting ill?'].map(v => ({ value: v, label: v }))} value={null} onChange={v => nav.go(v.startsWith('Make') ? 'why' : v.startsWith('Plan') ? 'sleepplan' : 'signals')} /><Text variant="callout" tone="ink2">Health answers use your data and NHS guidance. If you feel unwell, call NHS 111.</Text><LocalNotice /></Screen>;
-  return <HealthDetails screen={screen} />;
+  const params = useLocalSearchParams<{ state?: string }>(), { data } = useSeed();
+  const allowed = healthAllowed(data);
+  // Health data off (never agreed, declined or withdrawn): nothing about the body is read or shown, on any Body page.
+  if (!allowed && !NO_HEALTH_DATA.includes(screen)) return screen === 'body' ? <EmptyBodyV26 /> : <HealthOffV26 screen={screen} />;
+  if (screen === 'body' && params.state === 'connectfail') return <ConnectFailV26 />;
+  if (screen === 'body' && (params.state === 'emptybody' || !SHOW_SAMPLES)) return <EmptyBodyV26 />;
+  switch (screen) {
+    case 'body': return <BodyV26 />;
+    case 'devices': return <DevicesV26 />;
+    case 'readiness': return <ReadinessV26 />;
+    case 'sleep': return <SleepV26 />;
+    case 'load': return <LoadV26 />;
+    case 'trends': return <TrendsV26 />;
+    case 'hrv': return <HrvV26 />;
+    case 'signals': return <SignalsV26 />;
+    case 'illness': return <IllnessV26 />;
+    case 'stress': return <StressV26 />;
+    case 'breathe': return <BreatheV26 />;
+    case 'journal': return <JournalV26 />;
+    case 'insights': return <InsightsV26 />;
+    case 'workout': return <WorkoutV26 />;
+    case 'detected': return <DetectedV26 />;
+    case 'sleepplan': return <SleepplanV26 />;
+    case 'math': return <MathV26 />;
+    case 'coach': return <CoachV26 />;
+    case 'forecast': return <ForecastV26 />;
+    case 'cycle': return <CycleV26 />;
+    case 'fitnessage': return <FitnessageV26 />;
+    case 'sources': return <SourcesV26 />;
+    case 'cgm': return <CgmV26 />;
+    case 'basics': return <BasicsV26 />;
+    case 'sleepnight': return <SleepnightV26 />;
+    case 'workoutdetail': return <WorkoutdetailV26 />;
+    case 'weight': return <WeightV26 />;
+    case 'bmi': return <BmiV26 />;
+    case 'strain': return <StrainV26 />;
+    case 'zones': return <ZonesV26 />;
+    case 'breathlib': return <BreathlibV26 />;
+    case 'provenance': return <ProvenanceV26 />;
+    case 'regularity': return <RegularityV26 />;
+    case 'loadtrend': return <LoadtrendV26 />;
+    default: return <HealthdigestV26 />;
+  }
 }

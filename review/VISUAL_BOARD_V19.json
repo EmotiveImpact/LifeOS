@@ -1,0 +1,30 @@
+{
+  "artifact": "life-complete-board-v19.html",
+  "source": "review/life-complete-board-v18.html",
+  "sourceV18Sha256": "1a0667b62032c49c93e2c999544298d2ca6c394a91799c2c8a93237c938a1e37",
+  "sourceOriginalScreens": 221,
+  "renderedOriginalScreens": 221,
+  "originalChapters": 21,
+  "missingOriginalKeys": [],
+  "comparisonReferences": 2,
+  "proposedCapabilityReferences": 4,
+  "referenceRoutesImplemented": false,
+  "checks": {
+    "originalPulseSaveDismissesInvitation": "passed",
+    "aimRetainedAfterCheckin": "passed",
+    "nextMovePhotoRetainedAfterCheckin": "passed",
+    "checkinReturnsSpace": "passed; invitation hidden, small receipt retained",
+    "completedMoveDoesNotForceNewTask": "passed; live hero hidden, quiet acknowledgement visible",
+    "fiveBodySignalsAlwaysPresent": "passed: readiness, sleep, load, fuel, stress",
+    "secondaryTabsDoNotHideBodyKnowledgeQuestion": "passed",
+    "pickerSelectionIsNotCompletion": "passed; next-move title and brief updated, due date retained, completion false",
+    "pickerBoundedAndUndo": "passed; stops at three candidates, Undo restores choice and enables controls",
+    "focusBypass": "passed as prototype only; no OS restriction occurred",
+    "evidenceConfidence": "passed; manual entry labelled self-reported, not verified",
+    "stepsConnectionAndNoAccess": "passed as sample-state previews only",
+    "referenceHeaderFraming": "117px header / 117px inset after fix"
+  },
+  "research": "8 official source URLs and targeted repo audit; no live integrations or billed model calls",
+  "nativeValidation": "not performed; design artifact only",
+  "originalsOverwritten": false
+}

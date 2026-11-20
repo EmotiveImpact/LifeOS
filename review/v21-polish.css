@@ -1,0 +1,10 @@
+/* Integration guardrails: chrome and chart geometry are not modified by these refinements. */
+.v21-footer [data-sg]{overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none;flex-wrap:nowrap}
+.v21-footer [data-sg]>*{flex-shrink:0}.v21-content>.v21-body-note{font-size:13px;line-height:18px;color:var(--text-2);padding:0 20px}
+/* The design system's foreground imagery belongs to its native full-width band. */
+.v21-screen>.t-band,.v21-screen>.t-cover{pointer-events:none;z-index:0}
+.v21-screen .v21-content>.on-img{position:relative;z-index:1}
+.v21-screen .v21-content>.v21-image-follow{margin-top:var(--v21-image-gap,32px)}
+.v21-sheet-frame .v21-icon-action{background:var(--surface-2)}
+.v21-screen .v21-body .v21-m-pots{overflow:visible}
+.v21-audit-item .v21-review-status{margin-top:6px;color:var(--text)}

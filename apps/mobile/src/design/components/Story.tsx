@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Image, PanResponder, StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, PanResponder, Platform, StyleSheet, View, type ImageSourcePropType, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons, type GlyphName } from '../Icon';
 import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Callout, Headline, Mono, Text, Title, type Tone } from '../Text';
@@ -15,8 +15,8 @@ import { DottedOrb } from './Chrome';
 export type TwoToneSegment = {
   text: string;
   tone?: 'quiet' | 'ink';
-  /** Ionicon shown inline before the text. */
-  icon?: keyof typeof Ionicons.glyphMap;
+  /** Icon shown inline before the text (any life glyph, including the board's names). */
+  icon?: GlyphName;
   /** Inline avatar: initials on a colour. */
   avatar?: { initials: string; color: string };
 };
@@ -25,16 +25,19 @@ export type TwoToneSegment = {
  * DESIGN.md §6.2: the signature sentence. Quiet context in `ink-quiet`, what matters in full ink.
  * Write segments with their own spacing, e.g. [{text:'Nothing urgent — ', tone:'quiet'}, {text:'one form'}].
  */
-export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, style }: { segments: TwoToneSegment[]; size?: 'statement' | 'headline' | 'welcomeStatement'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
+export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, align, style }: { segments: TwoToneSegment[]; /** V26: centred lines (Children, Help, About). */ align?: 'center'; /** V26: `display` is Today's 34pt briefing, `lead` the 20pt medium line ("I’m arriving calm."). */ size?: 'statement' | 'headline' | 'welcomeStatement' | 'display' | 'lead'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
   const t = useTokens();
-  const quiet = onAtmos ? onAtmosphere.quiet : t.inkQuiet;
+  const quiet = onAtmos ? onAtmosphere.text2 : t.ink2;
   const ink = onAtmos ? onAtmosphere.text : t.ink;
-  const glyph = size === 'statement' ? 22 : 18;
+  const variant = size === 'lead' ? 'headlineMedium' : size;
+  // The board sets inline icons at about 0.8em with a 2pt stroke on the big sizes, in ink, sitting on the baseline.
+  const glyph = size === 'display' ? 26 : size === 'statement' ? 22 : 18;
+  const stroke = size === 'display' || size === 'statement' ? 2 : undefined;
   return (
     <View style={style}>
-      <Text variant={size} accessibilityRole="text">
+      <Text variant={variant} accessibilityRole="text" align={align}>
         {segments.map((s, i) => (
-          <Text key={i} variant={size} style={{ color: s.tone === 'quiet' ? quiet : ink }}>
+          <Text key={i} variant={variant} style={[{ color: s.tone === 'quiet' ? quiet : ink }, s.icon && size === 'display' ? keepTogether : null]}>
             {s.avatar ? (
               <View style={{ width: glyph + 2, height: glyph + 2, borderRadius: (glyph + 2) / 2, backgroundColor: s.avatar.color, alignItems: 'center', justifyContent: 'center', transform: [{ translateY: 3 }] }}>
                 <Text variant="micro" style={{ color: onAtmosphere.text }}>
@@ -42,8 +45,9 @@ export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, s
                 </Text>
               </View>
             ) : null}
-            {s.icon ? <Ionicons name={s.icon} size={glyph} color={s.tone === 'quiet' ? quiet : ink} /> : null}
-            {s.avatar || s.icon ? ' ' : ''}
+            {/* On display the icon hugs its word, as the board's `nw` pairs do: a 3pt gap inside the box and a word joiner, so a line never breaks between them. */}
+            {s.icon ? <View style={{ width: size === 'display' ? glyph + 3 : glyph, height: glyph, transform: [{ translateY: size === 'display' ? 3 : 2 }] }}><Ionicons name={s.icon} size={glyph} strokeWidth={stroke} color={size === 'display' ? ink : s.tone === 'quiet' ? quiet : ink} /></View> : null}
+            {s.avatar || (s.icon && size !== 'display') ? ' ' : s.icon ? '\u2060' : ''}
             {s.text}
           </Text>
         ))}
@@ -51,6 +55,9 @@ export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, s
     </View>
   );
 }
+
+/** The board's `nw`: an icon and its words wrap as one. The word joiner does it on iOS and Android; the browser needs nowrap, because it may break beside an inline box. */
+const keepTogether = (Platform.OS === 'web' ? { whiteSpace: 'nowrap' } : null) as TextStyle | null;
 
 /* ───────────────────────── 7. PeekStack ───────────────────────── */
 

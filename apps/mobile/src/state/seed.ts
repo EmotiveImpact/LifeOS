@@ -108,19 +108,10 @@ export const seedMeal: MealItem[] = [
   { name: 'Rice', grams: 150, kcal: 195, protein: 4, carbs: 43, fat: 0, fibre: 1, confidence: .8 },
   { name: 'Avocado', grams: 50, kcal: 80, protein: 1, carbs: 4, fat: 7, fibre: 3, confidence: .75 },
   { name: 'Edamame', grams: 40, kcal: 48, protein: 5, carbs: 4, fat: 2, fibre: 2, confidence: .9 },
-  { name: 'Egg', grams: 50, kcal: 72, protein: 7, carbs: 0, fat: 5, fibre: 0, confidence: .9 },
+  { name: 'Egg', grams: 50, kcal: 70, protein: 7, carbs: 0, fat: 5, fibre: 0, confidence: .9 },
 ];
 export type SeedHabit = { id: string; name: string; cue: string; last14: (boolean | undefined)[]; day?: number; automaticity?: number; source?: string; shortCue?: string; autoComplete?: boolean };
 export const seedHabitStrength = { name: 'Morning walk', strength: 71, beforeMiss: 73, day: 38, typicalDays: 66 };
-export const boardHealth = {
-  bodyLoad: 11.4,
-  loadDetail: 11.4,
-  loadTargetPreview: 6.2,
-  readinessHrv: 58,
-  readinessHrvBaseline: 52,
-  readinessRespiration: 14.8,
-  readinessMonth: [58, 61, 55, 49, 52, 66, 70, 64, 60, 57, 45, 41, 52, 58, 63, 67, 71, 69, 62, 60, 55, 50, 58, 64, 68, 72, 70, 66, 71, 72],
-};
 export const seedYearReview = {
   missionsCleared: 41,
   ideasLearned: 26,
@@ -132,16 +123,16 @@ export const seedYearReview = {
 export const seedLabResults: Partial<Record<LabMarkerId, LabResult>> = { 'bw-vitd': { value: 38, unit: 'nmol/L' }, 'bw-ferritin': { value: 64, unit: 'µg/L' }, 'bw-hba1c': { value: 36, unit: 'mmol/mol' }, 'bw-apob': { value: 1.1, unit: 'g/L' } };
 export const seedLabMarkerPositions: Partial<Record<LabMarkerId, number>> = { 'bw-vitd': 18, 'bw-ferritin': 52, 'bw-hba1c': 40, 'bw-apob': 78 };
 export const seed = {
-  membership: { annual: 48, monthly: 6, annualRenewal: 59.99 },
+  membership: { annual: 79.99, monthly: 7.99, annualRenewal: 79.99 },
   date: SEED_DATE,
   body: { heightCm: 172, weightKg: 74.2, waistCm: 84, bodyFatPct: 22, sexAtBirth: 'Female', activity: 'Active', bp: '118 / 76', bmi: 25.1, waistRatio: .49, rhr: 54, vo2: 44 },
-  health: { readiness: 72, sleepMinutes: 430, sleepNeed: 480, sleepDebt: 130, load: 6.2, loadTarget: [11, 14] as [number, number], hrv: 62, hrvBaseline: 54, rhr: 54, resp: 14.6, stress: 1.4, regularity: 78, fitnessAge: 25, loadRatio: 1.12, steps: 8240, waterMl: 1400, forecast: 68,
+  health: { readiness: 72, sleepMinutes: 430, sleepNeed: 480, sleepDebt: 130, load: 6.2, loadTarget: [11, 14] as [number, number], hrv: 58, hrvBaseline: 52, rhr: 54, resp: 14.8, stress: 1.4, regularity: 78, fitnessAge: 24, loadRatio: 1.12, steps: 8240, waterMl: 1400, forecast: 68,
     sleepTrend: [6.2, 7.1, 6.8, 7.5, 7.2, 8.1, 7.17], readinessTrend: [62, 68, 65, 74, 69, 80, 72], weightTrend: [76.6, 76.1, 75.8, 75.5, 75, 74.8, 74.2],
     sleepWindows: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => ({ day, start: [23.2, 23.4, 23.1, 23.6, 24.1, 25.2, 24.6][i], end: [30.9, 31, 30.8, 31.1, 31.4, 33.1, 32.6][i], highlight: i > 4 })),
     zones: [{ name: 'Zone 5', range: '176–190', minutes: 8 }, { name: 'Zone 4', range: '162–175', minutes: 22 }, { name: 'Zone 3', range: '148–161', minutes: 41 }, { name: 'Zone 2', range: '134–147', minutes: 164 }, { name: 'Zone 1', range: '120–133', minutes: 58 }],
     stages: [{ stage: 'light' as const, minutes: 65 }, { stage: 'deep' as const, minutes: 90 }, { stage: 'rem' as const, minutes: 44 }, { stage: 'awake' as const, minutes: 10 }, { stage: 'light' as const, minutes: 153 }, { stage: 'rem' as const, minutes: 68 }],
   },
-  fuel: { kcal: 2300, targetWeight: 70, pace: .5, protein: 140, carbs: 260, fat: 75, fibre: 30, eaten: 1060, burned: 600, mealFit: 8.4, loggedMealTotals: { kcal: 705, protein: 49, carbs: 62, fat: 28, fibre: 9 }, macros: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Carbs', value: 150, max: 260, unit: 'g' }, { label: 'Fat', value: 48, max: 75, unit: 'g' }],
+  fuel: { kcal: 2300, targetWeight: 70, pace: .5, protein: 140, carbs: 260, fat: 75, fibre: 30, eaten: 1060, burned: 600, mealFit: 8.4, macros: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Carbs', value: 150, max: 260, unit: 'g' }, { label: 'Fat', value: 48, max: 75, unit: 'g' }],
     savedMeals: [{ name: 'Usual breakfast', detail: 'Yoghurt, berries, oats', kcal: 420 }, { name: 'Salmon rice bowl', detail: 'From Itsu', kcal: 705 }, { name: 'Chicken wrap', detail: 'Homemade', kcal: 560 }, { name: 'Protein shake', detail: 'Whey + oat milk', kcal: 240 }],
     nutrients: [{ label: 'Protein', value: 112, max: 140, unit: 'g' }, { label: 'Fibre', value: 21, max: 30, unit: 'g' }, { label: 'Sugar', value: 48, max: 90, unit: 'g' }, { label: 'Salt', value: 4.1, max: 6, unit: 'g' }, { label: 'Saturated fat', value: 14, max: 20, unit: 'g' }, { label: 'Iron', value: 9.2, max: 14.8, unit: 'mg' }, { label: 'Calcium', value: 820, max: 700, unit: 'mg' }, { label: 'Vitamin D', value: 3, max: 10, unit: 'µg' }],
   },
@@ -174,8 +165,8 @@ export const seedHousing = compareRentAndBuy(rentBuyInputs);
 export const rebateTask = TASK_CATALOG.find(t => /rebate|P87|overpaid/i.test(t.title + t.shortTitle)) ?? TASK_CATALOG[0];
 
 /** Distinct local diary entries; selection never aliases the latest logged meal. */
+/** Today's diary in the sample life: breakfast and the photographed lunch, 1,060 kcal (`seed.fuel.eaten`). */
 export const seedDiaryMeals = [
-  { id: 'seed-breakfast', name: 'Yoghurt, berries, oats', at: '08:10', items: [{ name: 'Yoghurt, berries, oats', grams: 300, kcal: 420, protein: 24, carbs: 54, fat: 12, fibre: 6, confidence: .8 }] },
-  { id: 'seed-lunch', name: 'Salmon rice bowl', at: '12:40', items: [{ name: 'Salmon rice bowl', grams: 450, ...seed.fuel.loggedMealTotals, confidence: .8 }] },
-  { id: 'seed-snack', name: 'Apple and peanut butter', at: '16:00', items: [{ name: 'Apple and peanut butter', grams: 200, kcal: 285, protein: 8, carbs: 32, fat: 15, fibre: 6, confidence: .8 }] },
+  { id: 'seed-breakfast', name: 'Yoghurt, berries, oats', at: '08:10', via: 'saved' as const, from: 'Usual breakfast', items: [{ name: 'Yoghurt, berries, oats', grams: 300, kcal: 420, protein: 30, carbs: 48, fat: 9, fibre: 7, confidence: .8 }] },
+  { id: 'seed-lunch', name: 'Salmon rice bowl', at: '12:40', via: 'photo' as const, items: seedMeal.map(item => ({ ...item })) },
 ];

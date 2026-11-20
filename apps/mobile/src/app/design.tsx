@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
-import { Redirect } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { TrackAGallery } from '@/design/TrackAGallery';
+import { V26Gallery } from '@/design/V26Gallery';
 import { FullDrawingGallery } from '@/design/FullDrawingGallery';
 import { PlatformGallery } from '@/screens/PlatformGallery';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon as Ionicons } from '@/design/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  space,
+  componentSize,
+  Icon,
   ActivityTimeline,
   AttachMenu,
   BigMic,
@@ -86,7 +90,10 @@ import {
  */
 export default function DesignGallery() {
   const loaded = useLifeFonts();
-  const [mode, setMode] = useState<'light' | 'dark' | 'both'>('dark');
+  // `?only=v26` shows just the V26 gallery (Phase 13 review); `?scheme=light|dark|both` picks the starting scheme.
+  const params = useLocalSearchParams<{ only?: string; scheme?: string }>();
+  const onlyV26 = params.only === 'v26';
+  const [mode, setMode] = useState<'light' | 'dark' | 'both'>(params.scheme === 'light' || params.scheme === 'both' ? params.scheme : 'dark');
   const [look, setLook] = useState<Look>('p1');
   const { width } = useWindowDimensions();
   if (!__DEV__) return <Redirect href="/" />;
@@ -101,7 +108,11 @@ export default function DesignGallery() {
       <ScrollView contentContainerStyle={{ flexDirection: side ? 'row' : 'column' }}>
         {schemes.map((s) => (
           <SchemeProvider key={s} scheme={s}>
-            <Column look={look} style={side ? { flex: 1 } : undefined} />
+            <View style={side ? { flex: 1 } : undefined}>
+              <V26Heading />
+              <V26Gallery />
+              {onlyV26 ? null : <Column look={look} />}
+            </View>
           </SchemeProvider>
         ))}
       </ScrollView>
@@ -138,6 +149,17 @@ function Toolbar({ mode, setMode, look, setLook }: { mode: string; setMode: (m: 
   );
 }
 
+/** Phase 13: the V26 pieces come first, before the earlier galleries. */
+function V26Heading() {
+  const t = useTokens();
+  return (
+    <View nativeID="v26-top" style={{ backgroundColor: t.canvas, paddingHorizontal: 20, paddingTop: 28, gap: 4 }}>
+      <Text variant="headline">V26 · the board’s design system</Text>
+      <Callout tone="ink2">Every new and extended piece, with its states, in board copy. The earlier galleries follow below.</Callout>
+    </View>
+  );
+}
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View style={{ gap: 12 }}>
@@ -164,6 +186,10 @@ function Column({ look, style }: { look: Look; style?: object }) {
 
   return (
     <View style={[{ backgroundColor: t.canvas, padding: 20, gap: 36, paddingBottom: 160 }, style]}>
+      <Section title="Original calmer mockup · exact SVG icons">
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.lg }}>{(['home', 'layers', 'person', 'mic', 'search', 'bell', 'chev', 'arrow', 'doc', 'gift', 'heart', 'book', 'spark', 'check', 'gear', 'wallet'] as const).map(name => <View key={name} style={{ minWidth: componentSize.row, alignItems: 'center', gap: space.xs }}><Icon name={name} /><Text variant="micro" tone="ink2">{name}</Text></View>)}</View>
+        <View style={{ flexDirection: 'row', gap: space.xs }}><ToolTile compact title="Cash plan" icon="wallet-outline" /><ToolTile compact title="Documents" icon="document-text-outline" /></View>
+      </Section>
       <FullDrawingGallery />
       <TrackAGallery />
       <PlatformGallery />

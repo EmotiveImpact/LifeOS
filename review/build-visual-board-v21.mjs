@@ -1,0 +1,24 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+const here=path.dirname(fileURLToPath(import.meta.url));
+const input=path.join(here,'life-complete-board-v19.html');
+const original=fs.readFileSync(input,'utf8');
+const hash=crypto.createHash('sha256').update(original).digest('hex');
+const domains=['money','body','personal','shell'];
+const ready=domains.filter(d=>fs.existsSync(path.join(here,`v21-${d}.js`))&&fs.existsSync(path.join(here,`v21-${d}.css`)));
+let html=original.replace('<title>life · v19 · the living feed</title>','<title>life · v21 · considered throughout</title>');
+html=html.replace('A rich life. A considered day.','life, considered throughout.');
+html=html.replace(/<p class="p-lead">[\s\S]*?<\/p>/,'<p class="p-lead">Version 21: one coherent screen-layout system, then deliberate screen-family design. The complete <span id="countScreens">221</span>-screen library remains. Headers, scroll regions and action footers have explicit space. Original identity, imagery, Aim, level, body signals, questions and deadlines are preserved. This is a design review—not an installed app update. Numbers, dates and connection states are illustrative.</p>');
+// Do not inherit v20’s broad selectors and arbitrary grouping wrappers.
+const css=ready.map(d=>fs.readFileSync(path.join(here,`v21-${d}.css`),'utf8')).join('\n')+'\n'+fs.readFileSync(path.join(here,'visual-board-v21.css'),'utf8')+'\n'+fs.readFileSync(path.join(here,'v21-polish.css'),'utf8');
+const end=html.lastIndexOf('</style>');html=html.slice(0,end+8)+'\n<style>'+css+'</style>'+html.slice(end+8);
+const hook='\nrenderMoodCards();\nsyncTheme();';if(!html.includes(hook))throw new Error('Final-render hook missing');
+const code='\nwindow.__V21Passes=[];\n'+ready.map(d=>fs.readFileSync(path.join(here,`v21-${d}.js`),'utf8')).join('\n')+'\n'+fs.readFileSync(path.join(here,'v21-shell-layout.js'),'utf8')+'\n'+fs.readFileSync(path.join(here,'visual-board-v21.js'),'utf8')+'\n'+fs.readFileSync(path.join(here,'v21-validate.js'),'utf8');
+html=html.replace(hook,code+hook);
+for(const [i,m]of [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].entries())new vm.Script(m[1],{filename:`v21-script-${i}`});
+const output=path.join(here,'life-complete-board-v21.html');fs.writeFileSync(output,html);
+if(crypto.createHash('sha256').update(fs.readFileSync(input)).digest('hex')!==hash)throw new Error('Original v19 changed');
+console.log(JSON.stringify({output,bytes:fs.statSync(output).size,baseline:'v19 (no v20 styling overlays)',readyDomains:ready,awaiting:domains.filter(d=>!ready.includes(d)),originalUnchanged:true,scripts:'syntax passed'},null,2));

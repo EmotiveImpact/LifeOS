@@ -1,77 +1,28 @@
-import { useState } from 'react';
-import { Linking, Share, View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
-import { TASK_CATALOG } from '@life/core/engine';
-import { ActivityTimeline, Button, Card, Checklist, ChipGroup, InsightCard, MoneyFigure, Press, StageStepper, StatusPill, Text, Ticks, ToolTile, TwoTone, feedback, space } from '@/design';
-import { useNavigation } from '@/navigation/useNavigation';
+/**
+ * Plan's chapter. Every screen is the V26 build in `v26/plan.tsx`; this switch keeps the routes' entry point and the
+ * empty-plan state.
+ */
+import { useLocalSearchParams } from 'expo-router';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
-import { money, seed, seedTaxClaim } from '@/state/seed';
-import { Heading, Input, LocalNotice, Rows, Screen, Section, layout } from './Screen';
-import { useLocalSearchParams } from 'expo-router';
-import { ParentStateContent } from './States';
-import { MissionPreview } from './Today';
+import { isDayOne } from '@/state/firstopen';
+import { EmptyPlanV26 } from './v26/states';
+import { AreaHealthV26, AreaHomeV26, AreaWorkV26, DraftV26, HistoryV26, MissionsV26, MissionV26, NewGoalV26, PlanV26, TtkV26, useMissionParam } from './v26/plan';
 
-export const toolkit: { title: string; key: ScreenKey; level: number; icon: React.ComponentProps<typeof ToolTile>['icon'] }[] = [
-  { title: '30-day cash plan', key: 'cashplan', level: 1, icon: 'cash-outline' }, { title: 'Tax & NI check', key: 'taxcheck', level: 1, icon: 'calculator-outline' }, { title: 'Money & ledger', key: 'money', level: 2, icon: 'wallet-outline' }, { title: 'Subscriptions', key: 'subs', level: 2, icon: 'repeat-outline' }, { title: 'Body & habits', key: 'body', level: 1, icon: 'heart-outline' }, { title: 'Income & structure', key: 'income', level: 3, icon: 'briefcase-outline' }, { title: 'Rent vs buy', key: 'rentbuy', level: 3, icon: 'home-outline' }, { title: 'Bloodwork reader', key: 'blood', level: 3, icon: 'water-outline' }, { title: 'Protection review', key: 'protect', level: 4, icon: 'shield-outline' }, { title: 'Growth path', key: 'growth', level: 4, icon: 'trending-up-outline' }, { title: 'Learn', key: 'library', level: 1, icon: 'bulb-outline' }, { title: 'Health stack', key: 'healthstack', level: 2, icon: 'fitness-outline' }, { title: 'Mortgage vs invest', key: 'rentbuy', level: 4, icon: 'bar-chart-outline' },
-];
-export function ToolGrid() { const nav = useNavigation(), { engine, choose, data } = useSeed(); return <View style={layout.grid}>{toolkit.filter(tool => tool.key !== 'healthstack').map(tool => <View key={tool.title} style={{ width: '48%', flexGrow: 1 }}><ToolTile title={tool.title} icon={tool.icon} locked={tool.level > engine.level.currentLevel && !data.flags[`unlocked-${tool.key}`]} level={tool.level} onPress={() => { if (tool.level > engine.level.currentLevel && !data.flags[`unlocked-${tool.key}`]) { choose('unlock-tool', tool.key); choose('unlock-tool-title', tool.title); nav.go('unlock'); } else nav.go(tool.key); }} /></View>)}</View>; }
 export function PlanScreen({ screen }: { screen: ScreenKey }) {
-  const nav = useNavigation(), { data, set, flag, choose, draft, engine } = useSeed();
-  const [filter, setFilter] = useState('All'), [goal, setGoal] = useState(data.drafts['newgoal'] ?? 'Move out by July 2027'), [copied, setCopied] = useState(false);
-  const task = TASK_CATALOG.find(t => t.id === data.selectedMission) ?? TASK_CATALOG.find(t => t.id === 'uk-hmrc-tax-code')!;
-  const isTax = task.id === 'uk-hmrc-tax-code', isReferral = task.id === 'nhs-outpatient-referral', title = isTax ? 'Tax rebate' : isReferral ? 'Hospital referral' : task.shortTitle;
-  const clear = data.completed.includes(task.id), savedDraft = data.drafts[task.id] ?? (isTax ? `Hello,\n\nI’m following up on my P800 calculation for 2024/25 (ref P800-7Q2-K41). I’ve also submitted form P87 today for ${money(seedTaxClaim.workExpenses)} of work equipment and software.\n\nPlease pay the refund by bank transfer to the account on my Personal Tax Account.\n\nThank you,\n${data.profile.name}` : task.copilotDraft ?? `Hello,\n\nI’m following up about ${task.shortTitle.toLowerCase()}. Could you help me with the next step?\n\nThank you,\n${data.profile.name}`);
-  const missionValue = isTax ? seedTaxClaim.refund : task.estimatedValueAmount;
-  const reference = isTax ? seedTaxClaim.reference : isReferral ? 'UBRN-4821-0934' : task.id;
-  const steps = isTax ? ['Sign in to Government Gateway', 'Check the P800 against payslips', 'Claim by bank transfer'] : task.steps;
-  const openMission = (id: string) => { set({ selectedMission: id }); nav.go('mission'); };
-  const params = useLocalSearchParams<{ state?: string }>();
-  if (screen === 'plan' && params.state === 'emptyplan') return <Screen screen={screen} title="Plan"><ParentStateContent kind="emptyplan" /></Screen>;
-  if (screen === 'plan') return <Screen screen={screen} title="Plan" eyebrow={`November · ${engine.tasks.filter(task => !data.completed.includes(task.id)).length} open`} actions={[{ kind: 'icon', icon: 'add', label: 'Add something', onPress: () => nav.go('newgoal') }]}>
-    <Section title="Needs you" meta="All missions" onPress={() => nav.go('missions')}>
-      {!data.completed.includes('nhs-outpatient-referral') ? <MissionPreview title="Hospital referral" status="Waiting" sub="Cardiology · waiting 11 weeks · sample record" filled={7} id="nhs-outpatient-referral" /> : null}
-      {!data.completed.includes('uk-single-person-council') ? <MissionPreview title="Council tax discount" status="To do" sub="25% off · takes 4 min" filled={2} id="uk-single-person-council" /> : null}
-      {data.completed.includes('nhs-outpatient-referral') && data.completed.includes('uk-single-person-council') ? <Text variant="body" tone="ink2">Those next steps are cleared. See all missions for your other options.</Text> : null}
-    </Section>
-    {!data.completed.includes('uk-hmrc-tax-code') ? <Section title="Waiting"><MissionPreview title="HMRC tax rebate" status="Submitted" sub="Sample case · decision in 6 days" filled={16} /></Section> : null}
-    <Card onPress={() => nav.go('gambit')} style={{ gap: space.sm }}><View style={[layout.between, { flexWrap: 'wrap' }]}><Text variant="callout" tone="ink2">This month’s gambit</Text><Text variant="callout" tone="ink2">Check-in Sat 17:00</Text></View><TwoTone size="headline" segments={[{ text: 'I want to ', tone: 'quiet' }, { text: 'claim every £ I’m owed ' }, { text: 'and ', tone: 'quiet' }, { text: 'start a 3-month buffer ' }, { text: 'so money stops running my week.', tone: 'quiet' }]} /></Card>
-    <Section title="Your areas"><ChipGroup options={['Money', 'Work', 'Home', 'Health', 'Relationships', 'Life admin'].map(v => ({ value: v, label: v }))} value={filter} onChange={v => { setFilter(v); nav.go(v === 'Money' ? 'area' : v === 'Work' ? 'areawork' : v === 'Home' ? 'areahome' : v === 'Health' ? 'areahealth' : v === 'Relationships' ? 'people' : 'vault'); }} /></Section>
-    <Section title="Toolkit" meta="All tools" onPress={() => nav.go('tools')}><ToolGrid /></Section>
-    <Rows rows={[{ title: 'Your Aim', to: 'aim' }, { title: 'Things to know', to: 'ttk' }, { title: 'Body', to: 'body' }, { title: 'Documents and renewals', to: 'vault' }, { title: 'Learn', to: 'library' }, { title: 'Missions history', to: 'history' }]} />
-  </Screen>;
-  if (screen === 'mission') return <Screen screen={screen} title={title} action={{ kind: 'icon', icon: 'ellipsis-horizontal', label: 'Mission actions', onPress: () => flag('mission-actions') }} footer={<><Button label={clear ? 'Cleared · undo' : 'Mark as cleared'} onPress={() => { set({ completed: clear ? data.completed.filter(id => id !== task.id) : [...data.completed, task.id] }); if (!clear) feedback.cleared(); }} /><Button variant="link" label="Why am I seeing this?" onPress={() => nav.go('why')} /></>}>
-    <View style={{ gap: space.xs }}><Text variant="callout" tone="ink2">{`${isTax ? 'Money' : isReferral ? 'Health' : 'Plan'} · ${task.provider}`}</Text>{missionValue ? <><Text variant="callout" tone="ink2">Estimated value</Text><MoneyFigure value={missionValue} decimals={0} size="l" align="left" hidden={data.prefs.hideBalances} /></> : null}<Text variant="body" tone="ink2">About 12 minutes in total</Text></View>
-    <View style={{ gap: space.lg }}><StageStepper stages={[{ label: 'Started', timestamp: '12 Nov' }, { label: 'Submitted', timestamp: 'Today' }, { label: 'Cleared', timestamp: '~22 Nov' }]} current={clear ? 3 : 1} /><View style={[layout.between, { flexWrap: 'wrap' }]}><View style={{ flex: 1, minWidth: space.xxxl * 3, gap: space.xxs }}><Text variant="callout" tone="ink2">Reference</Text><Text variant="mono">{reference}</Text></View><Button variant="link" label={copied ? 'Copied' : 'Copy'} onPress={async () => { await Clipboard.setStringAsync(reference); setCopied(true); }} /></View></View>
-    <Section title="What to do"><Checklist items={steps.map((label, i) => ({ label, sub: isTax ? `${[3, 5, 4][i]} min` : undefined, done: !!data.missionSteps[`${task.id}-${i}`] }))} onToggle={i => set({ missionSteps: { ...data.missionSteps, [`${task.id}-${i}`]: !data.missionSteps[`${task.id}-${i}`] } })} /></Section>
-    <Card onPress={() => nav.go('draft')} style={{ gap: space.xs }}><Text variant="title">Draft message</Text><Text variant="body" tone="ink2" numberOfLines={2}>{savedDraft}</Text></Card>
-    <Section title="Why this matters"><Text variant="body" tone="ink2">{isTax ? `You bought ${money(seedTaxClaim.workExpenses)} of software and equipment for work in 2024/25 and didn’t claim it. At 20% that’s about ${money(seedTaxClaim.expenseRelief)}, plus overpaid tax HMRC already flagged on your P800.` : task.personalWhy}</Text></Section>
-    <Section title="Activity"><ActivityTimeline items={[{ time: '09:30', date: 'Today', text: clear ? 'Marked cleared on this phone' : isTax ? 'Sample case: Form P87 submitted' : 'Sample case opened' }, { time: '16:12', date: '12 Nov', text: isTax ? 'life spotted unclaimed expenses · from your talk' : 'Added to your local plan' }]} /></Section>
-    {data.flags['mission-actions'] ? <Rows rows={[{ title: 'Edit draft', to: 'draft' }, { title: 'View history', to: 'history' }, { title: 'Share reference', onPress: () => { void Share.share({ message: `${title} · ${reference}` }); } }]} /> : null}
-    <LocalNotice text="Sample case and timeline. Ticking steps or clearing a mission updates this phone only; nothing is submitted or verified with a provider." /><Text variant="callout" tone="ink2">Estimate, not financial or medical advice.</Text>
-  </Screen>;
-  if (screen === 'draft') return <Screen screen={screen} title="Draft message" footer={<><Button label={copied ? 'Copied' : 'Copy'} onPress={async () => { await Clipboard.setStringAsync(savedDraft); setCopied(true); }} /><Button variant="secondary" label="Open in Mail" onPress={() => { void Linking.openURL(`mailto:?subject=${encodeURIComponent(`${title}: ${reference}`)}&body=${encodeURIComponent(savedDraft)}`); }} /></>}><View style={layout.between}><Text variant="callout" tone="ink2">{title}</Text><StatusPill label="Draft" /></View><Rows rows={[{ title: 'To', value: isTax ? 'HMRC · PAYE enquiries' : task.provider }, { title: 'Subject', value: isTax ? 'P800 refund: bank transfer' : `${title} enquiry` }]} /><Input multiline label="Draft message" value={savedDraft} onChange={v => draft(task.id, v)} /><Text variant="callout" tone="ink2">Check the sample facts and choose the recipient before sending. Tap the text to edit. life never sends anything without you.</Text></Screen>;
-  if (screen === 'ttk') {
-    const records = data.records.filter(r => r.status === 'confirmed' && (filter === 'All' || r.area === filter.toLowerCase() || (filter === 'Goals' && r.area === 'goal')));
-    return <Screen screen={screen} title="Things to know"><ChipGroup options={['All', 'You', 'Home', 'Work', 'Money', 'Health', 'Goals'].map(v => ({ value: v, label: v }))} value={filter} onChange={setFilter} />{records.map(r => <Press key={r.id} haptic="open" accessibilityLabel={`Edit ${r.label}`} onPress={() => nav.go('editfiled')}><InsightCard area={r.area} source={`From your ${r.source.type} · 12 Nov`} value={typeof r.value === 'number' ? String(r.value) : r.area === 'health' ? '9 days' : 'Filed'} text={r.label} /></Press>)}{!records.length ? <Text variant="body" tone="ink2">Nothing filed here yet. Confirm something from a conversation and it will appear here.</Text> : null}{filter === 'All' || filter === 'Money' ? <Card style={{ gap: space.xs }}><Text variant="callout" tone="ink2">How the world works · Money mechanics</Text><Text variant="title">Tax relief is applied, not given</Text><Text variant="body" tone="ink2">Most reliefs only reach you if you claim them. HMRC won’t add work expenses you never told them about.</Text></Card> : null}<Button variant="secondary" label="Talk to life…" onPress={() => nav.go('chat')} /></Screen>;
+  const params = useLocalSearchParams<{ state?: string }>(), { data } = useSeed();
+  useMissionParam();
+  if (screen === 'plan' && (params.state === 'emptyplan' || (!params.state && isDayOne(data)))) return <EmptyPlanV26 />;
+  switch (screen) {
+    case 'plan': return <PlanV26 />;
+    case 'mission': return <MissionV26 />;
+    case 'draft': return <DraftV26 />;
+    case 'ttk': return <TtkV26 />;
+    case 'history': return <HistoryV26 />;
+    case 'missions': return <MissionsV26 />;
+    case 'newgoal': return <NewGoalV26 />;
+    case 'areahome': return <AreaHomeV26 />;
+    case 'areahealth': return <AreaHealthV26 />;
+    default: return <AreaWorkV26 />;
   }
-  if (screen === 'missions' || screen === 'history') {
-    const history = screen === 'history';
-    const visible = TASK_CATALOG.filter(v => history ? data.completed.includes(v.id) : !data.completed.includes(v.id) && engine.tasks.some(x => x.id === v.id) && (filter === 'All' || (filter === 'Body' ? v.category === 'health' : filter === 'Money' ? v.category === 'tax' : v.lifeArea === 'home'))).slice(0, 18);
-    const waiting = visible.filter(v => v.id === 'uk-hmrc-tax-code');
-    const needsYou = visible.filter(v => v.id !== 'uk-hmrc-tax-code').sort((a, b) => ({ urgent: 0, high: 1, recommended: 2 }[a.urgency] - { urgent: 0, high: 1, recommended: 2 }[b.urgency]));
-    const row = (v: (typeof TASK_CATALOG)[number]) => ({ title: v.shortTitle, sub: history ? 'Cleared · saved on this phone' : v.subtitle, value: v.estimatedValueAmount ? data.prefs.hideBalances ? '••••' : money(v.estimatedValueAmount) : undefined, onPress: () => openMission(v.id) });
-    return <Screen screen={screen} title={history ? 'Cleared' : 'Missions'}>
-      <Text variant="callout" tone="ink2">{history ? 'Found and claimed since joining · local record' : `${engine.tasks.filter(v => !data.completed.includes(v.id)).length} open · ${data.completed.length} cleared`}</Text>
-      {history ? <><MoneyFigure value={TASK_CATALOG.filter(v => data.completed.includes(v.id)).reduce((a, b) => a + (b.estimatedValueAmount ?? 0), 0)} size="l" hidden={data.prefs.hideBalances} align="left" />{visible.length ? <Rows rows={visible.map(row)} /> : <Text variant="body" tone="ink2">Your cleared missions will be here. Start with one small move.</Text>}<LocalNotice text="Values are engine estimates attached to your locally cleared missions, not confirmed refunds or payments." /></> : <>
-        <ChipGroup options={['All', 'Money', 'Home', 'Body'].map(v => ({ value: v, label: v }))} value={filter} onChange={setFilter} />
-        <Section title="Needs you">{needsYou.length ? <><Card onPress={() => openMission(needsYou[0].id)} style={{ gap: space.xs }}><Text variant="callout" tone="ink2">Next action</Text><Text variant="title">{needsYou[0].shortTitle}</Text><Text variant="body" tone="ink2">{needsYou[0].subtitle}</Text>{needsYou[0].estimatedValueAmount ? <Text variant="title">{data.prefs.hideBalances ? '••••' : money(needsYou[0].estimatedValueAmount)}</Text> : null}</Card>{needsYou.length > 1 ? <Rows rows={needsYou.slice(1).map(row)} /> : null}</> : <Text variant="body" tone="ink2">No next actions in this filter.</Text>}</Section>
-        {waiting.length ? <Section title="Waiting"><Rows rows={waiting.map(v => ({ ...row(v), sub: 'Submitted · sample case · waiting on HMRC' }))} /></Section> : null}
-      </>}
-      <Button variant="secondary" label={history ? 'See active missions' : 'See cleared missions'} onPress={() => nav.go(history ? 'missions' : 'history')} />
-    </Screen>;
-  }
-  if (screen === 'newgoal') return <Screen screen={screen} footer={<Button label="Add to Plan" disabled={!goal.trim()} onPress={() => { if (!goal.trim()) return; draft('newgoal', goal); set({ records: [...data.records, { id: `goal-${Date.now()}`, kind: 'goal', area: 'goal', label: goal.trim(), source: { type: 'record', at: new Date().toISOString() }, status: 'confirmed' }] }); feedback.file(); nav.close(); }} />}><Input label="Add something" value={goal} onChange={setGoal} /><Text variant="callout" tone="ink2">life would make this</Text><Heading variant="headline" title={goal || 'Your next move'} /><Rows rows={[{ title: '1 · Work out what you can afford', to: 'cashplan' }, { title: '2 · Save a deposit and first month', to: 'buffer' }, { title: '3 · Check renter schemes in your area', to: 'areahome' }]} /><Text variant="callout" tone="ink2">Or start from</Text><ChipGroup options={['Clear a debt', 'Get fitter', 'Start a business', 'Learn to invest'].map(v => ({ value: v, label: v }))} value={goal} onChange={setGoal} /></Screen>;
-  const home = screen === 'areahome', body = screen === 'areahealth', area = home ? 'Home' : body ? 'Health' : 'Work';
-  return <Screen screen={screen} title={area} image={home ? require('../../assets/images/scenes/area-home.jpg') : body ? undefined : require('../../assets/images/scenes/area-work.jpg')}><View style={body ? { gap: space.sm } : { minHeight: space.xxxl * 4, justifyContent: 'flex-end', gap: space.sm }}><Text variant="callout" tone={body ? 'ink2' : 'paper2'}>Area</Text><Heading tone={body ? 'ink' : 'paper'} title={area} sub={home ? 'Renting now. Aim: your own place by 2028.' : body ? 'The admin side of health: GP, prescriptions, dentist, tests. Body covers how you feel day to day.' : 'Freelance designer. Aim: grow your income by next year.'} /></View><Card style={{ gap: space.xs }}><View style={layout.between}><Text variant="title">Progress</Text><StatusPill label={home ? 'Steady' : body ? 'Good' : 'Building'} /></View><Ticks count={12} filled={Math.round((engine.areas.find(v => v.label === area)?.progressPct ?? 40) / 100 * 12)} /></Card><Rows rows={home ? [{ title: 'Deposit plan', sub: `${money(seed.finance.deposit)} of ${money(seed.finance.depositGoal)}`, to: 'aim' }, { title: 'Council tax discount', sub: 'Waiting on reply', onPress: () => openMission('uk-single-person-council') }, { title: 'Your next home: bedrooms', sub: 'Tool · level 2', to: 'bedrooms' }, { title: 'Lifetime ISA', sub: 'Idea · 60 seconds', to: 'idea' }] : body ? [{ title: 'Book a GP blood test', sub: 'Mission · 10 min', onPress: () => openMission('uk-overdue-gp-mot') }, { title: 'Dentist check-up', sub: 'Due in March', onPress: () => openMission('nhs-dental-annual') }, { title: 'Prescription prepayment', sub: 'Check your options', to: 'healthstack' }, { title: 'Bloodwork reader', sub: 'Tool · level 3', to: 'blood' }, { title: 'Body', sub: 'How you feel day to day', to: 'body' }] : [{ title: 'Register as self-employed', sub: 'Tax setup and deadlines', to: 'taxcheck' }, { title: 'Income and structure', sub: 'Sole trader or Ltd?', to: 'income' }, { title: 'Invoice tracker', sub: '3 unpaid invoices', to: 'money' }, { title: 'Deep work', sub: 'Idea · Cal Newport lens', to: 'lens' }]} /></Screen>;
 }
