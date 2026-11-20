@@ -343,7 +343,7 @@ export function ExperimentV26() {
   );
   const cells: DotCell[] = Array.from({ length: e.of }, (_, k) => k < e.day - 1 ? 'on' : k === e.day - 1 ? 'now' : '');
   return (
-    <Page screen="experiment" bar={{ kind: 'push', title: 'Experiment', action: { kind: 'icon', icon: 'more', label: 'More', onPress: () => nav.go('why') } }}>
+    <Page screen="experiment" bar={{ kind: 'push', title: 'Experiment', action: { kind: 'icon', icon: 'info', label: 'Why this experiment', onPress: () => nav.go('why') } }}>
       <PhotoCard source={photos.calmdesk} focal={{ y: 0.84 }} height={200} chips={[`Day ${e.day} of ${e.of}`]} chipRight={e.tag} title={mine ?? e.name} sub={e.left} style={{ marginTop: space.xxs }} />
       <DotGrid cells={cells} columns={14} label={`Day ${e.day} of ${e.of}`} holeColor={undefined} style={{ marginTop: space.md }} />
       <SectionHead title="So far" link="against your own baseline" />

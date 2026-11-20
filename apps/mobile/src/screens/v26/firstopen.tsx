@@ -19,6 +19,7 @@ import {
   space, useCalmMotion, useTokens, type GlyphName,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
+import { SHOW_SAMPLES } from '@/state/sample';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { health, records } from '@/services/local';
@@ -442,7 +443,12 @@ export function MicprimerV26() {
   const allow = async () => {
     setProblem('');
     try { await voice.requestPermission(); flag('mic-preview', true); nav.replace('talk'); }
-    catch (error) { setProblem(error instanceof Error ? error.message : 'Microphone access is unavailable. You can type instead.'); }
+    catch (error) {
+      // Sample builds without speech (the web preview) still show Talk, which plays its labelled sample so the filing can be seen.
+      const caps = await voice.capabilities().catch(() => null);
+      if (SHOW_SAMPLES && !caps?.speechAvailable) { flag('mic-preview', true); nav.replace('talk'); return; }
+      setProblem(error instanceof Error ? error.message : 'Microphone access is unavailable. You can type instead.');
+    }
   };
   return (
     <Page screen="micprimer" contentStyle={{ flexGrow: 1 }} footer={<><Btn label="Allow the microphone" icon="mic" onPress={() => { void allow(); }} /><QuietLink label="I’ll type instead" onPress={() => { choose('mic-permission', 'declined'); nav.replace('chat'); }} /></>}>

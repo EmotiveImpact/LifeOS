@@ -53,7 +53,7 @@ export function CashplanV26() {
     feedback.file();
   };
   return (
-    <Page screen="cashplan" bar={{ kind: 'push', title: '30-day cash plan', action: { kind: 'icon', icon: 'more', label: 'Change what’s coming in', onPress: () => flag('cashplan-edit') } }}
+    <Page screen="cashplan" bar={{ kind: 'push', title: '30-day cash plan', action: { kind: 'text', label: data.flags['cashplan-edit'] ? 'Done' : 'Edit', onPress: () => flag('cashplan-edit') } }}
       footer={<Btn label={saved ? 'Cash plan saved · update' : 'Save my cash plan'} onPress={save} />}>
       <Eyebrow>Safe to spend this month</Eyebrow>
       <Figure value={safe < 0 ? `−${show(-safe)}` : show(safe)} style={{ marginTop: space.xs }} />
@@ -284,7 +284,7 @@ export function GrowthV26() {
   const t = useTokens(), nav = useNavigation(), { data, choose } = useSeed();
   const picked = data.choices['growth-checkin'];
   return (
-    <Page screen="growth" bar={{ kind: 'push', action: { kind: 'icon', icon: 'more', label: 'Your levels', onPress: () => nav.go('levels') } }}>
+    <Page screen="growth" bar={{ kind: 'push', action: { kind: 'text', label: 'Levels', onPress: () => nav.go('levels') } }}>
       <Eyebrow>Level 4 · growth path</Eyebrow>
       <Display s="You’ve kept your {payday sweep} for {3 months}. Next: {raise your rate.}" />
       <PhotoCard source={photos.journal} focal={{ y: 0.6 }} height={284} size="md" chips={['This week’s check-in']} chipRight={{ label: 'Due Sun', dot: t.ember }} title="What did you do this week that future-you will thank you for?" style={{ marginTop: space.lg }}>

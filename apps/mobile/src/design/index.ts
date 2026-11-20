@@ -32,6 +32,7 @@ export * from './components/LabRange';
 // V26 (Phase 13): the board's pieces. See COMPONENTS.md, "V26 additions".
 export * from './photos';
 export * from './components/V26Chrome';
+export * from './components/V26Menu';
 export * from './components/V26Photo';
 export * from './components/V26Data';
 export * from './components/V26Lists';
