@@ -22,7 +22,10 @@ import { useNavigation } from '@/navigation/useNavigation';
 import { SHOW_SAMPLES } from '@/state/sample';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
-import { health, records } from '@/services/local';
+import { records } from '@/services/local';
+import { phoneHealth } from '@/services/health/phone';
+import { typesAllowed } from '@/services/health/mapping';
+import { readHealthNow } from '@/services/health/useHealthRunner';
 import { problemWords, sendCode, signInWith, verifyCode } from '@/services/account';
 import { voice } from '@/services/voice';
 import {
@@ -373,8 +376,11 @@ export function HealthprimerV26() {
   const go = async () => {
     // Asking here is the explicit, per-type yes (SPEC 9.3): it records the consent with the types switched on.
     if (consent.given) consent.setTypes(types); else consent.give(data.onboardingDone ? 'body' : 'first open', types);
-    await health.connect(healthName);
+    // The system's own sheet asks next; life reads only the kinds switched on here.
+    const allowed = typesAllowed(types);
+    if (await phoneHealth.available()) await phoneHealth.requestAccess(allowed);
     flag('health-connected', true); flag(`device-${healthName}`, true);
+    readHealthNow();
     HEALTH_TYPES.forEach(h => choose(`health-primer-${h.key}`, types[h.key] ? 'on' : 'off'));
     feedback.primary();
     leave();

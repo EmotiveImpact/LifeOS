@@ -12,6 +12,9 @@ import type { ScreenKey } from '@/navigation/screens';
 import type { SeedData } from './SeedProvider';
 import { useSeed } from './SeedProvider';
 import { SHOW_SAMPLES } from './sample';
+import { HEALTH_CONSENT_VERSION, consentFrom, type HealthConsent, type HealthType } from '@/services/health/consent';
+import { emptyHealth } from '@/services/health/ingest';
+import { disconnectWearable } from '@/services/health/wearables';
 import { engineSnapshot, money, seed, seedKnownRecords, seedTaxClaim } from './seed';
 
 type Focal = { x?: number; y?: number };
@@ -80,20 +83,7 @@ export function useAgeCheck() {
 
 /* ───────────────────────── Health-data consent ───────────────────────── */
 
-/** Bump when the words on the consent screen change, so an older yes is asked again. */
-export const HEALTH_CONSENT_VERSION = 1;
-
-export type HealthType = 'sleep' | 'heart' | 'workouts' | 'food';
-export type HealthConsent = {
-  version: number;
-  at: string;
-  /** What the yes covers: numbers you enter, readings from the phone or a wearable, and what you log. */
-  scope: ('body' | 'readings' | 'logs')[];
-  /** The reading types switched on before Apple Health or Health Connect asked. */
-  types: Record<HealthType, boolean>;
-  /** Where the yes was given. */
-  from: 'first open' | 'body' | 'settings';
-};
+export { HEALTH_CONSENT_VERSION, type HealthConsent, type HealthType } from '@/services/health/consent';
 
 export const HEALTH_TYPES: { key: HealthType; title: string; why: string; photo: PhotoName; focal: Focal; on: boolean }[] = [
   { key: 'sleep', title: 'Sleep', why: 'For your sleep need, debt and bedtime', photo: 'bedroom', focal: { y: 0.73 }, on: true },
@@ -104,9 +94,8 @@ export const HEALTH_TYPES: { key: HealthType; title: string; why: string; photo:
 
 const defaultTypes = (): Record<HealthType, boolean> => Object.fromEntries(HEALTH_TYPES.map(h => [h.key, h.on])) as Record<HealthType, boolean>;
 
-export function readHealthConsent(data: SeedData): HealthConsent | null {
-  const c = parse<HealthConsent>(data.choices['health-consent']);
-  return c && c.version === HEALTH_CONSENT_VERSION ? c : null;
+export function readHealthConsent(data: Pick<SeedData, 'choices'>): HealthConsent | null {
+  return consentFrom(data.choices);
 }
 
 /**
@@ -135,9 +124,15 @@ export function useHealthConsent() {
   });
   const decline = () => update(c => ({ ...c, choices: { ...c.choices, 'health-consent': '', 'health-consent-declined': new Date().toISOString() } }));
   /** Stops all health use at once: the yes is cleared, its withdrawal dated, and connected sources switched off. */
-  const withdraw = () => update(c => {
+  const withdraw = () => {
+    // A connected WHOOP or Oura is disconnected too, so the life API drops its sealed tokens.
+    for (const id of ['whoop', 'oura'] as const) if (data.flags[`device-${id}`]) void disconnectWearable(id);
+    withdrawHere();
+  };
+  const withdrawHere = () => update(c => {
     const flags = Object.fromEntries(Object.entries(c.flags).map(([k, v]) => [k, k === 'health-connected' || k.startsWith('device-') ? false : v]));
-    return { ...c, flags, choices: { ...c.choices, 'health-consent': '', 'health-consent-withdrawn': new Date().toISOString() } };
+    // Everything imported goes too: life keeps nothing about the body once the yes is withdrawn.
+    return { ...c, flags, health: emptyHealth(), choices: { ...c.choices, 'health-consent': '', 'health-consent-withdrawn': new Date().toISOString() } };
   });
   return { consent, given: !!consent, allowed: healthAllowed(data), declined: !!data.choices['health-consent-declined'], withdrawnAt: data.choices['health-consent-withdrawn'] || null, give, setTypes, decline, withdraw };
 }

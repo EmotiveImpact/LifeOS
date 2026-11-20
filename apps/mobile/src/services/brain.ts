@@ -30,7 +30,7 @@ let tokenProvider: (() => Promise<string | null>) | null = null;
 /** An auth integration supplies a short-lived session from SecureStore. Never
  * store provider secrets or a fixed production API token in the application. */
 export function setBrainSessionProvider(provider: (() => Promise<string | null>) | null) { tokenProvider = provider; }
-async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const base = apiBase();
   if (!base) throw new BrainError('UNAVAILABLE', 'The life API is not connected.');
   const token = await tokenProvider?.();
