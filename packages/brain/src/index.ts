@@ -8,3 +8,5 @@ export * from './voice.ts';
 export * from './safety.ts';
 export * from './proposals.ts';
 export * from './jobs.ts';
+export * from './consent.ts';
+export * from './router.ts';

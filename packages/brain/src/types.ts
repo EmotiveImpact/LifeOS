@@ -1,12 +1,16 @@
 /** Runtime-independent brain contracts. No UI, credentials, I/O or model SDKs. */
 import type { SupportReply } from './safety.ts';
+import type { ConsentGrant } from './consent.ts';
 export type Area = 'you' | 'home' | 'work' | 'money' | 'health' | 'goal';
 export type Job = 'ask' | 'extract' | 'draft' | 'lesson' | 'analyse' | 'showMe' | 'food' | 'coach' | 'plan-explain' | 'read-document';
-export type Tier = 'fast' | 'strong' | 'vision';
+/** Model strength, cheapest first. `top` is for big decisions only; `vision` reads photos. */
+export type Tier = 'fast' | 'strong' | 'top' | 'vision';
 export type ModelLocation = 'device' | 'server' | 'cloud';
 export type Source = { id: string; label: string; kind: 'engine' | 'record' | 'memory' | 'attachment' | 'profile'; at?: string; sample?: boolean };
-export type Fact = { id: string; label: string; value: string; source: Source };
-export type Memory = { id: string; text: string; source: Source; recordId?: string };
+/** `sensitivity: 'health'` keeps a fact or memory off the cloud unless consent names health. */
+export type Sensitivity = 'health' | 'money' | 'other';
+export type Fact = { id: string; label: string; value: string; source: Source; sensitivity?: Sensitivity };
+export type Memory = { id: string; text: string; source: Source; recordId?: string; sensitivity?: Sensitivity };
 export type Move = { id: string; title: string; reasons: string[]; area: Area; urgent: boolean };
 /** The six profile facts, a goal, a note, and the record kinds Talk can now
  * file. `details` carries the structured fields for the record kinds; its
@@ -31,12 +35,15 @@ export type Conversation = { id: string; title: string; createdAt: string; updat
 export type BrainState = { version: 1; conversations: Conversation[]; activeConversationId: string | null; confirmedRecordIds: string[] };
 export const emptyBrainState = (): BrainState => ({ version: 1, conversations: [], activeConversationId: null, confirmedRecordIds: [] });
 export type Context = { facts: Fact[]; memories: Memory[]; moves: Move[]; sample: boolean };
-export type Request = { id: string; job: Job; text: string; context: Context; history: Pick<Message, 'role' | 'text'>[]; attachments: Attachment[]; privateMode: boolean; consent: { requestId: string; locations: ModelLocation[] } | null };
+export type Request = { id: string; job: Job; text: string; context: Context; history: Pick<Message, 'role' | 'text'>[]; attachments: Attachment[]; privateMode: boolean; consent: { requestId: string; locations: ModelLocation[] } | null; grants?: ConsentGrant[] };
 export type ModelOutput = { answer: string; detail?: string; citations: string[]; proposals: Proposal[]; data?: unknown };
 export type Result = { answer: string; detail?: string; sources: Source[]; proposals: Proposal[]; route: { location: ModelLocation | 'rules'; model: string; tier: Tier }; data?: unknown; notices: string[]; safety?: SupportReply };
 export type Capability = { id: string; location: ModelLocation; jobs: Job[]; available: boolean; reason?: string };
-export interface ModelAdapter { id: string; location: ModelLocation; jobs: Job[]; available(): Promise<boolean>; generate(request: Request, signal: AbortSignal): Promise<unknown> }
+/** `tiers` limits an adapter to the strengths it can serve (all when left out);
+ * `maxContextChars` makes the runtime trim history and memories to fit. */
+export interface ModelAdapter { id: string; location: ModelLocation; jobs: Job[]; tiers?: Tier[]; maxContextChars?: number; available(): Promise<boolean>; generate(request: Request, signal: AbortSignal): Promise<unknown> }
 export class BrainError extends Error {
   constructor(public code: 'UNAVAILABLE' | 'CONSENT_REQUIRED' | 'INVALID_INPUT' | 'INVALID_OUTPUT' | 'CANCELLED' | 'TIMEOUT' | 'RATE_LIMITED', message: string) { super(message); this.name = 'BrainError'; }
 }
-export const tierFor = (job: Job): Tier => job === 'food' ? 'vision' : job === 'extract' ? 'fast' : 'strong';
+/** A job's starting tier (router.ts BASE_TIERS; the tier table can move it). */
+export const tierFor = (job: Job): Tier => job === 'food' ? 'vision' : job === 'extract' || job === 'ask' ? 'fast' : 'strong';

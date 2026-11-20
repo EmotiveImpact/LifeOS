@@ -7,6 +7,9 @@ interface DeviceIntelligence { available(): Promise<boolean>; generate(prompt: s
 const device = Platform.OS === 'web' ? null : requireOptionalNativeModule<DeviceIntelligence>('LifeIntelligence');
 const deviceAdapter: ModelAdapter = {
   id: 'os-foundation-model', location: 'device', jobs: ['ask', 'extract', 'draft', 'coach', 'plan-explain'],
+  // Apple's on-device model has a 4,096-token window shared by the policy, the
+  // request and the answer, so history and memories are trimmed to fit.
+  maxContextChars: 8000,
   available: async () => !!device && await device.available(),
   generate: async (request, signal) => {
     if (!device || signal.aborted) throw new BrainError('UNAVAILABLE', 'The on-device model is unavailable.');
