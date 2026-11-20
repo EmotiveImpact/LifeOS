@@ -6,7 +6,8 @@ export interface ProjectionStorage {
   readonly mode: 'sqlite' | 'web-preview';
   load(): Promise<unknown>;
   save(projection: unknown): Promise<void>;
-  clear(): Promise<void>;
+  /** Erases everything here. `everywhere` also queues deletes for the server; `this-phone` queues nothing (the account is already closed). */
+  clear(scope?: 'everywhere' | 'this-phone'): Promise<void>;
   exportEverything(): Promise<unknown>;
   close(): Promise<void>;
   /** Pushes this phone's changes and pulls the account's others (Phase 22). `applied` counts rows that changed here. */

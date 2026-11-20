@@ -315,12 +315,12 @@ function Meter({ value }: { value: number }) {
 /* ───────────────────────── Offline: Money, from what was saved ───────────────────────── */
 
 export function OfflineV26() {
-  const nav = useNavigation(), { data, flag } = useSeed();
+  const nav = useNavigation(), { data, flag, pref } = useSeed();
   const hide = data.prefs.hideBalances;
   const [pounds, pence] = money(offlineMoney.balance, 2).split('.');
   const retry = () => { feedback.select(); flag('offline-retry', true); };
   return (
-    <Page screen="money" bar={{ kind: 'push', title: 'Money', action: { kind: 'icon', icon: 'more', label: 'More', onPress: () => nav.go('area') } }}>
+    <Page screen="money" bar={{ kind: 'push', title: 'Money', action: { kind: 'icon', icon: hide ? 'eyeOff' : 'eye', label: hide ? 'Show balances' : 'Hide balances', onPress: () => pref('hideBalances', !hide) } }}>
       <Statement s={`You’re {offline.} Showing what was saved {${offlineMoney.savedAgo}.}`} />
       <TintCard area="money" style={{ marginTop: space.lg }}>
         <Between><View style={styles.inline}><Badge icon="wallet" /><Text variant="callout" tone="ink2">All accounts</Text></View><Text variant="callout" tone="ink2">{`Updated ${offlineMoney.savedAgo}`}</Text></Between>

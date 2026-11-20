@@ -196,7 +196,7 @@ function BarsSection() {
       <View style={{ height: 84, borderRadius: radius.lg, overflow: 'hidden', paddingTop: 6 }}>
         <PhotoFill source={photos.terrace} />
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: photo.shade }]} />
-        <TopBar look="v26" kind="push" title="Home" onImage onBack={none} action={{ kind: 'icon', icon: 'more', label: 'More', onPress: none }} />
+        <TopBar look="v26" kind="push" title="Home" onImage onBack={none} action={{ kind: 'icon', icon: 'info', label: 'Why these show here', onPress: none }} />
       </View>
     </Section>
   );

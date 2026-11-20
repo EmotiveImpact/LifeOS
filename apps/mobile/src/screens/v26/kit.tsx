@@ -5,14 +5,14 @@
  * Copy is written the board's way: braces mark the words that matter, `{@doc tax rebate}` sets an icon inside them.
  *   <Display s="Your {@doc tax rebate} is {one form} away." />
  */
-import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Children, createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import { Stack, useNavigation as useRouterNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Button, Card, Footer, Icon, LifeOrb, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
+  Appear, Button, Card, Footer, Icon, LifeOrb, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
   cardShadow, componentSize, photo, photoScrims, radius, space, useTokens,
   type Focal, type GlyphName, type SpineItem, type StatusKind, type Tone, type TopBarAction, type TwoToneSegment, type TypeStyle, type V26RowProps,
 } from '@/design';
@@ -37,9 +37,18 @@ export function two(s: string): TwoToneSegment[] {
   return out;
 }
 
-/** The 34pt briefing (board `.display`), 10pt below whatever sits above it. */
+/** How deep the current page sits: a tab's home, a page opened from it, or a full-screen moment. Set by `Page`. */
+const Depth = createContext<'root' | 'detail' | 'moment'>('root');
+
+/**
+ * The opening sentence, 10pt below whatever sits above it. One size per depth, the way iOS keeps large titles for a
+ * tab's top level (Edem, 20 Nov: bring the design into harmony): 34pt (board `.display`) on Today, Plan and You and on
+ * full-screen moments and photographs; the 24pt statement on pages and sheets opened from them, so their content
+ * starts higher and the tabs stay the loudest screens.
+ */
 export function Display({ s, onPhoto, flush, center, style }: { s: string; onPhoto?: boolean; flush?: boolean; center?: boolean; style?: StyleProp<ViewStyle> }) {
-  return <TwoTone size="display" segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={[flush ? null : { marginTop: space.tile }, style]} />;
+  const depth = useContext(Depth);
+  return <TwoTone size={depth === 'detail' && !onPhoto ? 'statement' : 'display'} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={[flush ? null : { marginTop: space.tile }, style]} />;
 }
 
 /** The 24pt two-tone sentence (board `.statement`). */
@@ -280,12 +289,13 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
     : b.kind === 'photo' ? <View style={styles.photoBar}><View style={{ flexShrink: 1 }}>{b.left ?? null}</View><View>{b.right ?? (b.close === false ? null : <PhotoRound icon="close" label="Close" onPress={close} />)}</View></View>
     : null;
   const pad = { paddingHorizontal: space.gutter, paddingTop: space.xxs, paddingBottom: 28 + (footer || bottom || meta.kind === 'Tab' ? 0 : insets.bottom) };
+  const content = <Depth.Provider value={meta.kind === 'Tab' ? 'root' : meta.kind === 'Push' || sheet ? 'detail' : 'moment'}>{children}</Depth.Provider>;
   const body = scroll
     ? <ScrollView style={fits && fit.web ? { flexGrow: 0, flexShrink: 1, minHeight: 0 } : { flex: 1, minHeight: 0 }} contentInsetAdjustmentBehavior="never" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
         onScroll={onPull ? e => { if (e.nativeEvent.contentOffset.y < -60) onPull(); } : undefined} scrollEventThrottle={16}
         onContentSizeChange={fits ? (_w, h) => fit.part('body', h) : undefined}
-        contentContainerStyle={[pad, center ? { flexGrow: 1, justifyContent: 'center' } : null, contentStyle]}>{children}</ScrollView>
-    : <View style={[{ flex: 1, minHeight: 0 }, pad, center ? { justifyContent: 'center' } : null, contentStyle]}>{children}</View>;
+        contentContainerStyle={[pad, center ? { flexGrow: 1, justifyContent: 'center' } : null, contentStyle]}>{content}</ScrollView>
+    : <View style={[{ flex: 1, minHeight: 0 }, pad, center ? { justifyContent: 'center' } : null, contentStyle]}>{content}</View>;
   const head = <View style={{ flexShrink: 0 }} onLayout={fits ? e => fit.part('top', e.nativeEvent.layout.height) : undefined}>{top}</View>;
   const foot = footer ? <View onLayout={fits ? e => fit.part('foot', e.nativeEvent.layout.height) : undefined}><Footer style={{ backgroundColor: onPhoto ? 'transparent' : bg }}>{footer}</Footer></View> : null;
   if (fits && fit.web) {
@@ -295,16 +305,16 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
         <Stack.Screen options={{ statusBarStyle }} />
         <StatusBar style={statusBarStyle} />
         <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
-        <View style={[styles.webSheet, { backgroundColor: bg, maxHeight: '94%' }]}>
+        <Appear rise={220} style={[styles.webSheet, { backgroundColor: bg, maxHeight: '94%' }]}>
           {head}
           {body}
           {foot}
           {bottom}
-        </View>
+        </Appear>
       </View>
     );
   }
-  return (
+  const page = (
     <View nativeID={`screen-${screen}`} style={{ flex: 1, minHeight: 0, backgroundColor: onPhoto ? t.ink : bg }}>
       <Stack.Screen options={{ statusBarStyle }} />
       <StatusBar style={statusBarStyle} />
@@ -317,6 +327,10 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
       </SafeAreaView>
     </View>
   );
+  // Phones get the system's own push, modal and sheet transitions. The browser preview has none, so a screen there
+  // arrives the same calm way: a pushed page slides in a little from the right, a full-screen flow rises, both fading.
+  if (Platform.OS !== 'web' || meta.kind === 'Tab') return page;
+  return <Appear from={meta.kind === 'Push' ? 'right' : 'below'} rise={meta.kind === 'Push' ? 36 : 40} style={{ flex: 1, minHeight: 0 }}>{page}</Appear>;
 }
 
 /**

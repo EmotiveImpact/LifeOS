@@ -127,7 +127,12 @@ export function MissionV26() {
     ? `{Tax rebate.} About {${money(m.value ?? 0)}} back, ${left ? `${left === 1 ? 'one form' : `${left} steps`} to go` : 'ready to clear'}.`
     : `{${m.title}.} ${m.value ? `About {${money(m.value)}}. ` : ''}${left ? `${left} ${left === 1 ? 'step' : 'steps'} to go.` : 'Ready to clear.'}`;
   return (
-    <Page screen="mission" bar={{ kind: 'push', action: { kind: 'icon', icon: 'more', label: 'Mission actions', onPress: () => flag('mission-actions') } }}>
+    <Page screen="mission" bar={{ kind: 'push', action: { kind: 'menu', label: 'Mission actions', items: [
+      { label: 'Draft message', sub: 'Already filled in for you', icon: 'doc', onPress: () => nav.go('draft') },
+      { label: cleared ? 'Undo cleared' : 'Mark as cleared', icon: 'checkCircle', onPress: clear },
+      { label: 'Share reference', icon: 'arrowUp', onPress: () => { void Share.share({ message: `${m.title} · ${m.reference}` }); } },
+      { label: 'Why am I seeing this?', icon: 'help', onPress: () => nav.go('why') },
+    ] } }}>
       <Eyebrow>{`${m.area} · ${m.task.provider}`}</Eyebrow>
       <Display s={headline} />
       <Timeline style={{ marginTop: space.lg }} items={[
@@ -146,12 +151,6 @@ export function MissionV26() {
         <View style={{ flex: 1 }}><Micro>Reference</Micro><Text variant="title" style={{ marginTop: space.xxs, fontVariant: ['tabular-nums'] }}>{m.reference}</Text></View>
         <Chip label={copied ? 'Copied' : 'Copy'} icon="copy" onPress={async () => { await Clipboard.setStringAsync(m.reference); setCopied(true); feedback.select(); }} />
       </View>
-      {data.flags['mission-actions'] ? <RowsCard style={{ marginTop: space.sm }}>
-        <Row icon="doc" title="Draft message" sub="Already filled in with your details" onPress={() => nav.go('draft')} />
-        <Row icon="checkCircle" title={cleared ? 'Undo cleared' : 'Mark as cleared'} onPress={clear} />
-        <Row icon="arrowUp" title="Share reference" onPress={() => { void Share.share({ message: `${m.title} · ${m.reference}` }); }} />
-        <Row icon="help" title="Why am I seeing this?" onPress={() => nav.go('why')} />
-      </RowsCard> : null}
       <Callout style={{ marginTop: space.md }}>{m.isTax ? 'An estimate from your payslip and what you told life, not tax advice.' : 'Guidance from what you’ve told life, not advice.'}</Callout>
     </Page>
   );
@@ -333,7 +332,7 @@ export function AreaHomeV26() {
   const pct = Math.round(seed.finance.deposit / seed.finance.depositGoal * 100);
   return (
     <Page screen="areahome" scroll={false} backdrop={<PhotoBackdrop source={photos.areahome} focal={{ y: 0.42 }} height={340} />}
-      bar={{ kind: 'photo', left: <PhotoRound icon="back" label="Back" onPress={nav.close} />, right: <PhotoRound icon="more" label="Why these show here" onPress={() => nav.go('why')} /> }} contentStyle={{ paddingHorizontal: 0, paddingBottom: 0, paddingTop: 0 }}>
+      bar={{ kind: 'photo', left: <PhotoRound icon="back" label="Back" onPress={nav.close} />, right: <PhotoRound icon="info" label="Why these show here" onPress={() => nav.go('why')} /> }} contentStyle={{ paddingHorizontal: 0, paddingBottom: 0, paddingTop: 0 }}>
       <View style={styles.areaHead}>
         <Chip label="Area · Steady" onPhoto />
         <Text variant="display" style={{ color: photo.onPhoto, marginTop: space.tile, fontFamily: fonts.sansSemibold }}>Home</Text>
@@ -366,7 +365,7 @@ function ScrollArea({ children }: { children: ReactNode }) {
 export function AreaHealthV26() {
   const nav = useNavigation(), openTool = useOpenTool(), { set } = useSeed(), surface = useCardSurface();
   return (
-    <Page screen="areahealth" bar={{ kind: 'push', action: { kind: 'icon', icon: 'more', label: 'Why these show here', onPress: () => nav.go('why') } }}>
+    <Page screen="areahealth" bar={{ kind: 'push', action: { kind: 'icon', icon: 'info', label: 'Why these show here', onPress: () => nav.go('why') } }}>
       <Eyebrow right={<Chip label="Good" tone="done" />}>Area · Health</Eyebrow>
       <Display s="{The admin of staying well.} GP, prescriptions, dentist, tests." />
       <PhotoCard source={photos.run} focal={{ y: 0.52 }} height={176} title="Body" sub="How you feel day to day lives here." topRight={<View style={[styles.go, { backgroundColor: photo.onPhoto }]}><Icon name="arrow" size={18} color={photo.ink} /></View>} onPress={() => nav.go('body')} style={{ marginTop: space.lg }} />
@@ -390,7 +389,7 @@ export function AreaHealthV26() {
 export function AreaWorkV26() {
   const nav = useNavigation(), openTool = useOpenTool(), { set } = useSeed();
   return (
-    <Page screen="areawork" bar={{ kind: 'push', action: { kind: 'icon', icon: 'more', label: 'Why these show here', onPress: () => nav.go('why') } }}>
+    <Page screen="areawork" bar={{ kind: 'push', action: { kind: 'icon', icon: 'info', label: 'Why these show here', onPress: () => nav.go('why') } }}>
       <Eyebrow>Area · Work</Eyebrow>
       <Display s={`{Freelance designer.} Aim: {${money(invoices.workAim / 1000)}k} by next year.`} />
       <View style={[styles.row2, { marginTop: space.lg }]}>

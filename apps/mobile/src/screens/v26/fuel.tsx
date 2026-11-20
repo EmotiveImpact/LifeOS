@@ -11,7 +11,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import {
-  Badge, Icon, LifeOrb, LifeSays, PhotoCard, PhotoFill, PhotoGrid, PickRow, Press, RoundButton, Ruler, SectionHead, SegmentedV26,
+  ActionMenu, Badge, Icon, LifeOrb, LifeSays, PhotoCard, PhotoFill, PhotoGrid, PickRow, Press, RoundButton, Ruler, SectionHead, SegmentedV26,
   SliderV26, SpineTimeline, StatusPill, Text, TileGrid, TintCard, V26Tile, cardShadow, feedback, fonts, photo, photoScrims, photos, radius,
   space, useTokens, type Focal, type GlyphName,
 } from '@/design';
@@ -503,7 +503,6 @@ export function MealresultV26() {
   const meal: DiaryMeal | undefined = preview
     ? { id: '', name: preview.name, at: clock(), items: savedItems(preview.name, preview.kcal), via: 'saved', from: preview.detail }
     : day.diary.find(m => m.id === sel) ?? day.diary[day.diary.length - 1];
-  const [menuOpen, setMenuOpen] = useState(false);
   if (!meal) return (
     <Page screen="mealresult" bar={{ kind: 'push', title: 'Meal' }} center>
       <Statement s="No meal to show yet. {Snap one} and it lands here." />
@@ -526,7 +525,7 @@ export function MealresultV26() {
     let own: { name: string; detail: string; kcal: number }[] = [];
     try { own = JSON.parse(data.choices['saved-meals'] ?? '[]'); } catch { own = []; }
     choose('saved-meals', JSON.stringify([...own, { name: meal.name, detail: where.replace(' · saved meal', ''), kcal: Math.round(tt.kcal) }]));
-    feedback.complete(); setMenuOpen(false);
+    feedback.complete();
   };
   const edit = () => { choose('editing-meal', meal.id); choose('meal-photo', meal.photo ?? ''); set({ meal: meal.items.map(i => ({ ...i })) }); nav.go('confirm'); };
   const remove = () => { set({ meals: data.meals.filter(m => m.id !== meal.id) }); feedback.select(); nav.close(); };
@@ -534,7 +533,11 @@ export function MealresultV26() {
     <Page screen="mealresult" scroll={false} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
       backdrop={bg ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: drawer.height ?? 430 }]}><PhotoFill source={bg.source} focal={bg.focal} /><LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} /></View> : <View style={[StyleSheet.absoluteFill, { backgroundColor: photo.ink }]} />}
       bar={{ kind: 'photo', left: <View style={styles.paperChip}><Text variant="buttonCompact" style={{ color: photo.ink }}>{preview ? 'Saved meal' : `${mealSlot(meal.at)} · ${meal.at}`}</Text></View>,
-        right: <View style={{ flexDirection: 'row', gap: space.xs }}>{preview ? null : <OnRound icon="more" label="Meal actions" on={menuOpen} onPress={() => setMenuOpen(!menuOpen)} />}<PhotoRound icon="close" label="Close" onPress={nav.close} /></View> }}>
+        right: <View style={{ flexDirection: 'row', gap: space.xs }}>{preview ? null : <ActionMenu items={[
+          { label: 'Fix it in your own words', icon: 'mic', onPress: () => { choose('editing-meal', meal.id); choose('meal-photo', meal.photo ?? ''); set({ meal: meal.items.map(i => ({ ...i })) }); nav.go('fixwords'); } },
+          { label: isSaved ? 'In your saved meals' : 'Save this meal', icon: isSaved ? 'check' : 'add', onPress: saveIt },
+          { label: 'Remove from today', icon: 'trash', destructive: true, onPress: remove },
+        ]}>{(open, isOpen) => <OnRound icon="more" label="Meal actions" on={isOpen} onPress={open} />}</ActionMenu>}<PhotoRound icon="close" label="Close" onPress={nav.close} /></View> }}>
       <View style={styles.mealTop}>
         {!hide ? <View style={styles.fitChip}><Text variant="buttonCompact" style={{ color: fits ? '#0B7A55' : photo.ink }}>{fits ? `Fits today${score ? ` · ${score}` : ''}` : 'A bigger meal than today has room for'}</Text></View> : null}
         <Text variant="display" style={{ color: photo.onPhoto, marginTop: space.tile }} numberOfLines={2}>{meal.name}</Text>
@@ -542,13 +545,6 @@ export function MealresultV26() {
       </View>
       <View onLayout={drawer.onLayout} style={[drawerStyle, styles.mealSheet, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.md) }]}>
         <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
-        {menuOpen ? (
-          <RowsCard style={{ marginBottom: space.md }}>
-            <Row icon="mic" title="Fix it in your own words" onPress={() => { choose('editing-meal', meal.id); choose('meal-photo', meal.photo ?? ''); set({ meal: meal.items.map(i => ({ ...i })) }); setMenuOpen(false); nav.go('fixwords'); }} />
-            <Row icon={isSaved ? 'check' : 'add'} title={isSaved ? 'In your saved meals' : 'Save this meal'} onPress={saveIt} />
-            <Row icon="trash" title="Remove from today" onPress={remove} />
-          </RowsCard>
-        ) : null}
         <View style={styles.betweenEnd}>
           {hide ? <Text variant="heading">{tt.protein >= 25 ? 'A filling meal' : 'A lighter meal'}</Text> : <Figure value={n(tt.kcal)} unit="kcal" />}
           {hide ? null : <Text variant="callout" tone="ink2" style={{ marginBottom: space.xs }}>{preview ? `${n(Math.max(0, leftAfter))} left after this` : `${n(leftAfter)} left today`}</Text>}

@@ -17,6 +17,7 @@ import { useSeed } from '@/state/SeedProvider';
 import { money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { ai } from '@/services/ai';
+import { closeAccount, exportAccount, isSignedIn, type AccountDataProblem } from '@/services/account';
 import { voice } from '@/services/voice';
 import { faces } from '@/state/people';
 import { workTitle } from '@/state/you';
@@ -40,11 +41,20 @@ function usePlus() {
   return (SHOW_SAMPLES || !!data.flags['plus-preview']) && !data.flags['plus-cancelled'];
 }
 
-/** Your data as one file through the phone's share sheet. */
+/**
+ * Your data as one file through the phone's share sheet. Signed in, the file also holds everything the account keeps
+ * on life's server (Phase 23); if the server can't be reached, it says so and still gives this phone's copy.
+ */
 function useExport() {
   const { exportEverything } = useSeed();
   return async () => {
-    try { await Share.share({ title: 'Your life data', message: JSON.stringify(await exportEverything(), null, 2) }); }
+    try {
+      const phone = await exportEverything();
+      const server = await isSignedIn() ? await exportAccount() : null;
+      const file = !server ? phone : server.ok ? { phone, account: server.data }
+        : { phone, account: null, note: 'Your account couldn’t be reached, so this file holds what’s on this phone. Export again when you’re online for the rest.' };
+      await Share.share({ title: 'Your life data', message: JSON.stringify(file, null, 2) });
+    }
     catch { Alert.alert('Couldn’t export your data', 'Your data has not changed. Please try again.'); }
   };
 }
@@ -414,28 +424,60 @@ export function PrivacyV26() {
 
 /* ───────────────────────── Delete your account ───────────────────────── */
 
+/** Why deleting an account didn't go through. Nothing on the phone changes until the server has said yes. */
+const deleteProblem: Record<AccountDataProblem, string> = {
+  offline: 'life couldn’t reach your account, so nothing was deleted. Try again when you’re online.',
+  'signed-out': 'Your sign-in has run out. Sign in again, then delete your account.',
+  failed: 'Your account wasn’t deleted. Try again in a moment.',
+};
+
+/**
+ * Delete your account (Phase 23). Signed in, the server closes the account at once (every session ends) and keeps it
+ * for 30 days in case the person signs back in, then deletes every row and file. With no account, everything lives on
+ * this phone, so it goes at once and the screen says so instead of promising a grace period it can't keep.
+ */
 export function DeleteacctV26() {
   const t = useTokens(), nav = useNavigation(), { reset } = useSeed(), exportData = useExport();
   const params = useLocalSearchParams<{ state?: string }>();
   const [typed, setTyped] = useState(params.state === 'typed' ? 'DELETE' : '');
-  const armed = typed.trim() === 'DELETE';
+  const [signedIn, setSignedIn] = useState(false), [busy, setBusy] = useState(false), [problem, setProblem] = useState<string | null>(null);
+  useEffect(() => { let live = true; void isSignedIn().then(on => { if (live) setSignedIn(on); }); return () => { live = false; }; }, []);
+  const armed = typed.trim() === 'DELETE', account = SHOW_SAMPLES || signedIn;
   const plus = SHOW_SAMPLES ? 'a life Plus refund is owed' : 'a refund is owed';
+  const remove = async () => {
+    if (!armed || busy) return;
+    feedback.select(); setBusy(true); setProblem(null);
+    try {
+      if (signedIn) {
+        const closed = await closeAccount();
+        if (!closed.ok) { setProblem(deleteProblem[closed.problem]); if (closed.problem === 'signed-out') setSignedIn(false); return; }
+      }
+      // Once the account is closed, the phone is erased without queueing deletes, so signing back in keeps everything.
+      if (await reset({ thisPhoneOnly: signedIn })) nav.replace('welcome');
+    } finally { setBusy(false); }
+  };
+  const armedWords = account ? 'Your account closes today. Sign in again within 30 days to keep it.' : 'Everything on this phone goes now.';
   return (
     <Page screen="deleteacct" bar={{ kind: 'push', title: '' }}
       footer={<View style={{ gap: space.xs }}>
         <Field label="Type DELETE to confirm" value={typed} placeholder="DELETE" onChangeText={setTyped} />
-        <Btn ghost={!armed} disabled={!armed} label="Delete account" onPress={async () => { if (!armed) return; feedback.select(); if (await reset()) nav.replace('welcome'); }} />
-        <Callout center>{armed ? 'Your account closes today. 30 days to change your mind.' : 'The button wakes when you type DELETE.'}</Callout>
+        <Btn ghost={!armed} disabled={!armed || busy} label="Delete account" onPress={() => { void remove(); }} />
+        <Callout center>{problem ?? (armed ? armedWords : 'The button wakes when you type DELETE.')}</Callout>
       </View>}>
       <Text variant="titleSerif" style={{ marginTop: space.xxs }}>Delete your account?</Text>
-      <Body s="Read this once. {After 30 days it can’t be undone.}" style={{ marginTop: space.xs }} />
+      <Body s={account ? 'Read this once. {After 30 days it can’t be undone.}' : 'Read this once. {It can’t be undone.}'} style={{ marginTop: space.xs }} />
       <Micro style={{ marginTop: space.xl }}>DELETED</Micro>
       <Statement s="{Everything you’ve told life}, your health data and your chats." style={{ marginTop: space.xs }} />
       <Micro style={{ marginTop: space.lg }}>KEPT</Micro>
       <Statement s={`{Nothing}, unless ${plus}.`} style={{ marginTop: space.xs }} />
-      <Micro style={{ marginTop: space.lg }}>GRACE PERIOD</Micro>
-      <Statement s="{30 days} to change your mind." style={{ marginTop: space.xs }} />
-      <DotGrid cells={Array<DotCell>(30).fill('')} columns={15} label="30 days" style={{ marginTop: space.sm }} />
+      {account ? <>
+        <Micro style={{ marginTop: space.lg }}>GRACE PERIOD</Micro>
+        <Statement s="{30 days} to change your mind." style={{ marginTop: space.xs }} />
+        <DotGrid cells={Array<DotCell>(30).fill('')} columns={15} label="30 days" style={{ marginTop: space.sm }} />
+      </> : <>
+        <Micro style={{ marginTop: space.lg }}>WHERE IT LIVES</Micro>
+        <Statement s="{Only on this phone}, so it goes as soon as you press the button." style={{ marginTop: space.xs }} />
+      </>}
       <Press haptic="select" onPress={() => { void exportData(); }} accessibilityLabel="Download my data first" pressScale={0.99} style={[styles.switchCard, { backgroundColor: t.surface, ...cardShadow(t.scheme), marginTop: space.lg }]}>
         <View style={{ flex: 1 }}><Text variant="title">Download my data first</Text><Text variant="callout" tone="ink2">One file with everything in it</Text></View>
         <View style={[styles.round, { backgroundColor: t.surface2 }]}><Icon name="arrowDown" size={componentSize.iconSm} color={t.ink} /></View>

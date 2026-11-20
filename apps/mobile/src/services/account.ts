@@ -39,14 +39,14 @@ export const accountsLive = () => accountBase() !== null;
 export const sessionToken = () => sessionStore.get(SESSION_KEY);
 setBrainSessionProvider(sessionToken);
 
-async function call(path: string, body: unknown, token?: string | null): Promise<Response | null> {
+async function call(path: string, body: unknown, token?: string | null, method: 'POST' | 'GET' = 'POST'): Promise<Response | null> {
   const base = accountBase();
   if (!base) return null;
   try {
     return await fetch(`${base}${path}`, {
-      method: 'POST',
+      method,
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify(body),
+      body: method === 'GET' ? undefined : JSON.stringify(body),
     });
   } catch { return null; }
 }
@@ -127,6 +127,51 @@ export async function signOut() {
   const token = await sessionToken();
   if (token) await call('/auth/sign-out', {}, token);
   await sessionStore.remove(SESSION_KEY);
+}
+
+/** True when this phone holds a session for a real account (not the local preview). */
+export async function isSignedIn(): Promise<boolean> {
+  return accountsLive() && !!(await sessionToken());
+}
+
+export type AccountDataProblem = 'signed-out' | 'offline' | 'failed';
+
+/** Everything life's server holds for this account (Phase 23 `GET /account/export`). */
+export async function exportAccount(): Promise<{ ok: true; data: unknown } | { ok: false; problem: AccountDataProblem }> {
+  const token = await sessionToken();
+  if (!accountsLive() || !token) return { ok: false, problem: 'signed-out' };
+  const response = await call('/account/export', null, token, 'GET');
+  if (!response) return { ok: false, problem: 'offline' };
+  if (response.status === 401) return { ok: false, problem: 'signed-out' };
+  const data = response.ok ? await response.json().catch(() => null) : null;
+  return data ? { ok: true, data } : { ok: false, problem: 'failed' };
+}
+
+/**
+ * Closes the account on the server (Phase 23 `POST /account/delete`). Every session ends there, so the token is
+ * forgotten here too. Nothing on this phone changes until the server has said yes.
+ */
+export async function closeAccount(): Promise<{ ok: true; deleteAfter: string } | { ok: false; problem: AccountDataProblem }> {
+  const token = await sessionToken();
+  if (!accountsLive() || !token) return { ok: false, problem: 'signed-out' };
+  const response = await call('/account/delete', { confirm: 'DELETE' }, token);
+  if (!response) return { ok: false, problem: 'offline' };
+  if (response.status === 401) { await sessionStore.remove(SESSION_KEY); return { ok: false, problem: 'signed-out' }; }
+  const body = response.ok ? await response.json().catch(() => null) as { closed?: boolean; deleteAfter?: string } | null : null;
+  if (!body?.closed || !body.deleteAfter) return { ok: false, problem: 'failed' };
+  await sessionStore.remove(SESSION_KEY);
+  return { ok: true, deleteAfter: body.deleteAfter };
+}
+
+/**
+ * Gives the server this phone's Expo push token, or `null` to stop push (Phase 23 `POST /push/register`). The token
+ * itself comes from `expo-notifications`, which arrives with Phase 29's notifications; until then nothing calls this.
+ */
+export async function registerPushToken(token: string | null): Promise<boolean> {
+  const session = await sessionToken();
+  if (!accountsLive() || !session) return false;
+  const response = await call('/push/register', { device: await deviceId(), token }, session);
+  return response?.ok === true;
 }
 
 /** Words for each problem, for the sheet. */

@@ -27,11 +27,13 @@ describe('server schema mirrors the phone', () => {
       expect(cols).toContain('user_id');
       expect(cols).toContain('deleted_at');
     }
-    expect(userTables).toEqual(expect.arrayContaining([...Object.keys(phone), 'devices', 'sync_ops', 'oauth_tokens', 'ai_usage']));
+    expect(userTables).toEqual(expect.arrayContaining([...Object.keys(phone), 'devices', 'sync_ops', 'oauth_tokens', 'ai_usage', 'files']));
   });
 
-  test('the row-level security migration covers every user table', async () => {
-    const sql = await Bun.file(new URL('../../apps/api/drizzle/0001_row_level_security.sql', import.meta.url)).text();
+  test('the migrations put row-level security on every user table', async () => {
+    const folder = new URL('../../apps/api/drizzle/', import.meta.url);
+    const names = [...new Bun.Glob('*.sql').scanSync(folder.pathname)];
+    const sql = (await Promise.all(names.map(name => Bun.file(new URL(name, folder)).text()))).join('\n');
     for (const name of userTables) {
       expect(sql).toContain(`ALTER TABLE "${name}" FORCE ROW LEVEL SECURITY;`);
       expect(sql).toContain(`CREATE POLICY "${name}_owner" ON "${name}"`);

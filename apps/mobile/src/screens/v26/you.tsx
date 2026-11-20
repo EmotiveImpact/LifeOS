@@ -63,11 +63,11 @@ export function RoundPhoto({ source, focal, size }: { source: number; focal?: { 
 /** One person in the crowd: steps in from the right when added (board `.tp-in`), a fade with Reduce Motion. */
 function Person({ size, enter, quiet }: { size: number; enter: boolean; quiet?: boolean }) {
   const t = useTokens(), calm = useCalmMotion();
-  const x = useSharedValue(enter && !calm ? 28 : 0), s = useSharedValue(enter && !calm ? 0.7 : 1), o = useSharedValue(enter ? 0 : 1);
+  const x = useSharedValue(enter && !calm ? 12 : 0), s = useSharedValue(enter && !calm ? 0.92 : 1), o = useSharedValue(enter ? 0 : 1);
   useEffect(() => {
     if (!enter) return;
     o.value = withTiming(1, { duration: calm ? 200 : 260 });
-    if (!calm) { x.value = withSpring(0, motion.bouncy); s.value = withSpring(1, motion.bouncy); }
+    if (!calm) { x.value = withSpring(0, motion.smooth); s.value = withSpring(1, motion.smooth); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const anim = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateX: x.value }, { scale: s.value }] }));
   return <Animated.View style={anim}><Icon name="person" size={size} strokeWidth={1.4} color={quiet ? t.surface3 : t.ink} /></Animated.View>;
@@ -343,7 +343,7 @@ export function ExperimentV26() {
   );
   const cells: DotCell[] = Array.from({ length: e.of }, (_, k) => k < e.day - 1 ? 'on' : k === e.day - 1 ? 'now' : '');
   return (
-    <Page screen="experiment" bar={{ kind: 'push', title: 'Experiment', action: { kind: 'icon', icon: 'more', label: 'More', onPress: () => nav.go('why') } }}>
+    <Page screen="experiment" bar={{ kind: 'push', title: 'Experiment', action: { kind: 'icon', icon: 'info', label: 'Why this experiment', onPress: () => nav.go('why') } }}>
       <PhotoCard source={photos.calmdesk} focal={{ y: 0.84 }} height={200} chips={[`Day ${e.day} of ${e.of}`]} chipRight={e.tag} title={mine ?? e.name} sub={e.left} style={{ marginTop: space.xxs }} />
       <DotGrid cells={cells} columns={14} label={`Day ${e.day} of ${e.of}`} holeColor={undefined} style={{ marginTop: space.md }} />
       <SectionHead title="So far" link="against your own baseline" />

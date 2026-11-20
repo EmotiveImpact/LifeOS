@@ -66,7 +66,7 @@ function CountStepperV23({ value, onChange, question, consequence, min = 0, max 
       {glyph !== 'none' ? (
         <View style={styles.glyphs}>
           {Array.from({ length: shown }, (_, i) => (
-            <Animated.View key={i} entering={calm ? FadeIn.duration(durations.quick) : FadeInDown.springify().damping(14)}>
+            <Animated.View key={i} entering={calm ? FadeIn.duration(durations.quick) : FadeInDown.springify().dampingRatio(1).duration(320)}>
               {glyph === 'people' ? (
                 <View style={{ alignItems: 'center', gap: 3 }}>
                   <View style={{ width: 11, height: 11, borderRadius: 4, backgroundColor: palette[i % palette.length] }} />

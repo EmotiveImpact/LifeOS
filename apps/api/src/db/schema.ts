@@ -154,5 +154,32 @@ export const aiUsage = pgTable('ai_usage', {
   at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
 }, t => [index('ai_usage_user_at').on(t.user_id, t.at)]);
 
+/**
+ * Meal photos and scanned letters in object storage (Phase 23, `src/storage.ts`). The server chooses every key:
+ * `tmp/<user>/<id>` for a file that goes once it has been read (the bucket also expires `tmp/` after a day), or
+ * `keep/<user>/<id>` for one the person chose to keep. `delete_after` is null for kept files.
+ */
+export const files = pgTable('files', {
+  id: text('id').primaryKey(),
+  user_id: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  key: text('key').notNull().unique(),
+  kind: text('kind').notNull(),
+  content_type: text('content_type').notNull(),
+  keep: boolean('keep').notNull().default(false),
+  delete_after: timestamp('delete_after', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [index('files_user').on(t.user_id)]);
+
+/**
+ * Accounts their owners asked to delete. Every session ends at once; signing in again before `delete_after` keeps
+ * the account; after it, the sweep deletes the person, every row (by cascade) and every file. Like `sessions`, this
+ * holds no personal content and has no row-level security, because the sweep reads it across accounts.
+ */
+export const accountClosures = pgTable('account_closures', {
+  user_id: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  requested_at: timestamp('requested_at', { withTimezone: true }).notNull().defaultNow(),
+  delete_after: timestamp('delete_after', { withTimezone: true }).notNull(),
+}, t => [index('account_closures_due').on(t.delete_after)]);
+
 /** Tables that hold one person's rows. Each has row-level security on `user_id`. */
-export const userTables = [...Object.keys(phoneTables), 'devices', 'sync_ops', 'oauth_tokens', 'ai_usage'] as const;
+export const userTables = [...Object.keys(phoneTables), 'devices', 'sync_ops', 'oauth_tokens', 'ai_usage', 'files'] as const;

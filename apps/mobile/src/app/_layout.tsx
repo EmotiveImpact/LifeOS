@@ -3,7 +3,6 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { HeroUINativeProvider } from 'heroui-native';
 import { SafeAreaProvider, SafeAreaView, initialWindowMetrics } from 'react-native-safe-area-context';
 import { Button, SheetProvider, Text, space, useLifeFonts, useTokens } from '@/design';
 import { SeedProvider, useSeed } from '@/state/SeedProvider';
@@ -23,5 +22,5 @@ function AppShell() {
   </Stack><StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} /></>;
 }
 export default function RootLayout() {
-  return <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider initialMetrics={initialWindowMetrics}><HeroUINativeProvider><SeedProvider><SheetProvider><AppShell /></SheetProvider></SeedProvider></HeroUINativeProvider></SafeAreaProvider></GestureHandlerRootView>;
+  return <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider initialMetrics={initialWindowMetrics}><SeedProvider><SheetProvider><AppShell /></SheetProvider></SeedProvider></SafeAreaProvider></GestureHandlerRootView>;
 }

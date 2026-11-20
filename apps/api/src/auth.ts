@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer, emailOTP } from 'better-auth/plugins';
+import { eq } from 'drizzle-orm';
 import type { Database } from './db/client';
 import * as schema from './db/schema';
 
@@ -52,6 +53,8 @@ export function createAuth(options: AuthOptions): Auth {
     // Apple, Google and an emailed code for the same verified address are one person, one userId.
     account: { accountLinking: { enabled: true, trustedProviders: ['apple', 'google', 'email-otp'] } },
     socialProviders: providers,
+    // Signing in again during the grace period after "Delete account" keeps the account (Phase 23).
+    databaseHooks: { session: { create: { after: async session => { await options.db.delete(schema.accountClosures).where(eq(schema.accountClosures.user_id, session.userId)); } } } },
     plugins: [
       // The phone keeps the session token in its secure store and sends it as a bearer token, no cookies.
       bearer(),
