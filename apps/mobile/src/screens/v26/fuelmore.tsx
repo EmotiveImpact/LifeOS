@@ -126,7 +126,7 @@ export function MealplanV26() {
   const tonight = mealWeek.days[ti][2];
   const eat = (name: string, slot: string, key: string) => { flag(key, true); log({ name, items: [{ name, grams: 400, kcal: mealWeek.kcal[slot] ?? 500, protein: slot === 'Breakfast' ? 18 : 34, carbs: 50, fat: 16, fibre: 6, confidence: .7 }], via: 'plan' }); };
   return (
-    <Page screen="mealplan" bar={{ kind: 'push', title: 'This week’s meals', action: { kind: 'icon', icon: 'more', label: 'Preferences and budget', onPress: () => nav.go('fuelgoal') } }}>
+    <Page screen="mealplan" bar={{ kind: 'push', title: 'This week’s meals', action: { kind: 'icon', icon: 'sliders', label: 'Preferences and budget', onPress: () => nav.go('fuelgoal') } }}>
       <SegmentedV26 options={(['Plan', 'Shopping list'] as const).map(v => ({ value: v, label: v }))} value={mode} onChange={v => { setMode(v); feedback.select(); }} />
       {mode === 'Plan' ? <>
         <Statement s={day.hide ? `About {£${mealWeek.cost}} for the week, matched to your plan.` : `About {£${mealWeek.cost}} for the week. Fits {${n(day.target)} kcal} and {${day.targets.protein}g protein}.`} style={{ marginTop: space.lg }} />

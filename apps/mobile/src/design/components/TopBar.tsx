@@ -7,6 +7,7 @@ import { useTokens } from '../theme';
 import { componentSize, palette, radius, space, touch } from '../tokens';
 import { LifeOrb } from './Orb';
 import { RoundButton } from './V26Chrome';
+import { ActionMenu, type MenuItem } from './V26Menu';
 
 /** One fixed bar outside the scroller. On photographs, ALL kinds use paper
  * controls over the actual image, never an opaque light-theme background. */
@@ -14,7 +15,9 @@ export type TopBarAction =
   | { kind: 'icon'; icon: GlyphName; label: string; onPress: () => void; badge?: boolean }
   | { kind: 'text'; label: string; onPress: () => void }
   /** V26: anything small in the bar's right slot (a chip such as "Free 13:40 to 14:00"). */
-  | { kind: 'node'; node: ReactNode };
+  | { kind: 'node'; node: ReactNode }
+  /** Three dots that drop a native menu of two or more actions. A single action never hides behind dots: give it its own icon or words. */
+  | { kind: 'menu'; label: string; items: MenuItem[] };
 /** `look: 'v26'` draws the board's bars (52pt, round 40pt buttons, the orb on root). Leave it unset for the V23 bars. */
 type BarLook = { look?: 'v26' };
 export type TopBarProps = BarLook & (
@@ -125,6 +128,7 @@ function TopBarV26(props: TopBarProps) {
 
 function ActionV26({ action, onImage }: { action: TopBarAction; onImage?: boolean }) {
   if (action.kind === 'node') return <>{action.node}</>;
+  if (action.kind === 'menu') return <ActionMenu items={action.items}>{open => <RoundButton icon="more" label={action.label} onPress={open} onPhoto={onImage} />}</ActionMenu>;
   if (action.kind === 'text') return <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label} hitSlop={10} style={styles.v26Txt}><Text variant="bodyMedium" tone={onImage ? 'paper' : 'ink2'} numberOfLines={1}>{action.label}</Text></Press>;
   return <RoundButton icon={action.icon} label={action.label} onPress={action.onPress} dot={action.badge} onPhoto={onImage} />;
 }
@@ -132,6 +136,7 @@ function ActionV26({ action, onImage }: { action: TopBarAction; onImage?: boolea
 function ActionButton({ action, onImage }: { action: TopBarAction; onImage?: boolean }) {
   const t = useTokens();
   if (action.kind === 'node') return <>{action.node}</>;
+  if (action.kind === 'menu') return <ActionMenu items={action.items}>{open => <ActionButton onImage={onImage} action={{ kind: 'icon', icon: 'more', label: action.label, onPress: open }} />}</ActionMenu>;
   if (action.kind === 'text') return <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label} style={styles.text}><Text variant="callout" tone={onImage ? 'paper' : 'ink'} numberOfLines={1}>{action.label}</Text></Press>;
   return <Press haptic="select" onPress={action.onPress} accessibilityLabel={action.label} style={[styles.icon, { backgroundColor: onImage ? palette.dark.surface : t.surface }]}>
     <Ionicons name={action.icon} size={componentSize.icon} color={onImage ? t.paper : t.ink} />

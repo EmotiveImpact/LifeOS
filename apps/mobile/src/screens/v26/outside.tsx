@@ -425,7 +425,7 @@ export function TopbarsV26() {
       <View pointerEvents="none" style={[styles.overPhoto, { backgroundColor: t.surface2, ...cardShadow(t.scheme) }]}>
         <PhotoFill source={photos.terrace} />
         <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
-        <TopBar look="v26" kind="push" title="Home" onBack={none} onImage action={{ kind: 'icon', icon: 'more', label: 'More', onPress: none }} />
+        <TopBar look="v26" kind="push" title="Home" onBack={none} onImage action={{ kind: 'icon', icon: 'info', label: 'Why these show here', onPress: none }} />
       </View>
       <Callout style={{ marginTop: space.md }}>Never two bars. Never more than one action on a pushed screen. The bar never moves.</Callout>
     </Page>

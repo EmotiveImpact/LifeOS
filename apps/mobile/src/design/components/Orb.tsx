@@ -66,7 +66,7 @@ export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { s
     spin.value += dt / 12000 * Math.PI * 2 * (m === 4 ? 1 - .85 * Math.min(1, elapsed.value / 700) : 1);
     voice.value += ((m === 4 ? .25 + .75 * Math.pow(Math.abs(Math.sin(t * 1.7) * Math.sin(t * .61 + .9)), .6) : 0) - voice.value) * .2;
     const goal = m === 5 && elapsed.value < 450 ? 1 : 0;
-    velocity.value = (velocity.value + (goal - gather.value) * .16 * factor) * Math.pow(.74, factor);
+    velocity.value = (velocity.value + (goal - gather.value) * .16 * factor) * Math.pow(.6, factor);
     gather.value += velocity.value * factor;
     if (m === 3 && t - hopAt.value > .55) {
       hopAt.value = t;

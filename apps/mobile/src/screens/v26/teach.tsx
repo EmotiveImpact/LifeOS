@@ -405,12 +405,12 @@ export function GapsV26() {
 
 export function GotitV26() {
   const nav = useNavigation(), t = useTokens(), { data, set } = useSeed(), insets = useSafeAreaInsets(), drawer = useDrawerPhoto(), calm = useCalmMotion();
-  const scale = useSharedValue(calm ? 1 : 0.86), fade = useSharedValue(0);
+  const scale = useSharedValue(calm ? 1 : 0.95), fade = useSharedValue(0);
   useEffect(() => {
     if (!data.learned.includes('tax-codes')) set({ learned: [...data.learned, 'tax-codes'] });
     feedback.cleared();
     fade.value = withTiming(1, { duration: calm ? 200 : 260 });
-    if (!calm) scale.value = withSpring(1, motion.bouncy);
+    if (!calm) scale.value = withSpring(1, motion.smooth);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const words = useAnimatedStyle(() => ({ opacity: fade.value, transform: [{ scale: scale.value }] }));
   const recallDay = new Date(Date.now() + 3 * 86400000).toLocaleDateString('en-GB', { weekday: 'long' });

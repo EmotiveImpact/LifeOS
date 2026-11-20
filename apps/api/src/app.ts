@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { DeleteBody, FileIdBody, PushBody, SignBody, closeAccount, deleteFile, exportAccount, purgeClosedAccounts, registerPush, sameSecret, signFile, tidyFiles } from './account';
 import type { Auth, Principal } from './auth';
 import type { Db } from './db/client';
 import { devices } from './db/schema';
+import type { Storage } from './storage';
 import { MAX_PULL, MAX_PUSH, forget, forgettable, isTable, pull, push, refusedByPolicy } from './sync';
 
 type Route = (request: Request, principal: Principal) => Promise<Response>;
@@ -39,9 +41,23 @@ function withCors(response: Response, origin: string): Response {
  * `/health` and `/auth/*` are open; every other path needs a session and returns 401 without one, before routing,
  * so an unknown path doesn't reveal what exists.
  */
-export function createApi(options: { db: Db; auth: Auth; now?: () => number; corsOrigins?: string[] }): (request: Request) => Promise<Response> {
-  const { db, auth, now = Date.now } = options;
+export type ApiOptions = {
+  db: Db;
+  auth: Auth;
+  now?: () => number;
+  corsOrigins?: string[];
+  /** R2 or S3 (`src/storage.ts`). Without it, `/files/*` answers 503 and nothing else changes. */
+  storage?: Storage | null;
+  /** Days between "Delete account" and the hard delete. 0 deletes at once. */
+  graceDays?: number;
+  /** The bearer secret the host's scheduler sends to `POST /jobs/sweep`. Without it the route is closed. */
+  jobsSecret?: string;
+};
+
+export function createApi(options: ApiOptions): (request: Request) => Promise<Response> {
+  const { db, auth, now = Date.now, storage = null, graceDays = 30, jobsSecret } = options;
   const cors = new Set(options.corsOrigins ?? []);
+  const readJson = async (request: Request): Promise<unknown> => request.json().catch(() => null);
   const routes: Record<string, Route> = {
     'GET /me': async (_request, principal) => json({ userId: principal.userId }),
     'POST /devices': async (request, principal) => {
@@ -68,6 +84,35 @@ export function createApi(options: { db: Db; auth: Auth; now?: () => number; cor
       const limit = Math.min(MAX_PULL, Math.max(1, Number(params.get('limit')) || MAX_PULL));
       return json(await db.withUser(principal.userId, tx => pull(tx, deviceOf(request), cursor, limit)));
     },
+    'POST /files/sign': async (request, principal) => {
+      if (!storage) return fail(503, 'STORAGE_NOT_CONFIGURED');
+      const parsed = SignBody.safeParse(await readJson(request));
+      if (!parsed.success) return fail(400, 'BAD_REQUEST');
+      // Temporary files nobody came back for go first; a failure here never blocks the person's own request.
+      await tidyFiles(db, storage, principal.userId, now()).catch(error => console.error('file tidy failed', error instanceof Error ? error.message : error));
+      const link = await signFile(db, storage, principal.userId, parsed.data, now());
+      return link ? json(link, parsed.data.action === 'upload' ? 201 : 200) : fail(404, 'NOT_FOUND');
+    },
+    'POST /files/delete': async (request, principal) => {
+      if (!storage) return fail(503, 'STORAGE_NOT_CONFIGURED');
+      const parsed = FileIdBody.safeParse(await readJson(request));
+      if (!parsed.success) return fail(400, 'BAD_REQUEST');
+      return await deleteFile(db, storage, principal.userId, parsed.data.id) ? json({ deleted: true }) : fail(404, 'NOT_FOUND');
+    },
+    'POST /push/register': async (request, principal) => {
+      const parsed = PushBody.safeParse(await readJson(request));
+      if (!parsed.success) return fail(400, 'BAD_REQUEST');
+      return await registerPush(db, principal.userId, parsed.data) ? json({ device: parsed.data.device }) : fail(404, 'DEVICE_NOT_FOUND');
+    },
+    'GET /account/export': async (_request, principal) => {
+      const at = now(), response = json(await exportAccount(db, principal.userId, at));
+      response.headers.set('content-disposition', `attachment; filename="life-export-${new Date(at).toISOString().slice(0, 10)}.json"`);
+      return response;
+    },
+    'POST /account/delete': async (request, principal) => {
+      if (!DeleteBody.safeParse(await readJson(request)).success) return fail(400, 'CONFIRM_REQUIRED');
+      return json(await closeAccount(db, storage, principal.userId, now(), graceDays));
+    },
     'POST /sync/forget': async (request, principal) => {
       const parsed = ForgetBody.safeParse(await request.json().catch(() => null));
       if (!parsed.success || !isTable(parsed.data.table) || !forgettable.has(parsed.data.table)) return fail(400, 'BAD_REQUEST');
@@ -80,6 +125,12 @@ export function createApi(options: { db: Db; auth: Auth; now?: () => number; cor
     try {
       if (pathname === '/health') return request.method === 'GET' ? json({ ok: true, at: new Date(now()).toISOString() }) : fail(405, 'METHOD_NOT_ALLOWED');
       if (pathname === '/auth' || pathname.startsWith('/auth/')) return await auth.handler(request);
+      // The host's scheduler, with its own secret: deletes accounts whose grace period has ended.
+      if (pathname === '/jobs/sweep' && request.method === 'POST') {
+        const given = /^Bearer (.+)$/.exec(request.headers.get('authorization') ?? '')?.[1];
+        if (!jobsSecret || !given || !sameSecret(given, jobsSecret)) return fail(401, 'UNAUTHENTICATED');
+        return json(await purgeClosedAccounts(db, storage, now()));
+      }
       const principal = await auth.getPrincipal(request);
       if (!principal) return fail(401, 'UNAUTHENTICATED');
       const route = routes[`${request.method} ${pathname}`];

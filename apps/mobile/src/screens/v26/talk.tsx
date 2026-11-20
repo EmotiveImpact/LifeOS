@@ -136,7 +136,7 @@ export function TalkV26() {
       bottom={bottom}
       footer={phase === 'listening' ? <View style={{ alignItems: 'center', gap: space.tile }}>
         <View style={styles.controls}>
-          <RoundButton icon="more" label="Type instead" onPress={() => nav.replace('chat')} />
+          <RoundButton icon="keyboard" label="Type instead" onPress={() => nav.replace('chat')} />
           <RoundButton icon="stop" size="xl" solid label="Stop and review" haptic="primary" onPress={() => { void review(); }} />
           <RoundButton icon={paused ? 'play' : 'pause'} label={paused ? 'Carry on' : 'Pause'} onPress={() => setPaused(p => !p)} />
         </View>
@@ -169,7 +169,7 @@ function AreaTile({ area, name, count, text, hitKey }: { area: Area; name: strin
   useEffect(() => {
     if (hitKey < 0) return;
     if (calm) { ink.value = withSequence(withTiming(1, { duration: 120 }), withDelay(700, withTiming(0, { duration: 200 }))); return; }
-    scale.value = withSequence(withSpring(1.05, motion.bouncy), withDelay(600, withSpring(1, motion.snappy)));
+    scale.value = withSequence(withSpring(1.03, motion.snappy), withDelay(600, withSpring(1, motion.smooth)));
     ink.value = withSequence(withTiming(1, { duration: 180 }), withDelay(620, withTiming(0, { duration: 250 })));
   }, [hitKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const box = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -408,7 +408,7 @@ export function ChatV26() {
     </Press>
   );
   return (
-    <Page screen="chat" bar={{ kind: 'push', titleNode: title, close: true, action: { kind: 'icon', icon: 'more', label: 'Your conversations', onPress: () => nav.go('chathistory') } }}
+    <Page screen="chat" bar={{ kind: 'push', titleNode: title, close: true, action: { kind: 'icon', icon: 'clock', label: 'Your conversations', onPress: () => nav.go('chathistory') } }}
       footer={<>
         <ConversationAttachments attachments={conversation.current?.attachments ?? []} onRemove={async attachment => {
           try { await removeAttachmentCopy(attachment); conversation.declineNetwork(); update(s => ({ ...s, brain: { ...s.brain, conversations: s.brain.conversations.map(c => c.id === conversation.current?.id ? { ...c, attachments: c.attachments.filter(f => f.id !== attachment.id) } : c) } })); }

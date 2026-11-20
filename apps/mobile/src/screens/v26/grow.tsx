@@ -124,11 +124,11 @@ export function LevelupV26() {
     ...levelupMore.map(m => ({ ...m, line: m.line.replace('DEPOSIT', String(pct)) })),
   ];
   const p = pages[page], last = page === pages.length - 1;
-  const scale = useSharedValue(calm ? 1 : 0.6), fade = useSharedValue(0);
+  const scale = useSharedValue(calm ? 1 : 0.92), fade = useSharedValue(0);
   useEffect(() => {
     if (page === 0) feedback.cleared();
     fade.value = 0; fade.value = withTiming(1, { duration: calm ? 200 : 320 });
-    scale.value = calm ? 1 : 0.6; if (!calm) scale.value = withSpring(1, motion.bouncy);
+    scale.value = calm ? 1 : 0.92; if (!calm) scale.value = withSpring(1, motion.smooth);
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
   const orb = useAnimatedStyle(() => ({ opacity: fade.value, transform: [{ scale: scale.value }] }));
   const words = useAnimatedStyle(() => ({ opacity: fade.value }));

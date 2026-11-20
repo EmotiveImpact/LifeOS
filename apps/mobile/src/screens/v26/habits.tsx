@@ -158,7 +158,6 @@ export function HabitnewV26() {
 
 export function StrengthV26() {
   const nav = useNavigation(), { data, set, choose, flag } = useSeed();
-  const [menu, setMenu] = useState(false);
   const real = data.habits.find(x => x.id === data.choices.habit);
   const s = strengthSample;
   const doneToday = real ? !!real.last14[13] : !!data.flags['walk-done-today'];
@@ -190,14 +189,11 @@ export function StrengthV26() {
   const left = typical - day;
   const noun = real ? 'it' : 'today’s walk';
   return (
-    <Page screen="strength" bar={{ kind: 'push', title: '', action: { kind: 'icon', icon: 'more', label: 'More', onPress: () => setMenu(!menu) } }}
+    <Page screen="strength" bar={{ kind: 'push', title: '', action: { kind: 'menu', label: 'Habit actions', items: [
+      { label: 'It feels automatic now', sub: 'Make it a routine and free a slot', icon: 'check', onPress: () => { flag(`graduated-${real?.id ?? 'walk'}`, true); feedback.complete(); } },
+      ...(real ? [{ label: 'Stop this habit', sub: 'Its history stays in your export', icon: 'trash' as const, destructive: true, onPress: () => { set({ habits: data.habits.filter(x => x.id !== real.id) }); nav.close(); } }] : []),
+    ] } }}
       footer={<Btn label={doneToday ? 'Done today · undo' : 'Done today'} icon={doneToday ? undefined : 'check'} ghost={doneToday} onPress={toggle} />}>
-      {menu ? (
-        <RowsCard style={{ marginBottom: space.lg }}>
-          <Row icon="check" title="It feels automatic now" sub="Graduate it to a routine and free a slot" onPress={() => { flag(`graduated-${real?.id ?? 'walk'}`, true); setMenu(false); feedback.complete(); }} />
-          {real ? <Row icon="trash" title="Stop this habit" sub="Its history stays in your export" onPress={() => { set({ habits: data.habits.filter(x => x.id !== real.id) }); nav.close(); }} /> : null}
-        </RowsCard>
-      ) : null}
       <Eyebrow>{`${name} · ${cue.charAt(0).toLowerCase() + cue.slice(1)}`}</Eyebrow>
       <Display s={day >= typical ? `Day {${day}}. Past the usual {${typical} days}.` : `Day {${day}} of about {${typical}}. ${day / typical >= 0.5 ? 'It’s becoming automatic.' : 'Early days, and that’s normal.'}`} />
       <Box style={{ marginTop: space.xl }}>
