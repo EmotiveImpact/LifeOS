@@ -316,7 +316,7 @@ export function TellbackV26() {
     if (!text) return;
     draft('tax-explanation', text); choose('tellback-seconds', String(seconds));
     setThinking(true); feedback.brief();
-    try { await ai.analyse(text); } catch { /* the local check below still runs */ }
+    try { if ((await ai.analyse(text)).support) { setThinking(false); nav.replace('support'); return; } } catch { /* the local check below still runs */ }
   };
   useEffect(() => {
     if (!thinking || params.state === 'done') return;

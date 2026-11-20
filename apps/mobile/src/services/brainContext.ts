@@ -14,9 +14,11 @@ export function brainContext(data: SeedData): Context {
     { id: 'income.taxReserveMonthly', label: 'Estimated monthly tax reserve', value: money(income.taxReserveMonthly), source: incomeSource },
     { id: 'life.score', label: 'Life engine score', value: String(computeLifeScore(data.profile, data.completed).total), source: { id: 'engine:score', label: 'Life engine · saved profile and completed tasks', kind: 'engine', sample: true } },
   ];
-  for (const record of data.records.filter(record => record.status === 'confirmed')) facts.push({ id: `record:${record.id}`, label: record.label, value: record.label, source: { id: `record:${record.id}`, label: `${confirmed.has(record.id) ? 'Confirmed' : 'Sample'} · ${record.source.type}`, kind: 'record', at: record.source.at, sample: !confirmed.has(record.id) } });
+  // Health records and Body memories are marked so they only leave the phone
+  // under consent that names health (packages/brain/src/consent.ts).
+  for (const record of data.records.filter(record => record.status === 'confirmed')) facts.push({ id: `record:${record.id}`, label: record.label, value: record.label, ...(record.area === 'health' ? { sensitivity: 'health' as const } : {}), source: { id: `record:${record.id}`, label: `${confirmed.has(record.id) ? 'Confirmed' : 'Sample'} · ${record.source.type}`, kind: 'record', at: record.source.at, sample: !confirmed.has(record.id) } });
   const liveRecords = new Set(data.records.filter(record => record.status === 'confirmed').map(record => record.id));
-  const memories: Memory[] = data.memories.filter(memory => !data.flags[`forgot-${memory.id}`] && (!memory.recordId || liveRecords.has(memory.recordId))).map(memory => ({ id: memory.id, text: memory.text, recordId: memory.recordId, source: { id: `memory:${memory.id}`, kind: 'memory', label: memory.source, sample: !memory.recordId && ['rent', 'kofi', 'aim'].includes(memory.id) } }));
+  const memories: Memory[] = data.memories.filter(memory => !data.flags[`forgot-${memory.id}`] && (!memory.recordId || liveRecords.has(memory.recordId))).map(memory => ({ id: memory.id, text: memory.text, recordId: memory.recordId, ...(memory.category === 'Body' ? { sensitivity: 'health' as const } : {}), source: { id: `memory:${memory.id}`, kind: 'memory', label: memory.source, sample: !memory.recordId && ['rent', 'kofi', 'aim'].includes(memory.id) } }));
   // Values remain engine-owned. Do not infer deadlines or readiness from a
   // fixture, and do not claim a contextual bandit is already learning.
   const rank = { urgent: 0, high: 1, recommended: 2 };

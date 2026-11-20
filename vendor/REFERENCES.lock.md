@@ -43,6 +43,10 @@ These packages are specified by `SYSTEM_DESIGN.md` §2. The Expo versions match 
 | `expo-dev-client` | `58.0.21` | MIT | `sha512-W1ZWddy0p64Z8j8FNOU4bCRDhbU8b5Gt7yZRouiw7bkyCfY5T3yODKTOLCVuhjbs3Oy3aUH6kLdn0i6hXozhqA==` |
 | `drizzle-orm` | `0.45.4` | Apache-2.0 | `sha512-NiM1YZpJ2UxyeE67DpDDZ+Tsw4YLX3trSlkNT7Tm9eKoUNb1LvaAaQzXgYQsWs+AQ9TUmmwMmBOCXuqqxUWKKQ==` |
 
+## Release plumbing pins (20 Nov 2026)
+- `expo-updates@58.0.22` (MIT), the version SDK 58's `bundledNativeModules.json` expects, for over-the-air updates. npm integrity `sha512-ceGlQ+C1fKX+cOEd4tg+/IP0YNdPrRYBScLUoNaV5f9ABEUypsWNTfruFDkBeKv1YdbDLdGahyXhDk2B8Fa+Zg==`.
+- CI installs `bun@1.4.4` from npm (the version the tests were written against) and uses the same SHA-pinned `actions/checkout` and `actions/setup-node` as the TestFlight workflow.
+
 ## Brain / attachment package pins (16 Nov 2026)
 - Expo SDK 58 pins: `expo-asset@58.0.21`, `expo-document-picker@58.0.5`, `expo-image-picker@58.0.10`, `expo-file-system@58.0.14` (MIT). npm integrity: `apps/mobile/package-lock.json`.
 - Android OCR: `com.google.mlkit:text-recognition:16.0.1`, bundled Latin recognition under Google's ML Kit SDK terms, as specified in SPEC §2.2. This is a binary SDK dependency, not copied reference source.

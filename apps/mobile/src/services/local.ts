@@ -1,6 +1,6 @@
 import type { FiledRecord, MealItem } from '@/state/seed';
 import { seedMeal } from '@/state/seed';
-import { extractStatements } from '@life/brain';
+import { screenWords } from '@life/brain';
 import { proposalRecord } from './brainState';
 /** Remaining Track A integration stubs. Conversation filing is now real and
  * conservative; no shared canned record set or fake voice transcript. */
@@ -14,4 +14,4 @@ export const food: FoodService = { readPhoto: async () => local(seedMeal) };
 export interface AuthService { signIn(provider: 'apple' | 'google' | 'email'): Promise<LocalResult<{ name: string }>>; }
 export const auth: AuthService = { signIn: async () => local({ name: 'Ama' }) };
 export interface RecordRepository { propose(text: string): Promise<{ data: FiledRecord[]; mode: 'rules' }>; }
-export const records: RecordRepository = { propose: async text => ({ data: extractStatements(text).map(proposal => proposalRecord(proposal, 'talk')), mode: 'rules' }) };
+export const records: RecordRepository = { propose: async text => ({ data: screenWords(text).proposals.map(proposal => proposalRecord(proposal, 'talk')), mode: 'rules' }) };

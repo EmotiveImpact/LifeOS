@@ -1,13 +1,17 @@
 import type { Proposal } from './types.ts';
+import { extractRecords, type Add } from './proposals.ts';
+import { detectCrisis, supportResponse, type CrisisSignal, type SupportReply } from './safety.ts';
 
-/** Conservative offline extraction. Only explicit first-person statements; no
- * keyword-to-profile mutations, hypothetical facts, or fabricated seed records. */
+/** Conservative offline extraction. Only explicit statements; no
+ * keyword-to-profile mutations, hypothetical facts, or fabricated seed records.
+ * Profile facts, goals and notes here; bills, subscriptions, dates, people,
+ * documents and appointments in proposals.ts. */
 export function extractStatements(text: string): Proposal[] {
   const proposals: Proposal[] = [];
-  const add = (field: Proposal['field'], area: Proposal['area'], label: string, quote: string, value: Proposal['value']) => {
-    const id = field === 'note' ? `note-${hash(quote.toLowerCase())}` : `profile-${field}`;
+  const add: Add = (field, area, label, quote, value, details, given) => {
+    const id = given ?? (field === 'note' ? `note-${hash(quote.toLowerCase())}` : `profile-${field}`);
     const at = proposals.findIndex(p => p.id === id);
-    const proposal = { id, field, area, label, quote: quote.trim(), value };
+    const proposal: Proposal = details ? { id, field, area, label, quote: quote.trim(), value, details } : { id, field, area, label, quote: quote.trim(), value };
     if (at >= 0) proposals[at] = proposal; else proposals.push(proposal);
   };
   for (const raw of text.split(/(?<=[.!?\n])\s+|\n+/)) {
@@ -37,9 +41,17 @@ export function extractStatements(text: string): Proposal[] {
       const amount = Number(m[1].replace(/,/g, '')); if (amount > 0 && amount <= 1e6) add('rent', 'money', 'Monthly rent', raw, amount);
     }
     if (/\bi want to buy (?:my (?:first |own )?|a )(?:home|house|flat|place)\b/i.test(clause)) add('goal', 'goal', 'Buy a home', raw, 'buy-home');
+    extractRecords(clause, raw, add, hash);
     const note = raw.match(/^\s*(?:please\s+)?remember(?:\s+that)?\s+(.+?)[.!]?\s*$/i);
     if (note?.[1].trim()) add('note', 'you', note[1].trim(), raw, note[1].trim());
   }
   return proposals;
 }
 export function hash(text: string): string { let value = 2166136261; for (let i = 0; i < text.length; i++) value = Math.imul(value ^ text.charCodeAt(i), 16777619); return (value >>> 0).toString(16); }
+
+/** Talk's entry point: the crisis check first, then filing. Words in distress
+ * file nothing and carry the support reply instead. */
+export function screenWords(text: string): { crisis: CrisisSignal | null; support: SupportReply | null; proposals: Proposal[] } {
+  const crisis = detectCrisis(text);
+  return crisis ? { crisis, support: supportResponse(crisis), proposals: [] } : { crisis: null, support: null, proposals: extractStatements(text) };
+}
