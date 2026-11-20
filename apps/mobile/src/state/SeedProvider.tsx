@@ -11,6 +11,7 @@ import type { QueuedAi } from '@/services/aiQueue';
 import { emptyHealth, type HealthState } from '@/services/health/ingest';
 import type { UserProfile } from '@life/core/types';
 import { emptyBrainState, type BrainState } from '@life/brain';
+import { emptyLoops, type LoopsState } from '@life/core';
 import { confirmBrainRecords } from '@/services/brainState';
 import { currentTransport } from '@/services/syncTransport';
 
@@ -28,6 +29,8 @@ export type SeedData = {
   health: HealthState;
   prefs: { dark: boolean; sounds: boolean; haptics: boolean; handDrawn: boolean; hideNumbers: boolean; hideBalances: boolean; glimpses: boolean; followMood: boolean; look: 'mix' | 'places'; notifications: boolean; privateMode: boolean; addback: 'None' | 'Half' | 'All'; /** Small icons beside key words in sentences; off shows words only. */ sentenceIcons: boolean };
   flags: Record<string, boolean>; choices: Record<string, string>; drafts: Record<string, string>;
+  /** The three core loops: plans by day, step ticks, check-in style and what counts as a win (`state/loops.ts`). */
+  loops: LoopsState;
 };
 const initial: SeedData = {
   brain: emptyBrainState(),
@@ -37,7 +40,7 @@ const initial: SeedData = {
   health: emptyHealth(),
   memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov', category: 'Money' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov', category: 'People' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov', category: 'Money' }],
   prefs: { dark: true, sounds: true, haptics: true, handDrawn: false, hideNumbers: false, hideBalances: false, glimpses: true, followMood: true, look: 'mix', notifications: true, privateMode: false, addback: 'Half', sentenceIcons: true },
-  flags: {}, choices: {}, drafts: {},
+  flags: {}, choices: {}, drafts: {}, loops: emptyLoops(),
 };
 type SeedContextValue = {
   data: SeedData; hydrated: boolean; storageError: boolean; storageMode: ProjectionStorage['mode'] | null;

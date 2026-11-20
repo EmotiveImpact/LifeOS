@@ -94,6 +94,18 @@ describe('local SQLite repositories', () => {
     await store.commitProjection(loaded);
     expect((await store.loadProjection<any>()).memories).toHaveLength(1);
   });
+  test('keeps the core loops (plans, ticks, check-in style) through a save and a reopen, and queues them to sync', async () => {
+    const { store, adapter } = await fixture(); await store.importLegacyOnce(projection());
+    const loops = {
+      plans: { '2026-11-21': { items: [{ id: 'own:a', text: 'Protect time to edit', own: true, steps: [] }, { id: 'starter:paperwork', text: 'Get my paperwork ready', own: false, area: 'admin', steps: [{ key: 'starter:paperwork:gather', title: 'Gather two documents', minutes: 10 }] }], savedAt: '2026-11-20T22:00:00.000Z' } },
+      skipped: {}, marks: { 'starter:paperwork:gather': { state: 'started', at: '2026-11-21T09:00:00.000Z', title: 'Gather two documents', priority: 'Get my paperwork ready', area: 'admin' } },
+      checkIn: 'noticed', wins: ['admin'],
+    };
+    await store.commitProjection({ ...await store.loadProjection<any>(), loops });
+    const reopened = await new LifeDataStore(adapter, 'owner').initialise();
+    expect((await reopened.loadProjection<any>()).loops).toEqual(loops);
+    expect(JSON.stringify(await reopened.pending())).toContain('Protect time to edit');
+  });
   test('subsequent commits update domain rows and retain unrelated health samples', async () => {
     const { store } = await fixture(); await store.importLegacyOnce(projection());
     await store.repos.health_sample.put({ type: 'steps', start: '2026-11-16', value: 1234 });
