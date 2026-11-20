@@ -44,7 +44,7 @@ export function PlanV26() {
   const openMission = (id: string) => { set({ selectedMission: id }); nav.go('mission'); };
   const done = (id: string) => data.completed.includes(id);
   const ready = [
-    !done('uk-hmrc-tax-code') ? <Row key="tax" icon="doc" title="Check your tax code" sub="Start with your payslip · 4 min" onPress={() => nav.go('taxcheck')} /> : null,
+    !done('uk-hmrc-tax-code') ? <Row key="tax" icon="doc" title="Check your tax code" sub="Start with your payslip · 4 min" onPress={() => nav.go('taxcheck', { state: 'code' })} /> : null,
     <Row key="cash" icon="wallet" title="Set your cash plan" sub="Know what the month needs" onPress={() => nav.go('cashplan')} />,
     habit ? <Row key="habit" icon="walk" title={habit.name} sub={`Day ${habit.day} of about 66`} onPress={() => nav.go('habits')} /> : null,
   ].filter(Boolean);

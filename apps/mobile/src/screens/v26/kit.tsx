@@ -253,13 +253,15 @@ export type PageProps = {
   center?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
   onPull?: () => void;
+  /** Dark status bar text over a light photograph (board `status('lt-ink')`). */
+  statusInk?: boolean;
 };
 
 /**
  * One V26 screen: the bar fixed outside the scroll, content with the board's 4/20/28 padding and no automatic gaps
  * (each block sets its own space above, as the board does), then the foot.
  */
-export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, onPull }: PageProps) {
+export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, onPull, statusInk }: PageProps) {
   const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets();
   const meta = screens[screen];
   const close = onClose ?? nav.close;
@@ -267,7 +269,7 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
   const b: Bar = bar ?? (meta.kind === 'Tab' ? { kind: 'root', title: meta.title } : sheet ? { kind: 'sheet' } : meta.kind === 'Full screen' ? { kind: 'push', close: true } : { kind: 'push' });
   const onPhoto = !!backdrop;
   const bg = sheet ? t.surface : t.canvas;
-  const statusBarStyle = onPhoto || t.scheme === 'dark' ? 'light' : 'dark';
+  const statusBarStyle = statusInk ? 'dark' : onPhoto || t.scheme === 'dark' ? 'light' : 'dark';
   // A sheet is only as tall as what's in it (Edem, 20 Nov): a photograph-led sheet draws its own drawer instead.
   const fits = sheet && !backdrop && scroll && !center;
   const fit = useSheetFit(fits);

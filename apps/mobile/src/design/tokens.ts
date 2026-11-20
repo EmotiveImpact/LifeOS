@@ -135,6 +135,8 @@ export const type = {
   /** V26: the two-tone briefing. Medium weight; bright words in `ink`, the rest in `ink2` (use `TwoTone size="display"`). */
   display: { fontFamily: fonts.sansMedium, fontSize: 34, lineHeight: 39, letterSpacing: -1.1 },
   welcome: { fontFamily: fonts.sansSemibold, fontSize: 46, lineHeight: 48, letterSpacing: -2.07 },
+  /** V26: a lesson's huge title (board `HUGE`, 44/48): "So, in short", "You’ve got it." */
+  huge: { fontFamily: fonts.sansSemibold, fontSize: 44, lineHeight: 48, letterSpacing: -1.32 },
   welcomeStatement: { fontFamily: fonts.sansMedium, fontSize: 21, lineHeight: 28, letterSpacing: -0.35 },
   titleSerif: { fontFamily: fonts.sansSemibold, fontSize: 30, lineHeight: 34, letterSpacing: -0.9 },
   statement: { fontFamily: fonts.sansMedium, fontSize: 24, lineHeight: 31, letterSpacing: -0.53 },

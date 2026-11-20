@@ -33,7 +33,7 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
 | [x] | `today` | Today (home) **V26** | Tab | tab bar | `/(tabs)/today` |
-| [x] | `nudge` | Nudge **V26** | Card / notification | Today or Lock Screen | component on Today / anywhere |
+| [x] | `nudge` | Nudge **V26** | Card / notification | Today or Lock Screen | the Tax check (`taxcheck?state=code`) and Talk |
 | [x] | `pulse` | Pulse **V26** | Sheet | Today check-in | `/(sheets)/pulse` · formSheet |
 | [x] | `checkin` | Checking in **V26** | Sheet | Today | `/(sheets)/checkin` · formSheet |
 | [x] | `customise` | Customise Today **V26** | Sheet | Today → edit | `/(sheets)/customise` · formSheet |
@@ -156,7 +156,7 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 | [x] | `bmi` | BMI and waist, explained **V26** | Push | Body numbers → BMI | `/plan/body/bmi` |
 | [x] | `strain` | Today’s target load **V26** | Push | Body → Load | `/plan/body/strain` |
 | [x] | `zones` | Your heart-rate zones **V26** | Push | Load → Zones | `/plan/body/zones` |
-| [x] | `illness` | Something may be coming on **V26** | Card / push | Today, when signals rise | component on Today / anywhere |
+| [x] | `illness` | Something may be coming on **V26** | Card / push | Today, when signals rise | the Tax check (`taxcheck?state=code`) and Talk |
 | [x] | `breathlib` | Breathing library **V26** | Push | Body → Breathe | `/plan/body/breathlib` |
 | [x] | `provenance` | Where this number came from **V26** | Sheet | tap any score | `/(sheets)/provenance` · formSheet |
 | [x] | `regularity` | Sleep regularity **V26** | Push | Sleep → Regularity | `/plan/body/regularity` |
@@ -208,32 +208,32 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `library` | Learn | Push | Plan → Learn | `/plan/learn/library` |
-| [x] | `lens` | A lens | Push | Learn → a lens | `/plan/learn/lens` |
-| [x] | `idea` | An idea, in 60 seconds | Full screen | Learn or Today | `/(flows)/idea` · fullScreenModal |
-| [x] | `lensask` | Ask through a lens | Full screen | a lens → Ask | `/(flows)/lensask` · fullScreenModal |
-| [x] | `recall` | Quick recall | Sheet | Today, when due | `/(sheets)/recall` · formSheet |
-| [x] | `learning` | Ideas into action | Push | Learn → Into action | `/plan/learn/learning` |
-| [x] | `teach` | Teach it back | Full screen | end of an idea | `/(flows)/teach` · fullScreenModal |
-| [x] | `hill` | Lens: definiteness of purpose | Push | Learn or Aim | `/plan/learn/hill` |
-| [x] | `learned` | What you’ve learned | Push | Learn → What you’ve learned | `/plan/learn/learned` |
-| [x] | `drawkit` | Pictures that teach | Push | Learn → Pictures | `/plan/learn/drawkit` |
+| [x] | `library` | Learn **V26** | Push | Plan → Learn | `/plan/learn/library` |
+| [x] | `lens` | A lens **V26** | Push | Learn → a lens | `/plan/learn/lens` |
+| [x] | `idea` | An idea, in 60 seconds **V26** | Full screen | Learn or Today | `/(flows)/idea` · fullScreenModal |
+| [x] | `lensask` | Ask through a lens **V26** | Full screen | a lens → Ask | `/(flows)/lensask` · fullScreenModal |
+| [x] | `recall` | Quick recall **V26** | Sheet | Today, when due | `/(sheets)/recall` · formSheet |
+| [x] | `learning` | Ideas into action **V26** | Push | Learn → Into action | `/plan/learn/learning` |
+| [x] | `teach` | Teach it back **V26** | Full screen | end of an idea | `/(flows)/teach` · fullScreenModal |
+| [x] | `hill` | Lens: definiteness of purpose **V26** | Push | Learn or Aim | `/plan/learn/hill` |
+| [x] | `learned` | What you’ve learned **V26** | Push | Learn → What you’ve learned | `/plan/learn/learned` |
+| [x] | `drawkit` | Pictures that teach **V26** | Push | Learn → Pictures | `/plan/learn/drawkit` |
 
 ## Teach me (11)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `teachoffer` | Teach me, right where it’s needed | Button | anywhere a new term appears | component on Today / anywhere |
-| [x] | `lessonready` | Your lesson, ready | Full screen | Teach me | `/(flows)/teach/lessonready` · fullScreenModal |
-| [x] | `bite` | A bite: one idea, one picture | Full screen | lesson | `/(flows)/teach/bite` · fullScreenModal |
-| [x] | `predict` | Guess first, then see | Full screen | lesson | `/(flows)/teach/predict` · fullScreenModal |
-| [x] | `puzzle` | One quick puzzle | Full screen | lesson | `/(flows)/teach/puzzle` · fullScreenModal |
-| [x] | `lessonrecap` | The whole idea, in three lines | Full screen | lesson | `/(flows)/teach/lessonrecap` · fullScreenModal |
-| [x] | `tellback` | Tell it back to life | Full screen | lesson | `/(flows)/teach/tellback` · fullScreenModal |
-| [x] | `gaps` | What you got, and the one gap | Full screen | after telling back | `/(flows)/teach/gaps` · fullScreenModal |
-| [x] | `gotit` | You’ve got it | Full screen | end of lesson | `/(flows)/teach/gotit` · fullScreenModal |
-| [x] | `teachplay` | Play the whole lesson | Prototype | the whole flow | reference only |
-| [x] | `bitedrawn` | A bite, drawn live | Full screen | lesson | `/(flows)/teach/bitedrawn` · fullScreenModal |
+| [x] | `teachoffer` | Teach me, right where it’s needed **V26** | Button | anywhere a new term appears | the Tax check (`taxcheck?state=code`) and Talk |
+| [x] | `lessonready` | Your lesson, ready **V26** | Full screen | Teach me | `/(flows)/teach/lessonready` · fullScreenModal |
+| [x] | `bite` | A bite: one idea, one picture **V26** | Full screen | lesson | `/(flows)/teach/bite` · fullScreenModal |
+| [x] | `predict` | Guess first, then see **V26** | Full screen | lesson | `/(flows)/teach/predict` · fullScreenModal |
+| [x] | `puzzle` | One quick puzzle **V26** | Full screen | lesson | `/(flows)/teach/puzzle` · fullScreenModal |
+| [x] | `lessonrecap` | The whole idea, in three lines **V26** | Full screen | lesson | `/(flows)/teach/lessonrecap` · fullScreenModal |
+| [x] | `tellback` | Tell it back to life **V26** | Full screen | lesson | `/(flows)/teach/tellback` · fullScreenModal |
+| [x] | `gaps` | What you got, and the one gap **V26** | Full screen | after telling back | `/(flows)/teach/gaps` · fullScreenModal |
+| [x] | `gotit` | You’ve got it **V26** | Full screen | end of lesson | `/(flows)/teach/gotit` · fullScreenModal |
+| [x] | `teachplay` | Play the whole lesson **V26** | Prototype | the whole flow | reference only |
+| [x] | `bitedrawn` | A bite, drawn live **V26** | Full screen | lesson | `/(flows)/teach/bitedrawn` · fullScreenModal |
 
 ## Tab 3 · You (10)
 
@@ -268,7 +268,7 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 | [x] | `people` | Your people | Push | You → People | `/you/people/people` |
 | [x] | `person` | A person | Push | People → a person | `/you/people/person` |
 | [x] | `addperson` | Add people from contacts | Sheet | People → + | `/(sheets)/addperson` · formSheet |
-| [x] | `birthdaynudge` | A birthday, on Today | Card | Today, 4 days before | component on Today / anywhere |
+| [x] | `birthdaynudge` | A birthday, on Today | Card | Today, 4 days before | the Tax check (`taxcheck?state=code`) and Talk |
 | [x] | `dates` | Important dates | Push | People → Dates | `/you/people/dates` |
 
 ## You · Settings and account (14)
