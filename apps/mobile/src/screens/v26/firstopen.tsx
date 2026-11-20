@@ -28,6 +28,8 @@ import { typesAllowed } from '@/services/health/mapping';
 import { readHealthNow } from '@/services/health/useHealthRunner';
 import { problemWords, sendCode, signInWith, verifyCode } from '@/services/account';
 import { voice } from '@/services/voice';
+import { askNotifications, notificationsSupported } from '@/services/notifications';
+import { askCalendar, calendarSupported } from '@/services/calendar';
 import {
   CHILDLINE, CITIES, DESTINATIONS, HEALTH_TYPES, TELL_TOPICS, WORK, birthDate, birthDateProblem, longDate, needsSupport, nextAfterConsent, planFound, useAgeCheck,
   useHealthConsent, type HealthType,
@@ -403,17 +405,24 @@ export function HealthprimerV26() {
 /* ───────────────────────── One nudge a day, at most ───────────────────────── */
 
 export function NotifprimerV26() {
-  const nav = useNavigation(), t = useTokens(), { data, pref, flag } = useSeed();
+  const nav = useNavigation(), t = useTokens(), { data, pref, flag, choose } = useSeed();
   const quiet = !data.flags['quiet-hours-off'], deadlines = !data.flags['notification-off-deadlines'];
   const next = () => { if (data.onboardingDone) nav.close(); else nav.go('aimnew'); };
+  // On a phone the system asks next (Phase 29). Saying no there is remembered, and Settings shows how to turn them on.
+  const turnOn = async () => {
+    pref('notifications', true); feedback.primary();
+    if (notificationsSupported) { const ok = await askNotifications(); choose('notification-permission', ok ? 'granted' : 'declined'); choose('notification-asked', String(Date.now())); }
+    next();
+  };
+  const example = SHOW_SAMPLES ? `You’ve got 20 free minutes. Finish the P87 and ${money(seedTaxClaim.refund)} starts moving.` : 'You’ve got 20 free minutes. Finish the P87 fits.';
   return (
-    <Page screen="notifprimer" footer={<><Btn label="Turn on nudges" onPress={() => { pref('notifications', true); feedback.primary(); next(); }} /><QuietLink label="Not now" onPress={() => { pref('notifications', false); next(); }} /></>}>
+    <Page screen="notifprimer" footer={<><Btn label="Turn on nudges" onPress={() => { void turnOn(); }} /><QuietLink label="Not now" onPress={() => { pref('notifications', false); next(); }} /></>}>
       <View style={[styles.nudgePhoto, { backgroundColor: t.surface2, ...cardShadow(t.scheme) }]}>
         <PhotoFill source={photos.calmdesk} focal={{ y: 0.7 }} />
         <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
         <View style={[styles.nudgeCard, { backgroundColor: t.surface, ...floatLift(t.scheme) }]}>
           <Between><View style={styles.inline}><LifeOrb size={20} /><Text variant="buttonCompact">Life</Text></View><Callout>now</Callout></Between>
-          <Text variant="body" style={{ marginTop: 6 }}>{`You’ve got 20 free minutes. Finish the P87 and ${money(seedTaxClaim.refund)} starts moving.`}</Text>
+          <Text variant="body" style={{ marginTop: 6 }}>{example}</Text>
         </View>
         <Text variant="callout" style={{ color: photo.onPhoto2 }}>An example nudge</Text>
       </View>
@@ -526,10 +535,20 @@ export function Corners({ inset = 28, bottom = 76, top = 8 }: { inset?: number; 
 
 export function CalprimerV26() {
   const nav = useNavigation(), t = useTokens(), { flag, choose } = useSeed();
-  const params = useLocalSearchParams<{ next?: string }>();
   const busy = <View style={[styles.busy, { backgroundColor: t.surface2 }]}><Text variant="label" tone="ink2">Busy</Text></View>;
+  // On a phone the system asks next, read only (Phase 29). The web preview keeps the board's sample day.
+  const allow = async () => {
+    feedback.primary();
+    if (calendarSupported) {
+      const ok = await askCalendar();
+      choose('calendar-permission', ok ? 'granted' : 'declined');
+      if (!ok) { nav.close(); return; }
+    }
+    flag('calendar-preview', true);
+    nav.replace('calendar');
+  };
   return (
-    <Page screen="calprimer" footer={<><Btn label="Allow calendar access" onPress={() => { flag('calendar-preview', true); feedback.primary(); nav.replace(params.next === 'calendar' || !params.next ? 'calendar' : 'calendar'); }} /><QuietLink label="Not now" onPress={() => { choose('calendar-permission', 'declined'); nav.close(); }} /></>}>
+    <Page screen="calprimer" footer={<><Btn label="Allow calendar access" onPress={() => { void allow(); }} /><QuietLink label="Not now" onPress={() => { choose('calendar-permission', 'declined'); nav.close(); }} /></>}>
       <View style={{ alignItems: 'flex-start' }}><MarkTile icon="calendar" /></View>
       <Display s="Nudges that {fit your day.}" style={{ marginTop: space.md }} />
       <Body s="Life looks at {when you’re busy}, never at what the meeting is about, and {never changes your calendar}." style={{ marginTop: space.xs }} />

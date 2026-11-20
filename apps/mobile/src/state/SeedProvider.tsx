@@ -14,6 +14,7 @@ import { emptyBrainState, type BrainState } from '@life/brain';
 import { emptyLoops, type LoopsState } from '@life/core';
 import { confirmBrainRecords } from '@/services/brainState';
 import { currentTransport } from '@/services/syncTransport';
+import { lastBackgroundWrite } from '@/services/backgroundMark';
 
 export type SeedData = {
   brain: BrainState;
@@ -60,7 +61,8 @@ type SeedContextValue = {
   /** Pushes and pulls now (also runs when the app comes to the front and a few seconds after each change). */
   syncNow: () => Promise<void>;
 };
-/** Fills in anything a saved projection lacks from the defaults. */
+/** Fills in anything a saved projection lacks from the defaults. Also used by background work (Phase 29). */
+export function hydrateSeed(loaded: unknown): SeedData { return hydrate(loaded); }
 function hydrate(loaded: unknown): SeedData {
   if (loaded !== null && (typeof loaded !== 'object' || Array.isArray(loaded))) throw new Error('Invalid local projection');
   const saved = (loaded ?? {}) as Partial<SeedData>;
@@ -77,6 +79,8 @@ export function SeedProvider({ children }: { children: ReactNode }) {
   const latest = useRef(data), lastQueued = useRef(''), revision = useRef(0), committed = useRef(0);
   const resetting = useRef<true | SeedData | null>(null);
   const needsReload = useRef(false), syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The last background save this app has loaded (Phase 29), so coming to the front reloads anything newer.
+  const seenBackground = useRef(0);
   latest.current = data;
 
   useEffect(() => {
@@ -92,6 +96,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
         await opened.save(latest.current);
         committed.current = revision.current;
       }
+      seenBackground.current = await lastBackgroundWrite();
       const next = hydrate(await opened.load());
       if (!active) return;
       lastQueued.current = JSON.stringify(next);
@@ -131,7 +136,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
 
   // Sync whenever the app comes back to the front.
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', state => { if (state === 'active') void syncNow(); });
+    const subscription = AppState.addEventListener('change', state => { if (state === 'active') { void reloadAfterBackground(); void syncNow(); } });
     return () => { subscription.remove(); if (syncTimer.current) clearTimeout(syncTimer.current); };
   }, []);
 
@@ -142,6 +147,13 @@ export function SeedProvider({ children }: { children: ReactNode }) {
     const next = hydrate(await target.load());
     if (storage.current !== target) return;
     latest.current = next; setData(next);
+  }
+  /** Background work saved while the app was away: show what it brought in rather than writing over it. */
+  async function reloadAfterBackground() {
+    const at = await lastBackgroundWrite(), target = storage.current;
+    if (!target || at <= seenBackground.current) return;
+    seenBackground.current = at;
+    writes.current = writes.current.then(() => reload(target)).catch(() => {});
   }
   /** The network part runs beside the local saves, never in their queue, so a slow connection can't hold up a save. */
   async function syncNow() {

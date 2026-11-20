@@ -40,6 +40,9 @@
         "android.permission.health.READ_SKIN_TEMPERATURE",
         "android.permission.health.READ_SLEEP",
         "android.permission.health.READ_STEPS"
+      ],
+      "blockedPermissions": [
+        "android.permission.WRITE_CALENDAR"
       ]
     },
     "plugins": [
@@ -86,6 +89,15 @@
         }
       ],
       "react-native-health-connect",
+      "expo-notifications",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Life reads only when you’re busy, to fit nudges around your day. It never reads what your events are and never changes your calendar.",
+          "remindersPermission": false
+        }
+      ],
+      "expo-background-task",
       [
         "./plugins/withAndroidMinSdk",
         26

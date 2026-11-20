@@ -4,7 +4,7 @@
  * words and figures live in `state/settings.ts`; every switch saves to the same preferences and flags as before.
  */
 import React, { useEffect, useState, type ReactNode } from 'react';
-import { Alert, Appearance, Platform, Share, StyleSheet, View } from 'react-native';
+import { Alert, Appearance, AppState, Linking, Platform, Share, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams } from 'expo-router';
@@ -21,6 +21,7 @@ import { SHOW_SAMPLES } from '@/state/sample';
 import { ai } from '@/services/ai';
 import { closeAccount, exportAccount, isSignedIn, type AccountDataProblem } from '@/services/account';
 import { voice } from '@/services/voice';
+import { askNotifications, notificationPermission, notificationsSupported, type NotificationPermission } from '@/services/notifications';
 import { faces } from '@/state/people';
 import { workTitle } from '@/state/you';
 import { longDate, useHealthConsent } from '@/state/firstopen';
@@ -173,8 +174,22 @@ function QuietHoursRuler({ from, until }: { from: number; until: number }) {
 
 const FROM = [20, 21, 22, 23], UNTIL = [6, 7, 8, 9];
 
+/** The phone's own notification setting for Life, checked again when you come back from Settings. */
+function useNotificationPermission(): NotificationPermission {
+  const [state, setState] = useState<NotificationPermission>('unavailable');
+  useEffect(() => {
+    const check = () => { void notificationPermission().then(setState); };
+    check();
+    const sub = AppState.addEventListener('change', s => { if (s === 'active') check(); });
+    return () => sub.remove();
+  }, []);
+  return state;
+}
+
 export function NotifsV26() {
-  const { data, flag, choose } = useSeed(), L = useLoops();
+  const { data, flag, choose, pref } = useSeed(), L = useLoops();
+  const permission = useNotificationPermission();
+  const turnOn = async () => { pref('notifications', true); if (notificationsSupported) choose('notification-permission', await askNotifications() ? 'granted' : 'declined'); };
   const style = L.loops.checkIn, words = CHECK_IN_WORDS[style];
   const from = Number(data.choices['quiet-from'] ?? quietHours.from), until = Number(data.choices['quiet-until'] ?? quietHours.until);
   const isOn = (key: string, fallback: boolean) => data.flags[`notification-off-${key}`] === undefined ? fallback : !data.flags[`notification-off-${key}`];
@@ -184,6 +199,19 @@ export function NotifsV26() {
     <Page screen="notifs" bar={{ kind: 'push', title: 'Notifications' }}>
       <Eyebrow>{`${on} of ${kinds.length} kinds are on`}</Eyebrow>
       <Display s={style === 'off' ? 'Life {@bell won’t ask}, and {@moon nothing at night}.' : `Life checks in {@bell ${words.line}}, and {@moon nothing at night}.`} />
+      {!data.prefs.notifications ? (
+        <Card style={{ marginTop: space.lg }}>
+          <Text variant="title">Nudges are off</Text>
+          <Callout style={{ marginTop: space.xxs }}>Turn them on and Life sends one a day at most, never in quiet hours.</Callout>
+          <Btn label="Turn on nudges" sm fit onPress={() => { void turnOn(); }} style={{ marginTop: space.sm }} />
+        </Card>
+      ) : notificationsSupported && permission === 'denied' ? (
+        <Card style={{ marginTop: space.lg }}>
+          <Text variant="title">Your phone has notifications off for Life</Text>
+          <Callout style={{ marginTop: space.xxs }}>Turn them on in Settings and Life can nudge you. Nothing changes here until you do.</Callout>
+          <Btn label="Open Settings" sm fit ghost onPress={() => { void Linking.openSettings(); }} style={{ marginTop: space.sm }} />
+        </Card>
+      ) : null}
       <Card style={{ marginTop: space.lg }}>
         <Micro>HOW LIFE CHECKS IN</Micro>
         <SegmentedV26 style={{ marginTop: space.xs }} options={CHECK_IN_STYLES.map(v => ({ value: v, label: CHECK_IN_WORDS[v].label }))} value={style} onChange={v => L.setCheckIn(v)} />

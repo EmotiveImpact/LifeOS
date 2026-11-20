@@ -9,6 +9,10 @@ import { Button, SheetProvider, Text, space, useLifeFonts, useTokens } from '@/d
 import { SeedProvider, useSeed } from '@/state/SeedProvider';
 import { useAiQueueRunner } from '@/services/useAiQueue';
 import { useHealthRunner } from '@/services/health/useHealthRunner';
+import { useNudgeRunner } from '@/services/nudges';
+// Defines the background task at start-up, as the phone needs it defined before it can run it (Phase 29).
+import { setBackgroundWork } from '@/services/background';
+import { consentFrom } from '@/services/health/consent';
 import '../global.css';
 
 void SplashScreen.preventAutoHideAsync();
@@ -18,7 +22,7 @@ function AppShell() {
   if (!fonts) return null;
   if (storageError) return <SafeAreaView style={{ flex: 1, backgroundColor: t.canvas, padding: space.gutter, justifyContent: 'center', gap: space.md }}><Text variant="headline">Your local data is unavailable</Text><Text variant="body" tone="ink2">Nothing has been reset. The app could not open or save its local store. Native builds require encrypted storage support.</Text><Button label="Try again" onPress={retryStorage} /></SafeAreaView>;
   if (!hydrated) return null;
-  return <><AiQueueRunner /><HealthRunner /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas }, animation: 'default', statusBarStyle: t.scheme === 'dark' ? 'light' : 'dark' }}>
+  return <><AiQueueRunner /><HealthRunner /><DayRunner /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas }, animation: 'default', statusBarStyle: t.scheme === 'dark' ? 'light' : 'dark' }}>
     <Stack.Screen name="(tabs)" />
     {/* The browser has no native sheet and hides the page under a form sheet, so the preview presents sheets as a
         transparent layer instead: the page stays in view, dimmed, and the sheet rises over it (Page draws it). */}
@@ -31,6 +35,14 @@ function AppShell() {
 /** Sends AI requests that waited for a connection, whichever screen is open (services/useAiQueue.ts). */
 function AiQueueRunner() { useAiQueueRunner(); return null; }
 function HealthRunner() { useHealthRunner(); return null; }
+/** Plans the phone's nudges and keeps background work registered while nudges or health reading are on. */
+function DayRunner() {
+  const { data } = useSeed();
+  useNudgeRunner();
+  const wanted = data.prefs.notifications || consentFrom(data.choices) !== null;
+  useEffect(() => { void setBackgroundWork(wanted); }, [wanted]);
+  return null;
+}
 export default function RootLayout() {
   return <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider initialMetrics={initialWindowMetrics}><SeedProvider><SheetProvider><AppShell /></SheetProvider></SeedProvider></SafeAreaProvider></GestureHandlerRootView>;
 }

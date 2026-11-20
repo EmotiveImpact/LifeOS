@@ -3,7 +3,7 @@
  * The feeling check rises as a drawer on the first open of the day; today's moves follow it as a deck.
  */
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Modal, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Linking, Modal, ScrollView, StyleSheet, TextInput, View, type ImageSourcePropType } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, initialWindowMetrics } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +25,8 @@ import {
 import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
 import { levelPlan } from '@/state/you';
 import { NudgeV26, TodayLoops } from './loops';
+import { SHOW_SAMPLES } from '@/state/sample';
+import { CalendarRealV26, WhyRealV26, moveCard, useRealMoves } from './dayengine';
 
 // Plan ahead and Get unstuck live with the other core-loop screens; the Today chapter still exports them.
 export { EveningV26, NudgeV26 } from './loops';
@@ -113,11 +115,20 @@ export function TodayV26() {
   const [searching, setSearching] = useState(false);
   const order = moveOrder(mood);
   const dec = preview === 'day' ? 'yny' : readDecisions(data.choices['today-moves'], day);
-  const decide = (d: string) => choose('today-moves', `${day}|${d}`);
+  // A real account's moves come from the day engine (Phase 29); the sample life keeps the board's three.
+  const real = useRealMoves();
+  const decide = (d: string) => { choose('today-moves', `${day}|${d}`); if (!SHOW_SAMPLES && !d) real.reset(); };
   const left = order.slice(dec.length).map(i => TODAY_MOVES[i]);
-  const chosen = order.filter((_, k) => dec[k] === 'y').map(i => TODAY_MOVES[i]);
-  const cards: MoveCard[] = left.map(m => ({ key: m.key, title: m.title, chip: m.chip, sub: `${m.value} · for your first home`, photo: photos[m.photo], focal: { y: m.photo === 'payslip' ? 0.78 : 0.55 } }));
-  const openMove = (key: string) => { const m = TODAY_MOVES.find(x => x.key === key)!; if (m.mission) update(c => ({ ...c, selectedMission: m.mission! })); nav.go(m.to); };
+  const cards: MoveCard[] = SHOW_SAMPLES ? left.map(m => ({ key: m.key, title: m.title, chip: m.chip, sub: `${m.value} · for your first home`, photo: photos[m.photo], focal: { y: m.photo === 'payslip' ? 0.78 : 0.55 } })) : real.cards;
+  const chosen: { key: string; title: string; chip: string; value: string; photo: ImageSourcePropType }[] = SHOW_SAMPLES
+    ? order.filter((_, k) => dec[k] === 'y').map(i => TODAY_MOVES[i]).map(m => ({ key: m.key, title: m.title, chip: m.chip, value: m.value, photo: photos[m.photo] }))
+    : real.taken.map(m => { const c = moveCard(real.sources[m.id], m); return { key: m.id, title: m.title, chip: c.chip, value: c.sub, photo: c.photo }; });
+  const total = SHOW_SAMPLES ? TODAY_MOVES.length : real.moves.length, decided = SHOW_SAMPLES ? dec.length : real.decided;
+  const openMove = (key: string) => {
+    if (!SHOW_SAMPLES) { real.open(key); return; }
+    const m = TODAY_MOVES.find(x => x.key === key)!; if (m.mission) update(c => ({ ...c, selectedMission: m.mission! })); nav.go(m.to);
+  };
+  const onDecide = (d: string, card: MoveCard) => { if (SHOW_SAMPLES) decide(`${dec}${d === 'take' ? 'y' : 'n'}`); else real.onDecide(d === 'take' ? 'take' : 'pass', card.key); };
 
   const qi = Number(data.choices['today-question-index'] ?? 0), q = QUESTIONS[qi], answered = data.choices['today-answer-day'] === day;
   const answer = (choice: string) => {
@@ -148,29 +159,30 @@ export function TodayV26() {
         <BirthdayMoveV26 b={birthday} day={day} />
         <TodayLoops />
       </> : <>
-      <Display s={todayBrief(mood)} />
+      <Display s={SHOW_SAMPLES ? todayBrief(mood) : real.brief} />
       <ArrivingCard mood={mood} onPress={() => setDrawer(true)} style={{ marginTop: space.lg }} />
       <TodayLoops />
 
       {cards.length ? <>
-        <SectionHead title="Today’s moves" link={`${dec.length + 1} of ${TODAY_MOVES.length}`} style={{ marginTop: space.xl }} />
-        <MoveDeck cards={cards} onDecide={d => decide(`${dec}${d === 'take' ? 'y' : 'n'}`)} />
+        <SectionHead title="Today’s moves" link={`${decided + 1} of ${total}`} style={{ marginTop: space.xl }} />
+        <MoveDeck cards={cards} onDecide={onDecide} />
+        {SHOW_SAMPLES ? null : <QuietLink label="Why am I seeing this?" center={false} onPress={() => nav.go('why')} style={{ marginTop: space.xs }} />}
       </> : chosen.length ? <>
         <SectionHead title={`Your day · ${chosen.length} ${chosen.length === 1 ? 'move' : 'moves'}`} link="Choose again" onLink={() => decide('')} style={{ marginTop: space.xl }} />
         <View style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Micro sig>First</Micro>
           <Text variant="headline" style={{ marginTop: space.tile }}>{chosen[0].title}</Text>
-          <Body s={`${chosen[0].chip} · {${chosen[0].value}}`} style={{ marginTop: space.xxs }} />
+          <Body s={chosen[0].value ? `${chosen[0].chip} · {${chosen[0].value}}` : chosen[0].chip} style={{ marginTop: space.xxs }} />
           <Btn label="Continue" icon="arrow" trail onPress={() => openMove(chosen[0].key)} style={{ marginTop: space.md }} />
           {chosen.slice(1).map(c => (
             <Press key={c.key} haptic="open" onPress={() => openMove(c.key)} accessibilityLabel={`Then ${c.title}`} style={styles.then}>
-              <Thumb source={photos[c.photo]} size={componentSize.round} />
+              <Thumb source={c.photo} size={componentSize.round} />
               <View style={{ flex: 1, minWidth: 0 }}><Text variant="rowTitle" numberOfLines={1}>{c.title}</Text><Text variant="callout" tone="ink2" numberOfLines={1}>{c.chip}</Text></View>
               <Text variant="callout" tone="ink2">Then</Text>
             </Press>
           ))}
         </View>
-      </> : (
+      </> : !SHOW_SAMPLES && !total ? null : (
         <View style={[styles.card, { marginTop: space.lg, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Text variant="headline">Nothing taken on today.</Text>
           <Body s="That’s allowed. Your moves keep until tomorrow." style={{ marginTop: space.xs }} />
@@ -401,6 +413,11 @@ export function RoutinesV26() {
 /* ───────────────────────── Why am I seeing this? ───────────────────────── */
 
 export function WhyV26() {
+  // A real account's reasons come from the day engine; the sample keeps the board's lighter-day story.
+  return SHOW_SAMPLES ? <WhySampleV26 /> : <WhyRealV26 />;
+}
+
+function WhySampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag } = useSeed();
   const back = data.flags['lighter-day'] === false;
   const drained = FEEL_MOODS.drained;
@@ -430,6 +447,11 @@ export function WhyV26() {
 /* ───────────────────────── Calendar-aware day ───────────────────────── */
 
 export function CalendarV26() {
+  // A real account sees its own calendar, times only (Phase 29); the sample keeps the board's busy day.
+  return SHOW_SAMPLES ? <CalendarSampleV26 /> : <CalendarRealV26 />;
+}
+
+function CalendarSampleV26() {
   const t = useTokens(), nav = useNavigation(), { update } = useSeed();
   const { now } = useLocalDay();
   return (
