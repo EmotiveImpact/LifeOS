@@ -226,7 +226,7 @@ export function Composer({ value, onChangeText, onSend, onTalk, onAttach, placeh
           <Ionicons name="add" size={22} color={t.ink2} />
         </Press>
       ) : null}
-      <TextInput
+      <TextInput maxFontSizeMultiplier={1.3}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}

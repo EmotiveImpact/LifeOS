@@ -219,14 +219,14 @@ export function SleepnightV26() {
         <View style={{ marginTop: space.md, gap: space.xs }} accessible accessibilityRole="image" accessibilityLabel={`The night in four lanes, ${dur(monday.deep)} of deep sleep, lowest heart rate ${monday.lowest} at ${monday.lowestAt}`}>
           {LANES.map(([k, name]) => (
             <View key={k} style={styles.laneRow}>
-              <Text variant="micro" tone="ink2" style={{ width: 44 }}>{name}</Text>
+              <Text variant="micro" tone="ink2" numberOfLines={1} style={{ width: 50 }}>{name}</Text>
               <View style={[styles.lane, { backgroundColor: t.surface }]}>
                 {placed.filter(s => s.stage === k).map((s, i) => <View key={i} style={{ position: 'absolute', top: 0, bottom: 0, left: `${s.left}%`, width: `${s.width}%`, minWidth: 5, borderRadius: 8, backgroundColor: accent, opacity: k === 'deep' ? 1 : 0.4 }} />)}
               </View>
             </View>
           ))}
           <View style={styles.laneRow}>
-            <View style={{ width: 44 }} />
+            <View style={{ width: 50 }} />
             <View style={{ flex: 1, paddingLeft: `${monday.lowestPct}%`, marginLeft: -4 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.ink }} /><Text variant="micro" tone="ink2" numberOfLines={1}>{`${monday.lowest} bpm · ${monday.lowestAt}`}</Text></View>
             </View>

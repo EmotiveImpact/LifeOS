@@ -249,7 +249,7 @@ export function Composer({ value, onChange, placeholder, onSend, onAttach, onMic
   return (
     <View style={[styles.composer, { backgroundColor: t.surface, shadowColor: '#000', shadowOpacity: t.scheme === 'dark' ? 0.4 : 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 10 }, elevation: 6 }]}>
       {onAttach ? <RoundButton icon="add" size="sm" label="Attach" onPress={onAttach} /> : null}
-      <TextInput value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={t.ink2} multiline editable={!disabled} accessibilityLabel={placeholder}
+      <TextInput maxFontSizeMultiplier={1.3} value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={t.ink2} multiline editable={!disabled} accessibilityLabel={placeholder}
         style={[styles.composerInput, { color: t.ink, fontFamily: fonts.sans }]} selectionColor={t.ember} onSubmitEditing={onSend} blurOnSubmit />
       {onMic && !typing
         ? <RoundButton icon="mic" solid label="Hold to talk" onPress={onMic} style={{ width: 44, height: 44 }} />
@@ -536,7 +536,7 @@ export function ChatHistoryV26() {
     <Page screen="chathistory" bar={{ kind: 'push', action: { kind: 'icon', icon: searching ? 'close' : 'search', label: searching ? 'Close search' : 'Search conversations', onPress: () => { setSearching(s => !s); setQuery(''); } } }}>
       <Eyebrow>Talk · your conversations</Eyebrow>
       {searching
-        ? <TextInput autoFocus value={query} onChangeText={setQuery} placeholder="Search conversations" placeholderTextColor={t.ink2} accessibilityLabel="Search conversations" selectionColor={t.ember}
+        ? <TextInput maxFontSizeMultiplier={1.3} autoFocus value={query} onChangeText={setQuery} placeholder="Search conversations" placeholderTextColor={t.ink2} accessibilityLabel="Search conversations" selectionColor={t.ember}
             style={[styles.search, { color: t.ink, backgroundColor: t.surface2, fontFamily: fonts.sansMedium }]} />
         : <Display s={total ? `{${total} ${total === 1 ? 'conversation' : 'conversations'}.} ${filedTotal} things filed.` : '{No conversations yet.} They’ll gather here.'} />}
       {useSamples || threads.length ? <FilterChips options={(['All', 'Chat', 'Talk', 'Scan'] as const).map(v => ({ value: v, label: v }))} value={filter} onChange={setFilter} style={{ marginTop: space.md }} /> : null}
@@ -597,7 +597,7 @@ export function EditFiledV26() {
         <View style={{ marginTop: space.xs, alignItems: 'center' }}><CompactStepper value={amount} onChange={setAmount} min={0} max={2000} step={1} label="Amount a month" format={v => money(v)} /></View>
       </> : picked === 'where' ? <Callout style={{ marginTop: space.lg }}>Bills live in Money. Moving a bill elsewhere comes with the Money chapter.</Callout> : <>
         <Micro style={{ marginTop: space.lg }}>{picked === 'what' ? 'What it is' : 'When it’s due'}</Micro>
-        <TextInput value={picked === 'what' ? what : due} onChangeText={picked === 'what' ? setWhat : setDue} accessibilityLabel={picked === 'what' ? 'What it is' : 'When it’s due'} selectionColor={t.ember}
+        <TextInput maxFontSizeMultiplier={1.3} value={picked === 'what' ? what : due} onChangeText={picked === 'what' ? setWhat : setDue} accessibilityLabel={picked === 'what' ? 'What it is' : 'When it’s due'} selectionColor={t.ember}
           style={[styles.field, { color: t.ink, backgroundColor: t.surface2, fontFamily: fonts.sansMedium }]} />
       </>}
       <View style={[styles.said, { backgroundColor: t.surface2, marginTop: space.lg }]}>

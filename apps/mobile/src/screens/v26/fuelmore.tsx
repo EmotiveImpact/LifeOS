@@ -82,7 +82,7 @@ export function CookV26() {
       {editing ? (
         <Box pad={space.md} style={{ marginTop: space.sm }}>
           <Micro>What’s in, separated by commas</Micro>
-          <TextInput value={found.join(', ')} onChangeText={v => choose('cook-found', v)} multiline autoFocus style={[styles.input, { color: t.ink, backgroundColor: t.surface2 }]} accessibilityLabel="What’s in your kitchen" />
+          <TextInput maxFontSizeMultiplier={1.3} value={found.join(', ')} onChangeText={v => choose('cook-found', v)} multiline autoFocus style={[styles.input, { color: t.ink, backgroundColor: t.surface2 }]} accessibilityLabel="What’s in your kitchen" />
           <Btn label="Done" sm ghost fit onPress={() => setEditing(false)} style={{ marginTop: space.xs }} />
         </Box>
       ) : null}
@@ -413,7 +413,7 @@ export function DescribeexerciseV26() {
   return (
     <Page screen="describeexercise" bar={{ kind: 'sheet', title: 'Add activity' }} footer={<Btn label="Add it" disabled={!text.trim()} onPress={add} />}>
       {typing
-        ? <TextInput value={text} onChangeText={setText} onBlur={() => { if (text.trim()) setTyping(false); }} autoFocus={!text} multiline placeholder="30 minutes of five-a-side, quite hard" placeholderTextColor={t.inkQuiet}
+        ? <TextInput maxFontSizeMultiplier={1.3} value={text} onChangeText={setText} onBlur={() => { if (text.trim()) setTyping(false); }} autoFocus={!text} multiline placeholder="30 minutes of five-a-side, quite hard" placeholderTextColor={t.inkQuiet}
             style={[styles.input, { color: t.ink, backgroundColor: t.surface2 }]} accessibilityLabel="Describe your workout" />
         : <Press haptic="select" onPress={() => setTyping(true)} accessibilityLabel={`${text}. Tap to change`} style={{ alignItems: 'flex-end' }}><ChatBubble text={text} /></Press>}
       {text.trim() ? <>

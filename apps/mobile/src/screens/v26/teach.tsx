@@ -338,7 +338,7 @@ export function TellbackV26() {
       footer={<View style={{ alignItems: 'center', gap: 4 }}>
         {typing ? (
           <View style={[styles.typeRow, { backgroundColor: t.surface2 }]}>
-            <TextInput value={typed} onChangeText={setTyped} placeholder="Type it instead" placeholderTextColor={t.inkQuiet} selectionColor={t.ember} onSubmitEditing={sendTyped}
+            <TextInput maxFontSizeMultiplier={1.3} value={typed} onChangeText={setTyped} placeholder="Type it instead" placeholderTextColor={t.inkQuiet} selectionColor={t.ember} onSubmitEditing={sendTyped}
               style={[styles.typeInput, { color: t.ink }]} accessibilityLabel="Type your explanation" returnKeyType="send" />
             <RoundButton icon="arrowUp" label="Add this" size="sm" solid onPress={sendTyped} disabled={!typed.trim()} />
           </View>

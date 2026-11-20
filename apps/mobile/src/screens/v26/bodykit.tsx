@@ -21,15 +21,15 @@ export function Measure({ height, children, label, style }: { height: number; ch
   return <View onLayout={onLayout} style={[{ height }, style]} accessible={!!label} accessibilityRole={label ? 'image' : undefined} accessibilityLabel={label}>{w ? children(w) : null}</View>;
 }
 
-/** A tinted chart card's heading (board `head`): round badge, title, and what the band means on the right. */
+/** A tinted chart card's heading (board `head`): round badge, title, and what the band means on the right (below it when both don't fit, at large text sizes). */
 export function Head({ icon, title, right }: { icon: GlyphName; title: string; right?: ReactNode }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.xs }}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: space.xs, rowGap: space.xxs }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.tile, flexShrink: 1 }}>
         <Badge icon={icon} />
-        <Text variant="title" numberOfLines={1} style={{ flexShrink: 1 }}>{title}</Text>
+        <Text variant="title" numberOfLines={2} style={{ flexShrink: 1 }}>{title}</Text>
       </View>
-      {typeof right === 'string' ? <Text variant="callout" tone="ink2" numberOfLines={1} style={{ flexShrink: 1 }}>{right}</Text> : right ?? null}
+      {typeof right === 'string' ? <Text variant="callout" tone="ink2" numberOfLines={2} style={{ flexShrink: 1 }}>{right}</Text> : right ?? null}
     </View>
   );
 }

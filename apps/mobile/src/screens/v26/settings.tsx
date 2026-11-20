@@ -624,9 +624,9 @@ export function AimodelsV26() {
       </Between>
       <Statement style={{ marginTop: space.sm }} s={builtIn ? `This ${phone} brings {its own AI}, so life downloads only {what’s missing}.` : `This ${phone} has {no built-in AI}, so life adds {a small open model} over Wi-Fi.`} />
       <Card style={{ marginTop: space.lg }}>
-        <Between><Text variant="callout">{`This ${phone}`}</Text><Text variant="callout">{builtIn ? `${onPhoneMB} MB` : 'about 1 to 2 GB'}</Text></Between>
+        <Between style={{ gap: space.sm }}><Text variant="callout" style={{ flexShrink: 1 }}>{`This ${phone}`}</Text><Text variant="callout">{builtIn ? `${onPhoneMB} MB` : 'about 1 to 2 GB'}</Text></Between>
         <View style={[styles.meter, { backgroundColor: t.surface3 }]}><View style={{ width: builtIn ? '12%' : '100%', height: '100%', borderRadius: radius.full, backgroundColor: t.ink }} /></View>
-        <Between style={{ marginTop: space.md }}><Callout>A phone with no built-in AI</Callout><Callout>about 1 to 2 GB</Callout></Between>
+        <Between style={{ marginTop: space.md, gap: space.sm }}><Callout style={{ flexShrink: 1 }}>A phone with no built-in AI</Callout><Callout>about 1 to 2 GB</Callout></Between>
         <View style={[styles.meter, { backgroundColor: t.surface3 }]}><View style={{ width: '100%', height: '100%', borderRadius: radius.full, backgroundColor: t.inkQuiet }} /></View>
       </Card>
       <AccordionGroup style={{ marginTop: space.sm }} initial={parts[0].key} items={parts.map(m => ({

@@ -459,7 +459,7 @@ export function ToolsV26() {
       {searching ? <>
         <View style={[styles.search, { backgroundColor: t.surface2, marginTop: space.lg }]}>
           <Icon name="search" size={18} color={t.ink2} />
-          <TextInput autoFocus value={q} onChangeText={setQ} placeholder="Search tools" placeholderTextColor={t.inkQuiet} selectionColor={t.ember} accessibilityLabel="Search tools" style={[styles.searchInput, { color: t.ink, fontFamily: fonts.sans }]} />
+          <TextInput maxFontSizeMultiplier={1.3} autoFocus value={q} onChangeText={setQ} placeholder="Search tools" placeholderTextColor={t.inkQuiet} selectionColor={t.ember} accessibilityLabel="Search tools" style={[styles.searchInput, { color: t.ink, fontFamily: fonts.sans }]} />
         </View>
         <RowsCard style={{ marginTop: space.sm }}>
           {match.map(x => <Row key={x.key} photo={photos[x.photo]} title={x.title} sub={x.sub} right={open(x.key, x.level) ? undefined : <Chip label={`Level ${x.level}`} tone="q" />} onPress={() => openTool(x.key, x.level, x.title)} />)}

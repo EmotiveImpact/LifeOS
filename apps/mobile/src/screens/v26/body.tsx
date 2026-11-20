@@ -24,7 +24,7 @@ import {
   clock, cycle as cycleData, drivers, dur, forecast as forecastData, journalEffects, journalLogged, journalTags, liveWorkout, load, pattern, readiness, signals as signalData,
   sleep, sleepPlan, spotted, stress as stressData, trends as trendData, hrvAverage, hrvMovers,
 } from '@/state/body';
-import { Between, BigPhoto, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Micro, Page, PeekStack, PhotoBackdrop, PhotoRound, Row, RowsCard, Statement, drawerStyle, useDrawerPhoto } from './kit';
+import { Between, BigPhoto, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Micro, Page, PeekStack, PhotoBackdrop, PhotoRound, Row, RowsCard, Shelf, Statement, drawerStyle, useDrawerPhoto } from './kit';
 import { Axis, FigRow, Gauge, Head, Measure, RangeMark, XL } from './bodykit';
 import { Composer } from './talk';
 
@@ -183,19 +183,19 @@ export function DevicesV26() {
         </View>
       </TintCard>
       <SectionHead title="Add another" link="when you’re ready" />
-      <View style={styles.hscroll}>
+      <Shelf>
         {others.map(o => {
           const asked = !!data.flags[`device-wanted-${o.id}`];
           return (
-            <Box key={o.id} pad={space.md} style={{ flex: 1, minWidth: 0 }}>
+            <Box key={o.id} pad={space.md} style={{ width: 168 }}>
               <View style={[styles.thumb, { backgroundColor: t.surface2 }]}><Icon name={o.icon} size={22} color={t.ink} /></View>
-              <Text variant="title" style={{ marginTop: space.sm }} numberOfLines={1}>{o.name}</Text>
+              <Text variant="title" style={{ marginTop: space.sm }} numberOfLines={2}>{o.name}</Text>
               <Text variant="callout" tone="ink2" style={{ marginTop: 2, flex: 1 }}>{asked ? 'life will remind you when this opens' : o.gives}</Text>
               <Btn ghost sm label={asked ? 'Noted' : o.act} icon={asked ? 'check' : undefined} onPress={() => { flag(`device-wanted-${o.id}`, !asked); feedback.select(); }} style={{ marginTop: 14 }} />
             </Box>
           );
         })}
-      </View>
+      </Shelf>
       <Callout style={{ marginTop: space.md }}>WHOOP and Oura connect through your account with them. Only a heart-rate strap pairs over Bluetooth.</Callout>
       <SectionHead title="Already works" />
       <RowsCard>
@@ -555,7 +555,7 @@ export function JournalV26() {
       </View>
       {adding ? (
         <View style={[styles.addRow, { backgroundColor: t.surface, ...cardShadow(t.scheme), marginTop: space.sm }]}>
-          <TextInput value={text} onChangeText={setText} placeholder="Something else today" placeholderTextColor={t.ink2} autoFocus accessibilityLabel="Your own tag"
+          <TextInput maxFontSizeMultiplier={1.3} value={text} onChangeText={setText} placeholder="Something else today" placeholderTextColor={t.ink2} autoFocus accessibilityLabel="Your own tag"
             style={{ flex: 1, color: t.ink, fontFamily: fonts.sans, fontSize: 15, paddingVertical: space.xs }} selectionColor={t.ember}
             onSubmitEditing={() => { const v = text.trim(); if (v && !data.journal.includes(v)) set({ journal: [...data.journal, v] }); setText(''); setAdding(false); }} />
           <Btn sm ghost fit label="Add" onPress={() => { const v = text.trim(); if (v && !data.journal.includes(v)) set({ journal: [...data.journal, v] }); setText(''); setAdding(false); }} />

@@ -159,7 +159,7 @@ export function BigfiveV26() {
   return (
     <Page screen="bigfive" bar={{ kind: 'push', title: 'Personality', action: { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: share } }}>
       <View style={styles.eyebrow}>
-        <RoundPhoto source={photos.desk} focal={{ x: 0.92, y: 0.5 }} size={28} />
+        {SHOW_SAMPLES ? <RoundPhoto source={photos.desk} focal={{ x: 0.92, y: 0.5 }} size={28} /> : null}
         <Text variant="callout" tone="ink2">{`${data.profile.name} · the Big Five`}</Text>
       </View>
       <Display s={bigFive.sentence} />

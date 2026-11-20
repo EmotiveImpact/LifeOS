@@ -64,7 +64,7 @@ export function AimNewV26() {
         <Body s={s.sub} style={{ marginTop: space.xs }} />
       </Hero>
       <View style={[styles.composer, { backgroundColor: t.surface, marginTop: space.sm }]}>
-        <TextInput value={value} onChangeText={v => setAim({ ...aim, [s.key]: v })} placeholder="Say it or type it" placeholderTextColor={t.inkQuiet} selectionColor={t.ember} multiline
+        <TextInput maxFontSizeMultiplier={1.3} value={value} onChangeText={v => setAim({ ...aim, [s.key]: v })} placeholder="Say it or type it" placeholderTextColor={t.inkQuiet} selectionColor={t.ember} multiline
           accessibilityLabel={s.title.replace(/[{}]/g, '')} style={[styles.input, { color: t.ink, fontFamily: fonts.sansMedium }]} />
         <RoundButton icon="mic" size="sm" label="Talk instead of typing" onPress={() => nav.go('talk')} />
       </View>
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   aimHead: { height: 200, paddingHorizontal: space.gutter, paddingTop: 6 },
   sheet: { borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: space.gutter, paddingBottom: 40, minHeight: 600 },
   handle: { width: 36, height: 5, borderRadius: 3, alignSelf: 'center', marginTop: space.xs, marginBottom: 14 },
-  photoStatement: { height: 260, borderRadius: radius.photo, overflow: 'hidden', justifyContent: 'space-between' },
+  photoStatement: { minHeight: 260, borderRadius: radius.photo, overflow: 'hidden', justifyContent: 'space-between' },
   glimpseChip: { borderRadius: radius.full },
   glimpseSheet: { borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: space.gutter, paddingTop: 18 },
   earned: { flexDirection: 'row', gap: space.sm, marginTop: 14 },

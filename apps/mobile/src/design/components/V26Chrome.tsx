@@ -55,7 +55,7 @@ export function SectionHead({ title, link, onLink, first, style }: { title: stri
   const t = useTokens();
   return (
     <View style={[styles.secHead, first ? { marginTop: 0 } : null, style]}>
-      <Text variant="title" accessibilityRole="header" numberOfLines={1} style={{ flexShrink: 1 }}>{title}</Text>
+      <Text variant="title" accessibilityRole="header" numberOfLines={2} style={{ flexShrink: 1 }}>{title}</Text>
       {link ? onLink
         ? <Press haptic="select" onPress={onLink} accessibilityLabel={link} hitSlop={10} style={styles.link}><Text variant="callout" tone="ink2" numberOfLines={1}>{link}</Text><Icon name="chev" size={componentSize.iconXs} color={t.ink2} /></Press>
         : <Text variant="callout" tone="ink2" numberOfLines={1}>{link}</Text> : null}

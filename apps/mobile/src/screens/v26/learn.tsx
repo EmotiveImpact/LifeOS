@@ -149,7 +149,7 @@ export function LibraryV26() {
         <View style={{ marginBottom: space.lg }}>
           <View style={[styles.search, { backgroundColor: t.surface2 }]}>
             <Icon name="search" size={18} color={t.ink2} />
-            <TextInput value={query} onChangeText={setQuery} autoFocus placeholder="Search ideas and thinkers" placeholderTextColor={t.inkQuiet} selectionColor={t.ember}
+            <TextInput maxFontSizeMultiplier={1.3} value={query} onChangeText={setQuery} autoFocus placeholder="Search ideas and thinkers" placeholderTextColor={t.inkQuiet} selectionColor={t.ember}
               style={[styles.searchInput, { color: t.ink }]} accessibilityLabel="Search ideas" returnKeyType="search" />
           </View>
           {query.trim() ? (found.length ? (
@@ -474,7 +474,7 @@ export function TeachV26() {
       <Press haptic={null} onPress={checked ? () => setChecked(false) : undefined} accessibilityLabel={checked ? 'Edit your explanation' : undefined}
         style={[styles.paper, { backgroundColor: t.surface, marginTop: space.xl }, cardShadow(t.scheme)]}>
         {checked ? <Marked text={text} /> : (
-          <TextInput value={text} onChangeText={v => { setText(v); draft('barbell-explanation', v); }} multiline placeholder="In your own words…" placeholderTextColor={t.inkQuiet}
+          <TextInput maxFontSizeMultiplier={1.3} value={text} onChangeText={v => { setText(v); draft('barbell-explanation', v); }} multiline placeholder="In your own words…" placeholderTextColor={t.inkQuiet}
             selectionColor={t.ember} style={[styles.paperText, { color: t.ink, minHeight: 112 }]} accessibilityLabel="Your explanation" />
         )}
       </Press>

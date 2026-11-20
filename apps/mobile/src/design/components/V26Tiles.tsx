@@ -42,11 +42,11 @@ export function V26Tile({ label, dot, scale, value, unit, sub, slim, meter, part
     <View style={styles.th}>
       <View style={styles.thLabel}>
         {dot ? <View style={[styles.dot, { backgroundColor: areaColors[t.scheme][dot] }]} /> : null}
-        <Text variant="callout" tone="ink2" numberOfLines={1} style={{ flexShrink: 1 }}>{label}</Text>
+        <Text variant="callout" tone="ink2" numberOfLines={2} style={{ flexShrink: 1 }}>{label}</Text>
       </View>
       {scale ? <Text variant="micro" tone="quiet">{scale}</Text> : null}
     </View>
-    {value !== undefined ? <Text variant={slim ? 'headline' : 'numeralL'} numberOfLines={1} style={slim ? styles.slimValue : { marginTop: 14 }}>{value}{unit ? <Text variant="unit" tone="ink2">{unit.startsWith('.') ? unit : ` ${unit}`}</Text> : null}</Text> : null}
+    {value !== undefined ? <Text variant={slim ? 'headline' : 'numeralL'} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={slim ? styles.slimValue : { marginTop: 14 }}>{value}{unit ? <Text variant="unit" tone="ink2">{unit.startsWith('.') ? unit : ` ${unit}`}</Text> : null}</Text> : null}
     {sub ? <Text variant="callout" tone="ink2" style={slim ? null : { marginTop: 2 }}>{sub}</Text> : null}
     {meter !== undefined ? <View style={[styles.meter, { backgroundColor: t.surface3 }]}><View style={{ width: `${Math.max(0, Math.min(1, meter)) * 100}%`, height: '100%', borderRadius: radius.full, backgroundColor: t.ink }} /></View> : null}
     {parts ? <View style={styles.parts}>{parts.map(p => <View key={p.label} style={[styles.part, { backgroundColor: t.surface2 }]}><Text variant="micro" tone="ink2">{p.label}</Text><Text variant="buttonCompact" style={{ fontVariant: ['tabular-nums'] }}>{p.value}</Text></View>)}</View> : null}

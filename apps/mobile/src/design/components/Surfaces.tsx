@@ -186,7 +186,7 @@ export function Button({ label, onPress, variant = 'primary', onAtmosphere: onAt
       style={[styles.button, { backgroundColor: bg, opacity: disabled ? 0.4 : 1, minHeight: size === 'sm' ? componentSize.buttonSm : size === 'md' ? componentSize.button : compact ? touch.min : componentSize.button }, size ? { alignSelf: 'stretch', paddingHorizontal: space.md } : null, style]}
     >
       {icon && iconPosition === 'leading' ? <Ionicons name={icon} size={size ? componentSize.iconSm : componentSize.icon} color={fg} /> : null}
-      <Text variant={compact || size === 'sm' ? 'buttonCompact' : 'button'} numberOfLines={1} style={{ color: fg }}>
+      <Text variant={compact || size === 'sm' ? 'buttonCompact' : 'button'} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ color: fg }}>
         {label}
       </Text>
       {icon && iconPosition === 'trailing' ? <Ionicons name={icon} size={size ? componentSize.iconSm : componentSize.icon} color={fg} /> : null}

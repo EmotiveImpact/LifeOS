@@ -20,7 +20,7 @@ import { useSeed } from '@/state/SeedProvider';
 import { knowledgeLabels, money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import {
-  becoming, bornOn, childrenLine, details, experiment, factPhoto, gateTo, gateWords, householdLine, knowsArea, knowsFilters, levelPlan, memoryFilters, memoryPhoto,
+  becoming, bornOn, childrenLine, details, ordinalDay, workWords, experiment, factPhoto, gateTo, gateWords, householdLine, knowsArea, knowsFilters, levelPlan, memoryFilters, memoryPhoto,
   moodGrid, moodPatterns, moodSummary, nextExperiments, season, shared, streak, usedToday, workTitle, youAreas, youRows, type KnowsFilter,
 } from '@/state/you';
 import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, QuietLink, Row, RowsCard, Shelf, Statement } from './kit';
@@ -398,7 +398,7 @@ export function MemoryV26() {
       {search !== null ? (
         <View style={[styles.search, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Icon name="search" size={18} color={t.ink2} />
-          <TextInput autoFocus value={search} onChangeText={setSearch} placeholder="Search what life remembers" placeholderTextColor={t.inkQuiet} accessibilityLabel="Search what life remembers" selectionColor={t.ember} style={[styles.searchInput, { color: t.ink }]} />
+          <TextInput maxFontSizeMultiplier={1.3} autoFocus value={search} onChangeText={setSearch} placeholder="Search what life remembers" placeholderTextColor={t.inkQuiet} accessibilityLabel="Search what life remembers" selectionColor={t.ember} style={[styles.searchInput, { color: t.ink }]} />
         </View>
       ) : null}
       <Eyebrow style={{ marginTop: search !== null ? space.md : 0 }}>What life remembers</Eyebrow>
@@ -495,6 +495,9 @@ export function ProfileV26() {
   const editing = !!data.flags['profile-edit'];
   const [name, setName] = useState(data.profile.name), [city, setCity] = useState(data.profile.city);
   const p = data.profile, others = Math.max(0, p.householdSize - 1), born = bornOn(p);
+  // A real account reads its own work and pay day; the sample life keeps the board's words.
+  const payN = Number(data.choices['payday-day']) || 0;
+  const work = SHOW_SAMPLES ? details.work : workWords[p.workStatus] ?? 'Not set', payDay = SHOW_SAMPLES ? details.payDay : payN ? ordinalDay(payN) : 'Not set';
   const fullName = SHOW_SAMPLES && p.name === 'Ama' ? 'Ama Mensah' : p.name;
   const kids = Number(data.choices.children ?? 0) || 0;
   const living = others === 0 ? '{on your own}' : `with {${others} ${others === 1 ? 'other' : 'others'}}`;
@@ -505,15 +508,15 @@ export function ProfileV26() {
   const rows: { photo: keyof typeof photos; title: string; sub: string; to?: Parameters<typeof nav.go>[0] }[] = [
     { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: 'yourbirthday' },
     { photo: 'terrace', title: `Lives in · ${SHOW_SAMPLES ? `${details.area}, ` : ''}${p.city}`, sub: 'Council tax, schemes' },
-    { photo: 'work', title: `Work · ${details.work}`, sub: 'Tax and structure', to: 'income' },
+    { photo: 'work', title: `Work · ${work}`, sub: 'Tax and structure', to: 'income' },
     { photo: 'home', title: `Lives with · ${others === 0 ? 'Just me' : `${others} ${others === 1 ? 'other' : 'others'}`}`, sub: 'Discounts, benefits', to: 'household' },
-    { photo: 'payslip', title: `Pay day · ${details.payDay}`, sub: 'When nudges land', to: 'routines' },
+    { photo: 'payslip', title: `Pay day · ${payDay}`, sub: 'When nudges land', to: 'routines' },
     { photo: 'people', title: `Children · ${kids === 0 ? 'None' : kids}`, sub: 'Child Benefit, childcare', to: 'children' },
     { photo: 'walk', title: 'Body numbers', sub: 'Food targets, readiness, ranges', to: 'measures' },
   ];
   return (
     <Page screen="profile" bar={{ kind: 'push', title: 'Your details', action: { kind: 'node', node: <Chip label={editing ? 'Done' : 'Edit'} onPress={save} /> } }}>
-      <PhotoCard source={photos.desk} height={200} chips={[`Level ${engine.level.currentLevel} · ${engine.level.levelName}`]} title={fullName} sub={born ? `Born ${born}` : undefined} style={{ marginTop: space.xxs }} />
+      <PhotoCard source={SHOW_SAMPLES ? photos.desk : photos.aimdesk} height={200} chips={[`Level ${engine.level.currentLevel} · ${engine.level.levelName}`]} title={fullName} sub={born ? `Born ${born}` : undefined} style={{ marginTop: space.xxs }} />
       <Statement s={sentence} style={{ marginTop: space.lg }} />
       {editing ? <View style={{ gap: space.xs, marginTop: space.lg }}>
         <Field label="Name" value={name} onChangeText={setName} />

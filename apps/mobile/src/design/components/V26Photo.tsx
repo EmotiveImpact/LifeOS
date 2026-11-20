@@ -69,7 +69,7 @@ export function PhotoCard({ source, title, titleSuffix, sub, chips, chipRight, t
       {children}
     </View>
   </>;
-  const box: ViewStyle = { height, borderRadius: radius.photo, overflow: 'hidden', backgroundColor: t.surface2, paddingTop: 14, paddingHorizontal: space.md, paddingBottom: space.md, justifyContent: 'space-between' };
+  const box: ViewStyle = { minHeight: height, borderRadius: radius.photo, overflow: 'hidden', backgroundColor: t.surface2, paddingTop: 14, paddingHorizontal: space.md, paddingBottom: space.md, justifyContent: 'space-between' };
   // The shadow sits on an outer view: overflow hidden would clip it on iOS.
   return (
     <View style={[{ borderRadius: radius.photo, ...cardShadow(t.scheme) }, style]}>

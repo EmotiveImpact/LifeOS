@@ -75,7 +75,7 @@ export function SegmentedV26<T extends string>({ options, value, onChange, style
         return (
           <Press key={o.value} haptic="select" onPress={() => onChange(o.value)} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={o.label}
             style={[styles.segItem, on ? { backgroundColor: t.surface, ...cardShadow(t.scheme) } : null]}>
-            <Text variant="label" tone={on ? 'ink' : 'ink2'} numberOfLines={1}>{o.label}</Text>
+            <Text variant="label" tone={on ? 'ink' : 'ink2'} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{o.label}</Text>
           </Press>
         );
       })}

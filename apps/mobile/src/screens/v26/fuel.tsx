@@ -663,11 +663,11 @@ export function QuicklogV26() {
       {tab === 'Quick add' ? (
         <View style={{ marginTop: space.lg }}>
           <Micro>What you had</Micro>
-          <TextInput value={data.drafts['quick-food'] ?? ''} onChangeText={v => draft('quick-food', v)} placeholder="A flapjack, a pint of milk…" placeholderTextColor={t.inkQuiet}
+          <TextInput maxFontSizeMultiplier={1.3} value={data.drafts['quick-food'] ?? ''} onChangeText={v => draft('quick-food', v)} placeholder="A flapjack, a pint of milk…" placeholderTextColor={t.inkQuiet}
             style={[styles.field, { backgroundColor: t.surface2, color: t.ink }]} accessibilityLabel="What you had" />
           {day.hide ? null : <>
             <Micro style={{ marginTop: space.md }}>Calories, if you know them</Micro>
-            <TextInput value={data.drafts['quick-kcal'] ?? ''} onChangeText={v => draft('quick-kcal', v.replace(/[^0-9]/g, ''))} keyboardType="number-pad" placeholder="Optional" placeholderTextColor={t.inkQuiet}
+            <TextInput maxFontSizeMultiplier={1.3} value={data.drafts['quick-kcal'] ?? ''} onChangeText={v => draft('quick-kcal', v.replace(/[^0-9]/g, ''))} keyboardType="number-pad" placeholder="Optional" placeholderTextColor={t.inkQuiet}
               style={[styles.field, { backgroundColor: t.surface2, color: t.ink }]} accessibilityLabel="Calories" />
           </>}
           <Btn label="Log it" disabled={!(data.drafts['quick-food'] ?? '').trim()} style={{ marginTop: space.lg }}
@@ -758,7 +758,7 @@ export function FoodsearchV26() {
     <Page screen="foodsearch" bar={{ kind: 'push', title: 'Find food', action: { kind: 'icon', icon: 'camera', label: 'Scan instead', onPress: () => nav.go('barcode') } }}>
       <View style={styles.searchRow}>
         <Icon name="search" size={22} color={t.ink} />
-        <TextInput ref={input} value={query} onChangeText={setQuery} placeholder="Search foods" placeholderTextColor={t.inkQuiet} autoCorrect={false} returnKeyType="search"
+        <TextInput maxFontSizeMultiplier={1.3} ref={input} value={query} onChangeText={setQuery} placeholder="Search foods" placeholderTextColor={t.inkQuiet} autoCorrect={false} returnKeyType="search"
           style={[styles.searchInput, { color: t.ink }]} accessibilityLabel="Search foods" />
         {query ? <RoundButton icon="close" size="sm" solid label="Clear" onPress={() => { setQuery(''); input.current?.focus(); }} /> : null}
       </View>
@@ -964,7 +964,7 @@ export function SayitV26() {
       <View style={{ alignItems: 'center', paddingTop: space.xxs }}><LifeOrb size={72} state={listening ? 'listening' : 'ring'} /></View>
       <Callout center style={{ marginTop: space.xxs }}>{listening ? 'Listening…' : typing ? 'Type it, or tap Say it again' : 'What life heard'}</Callout>
       {typing ? (
-        <TextInput value={text} onChangeText={setText} multiline placeholder="I had a chicken wrap and a large oat latte around 1." placeholderTextColor={t.inkQuiet}
+        <TextInput maxFontSizeMultiplier={1.3} value={text} onChangeText={setText} multiline placeholder="I had a chicken wrap and a large oat latte around 1." placeholderTextColor={t.inkQuiet}
           style={[styles.sayInput, { color: t.ink }]} accessibilityLabel="What you ate" />
       ) : (
         <Press haptic="select" onPress={() => setTyping(true)} accessibilityLabel={`${text}. Tap to change the words`}><Display s={heardTwoTone} style={{ marginTop: space.md }} /></Press>
@@ -1032,7 +1032,7 @@ export function FixwordsV26() {
       </>}>
       <View style={styles.saysRow}><LifeOrb size={28} /><Text variant="callout" tone="ink2">{listening ? 'Listening…' : 'You said'}</Text></View>
       {typing
-        ? <TextInput value={words} onChangeText={setWords} multiline placeholder="Half the rice, no sauce, extra chicken." placeholderTextColor={t.inkQuiet} style={[styles.fixInput, { color: t.ink }]} accessibilityLabel="What changed" />
+        ? <TextInput maxFontSizeMultiplier={1.3} value={words} onChangeText={setWords} multiline placeholder="Half the rice, no sauce, extra chicken." placeholderTextColor={t.inkQuiet} style={[styles.fixInput, { color: t.ink }]} accessibilityLabel="What changed" />
         : <Press haptic="select" onPress={() => setTyping(true)} accessibilityLabel={`${words}. Tap to change the words`}><Statement s={twoTone} style={{ marginTop: space.sm }} /></Press>}
       {error ? <Callout style={{ marginTop: space.xs }}>{error}</Callout> : null}
       <View style={[styles.betweenEnd, { marginTop: space.xl }]}>

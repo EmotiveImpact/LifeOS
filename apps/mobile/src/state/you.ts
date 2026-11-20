@@ -136,6 +136,11 @@ export const shared = SHOW_SAMPLES ? {
 
 export const details = { born: '14 March 1999', bornShort: '14 March', work: 'Freelance designer', area: 'Hackney', payDay: '28th' };
 
+/** How work reads on Your details for a real account, from the profile's work status. */
+export const workWords: Record<string, string> = { employed: 'Employed', 'sole-trader': 'Self-employed', director: 'Company director', 'student-between': 'Studying or between jobs' };
+/** "1st", "22nd", "28th": the pay day chosen in routines (`payday-day`). */
+export const ordinalDay = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
+
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 /**
  * "14 March 1999" (or "14 March" when short) from the date of birth the age check keeps on the profile. The sample

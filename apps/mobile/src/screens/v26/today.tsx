@@ -541,7 +541,7 @@ export function EveningV26() {
           {did.map(d => <Row key={d.t} lead={<Tick on />} title={d.t} end={d.a} style={{ minHeight: 46, paddingVertical: space.xxs }} />)}
           <Row lead={<Tick icon="arrow" />} title="Call the dentist" sub="Moved to tomorrow, 9:30" end="Tomorrow" style={{ minHeight: 52, paddingVertical: space.xxs }} />
           <Micro style={{ marginTop: space.sm }}>ONE LINE ABOUT TODAY?</Micro>
-          <TextInput value={data.drafts.evening ?? ''} onChangeText={v => draft('evening', v)} placeholder="Felt sharper after the run." placeholderTextColor={t.inkQuiet} accessibilityLabel="One line about today"
+          <TextInput maxFontSizeMultiplier={1.3} value={data.drafts.evening ?? ''} onChangeText={v => draft('evening', v)} placeholder="Felt sharper after the run." placeholderTextColor={t.inkQuiet} accessibilityLabel="One line about today"
             style={[styles.note, { backgroundColor: t.surface2, color: t.ink, fontFamily: fonts.sans }]} selectionColor={t.ember} />
           <Btn label="Close the day" onPress={() => { flag('day-closed', true); feedback.complete(); nav.close(); }} style={{ marginTop: space.md }} />
         </View>
@@ -634,7 +634,7 @@ export function SearchV26({ onClose }: { onClose: () => void }) {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={styles.searchBar}>
           <Icon name="search" size={componentSize.icon} color={t.ink} />
-          <TextInput autoFocus value={query} onChangeText={setQuery} placeholder="Search" placeholderTextColor={t.ink2} accessibilityLabel="Search everything" returnKeyType="search"
+          <TextInput maxFontSizeMultiplier={1.3} autoFocus value={query} onChangeText={setQuery} placeholder="Search" placeholderTextColor={t.ink2} accessibilityLabel="Search everything" returnKeyType="search"
             onSubmitEditing={() => go(() => nav.go('chat', { question: query }))} selectionColor={t.ember}
             style={[styles.searchInput, { color: t.ink, fontFamily: fonts.sansMedium }]} />
           <RoundButton icon="close" solid label="Close search" onPress={onClose} />

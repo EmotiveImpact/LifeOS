@@ -182,7 +182,7 @@ export function DraftV26() {
         <Chip label="Ready" tone="done" />
       </View>
       <View style={{ gap: space.xs, marginTop: space.sm }}><Field label="To" value={to} /><Field label="Subject" value={subject} /></View>
-      <TextInput multiline value={m.draft} onChangeText={v => draft(m.task.id, v)} accessibilityLabel="Draft message" selectionColor={t.ember}
+      <TextInput maxFontSizeMultiplier={1.3} multiline value={m.draft} onChangeText={v => draft(m.task.id, v)} accessibilityLabel="Draft message" selectionColor={t.ember}
         style={[styles.card, styles.letter, { color: t.ink, fontFamily: fonts.sans, marginTop: space.sm }, surface]} />
       <Callout style={{ marginTop: space.sm }}>Tap the text to edit. life never sends anything without you.</Callout>
     </Page>
@@ -306,7 +306,7 @@ export function NewGoalV26() {
   return (
     <Page screen="newgoal" bar={{ kind: 'sheet', title: 'A new goal', action: { kind: 'node', node: <RoundButton icon="mic" size="sm" label="Say it" onPress={() => nav.go('talk')} /> } }} footer={<Btn label="Add to Plan" disabled={!goal} onPress={add} />}>
       {typing
-        ? <TextInput autoFocus value={said} onChangeText={setSaid} onSubmitEditing={() => setTyping(false)} placeholder="Say it in your own words" placeholderTextColor={t.ink2} selectionColor={t.ember} accessibilityLabel="Your goal, in your words" returnKeyType="done"
+        ? <TextInput maxFontSizeMultiplier={1.3} autoFocus value={said} onChangeText={setSaid} onSubmitEditing={() => setTyping(false)} placeholder="Say it in your own words" placeholderTextColor={t.ink2} selectionColor={t.ember} accessibilityLabel="Your goal, in your words" returnKeyType="done"
             style={[styles.goalInput, { color: t.ink, backgroundColor: t.surface2, fontFamily: fonts.sansMedium }]} />
         : <Press haptic="select" onPress={() => setTyping(true)} accessibilityLabel={`Edit: ${said}`} style={{ alignItems: 'flex-end', marginTop: space.xxs }}><ChatBubble text={said} /></Press>}
       {goal ? <>

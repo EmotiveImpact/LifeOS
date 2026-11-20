@@ -113,7 +113,7 @@ export function Field({ label, value, placeholder = '', onChangeText, onPress, k
   if (onChangeText) return (
     <View style={[box, style]}>
       {head}
-      <TextInput value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor={t.inkQuiet} keyboardType={keyboardType} accessibilityLabel={label} selectionColor={t.ember}
+      <TextInput maxFontSizeMultiplier={1.3} value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor={t.inkQuiet} keyboardType={keyboardType} accessibilityLabel={label} selectionColor={t.ember}
         style={[type.greeting, { color: t.ink, marginTop: 2, paddingVertical: 1.5, paddingHorizontal: 0 }]} />
     </View>
   );
