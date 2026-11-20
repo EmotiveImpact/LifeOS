@@ -1,8 +1,9 @@
 name: CI
 
-# Every push and pull request: the app's typecheck, the engine, brain and data
-# tests (including the crisis-language case set), and both JavaScript bundles.
-# No secrets are used, so this is safe on a public repository.
+# Every push and pull request: the app's typecheck and the engine, brain and
+# data tests (including the crisis-language case set). The iOS and Android
+# bundles run on pull requests, pushes to master and manual runs only, to keep
+# Actions minutes down on this private repository. No secrets are used.
 
 on:
   push:
@@ -58,6 +59,7 @@ jobs:
 
   bundles:
     name: ${{ matrix.platform }} bundle
+    if: github.event_name != 'push' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:

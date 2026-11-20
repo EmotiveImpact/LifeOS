@@ -11,7 +11,7 @@
 - **Router tiers.** Jobs start at fast, strong, top or vision; chat climbs to strong for careful work and to top for big decisions. A tier table (the future `tiers.json`) moves jobs and orders models, and allowances are checked before any model call.
 - **Release plumbing.** `eas.json` with development, preview and production profiles, `expo-updates` configured, and CI on every push: typecheck, all tests, and the iOS and Android bundles.
 
-Checks: typecheck clean, `bun test tests/` 312 pass (was 93), iOS and Android bundles export.
+Checks: typecheck clean, `bun test tests/` 312 pass (was 93), iOS and Android bundles export. All three were run here; the first GitHub run didn't start (see item 1 under "Needs Edem").
 
 ## What was built
 
@@ -52,7 +52,7 @@ Checks: typecheck clean, `bun test tests/` 312 pass (was 93), iOS and Android bu
 
 - `apps/mobile/eas.json`: `development` (dev client, internal), `development-simulator`, `preview` (internal, Android APK), `production` (store, build number from EAS). Each sets an update channel, an EAS environment, and `EXPO_PUBLIC_APP_ENV`.
 - `expo-updates@58.0.22` added; `runtimeVersion` uses the fingerprint policy; updates check on launch and apply next time. Updates stay off until an update URL exists (see below), so nothing changes for the TestFlight build.
-- `.github/workflows/ci.yml`: on every push and pull request (screenshots and Markdown-only changes skipped), typecheck plus `bun test tests/`, and the iOS and Android bundles in parallel. No secrets used.
+- `.github/workflows/ci.yml`: on every push and pull request (screenshots and Markdown-only changes skipped), typecheck plus `bun test tests/`. The iOS and Android bundles run in parallel on pull requests, pushes to `master` and manual runs, so branch pushes cost one job of Actions minutes, not three. No secrets used.
 
 ## Files outside `packages/brain`
 
@@ -74,11 +74,12 @@ Kept small, and away from the lines other threads are changing:
 
 ## Needs Edem, or another thread
 
-1. **Expo account and project** (decision 8). Run `eas init`, then `eas update:configure`: that adds the project id and update URL, and over-the-air updates switch on by themselves. Before the first EAS iOS build, run `eas build:version:set` to above TestFlight build 22.
-2. **Settings toggle for standing AI consent.** The brain side is done; it needs a board design and your OK before a screen is built (Settings belongs to the Phase 19 thread).
-3. **Onboarding "Just tell life"** (First open thread): distress now files nothing there, but the screen should also open `support`, as Talk does. One line.
-4. **Chat bubble:** the support reply shows the numbers in text. A "Need support now" button on that bubble, opening the screen, is screen work and isn't done.
-5. **Safeguarding review** of the crisis wording and rules before beta (SPEC 9.8). English only for now.
-6. **Phase 21 and 24 server:** check consent against the server's own copy of the ledger, never the grants a request carries; write `tiers.json` from evals; feed real allowances to the router. The free-tier allowance (about 10 fast requests a day was suggested) is still your call.
-7. **Force update:** the `forceupdate` screen's minimum-version check needs the API (Phase 21).
-8. **Test and live API split:** `EXPO_PUBLIC_LIFE_API_URL` goes in each EAS environment once Phase 21 picks the host.
+1. **GitHub Actions minutes.** The first CI run (20 Nov, 18:18) failed in two seconds on all three jobs with no runner assigned and no log, while the same action pins and `ubuntu-latest` ran fine in the TestFlight workflow on 17 Nov. That pattern means GitHub refused to start the jobs, which on a private repository is almost always the monthly Actions allowance or spending limit (macOS runs for TestFlight count ten times). On GitHub, open Settings, then Billing and licensing, then Usage, and raise the Actions budget or wait for the monthly reset. The workflow itself is fine; re-run it from the Actions tab once minutes are available.
+2. **Expo account and project** (decision 8). Run `eas init`, then `eas update:configure`: that adds the project id and update URL, and over-the-air updates switch on by themselves. Before the first EAS iOS build, run `eas build:version:set` to above TestFlight build 22.
+3. **Settings toggle for standing AI consent.** The brain side is done; it needs a board design and your OK before a screen is built (Settings belongs to the Phase 19 thread).
+4. **Onboarding "Just tell life"** (First open thread): distress now files nothing there, but the screen should also open `support`, as Talk does. One line.
+5. **Chat bubble:** the support reply shows the numbers in text. A "Need support now" button on that bubble, opening the screen, is screen work and isn't done.
+6. **Safeguarding review** of the crisis wording and rules before beta (SPEC 9.8). English only for now.
+7. **Phase 21 and 24 server:** check consent against the server's own copy of the ledger, never the grants a request carries; write `tiers.json` from evals; feed real allowances to the router. The free-tier allowance (about 10 fast requests a day was suggested) is still your call.
+8. **Force update:** the `forceupdate` screen's minimum-version check needs the API (Phase 21).
+9. **Test and live API split:** `EXPO_PUBLIC_LIFE_API_URL` goes in each EAS environment once Phase 21 picks the host.
