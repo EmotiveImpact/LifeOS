@@ -4,6 +4,7 @@ import { createAuth } from './auth';
 import { bunDb } from './db/bun';
 import { assertRowSecurity } from './db/client';
 import { readEnv } from './env';
+import { modelsFromEnv } from './models/registry';
 import { storageFromEnv } from './storage';
 
 /** The local server: any Postgres (a local one or a Neon branch), with sign-in codes printed here instead of emailed. */
@@ -19,7 +20,7 @@ const auth = createAuth({
   google: env.GOOGLE_CLIENT_ID ? { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } : undefined,
 });
 const storage = storageFromEnv(env);
-const server = Bun.serve({ port: env.PORT, fetch: createApi({ db, auth, corsOrigins: origins, storage, graceDays: env.ACCOUNT_GRACE_DAYS, jobsSecret: env.JOBS_SECRET }) });
+const server = Bun.serve({ port: env.PORT, fetch: createApi({ db, auth, corsOrigins: origins, storage, graceDays: env.ACCOUNT_GRACE_DAYS, jobsSecret: env.JOBS_SECRET, ai: { models: modelsFromEnv(env) } }) });
 // Locally the server runs its own hourly sweep; a hosted server's scheduler calls POST /jobs/sweep instead.
 setInterval(() => { void purgeClosedAccounts(db, storage, Date.now()).catch(error => console.error('sweep failed', error)); }, 60 * 60 * 1000);
 console.log(`life API on ${server.url}${storage ? '' : ' (no file storage set up)'}`);

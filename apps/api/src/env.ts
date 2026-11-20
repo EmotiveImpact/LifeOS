@@ -31,6 +31,11 @@ const schema = z.object({
   ACCOUNT_GRACE_DAYS: unsetIfBlank(z.coerce.number().int().min(0).max(90).default(30)),
   /** The scheduler's secret for `POST /jobs/sweep`. Without it the sweep route stays closed. */
   JOBS_SECRET: unsetIfBlank(z.string().min(32, 'at least 32 characters').optional()),
+  /** Model providers (decision 7). Each key switches on that provider's models in `src/models/registry.ts`. */
+  ANTHROPIC_API_KEY: unsetIfBlank(z.string().min(10).optional()),
+  OPENAI_API_KEY: unsetIfBlank(z.string().min(10).optional()),
+  /** Gemini API key: trial data only. Real people's data goes through Google Cloud's EU endpoint (owner decision). */
+  GEMINI_API_KEY: unsetIfBlank(z.string().min(10).optional()),
   PORT: z.coerce.number().int().positive().default(8787),
 });
 

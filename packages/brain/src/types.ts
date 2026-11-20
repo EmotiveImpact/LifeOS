@@ -37,11 +37,16 @@ export const emptyBrainState = (): BrainState => ({ version: 1, conversations: [
 export type Context = { facts: Fact[]; memories: Memory[]; moves: Move[]; sample: boolean };
 export type Request = { id: string; job: Job; text: string; context: Context; history: Pick<Message, 'role' | 'text'>[]; attachments: Attachment[]; privateMode: boolean; consent: { requestId: string; locations: ModelLocation[] } | null; grants?: ConsentGrant[] };
 export type ModelOutput = { answer: string; detail?: string; citations: string[]; proposals: Proposal[]; data?: unknown };
-export type Result = { answer: string; detail?: string; sources: Source[]; proposals: Proposal[]; route: { location: ModelLocation | 'rules'; model: string; tier: Tier }; data?: unknown; notices: string[]; safety?: SupportReply };
+/** `output` is the model's checked answer before facts are filled in: what the life API sends back to the phone,
+ * which checks it again against its own request. */
+export type Result = { answer: string; detail?: string; sources: Source[]; proposals: Proposal[]; route: { location: ModelLocation | 'rules'; model: string; tier: Tier }; data?: unknown; notices: string[]; safety?: SupportReply; output?: ModelOutput };
 export type Capability = { id: string; location: ModelLocation; jobs: Job[]; available: boolean; reason?: string };
 /** `tiers` limits an adapter to the strengths it can serve (all when left out);
- * `maxContextChars` makes the runtime trim history and memories to fit. */
-export interface ModelAdapter { id: string; location: ModelLocation; jobs: Job[]; tiers?: Tier[]; maxContextChars?: number; available(): Promise<boolean>; generate(request: Request, signal: AbortSignal): Promise<unknown> }
+ * `maxContextChars` makes the runtime trim history and memories to fit.
+ * `relay` marks the life API, which has already checked the model's answer: it
+ * may add one line of `notice` (an allowance running out) or a `support` signal
+ * (the phone then shows its own support screen). A model's answer can do neither. */
+export interface ModelAdapter { id: string; location: ModelLocation; jobs: Job[]; tiers?: Tier[]; maxContextChars?: number; relay?: boolean; available(): Promise<boolean>; generate(request: Request, signal: AbortSignal): Promise<unknown> }
 export class BrainError extends Error {
   constructor(public code: 'UNAVAILABLE' | 'CONSENT_REQUIRED' | 'INVALID_INPUT' | 'INVALID_OUTPUT' | 'CANCELLED' | 'TIMEOUT' | 'RATE_LIMITED', message: string) { super(message); this.name = 'BrainError'; }
 }

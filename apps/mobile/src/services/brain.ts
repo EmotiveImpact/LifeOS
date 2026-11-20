@@ -41,16 +41,29 @@ async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   } else if (!token) throw new BrainError('UNAVAILABLE', 'Sign in is required before sending information to the life API.');
   return fetch(`${base}${path}`, { ...init, credentials: 'include', headers });
 }
+/** What the life API's refusals mean here (apps/api/src/router.ts). The API's own words are shown when it sends them. */
+async function refusal(response: Response): Promise<BrainError> {
+  const body = await response.json().catch(() => null) as { error?: string; message?: string } | null;
+  const said = typeof body?.message === 'string' && body.message.length <= 300 ? body.message : null;
+  switch (body?.error) {
+    case 'CONSENT_REQUIRED': return new BrainError('CONSENT_REQUIRED', said ?? 'This needs your OK before it leaves your phone.');
+    case 'RATE_LIMITED': return new BrainError('RATE_LIMITED', said ?? 'You’ve used today’s AI allowance. Your message is saved.');
+    case 'PRIVATE_MODE': return new BrainError('UNAVAILABLE', 'Private mode is on, so this stays on your phone. Nothing was sent to a model.');
+    case 'INVALID_OUTPUT': return new BrainError('INVALID_OUTPUT', 'The answer didn’t pass life’s checks, so nothing was changed.');
+    case 'TIMEOUT': return new BrainError('TIMEOUT', 'The request stopped. Nothing was filed.');
+  }
+  if (response.status === 429) return new BrainError('RATE_LIMITED', 'The request limit has been reached. Your message is saved.');
+  return new BrainError('UNAVAILABLE', response.status === 401 ? 'Please sign in again. Nothing was sent to a model.' : 'The model service is unavailable. Your message is saved.');
+}
+/** The life API checks the model's answer and sends it back unrendered; the runtime checks it again here. `relay`
+ * lets it add one notice (an allowance running out) or a support signal (this phone shows its own support screen). */
 const networkAdapter: ModelAdapter = {
-  id: 'life-api', location: 'cloud', jobs: ['ask', 'extract', 'draft', 'coach', 'plan-explain'],
+  id: 'life-api', location: 'cloud', jobs: ['ask', 'extract', 'draft', 'coach', 'plan-explain'], relay: true,
   available: async () => !!endpoint,
   generate: async (request, signal) => {
     const outgoing = prepareExternalRequest(request);
     const response = await apiFetch('/ai/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(outgoing), signal });
-    if (!response.ok) {
-      if (response.status === 429) throw new BrainError('RATE_LIMITED', 'The request limit has been reached. Your message is saved.');
-      throw new BrainError('UNAVAILABLE', response.status === 401 ? 'Please sign in again. Nothing was sent to a model.' : 'The model service is unavailable. Your message is saved.');
-    }
+    if (!response.ok) throw await refusal(response);
     return response.json();
   },
 };

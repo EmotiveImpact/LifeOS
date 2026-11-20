@@ -57,7 +57,7 @@ describe('browsers', () => {
     expect(preflight.headers.get('access-control-allow-credentials')).toBeNull();
     const res = await api(new Request(`${base}/auth/sign-in/email-otp`, { method: 'POST', headers: { origin: 'https://web.life.test' } }));
     expect(res.headers.get('access-control-allow-origin')).toBe('https://web.life.test');
-    expect(res.headers.get('access-control-expose-headers')).toBe('set-auth-token');
+    expect(res.headers.get('access-control-expose-headers')).toBe('set-auth-token, life-model, life-tier');
   });
 
   test('any other origin gets no CORS headers, and still no data without a session', async () => {

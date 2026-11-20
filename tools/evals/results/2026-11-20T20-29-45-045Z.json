@@ -1,0 +1,221 @@
+{
+  "at": "2026-11-20T20:29:45.045Z",
+  "bar": 0.9,
+  "scores": [
+    {
+      "model": "life-rules",
+      "job": "extract",
+      "cases": 40,
+      "passed": 35,
+      "costMicros": 0,
+      "latencies": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "failures": [
+        {
+          "id": "x18",
+          "reason": "missed bill"
+        },
+        {
+          "id": "x19",
+          "reason": "missed person"
+        },
+        {
+          "id": "x24",
+          "reason": "missed bill"
+        },
+        {
+          "id": "x32",
+          "reason": "missed bill"
+        },
+        {
+          "id": "x39",
+          "reason": "missed subscription"
+        }
+      ]
+    },
+    {
+      "model": "life-rules",
+      "job": "ask",
+      "cases": 32,
+      "passed": 7,
+      "costMicros": 0,
+      "latencies": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "failures": [
+        {
+          "id": "a02",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a03",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a04",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a05",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a08",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a09",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a10",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a11",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a13",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a14",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a15",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a16",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a17",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a18",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a19",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a20",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a22",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a23",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a24",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a26",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a27",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a29",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a30",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a31",
+          "reason": "UNAVAILABLE"
+        },
+        {
+          "id": "a32",
+          "reason": "UNAVAILABLE"
+        }
+      ]
+    }
+  ],
+  "decisions": []
+}

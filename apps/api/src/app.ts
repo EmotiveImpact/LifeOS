@@ -3,6 +3,7 @@ import { DeleteBody, FileIdBody, PushBody, SignBody, closeAccount, deleteFile, e
 import type { Auth, Principal } from './auth';
 import type { Db } from './db/client';
 import { devices } from './db/schema';
+import { aiCapabilities, runAi, type AiOptions } from './router';
 import type { Storage } from './storage';
 import { MAX_PULL, MAX_PUSH, forget, forgettable, isTable, pull, push, refusedByPolicy } from './sync';
 
@@ -31,7 +32,7 @@ const DeviceBody = z.object({
 function withCors(response: Response, origin: string): Response {
   const headers = new Headers(response.headers);
   headers.set('access-control-allow-origin', origin);
-  headers.set('access-control-expose-headers', 'set-auth-token');
+  headers.set('access-control-expose-headers', 'set-auth-token, life-model, life-tier');
   headers.append('vary', 'Origin');
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
@@ -52,10 +53,12 @@ export type ApiOptions = {
   graceDays?: number;
   /** The bearer secret the host's scheduler sends to `POST /jobs/sweep`. Without it the route is closed. */
   jobsSecret?: string;
+  /** Cloud models, tiers and allowances (`src/router.ts`). Without models, `/ai/run` answers 503 after its checks. */
+  ai?: AiOptions;
 };
 
 export function createApi(options: ApiOptions): (request: Request) => Promise<Response> {
-  const { db, auth, now = Date.now, storage = null, graceDays = 30, jobsSecret } = options;
+  const { db, auth, now = Date.now, storage = null, graceDays = 30, jobsSecret, ai } = options;
   const cors = new Set(options.corsOrigins ?? []);
   const readJson = async (request: Request): Promise<unknown> => request.json().catch(() => null);
   const routes: Record<string, Route> = {
@@ -113,6 +116,13 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       if (!DeleteBody.safeParse(await readJson(request)).success) return fail(400, 'CONFIRM_REQUIRED');
       return json(await closeAccount(db, storage, principal.userId, now(), graceDays));
     },
+    'POST /ai/run': async (request, principal) => {
+      const reply = await runAi(db, principal.userId, await readJson(request), ai, now(), request.signal);
+      const response = json(reply.body, reply.status);
+      for (const [name, value] of Object.entries(reply.headers ?? {})) response.headers.set(name, value);
+      return response;
+    },
+    'GET /ai/capabilities': async (_request, principal) => json(await aiCapabilities(db, principal.userId, ai, now())),
     'POST /sync/forget': async (request, principal) => {
       const parsed = ForgetBody.safeParse(await request.json().catch(() => null));
       if (!parsed.success || !isTable(parsed.data.table) || !forgettable.has(parsed.data.table)) return fail(400, 'BAD_REQUEST');
