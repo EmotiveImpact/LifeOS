@@ -268,7 +268,7 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 | [x] | `people` | Your people | Push | You → People | `/you/people/people` |
 | [x] | `person` | A person | Push | People → a person | `/you/people/person` |
 | [x] | `addperson` | Add people from contacts | Sheet | People → + | `/(sheets)/addperson` · formSheet |
-| [x] | `birthdaynudge` | A birthday, on Today | Card | Today, 4 days before | the Tax check (`taxcheck?state=code`) and Talk |
+| [x] | `birthdaynudge` | A birthday, on Today | Card | Today, 4 days before | component on Today / anywhere |
 | [x] | `dates` | Important dates | Push | People → Dates | `/you/people/dates` |
 
 ## You · Settings and account (14)
