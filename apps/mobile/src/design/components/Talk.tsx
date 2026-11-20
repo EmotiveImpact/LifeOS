@@ -123,7 +123,7 @@ function TrayTile({ area, count }: { area: Area; count: number }) {
   const prev = useRef(count);
   useEffect(() => {
     if (count > prev.current) {
-      s.value = withSequence(withSpring(1.06, springs.snappy), withSpring(1, springs.smooth));
+      s.value = withSequence(withSpring(1.03, springs.snappy), withSpring(1, springs.smooth));
       feedback.file();
     }
     prev.current = count;
@@ -255,7 +255,7 @@ export function AttachMenu({ visible, options, onPick, onClose }: { visible: boo
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.scheme === 'dark' ? 'rgba(0,0,0,0.55)' : 'rgba(13,14,16,0.3)' }]} onPress={onClose} accessibilityLabel="Close attach menu" />
       <View style={[styles.attach, { backgroundColor: t.surface }]}>
         {options.map((o, i) => (
-          <Animated.View key={o.key} entering={FadeInDown.delay(i * 40).springify().damping(16)}>
+          <Animated.View key={o.key} entering={FadeInDown.delay(i * 40).springify().dampingRatio(1).duration(320)}>
             <Press
               haptic="open"
               onPress={() => {
