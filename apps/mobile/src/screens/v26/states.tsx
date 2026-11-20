@@ -23,7 +23,7 @@ import { SHOW_SAMPLES } from '@/state/sample';
 import { money, seed } from '@/state/seed';
 import { bufferMonths } from '@/state/plan';
 import { hm } from '@/state/today';
-import { auth } from '@/services/local';
+import { signInWith } from '@/services/account';
 import {
   HELPLINES, STILL_WORKING, lifeDay, longDate, offlineMoney, phoneOnly, quietDevice, readChatQueue, syncConflict, taxYearMonths, useHealthConsent,
 } from '@/state/firstopen';
@@ -476,7 +476,13 @@ export function ForceupdateV26() {
 export function SignedOutV26() {
   const nav = useNavigation(), { set, flag, reset } = useSeed();
   const provider = Platform.OS === 'android' ? 'google' : 'apple';
-  const signIn = async () => { feedback.primary(); await auth.signIn(provider); flag('signed-in-preview', true); set({ onboardingDone: true }); nav.home(); };
+  const signIn = async () => {
+    feedback.primary();
+    const result = await signInWith(provider);
+    // Until the native Apple and Google sheets are installed, a live account signs in by email on the sign-in sheet.
+    if (!result.ok) { nav.go('signin'); return; }
+    flag(result.mode === 'account' ? 'signed-in' : 'signed-in-preview', true); set({ onboardingDone: true }); nav.home();
+  };
   const fresh = async () => { if (await reset()) nav.replace('welcome'); };
   return (
     <View nativeID="screen-signedout" style={{ flex: 1, backgroundColor: photo.ink }}>
