@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { dayCandidates, type CandidateInput } from '../../packages/core/src/day/candidates';
 import { freeGaps, gapFor } from '../../packages/core/src/day/gaps';
-import { dayNudges, NUDGE_WINDOW } from '../../packages/core/src/day/nudges';
+import { dayNudges, NUDGE_WINDOW, planNudges, markActed, recentMoveNudges } from '../../packages/core/src/day/nudges';
 import { dueJobs, JOB_EVERY } from '../../packages/core/src/day/jobs';
 import { planToday } from '../../packages/core/src/day/planner';
+import { dayRandom } from '../../packages/core/src/day/learning';
 import { emptyLoops, savePlan, finishStep, type Priority } from '../../packages/core/src/day/loops';
 import { instantAt, localMinutes } from '../../packages/core/src/time/zone';
 
@@ -140,6 +141,41 @@ describe('nudges for the day', () => {
   test('nothing in a nudge is about your health or money figures', () => {
     const n = dayNudges({ ...base, next: { id: 'm', title: 'Walk' }, habitsAtRisk: [{ id: 'h', name: 'Stretch' }], recallDue: 1, bedtime: 23 * 60 });
     for (const x of n) expect(x.body).not.toMatch(/£|kcal|readiness|HRV|\bbpm\b/i);
+  });
+});
+
+describe('from nudges to the phone’s schedule', () => {
+  const now = at(TODAY, 8, 30);
+  const rules = { timeZone: LDN };
+  test('one nudge a day, but a deadline under a day still comes', () => {
+    const n = dayNudges({ now, timeZone: LDN, next: { id: 'plan:x', title: 'Walk' }, habitsAtRisk: [{ id: 'walk', name: 'Morning walk' }], deadlines: [{ id: 'car', title: 'Your car insurance', dueAt: at(TODAY, 20) }] });
+    const { planned } = planNudges(n, [], rules, now);
+    const today = planned.filter(p => p.at < at('2026-11-21', 0)).map(p => p.nudge.kind);
+    expect(today.sort()).toEqual(['deadlines', 'habit']);
+  });
+  test('what already went out today uses up the day; what is still to come is planned again', () => {
+    const n = dayNudges({ now: at(TODAY, 15), timeZone: LDN, next: { id: 'plan:x', title: 'Walk' }, recallDue: 1 });
+    const sent = [{ id: 'recall-2026-11-20', kind: 'recall', at: at(TODAY, 12) }, { id: 'old', kind: 'move', at: at(TODAY, 18) }];
+    const { planned, log } = planNudges(n, sent, rules, at(TODAY, 15));
+    expect(planned).toEqual([]);
+    expect(log.map(e => e.id)).toEqual(['recall-2026-11-20']);
+  });
+  test('quiet hours you set are kept, and the bedtime reminder is yours', () => {
+    const n = dayNudges({ now, timeZone: LDN, bedtime: 23 * 60, habitsAtRisk: [{ id: 'walk', name: 'Morning walk' }] });
+    const { planned } = planNudges(n, [], { timeZone: LDN, quiet: { start: 17 * 60, end: 8 * 60 } }, now);
+    expect(planned.map(p => [p.nudge.kind, localMinutes(p.at, LDN)])).toEqual([['bedtime', 22 * 60 + 15]]);
+  });
+  test('opening a move nudge is remembered, for fatigue', () => {
+    const n = dayNudges({ now, timeZone: LDN, next: { id: 'plan:x', title: 'Walk' } });
+    const { log } = planNudges(n, [], rules, now);
+    const opened = markActed(log.map(e => ({ ...e, at: now - 1 })), 'move-2026-11-20');
+    expect(recentMoveNudges(opened)).toEqual([{ id: 'plan:x', at: now - 1, acted: true }]);
+  });
+  test('the day’s random draws repeat within a day and differ between days', () => {
+    const a = dayRandom('2026-11-20'), b = dayRandom('2026-11-20'), c = dayRandom('2026-11-21');
+    const first = a();
+    expect(b()).toBe(first);
+    expect(c()).not.toBe(first);
   });
 });
 

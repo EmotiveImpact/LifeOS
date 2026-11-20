@@ -15,7 +15,7 @@ import { addDays, instantAt, localDate, localMinutes, weekdayOf, type DateKey, t
 import { BEDTIME_REMINDER_LEAD } from '../health/sleep';
 import { gapFor, type Gap } from './gaps';
 import { checkInNotifications, type CheckInContext, type CheckInStyle } from './loops';
-import { bedtimeReminder, type NotificationCandidate } from './notifications';
+import { bedtimeReminder, MAX_PER_DAY, scheduleNotifications, type NotificationCandidate } from './notifications';
 
 export type NudgeKind = 'move' | 'deadlines' | 'habit' | 'recall' | 'recap' | 'bedtime' | 'plan-tomorrow' | 'pick-up';
 
@@ -25,6 +25,8 @@ export interface Nudge extends NotificationCandidate {
   body: string;
   /** Where tapping it opens. */
   to: string;
+  /** The move behind a move nudge, for fatigue. */
+  ref?: string;
 }
 
 export interface NudgeInput {
@@ -89,9 +91,9 @@ export function dayNudges(input: NudgeInput): Nudge[] {
         .filter(g => g.end > g.start)
         .map(g => ({ ...g, minutes: Math.floor((g.end - g.start) / 60_000) }));
       const gap = gapFor(inWindow, minutes, from);
-      if (gap) add({ id: `move-${today}`, kind: 'move', earliest: gap.start, latest, body: `You’ve got ${gap.minutes} free minutes. ${input.next.title} fits.`, to: 'today' });
+      if (gap) add({ id: `move-${today}`, kind: 'move', ref: input.next.id, earliest: gap.start, latest, body: `You’ve got ${gap.minutes} free minutes. ${input.next.title} fits.`, to: 'today' });
     } else {
-      add({ id: `move-${today}`, kind: 'move', earliest: Math.max(from, at(NO_CALENDAR_MOVE_AT)), latest, body: `Today’s move: ${input.next.title}.`, to: 'today' });
+      add({ id: `move-${today}`, kind: 'move', ref: input.next.id, earliest: Math.max(from, at(NO_CALENDAR_MOVE_AT)), latest, body: `Today’s move: ${input.next.title}.`, to: 'today' });
     }
   }
 
@@ -122,3 +124,53 @@ export function dayNudges(input: NudgeInput): Nudge[] {
   const off = input.off ?? new Set<string>();
   return out.filter(n => !off.has(n.kind)).sort((a, b) => b.priority - a.priority || a.earliest - b.earliest || a.id.localeCompare(b.id));
 }
+
+/* ───────────────────────── From nudges to the phone's schedule ───────────────────────── */
+
+/** What was scheduled, kept so the day's cap counts what has already gone out. `ref` is the move behind a move nudge. */
+export interface NudgeLogEntry { id: string; kind: string; at: number; ref?: string; acted?: boolean; requested?: boolean }
+export interface PlannedNudge { nudge: Nudge; at: number }
+
+/** Deadlines under a day are time-critical: they sit outside the one-a-day nudge, up to this many a day. */
+export const DEADLINE_MAX_PER_DAY = 3;
+/** How long the log keeps what went out, for fatigue and the cap. */
+export const NUDGE_LOG_DAYS = 14;
+
+/**
+ * Turns the day's nudges into the phone's schedule. Everything already delivered counts towards today's cap; what is
+ * still in the future is planned again from scratch, so a change in the day (a step ticked, a habit done) is reflected.
+ */
+export function planNudges(
+  nudges: readonly Nudge[],
+  log: readonly NudgeLogEntry[],
+  rules: { timeZone: string; quiet?: QuietHours },
+  now: number,
+  horizonDays = 2,
+): { planned: PlannedNudge[]; log: NudgeLogEntry[] } {
+  const delivered = log.filter(e => e.at <= now && e.at >= now - NUDGE_LOG_DAYS * 86_400_000);
+  const sentOf = (deadline: boolean) => delivered.filter(e => (e.kind === 'deadlines') === deadline).map(e => ({ id: e.id, at: e.at, requested: e.requested }));
+  const goneOut = new Set(delivered.map(e => e.id));
+  const fresh = nudges.filter(n => !goneOut.has(n.id));
+  const byId = new Map(fresh.map(n => [n.id, n]));
+  const options = { now, horizonDays };
+  const deadlines = scheduleNotifications(fresh.filter(n => n.kind === 'deadlines'), sentOf(true), { ...rules, maxPerDay: DEADLINE_MAX_PER_DAY }, options);
+  const rest = scheduleNotifications(fresh.filter(n => n.kind !== 'deadlines'), sentOf(false), { ...rules, maxPerDay: MAX_PER_DAY }, options);
+  const planned = [...deadlines.scheduled, ...rest.scheduled]
+    .map(s => ({ nudge: byId.get(s.id)!, at: s.at }))
+    .sort((a, b) => a.at - b.at);
+  const refs = new Map(log.map(e => [e.id, e]));
+  return {
+    planned,
+    log: [
+      ...delivered,
+      ...planned.map(p => ({ id: p.nudge.id, kind: p.nudge.kind, at: p.at, ...(p.nudge.ref ? { ref: p.nudge.ref } : {}), ...(p.nudge.requested ? { requested: true } : {}), ...(refs.get(p.nudge.id)?.acted ? { acted: true } : {}) })),
+    ],
+  };
+}
+
+/** Marks a nudge as opened, for fatigue: moves you open aren't held back. */
+export const markActed = (log: readonly NudgeLogEntry[], id: string): NudgeLogEntry[] => log.map(e => (e.id === id ? { ...e, acted: true } : e));
+
+/** The move nudges of the last week, as the planner's fatigue reads them. */
+export const recentMoveNudges = (log: readonly NudgeLogEntry[]) =>
+  log.filter(e => e.kind === 'move' && e.ref).map(e => ({ id: e.ref as string, at: e.at, acted: !!e.acted }));

@@ -6,7 +6,7 @@
  *
  * The random source is passed in, so a test (or "Why am I seeing this?") can replay exactly what happened.
  */
-import { clamp } from '../math/stats';
+import { clamp, seededRandom } from '../math/stats';
 import { localMinutes } from '../time/zone';
 
 export interface Arm { done: number; skipped: number }
@@ -78,4 +78,11 @@ export function recordOutcome(state: BanditState, kind: string, context: string,
   const arm = state[key] ?? { done: 0, skipped: 0 };
   const next = { done: arm.done * FORGET + (outcome === 'done' ? 1 : 0), skipped: arm.skipped * FORGET + (outcome === 'done' ? 0 : 1) };
   return { ...state, [key]: next };
+}
+
+/** A random source that stays the same all day, so today's order doesn't reshuffle each time Today opens. */
+export function dayRandom(key: string): () => number {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return seededRandom(h >>> 0);
 }
