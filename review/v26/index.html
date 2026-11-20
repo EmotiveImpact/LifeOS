@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>life · V26 board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v26.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>life · V26 <span>taken apart, put together.</span></h1>
+      <p><b>Every screen, rebuilt from your references.</b> Twelve design moves, then the whole app chapter by chapter. Each screen says which references it draws on; approve it or flag it underneath. <b id="progress"></b>.</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="jump" aria-label="Jump to a chapter"><option value="">Jump to a chapter</option></select>
+      <div class="toggle" role="group" aria-label="Theme">
+        <button data-theme-set="light" aria-pressed="true">Light</button>
+        <button data-theme-set="dark" aria-pressed="false">Dark</button>
+      </div>
+    </div>
+  </header>
+  <p class="still-note"><b>This is the still version.</b> This preview does not run the page’s scripts, so the orb is not moving, and the Approve buttons, dark mode and tap-through states are hidden. Every screen is here. Open the file in your browser for the full board.</p>
+  <section class="sec chrome" style="margin-top:28px">
+    <h2>Twelve moves <span>from your references</span></h2>
+    <p class="lede">These are the additions. Each one names the references it comes from and what changes in life.</p>
+    <div class="moves" id="moves"></div>
+  </section>
+  <div id="screens"></div>
+  <section class="sec chrome">
+    <h2>The references, <span>taken apart</span></h2>
+    <p class="lede">What each one does well, where it lands, and what we don’t take.</p>
+    <div class="refs" id="refs"></div>
+  </section>
+</div>
+<div class="tally" role="region" aria-label="Your review"><span><b id="n-ok">0</b> approved · <b id="n-fix">0</b> need work</span><button type="button" id="next" class="quiet">Next to review</button><button type="button" id="copy">Copy for Claude</button></div>
+<script src="../v25/icons.js"></script>
+<script src="../v25/orb.js"></script>
+<script src="catalogue.js"></script>
+<script src="kit.js"></script>
+<script src="screens/core.js"></script>
+<script src="screens/picture.js"></script>
+<script src="screens/first-open.js"></script>
+<script src="screens/states-outside.js"></script>
+<script src="screens/today-plan-you.js"></script>
+<script src="screens/talk-toolkit.js"></script>
+<script src="screens/money-docs-aim.js"></script>
+<script src="screens/body-a.js"></script>
+<script src="screens/body-b.js"></script>
+<script src="screens/fuel.js"></script>
+<script src="screens/learn-teach-grow.js"></script>
+<script src="screens/settings-people.js"></script>
+<script src="board-markup.js"></script>
+<script src="board.js"></script>
+</body>
+</html>

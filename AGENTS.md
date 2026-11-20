@@ -6,6 +6,7 @@ Instructions for any coding agent working in this repo (Codex reads this file au
 **life** is an Expo app (iOS + Android) in `apps/mobile`. Engine logic lives in `packages/core`. The design, spec and plan are finished; your job is to **build it, phase by phase**, exactly as specified. Claude reviews every phase at a 🛑 gate before the next one starts.
 
 ## Read in this order before writing code
+0. **`BUILD_V26.md`: the current job list (20 Nov 2026).** It replaces the phase list in `BUILD_PLAN.md` for everything still to do, and the V26 board (`review/v26/board.html`) replaces the v17 board as the visual target. Where this file and `BUILD_V26.md` differ on order or target, `BUILD_V26.md` wins.
 1. `MASTER_PLAN.md`: order of everything, stack (Neon, voice, AI models), decisions log.
 2. `BUILD_PLAN.md`: **your job list**. Phases, tasks, acceptance criteria, gates.
 3. `SPEC.md`: how everything works (engine, health, learning, data model, blind spots).
