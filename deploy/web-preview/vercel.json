@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci --prefix ../../apps/mobile --no-audit --no-fund",
+  "buildCommand": "cd ../../apps/mobile && EXPO_PUBLIC_SAMPLE_DATA=1 npx expo export --platform web --output-dir ../../deploy/web-preview/public",
+  "outputDirectory": "public",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "headers": [
+    { "source": "/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+  ],
+  "git": { "deploymentEnabled": false }
+}
