@@ -195,7 +195,7 @@ export function InsightCard({ area, source, value, text, width }: { area: Area; 
 export function RecordRow({ area, badge, label, destination, removed, onToggleRemove }: { area: Area; badge: string; label: string; destination: string; removed?: boolean; onToggleRemove: () => void }) {
   const t = useTokens();
   return (
-    <Animated.View layout={LinearTransition.springify()} style={styles.row}>
+    <Animated.View layout={LinearTransition.springify().dampingRatio(1).duration(400)} style={styles.row}>
       <View style={[styles.badge, { backgroundColor: areaColors[t.scheme][area] }]}>
         <Text variant="micro" style={{ color: '#0D0E10', fontSize: 12 }}>
           {badge}

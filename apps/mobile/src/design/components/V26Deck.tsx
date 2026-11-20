@@ -11,6 +11,7 @@ import { Press } from '../Press';
 import { Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
 import { componentSize, floatLift, motion, photo, photoScrims, radius, space } from '../tokens';
+import { Appear } from './Appear';
 import { StatusPill } from './Surfaces';
 import { PhotoFill, type Focal } from './V26PhotoFill';
 
@@ -228,8 +229,11 @@ export type DecisionDrawerProps = {
 export function DecisionDrawer({ title, sub, leave, confirm, ask, undo, safeBottom = true, style }: DecisionDrawerProps) {
   const t = useTokens();
   const insets = useSafeAreaInsets();
+  // It rises from the bottom edge when it first appears; when its question changes (review → filed) the words cross-fade
+  // in place instead of jumping.
   return (
-    <View style={[styles.drawer, { backgroundColor: t.ink, paddingBottom: safeBottom ? Math.max(insets.bottom, space.lg) + space.xs : 30 }, style]}>
+    <Appear rise={56} style={[styles.drawer, { backgroundColor: t.ink, paddingBottom: safeBottom ? Math.max(insets.bottom, space.lg) + space.xs : 30 }, style]}>
+      <Appear key={title} rise={6}>
       <Text variant="heading" tone="inverse" align="center" accessibilityRole="header" style={{ fontVariant: [] }}>{title}</Text>
       {sub ? <Text variant="callout" tone="inverse2" align="center" style={{ marginTop: 2 }}>{sub}</Text> : null}
       {undo
@@ -238,7 +242,8 @@ export function DecisionDrawer({ title, sub, leave, confirm, ask, undo, safeBott
             left={leave ? { icon: leave.icon ?? 'close', label: leave.label, onPress: leave.onPress, haptic: leave.haptic } : undefined}
             knob={confirm ? { icon: confirm.icon ?? 'check', label: confirm.label, onPress: confirm.onPress, haptic: confirm.haptic } : undefined}
             right={ask ? { icon: ask.icon ?? 'help', label: ask.label, onPress: ask.onPress, haptic: ask.haptic } : undefined} />}
-    </View>
+      </Appear>
+    </Appear>
   );
 }
 

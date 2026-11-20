@@ -119,7 +119,7 @@ export function SubsV26() {
   };
   const cancelled = s.all.filter(x => x.cancelled);
   return (
-    <Page screen="subs" bar={{ kind: 'push', title: 'Subscriptions', action: { kind: 'text', label: data.flags['subs-show-cancelled'] ? 'Hide cancelled' : 'Show cancelled', onPress: () => flag('subs-show-cancelled') } }}>
+    <Page screen="subs" bar={{ kind: 'push', title: 'Subscriptions', action: { kind: 'text', label: data.flags['subs-show-cancelled'] ? 'Active only' : 'Show all', onPress: () => flag('subs-show-cancelled') } }}>
       <Eyebrow>Checked every quarter</Eyebrow>
       {s.unused.length
         ? <Display s={`{${show(s.unusedMonthly * 12, 2)} a year} goes on ${word(s.unused.length).toLowerCase()} ${s.unused.length === 1 ? 'thing' : 'things'} you {haven’t used} in 60 days.`} />

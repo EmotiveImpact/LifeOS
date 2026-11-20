@@ -169,7 +169,7 @@ function AreaTile({ area, name, count, text, hitKey }: { area: Area; name: strin
   useEffect(() => {
     if (hitKey < 0) return;
     if (calm) { ink.value = withSequence(withTiming(1, { duration: 120 }), withDelay(700, withTiming(0, { duration: 200 }))); return; }
-    scale.value = withSequence(withSpring(1.05, motion.bouncy), withDelay(600, withSpring(1, motion.snappy)));
+    scale.value = withSequence(withSpring(1.03, motion.snappy), withDelay(600, withSpring(1, motion.smooth)));
     ink.value = withSequence(withTiming(1, { duration: 180 }), withDelay(620, withTiming(0, { duration: 250 })));
   }, [hitKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const box = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));

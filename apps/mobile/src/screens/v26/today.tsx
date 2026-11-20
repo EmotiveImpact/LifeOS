@@ -8,7 +8,7 @@ import { SafeAreaProvider, SafeAreaView, initialWindowMetrics } from 'react-nati
 import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  ArrivingCard, DecideRow, FEEL_MOODS, FeelingDrawer, Icon, LifeOrb, MoveDeck, PhotoCard, PhotoFill, Press, ReorderRow, RoundButton, Ruler,
+  Appear, ArrivingCard, DecideRow, FEEL_MOODS, FeelingDrawer, Icon, LifeOrb, MoveDeck, PhotoCard, PhotoFill, Press, ReorderRow, RoundButton, Ruler,
   SectionHead, StatusPill, Text, TileGrid, TintCard, V26Tile, Waveform, cardShadow, componentSize, feedback, fonts, photo, photoScrims, photos,
   radius, space, type, useCalmMotion, useTokens, type FeelMoodId, type MoveCard, type TopBarAction,
 } from '@/design';
@@ -215,7 +215,8 @@ export function TodayV26() {
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
           <View style={[StyleSheet.absoluteFill, { backgroundColor: t.scrim }]} />
           <Press haptic={null} accessibilityLabel="Not now" onPress={() => { choose('pulse-skipped-day', day); setDrawer(false); }} style={{ flex: 1 }} />
-          <FeelingDrawer initial={mood ?? 'calm'} onClose={() => { if (!mood) choose('pulse-skipped-day', day); setDrawer(false); }} onSet={m => { logMood(m); decide(''); setDrawer(false); }} />
+          {/* The scrim fades; the drawer rises from the bottom edge like a native sheet. */}
+          <Appear rise={120}><FeelingDrawer initial={mood ?? 'calm'} onClose={() => { if (!mood) choose('pulse-skipped-day', day); setDrawer(false); }} onSet={m => { logMood(m); decide(''); setDrawer(false); }} /></Appear>
         </SafeAreaProvider>
       </Modal>
       <Modal visible={params.nudge === '1' && !data.flags['nudge-dismissed']} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => nav.replace('today')}>
