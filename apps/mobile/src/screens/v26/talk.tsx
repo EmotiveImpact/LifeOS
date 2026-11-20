@@ -238,7 +238,7 @@ export function UnderstoodV26() {
 }
 
 /** The board's composer: a white bar with a soft lift, the words, and a round send. */
-function Composer({ value, onChange, placeholder, onSend, onAttach, onMic, disabled }: { value: string; onChange: (v: string) => void; placeholder: string; onSend: () => void; onAttach?: () => void; onMic?: () => void; disabled?: boolean }) {
+export function Composer({ value, onChange, placeholder, onSend, onAttach, onMic, disabled }: { value: string; onChange: (v: string) => void; placeholder: string; onSend: () => void; onAttach?: () => void; onMic?: () => void; disabled?: boolean }) {
   const t = useTokens();
   const typing = value.trim().length > 0;
   return (

@@ -127,41 +127,41 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `body` | Body | Push | Plan → Body or Today’s body card | `/plan/body/body` |
-| [x] | `devices` | Connect devices | Push | Body → Sources | `/plan/body/devices` |
-| [x] | `readiness` | Readiness | Push | Body | `/plan/body/readiness` |
-| [x] | `sleep` | Sleep | Push | Body | `/plan/body/sleep` |
-| [x] | `load` | Load | Push | Body | `/plan/body/load` |
-| [x] | `trends` | Trends | Push | Body | `/plan/body/trends` |
-| [x] | `hrv` | Metric detail: HRV | Push | Readiness → HRV | `/plan/body/hrv` |
-| [x] | `signals` | Body signals | Push | Body | `/plan/body/signals` |
-| [x] | `stress` | Stress today | Push | Body | `/plan/body/stress` |
-| [x] | `breathe` | Breathe | Full screen | Stress or a nudge | `/(flows)/breathe` · fullScreenModal |
-| [x] | `journal` | Evening journal | Sheet | evening | `/(sheets)/journal` · formSheet |
-| [x] | `insights` | Journal insights | Push | Journal | `/plan/body/insights` |
-| [x] | `workout` | Live workout | Full screen | start a workout | `/(flows)/workout` · fullScreenModal |
-| [x] | `detected` | Workouts we spotted | Push | Body | `/plan/body/detected` |
-| [x] | `sleepplan` | Sleep planner | Push | Sleep | `/plan/body/sleepplan` |
-| [x] | `math` | How scores work | Push | any score → How it works | `/plan/body/math` |
-| [x] | `coach` | Ask about your body | Full screen | Body → Ask | `/(flows)/coach` · fullScreenModal |
-| [x] | `forecast` | Tomorrow's forecast | Push | Readiness | `/plan/body/forecast` |
-| [x] | `cycle` | Cycle-aware readiness | Push | Body (opt-in) | `/plan/body/cycle` |
-| [x] | `fitnessage` | Fitness age | Push | Body | `/plan/body/fitnessage` |
-| [x] | `sources` | One picture from all your devices | Push | Body → Sources | `/plan/body/sources` |
-| [x] | `cgm` | Glucose, after meals | Push | Body (with a sensor) | `/plan/body/cgm` |
-| [x] | `basics` | Water, sitting and recovery | Push | Body | `/plan/body/basics` |
-| [x] | `sleepnight` | One night | Push | Sleep → a night | `/plan/body/sleepnight` |
-| [x] | `workoutdetail` | A past workout | Push | Load → a workout | `/plan/body/workoutdetail` |
-| [x] | `weight` | Weight and body | Push | Body | `/plan/body/weight` |
-| [x] | `bmi` | BMI and waist, explained | Push | Body numbers → BMI | `/plan/body/bmi` |
-| [x] | `strain` | Today’s target load | Push | Body → Load | `/plan/body/strain` |
-| [x] | `zones` | Your heart-rate zones | Push | Load → Zones | `/plan/body/zones` |
-| [x] | `illness` | Something may be coming on | Card / push | Today, when signals rise | component on Today / anywhere |
-| [x] | `breathlib` | Breathing library | Push | Body → Breathe | `/plan/body/breathlib` |
-| [x] | `provenance` | Where this number came from | Sheet | tap any score | `/(sheets)/provenance` · formSheet |
-| [x] | `regularity` | Sleep regularity | Push | Sleep → Regularity | `/plan/body/regularity` |
-| [x] | `loadtrend` | Training load trend | Push | Load → Trend | `/plan/body/loadtrend` |
-| [x] | `healthdigest` | Your body this week | Push | Sunday, on Today | `/plan/body/healthdigest` |
+| [x] | `body` | Body **V26** | Push | Plan → Body or Today’s body card | `/plan/body/body` |
+| [x] | `devices` | Connect devices **V26** | Push | Body → Sources | `/plan/body/devices` |
+| [x] | `readiness` | Readiness **V26** | Push | Body | `/plan/body/readiness` |
+| [x] | `sleep` | Sleep **V26** | Push | Body | `/plan/body/sleep` |
+| [x] | `load` | Load **V26** | Push | Body | `/plan/body/load` |
+| [x] | `trends` | Trends **V26** | Push | Body | `/plan/body/trends` |
+| [x] | `hrv` | Metric detail: HRV **V26** | Push | Readiness → HRV | `/plan/body/hrv` |
+| [x] | `signals` | Body signals **V26** | Push | Body | `/plan/body/signals` |
+| [x] | `stress` | Stress today **V26** | Push | Body | `/plan/body/stress` |
+| [x] | `breathe` | Breathe **V26** | Full screen | Stress or a nudge | `/(flows)/breathe` · fullScreenModal |
+| [x] | `journal` | Evening journal **V26** | Sheet | evening | `/(sheets)/journal` · formSheet |
+| [x] | `insights` | Journal insights **V26** | Push | Journal | `/plan/body/insights` |
+| [x] | `workout` | Live workout **V26** | Full screen | start a workout | `/(flows)/workout` · fullScreenModal |
+| [x] | `detected` | Workouts we spotted **V26** | Push | Body | `/plan/body/detected` |
+| [x] | `sleepplan` | Sleep planner **V26** | Push | Sleep | `/plan/body/sleepplan` |
+| [x] | `math` | How scores work **V26** | Push | any score → How it works | `/plan/body/math` |
+| [x] | `coach` | Ask about your body **V26** | Full screen | Body → Ask | `/(flows)/coach` · fullScreenModal |
+| [x] | `forecast` | Tomorrow's forecast **V26** | Push | Readiness | `/plan/body/forecast` |
+| [x] | `cycle` | Cycle-aware readiness **V26** | Push | Body (opt-in) | `/plan/body/cycle` |
+| [x] | `fitnessage` | Fitness age **V26** | Push | Body | `/plan/body/fitnessage` |
+| [x] | `sources` | One picture from all your devices **V26** | Push | Body → Sources | `/plan/body/sources` |
+| [x] | `cgm` | Glucose, after meals **V26** | Push | Body (with a sensor) | `/plan/body/cgm` |
+| [x] | `basics` | Water, sitting and recovery **V26** | Push | Body | `/plan/body/basics` |
+| [x] | `sleepnight` | One night **V26** | Push | Sleep → a night | `/plan/body/sleepnight` |
+| [x] | `workoutdetail` | A past workout **V26** | Push | Load → a workout | `/plan/body/workoutdetail` |
+| [x] | `weight` | Weight and body **V26** | Push | Body | `/plan/body/weight` |
+| [x] | `bmi` | BMI and waist, explained **V26** | Push | Body numbers → BMI | `/plan/body/bmi` |
+| [x] | `strain` | Today’s target load **V26** | Push | Body → Load | `/plan/body/strain` |
+| [x] | `zones` | Your heart-rate zones **V26** | Push | Load → Zones | `/plan/body/zones` |
+| [x] | `illness` | Something may be coming on **V26** | Card / push | Today, when signals rise | component on Today / anywhere |
+| [x] | `breathlib` | Breathing library **V26** | Push | Body → Breathe | `/plan/body/breathlib` |
+| [x] | `provenance` | Where this number came from **V26** | Sheet | tap any score | `/(sheets)/provenance` · formSheet |
+| [x] | `regularity` | Sleep regularity **V26** | Push | Sleep → Regularity | `/plan/body/regularity` |
+| [x] | `loadtrend` | Training load trend **V26** | Push | Load → Trend | `/plan/body/loadtrend` |
+| [x] | `healthdigest` | Your body this week **V26** | Push | Sunday, on Today | `/plan/body/healthdigest` |
 
 ## Plan · Body · Fuel (28)
 
@@ -200,9 +200,9 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `habits` | Habits | Push | Body → Habits | `/plan/body/habits/habits` |
-| [x] | `habitnew` | New habit | Sheet | Habits → + | `/(sheets)/habitnew` · formSheet |
-| [x] | `strength` | Habit strength | Push | a habit | `/plan/body/habits/strength` |
+| [x] | `habits` | Habits **V26** | Push | Body → Habits | `/plan/body/habits/habits` |
+| [x] | `habitnew` | New habit **V26** | Sheet | Habits → + | `/(sheets)/habitnew` · formSheet |
+| [x] | `strength` | Habit strength **V26** | Push | a habit | `/plan/body/habits/strength` |
 
 ## Learn from the best (10)
 
