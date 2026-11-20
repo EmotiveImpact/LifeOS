@@ -5,9 +5,9 @@
  * Copy is written the board's way: braces mark the words that matter, `{@doc tax rebate}` sets an icon inside them.
  *   <Display s="Your {@doc tax rebate} is {one form} away." />
  */
-import { Children, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
-import { Stack } from 'expo-router';
+import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
+import { Stack, useNavigation as useRouterNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -268,6 +268,9 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
   const onPhoto = !!backdrop;
   const bg = sheet ? t.surface : t.canvas;
   const statusBarStyle = onPhoto || t.scheme === 'dark' ? 'light' : 'dark';
+  // A sheet is only as tall as what's in it (Edem, 20 Nov): a photograph-led sheet draws its own drawer instead.
+  const fits = sheet && !backdrop && scroll && !center;
+  const fit = useSheetFit(fits);
   const top = b.kind === 'root' ? <TopBar look="v26" kind="root" title={b.title} sub={b.sub} actions={b.actions} onImage={onPhoto} />
     : b.kind === 'push' ? <TopBar look="v26" kind="push" title={b.title} titleNode={b.titleNode} action={b.action} onBack={close} closeIcon={b.close} onImage={onPhoto} />
     : b.kind === 'sheet' ? (b.title ? <TopBar look="v26" kind="sheet" title={b.title} action={b.action} onClose={close} onImage={onPhoto} /> : <SheetHandle />)
@@ -276,24 +279,81 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
     : null;
   const pad = { paddingHorizontal: space.gutter, paddingTop: space.xxs, paddingBottom: 28 + (footer || bottom || meta.kind === 'Tab' ? 0 : insets.bottom) };
   const body = scroll
-    ? <ScrollView style={{ flex: 1, minHeight: 0 }} contentInsetAdjustmentBehavior="never" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
+    ? <ScrollView style={fits && fit.web ? { flexGrow: 0, flexShrink: 1, minHeight: 0 } : { flex: 1, minHeight: 0 }} contentInsetAdjustmentBehavior="never" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
         onScroll={onPull ? e => { if (e.nativeEvent.contentOffset.y < -60) onPull(); } : undefined} scrollEventThrottle={16}
+        onContentSizeChange={fits ? (_w, h) => fit.part('body', h) : undefined}
         contentContainerStyle={[pad, center ? { flexGrow: 1, justifyContent: 'center' } : null, contentStyle]}>{children}</ScrollView>
     : <View style={[{ flex: 1, minHeight: 0 }, pad, center ? { justifyContent: 'center' } : null, contentStyle]}>{children}</View>;
+  const head = <View style={{ flexShrink: 0 }} onLayout={fits ? e => fit.part('top', e.nativeEvent.layout.height) : undefined}>{top}</View>;
+  const foot = footer ? <View onLayout={fits ? e => fit.part('foot', e.nativeEvent.layout.height) : undefined}><Footer style={{ backgroundColor: onPhoto ? 'transparent' : bg }}>{footer}</Footer></View> : null;
+  if (fits && fit.web) {
+    // The web preview has no native sheet, so draw one: dimmed page behind, the sheet hugging its content at the bottom.
+    return (
+      <View nativeID={`screen-${screen}`} style={{ flex: 1, minHeight: 0, backgroundColor: t.scrim, justifyContent: 'flex-end' }}>
+        <Stack.Screen options={{ statusBarStyle }} />
+        <StatusBar style={statusBarStyle} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
+        <View style={[styles.webSheet, { backgroundColor: bg, maxHeight: '94%' }]}>
+          {head}
+          {body}
+          {foot}
+          {bottom}
+        </View>
+      </View>
+    );
+  }
   return (
     <View nativeID={`screen-${screen}`} style={{ flex: 1, minHeight: 0, backgroundColor: onPhoto ? t.ink : bg }}>
       <Stack.Screen options={{ statusBarStyle }} />
       <StatusBar style={statusBarStyle} />
       {backdrop}
       <SafeAreaView edges={sheet ? [] : ['top']} style={{ flex: 1, minHeight: 0 }}>
-        <View style={{ flexShrink: 0 }}>{top}</View>
+        {head}
         {body}
-        {footer ? <Footer style={{ backgroundColor: onPhoto ? 'transparent' : bg }}>{footer}</Footer> : null}
+        {foot}
         {bottom}
       </SafeAreaView>
     </View>
   );
 }
+
+/**
+ * Keeps a sheet only as tall as its content. On a phone it asks the native sheet to rest at the content's height
+ * (capped at 92% of the screen); in the web preview it tells the page to draw the sheet itself.
+ */
+function useSheetFit(on: boolean) {
+  const navigation = useRouterNavigation();
+  const { height: screenH } = useWindowDimensions();
+  const parts = useRef({ top: 0, body: 0, foot: 0 });
+  const [total, setTotal] = useState(0);
+  const part = useCallback((k: 'top' | 'body' | 'foot', h: number) => {
+    parts.current[k] = Math.round(h);
+    const next = parts.current.top + parts.current.body + parts.current.foot;
+    setTotal(c => (Math.abs(c - next) < 8 ? c : next));
+  }, []);
+  useEffect(() => {
+    if (!on || Platform.OS === 'web' || !total || !parts.current.body) return;
+    const detent = Math.min(0.92, Math.max(0.3, (total + 12) / screenH));
+    // The sheet group is the parent screen; asking it to rest at this height. If a platform ignores it, the sheet stays as it was.
+    try { (navigation.getParent() as { setOptions?: (o: object) => void } | undefined)?.setOptions?.({ sheetAllowedDetents: [Number(detent.toFixed(3))], sheetInitialDetentIndex: 0 }); } catch { /* keep the default height */ }
+  }, [on, total, screenH, navigation]);
+  return { part, web: Platform.OS === 'web' };
+}
+
+/**
+ * A drawer over a photograph (board `.sheet`) is only as tall as what's in it; the photograph takes the rest. Put
+ * `onLayout` on the drawer and draw the photo `height` tall: it ends just under the drawer's rounded top.
+ * `bar` is the height of the bar above the content (the photo bar by default, 0 for none).
+ */
+export function useDrawerPhoto(bar: number = componentSize.topBarV26) {
+  const insets = useSafeAreaInsets();
+  const [y, setY] = useState(0);
+  const onLayout = useCallback((e: { nativeEvent: { layout: { y: number } } }) => { const next = Math.round(e.nativeEvent.layout.y); setY(c => (c === next ? c : next)); }, []);
+  return { height: y ? insets.top + bar + y + radius.xl : undefined, onLayout };
+}
+
+/** The style a drawer over a photograph shares: hugging its content, rounded on top, shrinking (and scrolling) if it must. */
+export const drawerStyle = { flexShrink: 1, minHeight: 0, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl } as const;
 
 /** The sheet's grabber, drawn by the page because the native sheet hides its own (board `.handle`). */
 export function SheetHandle() {
@@ -419,6 +479,7 @@ const styles = StyleSheet.create({
   well: { width: componentSize.round, height: componentSize.round, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   tick: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   round: { width: componentSize.round, height: componentSize.round, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
+  webSheet: { flexShrink: 1, minHeight: 0, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, overflow: 'hidden' },
   photoBar: { height: componentSize.topBarV26, paddingHorizontal: space.gutter, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   big: { borderRadius: radius.photo, overflow: 'hidden', justifyContent: 'space-between' },
   bigTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: space.md },

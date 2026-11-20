@@ -24,7 +24,7 @@ import {
   clock, cycle as cycleData, drivers, dur, forecast as forecastData, journalEffects, journalLogged, journalTags, liveWorkout, load, pattern, readiness, signals as signalData,
   sleep, sleepPlan, spotted, stress as stressData, trends as trendData, hrvAverage, hrvMovers,
 } from '@/state/body';
-import { Between, BigPhoto, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Micro, Page, PeekStack, PhotoBackdrop, PhotoRound, Row, RowsCard, Statement } from './kit';
+import { Between, BigPhoto, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Micro, Page, PeekStack, PhotoBackdrop, PhotoRound, Row, RowsCard, Statement, drawerStyle, useDrawerPhoto } from './kit';
 import { Axis, FigRow, Gauge, Head, Measure, RangeMark, XL } from './bodykit';
 import { Composer } from './talk';
 
@@ -343,7 +343,7 @@ export function HrvV26() {
       <Statement s={v.value > hi ? `Above your normal range of {${lo}–${hi} ms}. Higher than usual often means your body has {recovered well}.` : v.value >= lo ? `Inside your normal range of {${lo}–${hi} ms}. {A usual night.}` : `Below your normal range of {${lo}–${hi} ms}. Lower than usual can mean your body is {still recovering}.`} style={{ marginTop: space.sm }} />
       <TintCard area="health" style={{ marginTop: space.lg }}>
         <Head icon="pulse" title="30 days" right={`avg ${hrvAverage} · band = your normal`} />
-        <View style={{ marginTop: space.xs }}><BandLine values={v.month} normal={v.normal} height={130} color={accent} bandColor={t.surface} label={`Heart rate variability over 30 days, against your normal range of ${lo} to ${hi} milliseconds`} /></View>
+        <View style={{ marginTop: space.xs }}><BandLine values={v.month} normal={v.normal} height={130} color={accent} bandColor={accent} bandOpacity={.2} label={`Heart rate variability over 30 days, against your normal range of ${lo} to ${hi} milliseconds`} /></View>
         <Axis labels={['18 Oct', '1 Nov', 'Today']} lastInk />
       </TintCard>
       <SectionHead title="What moves yours" link="from your journal" onLink={() => nav.go('insights')} />
@@ -469,7 +469,7 @@ const MINUTES = ['', 'One minute', 'Two minutes', 'Three minutes', 'Four minutes
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 
 export function BreatheV26() {
-  const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets(), calm = useCalmMotion(), { data } = useSeed();
+  const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets(), calm = useCalmMotion(), { data } = useSeed(), drawer = useDrawerPhoto();
   const name = data.choices['breath-protocol'] && BREATHS[data.choices['breath-protocol']] ? data.choices['breath-protocol'] : 'Resonance';
   const p = BREATHS[name], seconds = Number(data.choices['breath-seconds'] ?? p.seconds) || p.seconds;
   const cycle = p.inS + p.hold + p.out + p.hold2, perMin = Math.round(60 / cycle);
@@ -496,13 +496,13 @@ export function BreatheV26() {
   const sub = state === 'done' ? `${breaths} slow breath${breaths === 1 ? '' : 's'}, at about ${perMin} a minute.` : state === 'go' ? (phase === 'in' ? `Through your nose, for ${p.inS}` : phase === 'out' ? `Slowly out, for ${p.out}` : `Hold, for ${phase === 'hold' ? p.hold : p.hold2}`) : p.how;
   return (
     <Page screen="breathe" scroll={false} contentStyle={{ paddingHorizontal: 0, paddingBottom: 0, paddingTop: 0 }}
-      backdrop={<View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: 400 }]}><PhotoFillFade /></View>}
+      backdrop={<View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: drawer.height ?? 400 }]}><PhotoFillFade /></View>}
       bar={{ kind: 'photo', left: <PhotoRound icon="close" label="Close" onPress={nav.close} />, right: <View style={{ flexDirection: 'row', gap: space.xs }}>{SHOW_SAMPLES ? <StatusPill size="chip" onPhoto icon="heart" label={`${stressData.breatheHr} bpm`} /> : null}<StatusPill size="chip" onPhoto label={`${perMin} breaths a minute`} /></View> }}>
-      <View style={{ height: 188 }} />
-      <View style={[styles.sheet, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.md) + space.sm }]}>
+      <View style={{ flex: 1, minHeight: 188 }} />
+      <View onLayout={drawer.onLayout} style={[drawerStyle, styles.sheet, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.md) + space.sm }]}>
         <Text variant="titleSerif" align="center">{cue}</Text>
         <Text variant="callout" tone="ink2" align="center" style={{ marginTop: 6 }}>{sub}</Text>
-        <View style={{ flex: 1, minHeight: 220, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ height: 236, alignItems: 'center', justifyContent: 'center' }}>
           <Animated.View style={[styles.halo, { backgroundColor: t.surface3 }, halo]} />
           <View style={[styles.air, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><LifeOrb size={88} state={state === 'done' ? 'done' : state === 'go' ? 'listening' : 'ring'} /></View>
         </View>
@@ -605,19 +605,19 @@ export function InsightsV26() {
 /* ───────────────────────── Live workout ───────────────────────── */
 
 export function WorkoutV26() {
-  const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets(), { flag } = useSeed(), { accent } = useAreaTint('goal');
+  const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets(), { flag } = useSeed(), { accent } = useAreaTint('goal'), drawer = useDrawerPhoto();
   const w = liveWorkout, [lo, hi] = load.target;
   const [running, setRunning] = useState(true), [secs, setSecs] = useState(SHOW_SAMPLES ? w.startSeconds : 0);
   useEffect(() => { if (!running) return; const id = setInterval(() => setSecs(s => s + 1), 1000); return () => clearInterval(id); }, [running]);
   return (
     <Page screen="workout" scroll={false} contentStyle={{ paddingHorizontal: 0, paddingBottom: 0, paddingTop: 0 }}
-      backdrop={<View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: 430 }]}><PhotoBackdrop source={photos.run} focal={{ y: 0.8 }} /></View>}
+      backdrop={<View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: drawer.height ?? 430 }]}><PhotoBackdrop source={photos.run} focal={{ y: 0.8 }} /></View>}
       bar={{ kind: 'photo', left: <StatusPill size="chip" onPhoto icon="fitness" label={w.kind} />, right: <StatusPill size="chip" onPhoto icon="pulse" label={`${w.strap} · Bluetooth`} /> }}>
-      <View style={{ height: 180, paddingHorizontal: space.gutter, paddingTop: space.xs, alignItems: 'flex-end' }}>
+      <View style={{ flex: 1, minHeight: 180, paddingHorizontal: space.gutter, paddingTop: space.xs, alignItems: 'flex-end' }}>
         <Text variant="callout" style={{ color: photo.onPhoto2 }}>{running ? 'Moving time' : 'Paused'}</Text>
         <Text variant="numeralXl" style={{ color: photo.onPhoto, marginTop: 2 }}>{mmss(secs)}</Text>
       </View>
-      <View style={[styles.sheet, { backgroundColor: t.surface, paddingTop: space.lg, paddingBottom: Math.max(insets.bottom, space.md) + space.sm }]}>
+      <View onLayout={drawer.onLayout} style={[drawerStyle, styles.sheet, { backgroundColor: t.surface, paddingTop: space.lg, paddingBottom: Math.max(insets.bottom, space.md) + space.sm }]}>
         <Between style={{ alignItems: 'flex-end' }}>
           <View><Micro>HEART RATE</Micro><View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5, marginTop: space.xxs }}><Text variant="numeralL">{String(w.bpm)}</Text><Text variant="callout" tone="ink2">bpm</Text></View></View>
           <Text variant="title" style={{ marginBottom: 6 }}>{`Zone ${w.zone}`}</Text>
@@ -631,8 +631,7 @@ export function WorkoutV26() {
           <Gauge lo={lo / 21 * 100} hi={hi / 21 * 100} at={w.load / 21 * 100} onTint color={accent} style={{ marginTop: space.sm }} />
           <Axis labels={['0', 'the band is today’s target', '21']} />
         </TintCard>
-        <View style={{ flex: 1, minHeight: space.sm }} />
-        <View style={{ alignItems: 'center' }}>
+        <View style={{ alignItems: 'center', marginTop: space.lg }}>
           <Press haptic="select" onPress={() => setRunning(r => !r)} accessibilityLabel={running ? 'Pause' : 'Resume'} style={[styles.big, { backgroundColor: t.ink }]}>
             <Icon name={running ? 'pause' : 'play'} size={28} color={t.canvas} />
           </Press>
@@ -911,7 +910,7 @@ const styles = StyleSheet.create({
   key: { width: 8, height: 8, borderRadius: 4 },
   split: { flexDirection: 'row', gap: 3, height: 12 },
   day: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 96 },
-  sheet: { flex: 1, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: space.gutter, paddingTop: space.xl },
+  sheet: { paddingHorizontal: space.gutter, paddingTop: space.xl },
   halo: { position: 'absolute', width: 196, height: 196, borderRadius: 98 },
   air: { width: 128, height: 128, borderRadius: 64, alignItems: 'center', justifyContent: 'center' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },

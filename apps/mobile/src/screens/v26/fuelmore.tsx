@@ -290,7 +290,9 @@ export function FuelprogressV26() {
   const { data } = useSeed(), plan = usePlan(), { accent } = useAreaTint('health'), t = useTokens();
   const kg = data.weightKg, start = progress.startWeight, down = r1(start - kg);
   const trend = [...seed.health.weightTrend.slice(0, -1), kg];
-  const band: [number, number] = [r1(start - .75 * progress.weeks), r1(start - .25 * progress.weeks)];
+  // Where a safe pace (a quarter to three quarters of a kilo a week) would have you each week since you began.
+  const at = (k: number) => k / Math.max(1, trend.length - 1) * progress.weeks;
+  const band: [number[], number[]] = [trend.map((_, k) => r1(start - .75 * at(k))), trend.map((_, k) => r1(start - .25 * at(k)))];
   const wk = weightWeekChange, pace = plan.pace;
   const vsPlan = Math.abs(wk) > pace * 1.1 ? 'a bit faster than planned' : Math.abs(wk) < pace * .8 ? 'a little slower than planned' : 'right on plan';
   const now = new Date(), first = new Date(now.getFullYear(), now.getMonth(), 1), last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -303,7 +305,7 @@ export function FuelprogressV26() {
       <Statement s={`You’ve averaged {${n(progress.averageKcal)} kcal} a day, and your trend has followed.`} style={{ marginTop: space.sm }} />
       <TintCard area="health" style={{ marginTop: space.lg }}>
         <Between><Text variant="title">Weight trend</Text><Text variant="callout" tone="ink2">{`${kg.toFixed(1)} kg now`}</Text></Between>
-        <View style={{ marginTop: space.sm }}><BandLine values={trend} normal={band} height={120} color={accent} bandColor={t.surface} label="Weight trend since October, inside the range a safe pace would give" /></View>
+        <View style={{ marginTop: space.sm }}><BandLine values={trend} normal={band} height={120} color={accent} bandColor={accent} bandOpacity={.2} label="Weight trend since October, inside the range a safe pace would give" /></View>
         <Axis labels={['Early Oct', 'Today']} lastInk />
         <Callout style={{ marginTop: space.xs }}>The pale band is where a safe pace, a quarter to three quarters of a kilo a week, would have you by now.</Callout>
       </TintCard>
@@ -444,6 +446,8 @@ export function WeighinV26() {
   const [kg, setKg] = useState(r1(data.weightKg));
   const lastTrend = weightDays[weightDays.length - 1].trend, offset = data.weightKg - lastTrend;
   const days = weightDays.slice(-14).map(d => r1(d.day + offset)), trendNow = r1(data.weightKg);
+  // The trend under the daily numbers (an average of the last few days), so the band follows it day by day.
+  const smooth = days.map((_, k) => { const run = days.slice(Math.max(0, k - 3), k + 1); return run.reduce((a, v) => a + v, 0) / run.length; });
   const wk = weightWeekChange, pace = plan.pace;
   const words = Math.abs(wk) > pace * 1.1 ? 'A bit faster than planned, which is fine.' : Math.abs(wk) < pace * .8 ? 'A little slower than planned, which is fine.' : 'Right on plan.';
   return (
@@ -452,7 +456,7 @@ export function WeighinV26() {
       <Figure value={trendNow.toFixed(1)} unit="kg" style={{ marginTop: 6 }} />
       <Body s={`${wk <= 0 ? 'Down' : 'Up'} {${Math.abs(wk)}} this week. ${words}`} style={{ marginTop: space.xs }} />
       <TintCard area="health" style={{ marginTop: space.md }}>
-        <BandLine values={days} normal={[r1(trendNow - .3), r1(trendNow + .3)]} height={112} color={accent} bandColor={t.surface} label="Daily weigh-ins over 14 days against your trend" />
+        <BandLine values={days} normal={[smooth.map(v => r1(v - .3)), smooth.map(v => r1(v + .3))]} height={112} color={accent} bandColor={accent} bandOpacity={.2} label="Daily weigh-ins over 14 days against your trend" />
         <Axis labels={['2 weeks ago', 'This morning']} lastInk />
         <Callout style={{ marginTop: space.xs }}>Daily numbers move about. The pale band is your trend, give or take a normal day.</Callout>
       </TintCard>

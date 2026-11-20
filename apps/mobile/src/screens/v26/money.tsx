@@ -323,7 +323,7 @@ export function NetWorthV26() {
       <View style={{ flexDirection: 'row', marginTop: space.xs }}><Chip label={`${show(f.netWorthGain)} this year`} icon="arrowUp" tone="done" /></View>
       <TintCard area="money" style={{ marginTop: space.lg }}>
         <Between><Text variant="title">The trend leads</Text><Text variant="callout" tone="ink2">12 months</Text></Between>
-        <View style={{ marginTop: space.sm }}><BandLine values={netWorthYear} normal={[start - 100, start + 100]} height={150} color={accent} bandColor={t.surface} label={`Net worth from December to November, rising from ${money(start)} to ${money(netWorthYear[netWorthYear.length - 1])}`} /></View>
+        <View style={{ marginTop: space.sm }}><BandLine values={netWorthYear} baseline={start} height={150} color={accent} label={`Net worth from December to November, rising from ${money(start)} to ${money(netWorthYear[netWorthYear.length - 1])}`} /></View>
         <Between style={{ marginTop: space.xxs }}><Text variant="micro" tone="ink2">Dec</Text><Text variant="micro" tone="ink2">Nov</Text></Between>
         <Callout style={{ marginTop: space.xs }}>{`The pale line is where you began the year: ${show(start)}.`}</Callout>
       </TintCard>

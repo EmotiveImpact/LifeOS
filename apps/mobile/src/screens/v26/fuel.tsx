@@ -27,7 +27,7 @@ import {
 import { food } from '@/services/local';
 import { pickAttachment } from '@/services/attachments';
 import { voice } from '@/services/voice';
-import { Between, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Figure, Micro, Page, PhotoRound, PhotoTile, QuietLink, Row, RowsCard, SheetHandle, Shelf, Sp, Statement, two } from './kit';
+import { Between, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Figure, Micro, Page, PhotoRound, PhotoTile, QuietLink, Row, RowsCard, SheetHandle, Shelf, Sp, Statement, drawerStyle, two, useDrawerPhoto } from './kit';
 
 /* ───────────────────────── Shared pieces ───────────────────────── */
 
@@ -275,7 +275,7 @@ export function SnapV26() {
 
 export function ConfirmV26() {
   const nav = useNavigation(), t = useTokens(), insets = useSafeAreaInsets(), { data, set, choose } = useSeed(), day = useFuelDay(), log = useLogMeal();
-  const params = useLocalSearchParams<{ state?: string }>();
+  const params = useLocalSearchParams<{ state?: string }>(), drawer = useDrawerPhoto(0);
   const editingId = data.choices['editing-meal'] || '';
   const editing = day.diary.find(m => m.id === editingId);
   const photoUri = editing ? editing.photo : data.choices['meal-photo'] || undefined;
@@ -297,9 +297,9 @@ export function ConfirmV26() {
   };
   return (
     <Page screen="confirm" scroll={false} bar={{ kind: 'none' }} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
-      backdrop={header ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: 190 }]}><PhotoFill source={header.source} focal={header.focal} /></View> : undefined}>
-      {header ? <View style={{ height: 76 }} /> : null}
-      <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.md) }]}>
+      backdrop={header ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: drawer.height ?? 190 }]}><PhotoFill source={header.source} focal={header.focal} /></View> : undefined}>
+      {header ? <View style={{ flex: 1, minHeight: 76 }} /> : null}
+      <View onLayout={drawer.onLayout} style={[drawerStyle, { paddingHorizontal: space.lg, backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.md) }]}>
         <SheetHandle />
         <View style={styles.sheetTitle}>
           <View style={{ width: 40 }} />
@@ -317,7 +317,7 @@ export function ConfirmV26() {
           </View>
         </View>
         <View style={[styles.wrapRow, { marginTop: space.xs }]}><Chip label="Estimate" tone="q" /><Text variant="callout" tone="ink2">Adjust anything that looks off.</Text></View>
-        <View style={{ flex: 1, minHeight: 0, marginTop: space.xs }}>
+        <View style={{ flexShrink: 1, minHeight: 0, marginTop: space.xs, marginBottom: space.md }}>
           {data.meal.length ? (
             <ScrollItems>
               {data.meal.map((item, i) => {
@@ -366,7 +366,7 @@ export function ConfirmV26() {
 }
 
 function ScrollItems({ children }: { children: ReactNode }) {
-  return <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>{children}</ScrollView>;
+  return <ScrollView showsVerticalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 1 }}>{children}</ScrollView>;
 }
 
 /* ───────────────────────── 3. Fuel, the hub ───────────────────────── */
@@ -497,7 +497,7 @@ function HeroMeal({ pic, small, title, sub, onPress, children }: { pic: Pic; sma
 
 export function MealresultV26() {
   const nav = useNavigation(), t = useTokens(), { data, set, choose } = useSeed(), day = useFuelDay(), log = useLogMeal(), saved = useSavedMeals();
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets(), drawer = useDrawerPhoto();
   const sel = data.choices['selected-meal'] ?? '';
   const preview = sel.startsWith('saved:') ? saved.find(s => s.name === sel.slice(6)) : undefined;
   const meal: DiaryMeal | undefined = preview
@@ -532,7 +532,7 @@ export function MealresultV26() {
   const remove = () => { set({ meals: data.meals.filter(m => m.id !== meal.id) }); feedback.select(); nav.close(); };
   return (
     <Page screen="mealresult" scroll={false} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
-      backdrop={bg ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: 430 }]}><PhotoFill source={bg.source} focal={bg.focal} /><LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} /></View> : <View style={[StyleSheet.absoluteFill, { backgroundColor: photo.ink }]} />}
+      backdrop={bg ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: drawer.height ?? 430 }]}><PhotoFill source={bg.source} focal={bg.focal} /><LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} /></View> : <View style={[StyleSheet.absoluteFill, { backgroundColor: photo.ink }]} />}
       bar={{ kind: 'photo', left: <View style={styles.paperChip}><Text variant="buttonCompact" style={{ color: photo.ink }}>{preview ? 'Saved meal' : `${mealSlot(meal.at)} · ${meal.at}`}</Text></View>,
         right: <View style={{ flexDirection: 'row', gap: space.xs }}>{preview ? null : <OnRound icon="more" label="Meal actions" on={menuOpen} onPress={() => setMenuOpen(!menuOpen)} />}<PhotoRound icon="close" label="Close" onPress={nav.close} /></View> }}>
       <View style={styles.mealTop}>
@@ -540,7 +540,8 @@ export function MealresultV26() {
         <Text variant="display" style={{ color: photo.onPhoto, marginTop: space.tile }} numberOfLines={2}>{meal.name}</Text>
         <Text variant="callout" style={{ color: photo.onPhoto2 }}>{where}</Text>
       </View>
-      <View style={[styles.mealSheet, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.md) }]}>
+      <View onLayout={drawer.onLayout} style={[drawerStyle, styles.mealSheet, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.md) }]}>
+        <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
         {menuOpen ? (
           <RowsCard style={{ marginBottom: space.md }}>
             <Row icon="mic" title="Fix it in your own words" onPress={() => { choose('editing-meal', meal.id); choose('meal-photo', meal.photo ?? ''); set({ meal: meal.items.map(i => ({ ...i })) }); setMenuOpen(false); nav.go('fixwords'); }} />
@@ -562,8 +563,8 @@ export function MealresultV26() {
           <Callout style={{ marginTop: space.xs }}>Percentages are of your day’s targets.</Callout>
         </>}
         <View style={[styles.saysRow, { marginTop: space.md }]}><LifeOrb size={20} /><Text variant="body" style={{ flex: 1 }}>{tip}</Text></View>
-        <View style={{ flex: 1 }} />
-        <View style={{ flexDirection: 'row', gap: space.xs, marginTop: space.md }}>
+        </ScrollView>
+        <View style={{ flexDirection: 'row', gap: space.xs, marginTop: space.lg }}>
           <Btn label="Edit" ghost fit onPress={preview ? () => { choose('editing-meal', ''); choose('meal-photo', ''); set({ meal: meal.items.map(i => ({ ...i })) }); nav.go('confirm'); } : edit} />
           <View style={{ flex: 1 }}>
             {preview
@@ -880,7 +881,7 @@ function Pin({ n: num, best, quiet }: { n: number; best?: boolean; quiet?: boole
 }
 
 export function MenuscanV26() {
-  const nav = useNavigation(), t = useTokens(), day = useFuelDay(), log = useLogMeal();
+  const nav = useNavigation(), t = useTokens(), day = useFuelDay(), log = useLogMeal(), drawer = useDrawerPhoto(), insets = useSafeAreaInsets();
   const proteinLeft = Math.max(0, Math.round(day.targets.protein - day.totals.protein));
   const fitting = menu.filter(d => d.kcal <= day.left);
   const best = (fitting.length ? fitting : [...menu].sort((a, b) => a.kcal - b.kcal)).reduce((a, b) => fitting.length ? (b.protein > a.protein ? b : a) : a);
@@ -889,16 +890,16 @@ export function MenuscanV26() {
   const eat = (d: (typeof menu)[number]) => { log({ name: d.name, items: [{ name: d.name, grams: 400, kcal: d.kcal, protein: d.protein, carbs: Math.round(d.kcal * .1), fat: Math.round(d.kcal * .035), fibre: 5, confidence: .6 }], via: 'menu' }); nav.replace('mealresult'); };
   return (
     <Page screen="menuscan" scroll={false} contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
-      backdrop={<View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: 440 }]}><PhotoFill source={photos.breakfast} focal={{ x: 1, y: 0, zoom: 2.1 }} /><LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} /></View>}
+      backdrop={<View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: drawer.height ?? 440 }]}><PhotoFill source={photos.breakfast} focal={{ x: 1, y: 0, zoom: 2.1 }} /><LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} /></View>}
       bar={{ kind: 'photo', left: <View style={styles.rowLine}><PhotoRound icon="back" label="Back" onPress={nav.close} /><StatusPill size="chip" onPhoto label={`${menu.length} dishes read from the menu`} /></View>, right: <PhotoRound icon="camera" label="Snap it again" onPress={() => nav.replace('snap')} /> }}>
-      <View style={{ height: 280 }}>
+      <View style={{ flex: 1, minHeight: 280 }}>
         <Corners style={{ left: 22, right: 22, top: 26, bottom: 30 }} />
         <View style={[styles.menuCard, { ...cardShadow(t.scheme) }]}>
           <Text variant="micro" style={{ color: photo.ink, opacity: .6, textAlign: 'center', letterSpacing: 2 }}>MAINS</Text>
           {menu.map(d => <View key={d.name} style={styles.menuLine}><Text variant="buttonCompact" style={{ color: photo.ink, flex: 1 }}>{d.name}</Text><Pin n={at(d)} best={d === best} /></View>)}
         </View>
       </View>
-      <View style={[styles.panel, { backgroundColor: t.surface, paddingTop: space.lg }]}>
+      <View onLayout={drawer.onLayout} style={[drawerStyle, { paddingHorizontal: space.lg, backgroundColor: t.surface, paddingTop: space.lg, paddingBottom: Math.max(insets.bottom, space.md) }]}>
         <Eyebrow>{day.hide ? 'Here’s what fits your day best.' : `You have about ${n(day.left)} kcal and ${proteinLeft} g protein left today.`}</Eyebrow>
         <Statement s={fitting.length ? `Order the {${best.name.toLowerCase()}}.` : `Everything here is over today’s budget. The {${best.name.toLowerCase()}} is the lightest.`} style={{ marginTop: space.xs }} />
         <View style={[styles.wrapRow, { marginTop: space.sm }]}><Chip label="Best fit" tone="live" />{day.hide ? null : <Chip label={`~${n(best.kcal)} kcal · ${best.protein} g protein`} />}</View>
@@ -906,8 +907,7 @@ export function MenuscanV26() {
           {others.map(d => <Row key={d.name} lead={<Pin n={at(d)} quiet />} title={d.name} sub={day.hide ? undefined : `~${n(d.kcal)} kcal · ${d.protein} g protein`} onPress={() => eat(d)}
             right={<Chip label={d.kcal > day.left ? 'Over today’s budget' : 'Good'} tone="q" />} />)}
         </View>
-        <View style={{ flex: 1 }} />
-        <Callout>{SHOW_SAMPLES ? 'Restaurant portions vary; these are estimates.' : 'An example menu. Reading a real menu comes with the next camera update.'}</Callout>
+        <Callout style={{ marginTop: space.md }}>{SHOW_SAMPLES ? 'Restaurant portions vary; these are estimates.' : 'An example menu. Reading a real menu comes with the next camera update.'}</Callout>
         <Btn label="I’ll have this" onPress={() => eat(best)} style={{ marginTop: space.sm }} />
       </View>
     </Page>
@@ -1080,8 +1080,8 @@ const styles = StyleSheet.create({
   heroIn: { borderRadius: radius.lg, overflow: 'hidden' },
   paperChip: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 28, paddingHorizontal: space.sm, borderRadius: radius.full, backgroundColor: photo.onPhoto },
   fitChip: { alignSelf: 'flex-start', height: 28, paddingHorizontal: space.sm, borderRadius: radius.full, backgroundColor: photo.onPhoto, justifyContent: 'center' },
-  mealTop: { height: 206, justifyContent: 'flex-end', paddingHorizontal: space.gutter, paddingBottom: 18 },
-  mealSheet: { flex: 1, minHeight: 0, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: space.lg, paddingTop: 22 },
+  mealTop: { flex: 1, minHeight: 206, justifyContent: 'flex-end', paddingHorizontal: space.gutter, paddingBottom: 18 },
+  mealSheet: { paddingHorizontal: space.lg, paddingTop: 22 },
   micro: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   field: { marginTop: space.xs, height: 52, borderRadius: radius.md, paddingHorizontal: space.md, fontSize: 16, fontFamily: fonts.sans },
   soft: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingLeft: space.tile, paddingRight: 14, borderRadius: radius.full },

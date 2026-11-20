@@ -54,7 +54,7 @@ export function FitnessageV26() {
       <Statement s={fit < age ? '{Two Zone 2 sessions a week} would likely take {another year off} by spring.' : '{Two Zone 2 sessions a week} would likely bring it {closer to your age} by spring.'} style={{ marginTop: space.lg }} />
       <TintCard area="health" style={{ marginTop: space.lg }}>
         <Head icon="heart" title="Last 6 months" right="Lower is fitter" />
-        <View style={{ marginTop: space.sm }}><BandLine values={fitness.sixMonths} normal={[25, 25.3]} height={96} color={accent} bandColor={t.surface} label={`Fitness age over the last six months, falling to ${fit}`} /></View>
+        <View style={{ marginTop: space.sm }}><BandLine values={fitness.sixMonths} normal={[fitness.sixMonths.map((_, k) => (k < 3 ? 25 : NaN)), fitness.sixMonths.map((_, k) => (k < 3 ? 25.3 : NaN))]} height={96} color={accent} bandColor={accent} bandOpacity={.2} label={`Fitness age over the last six months, falling to ${fit}`} /></View>
         <Axis labels={['Jun', 'Nov']} />
         <Callout style={{ marginTop: space.xs }}>The band is where you were from June to August.</Callout>
       </TintCard>

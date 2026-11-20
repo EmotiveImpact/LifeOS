@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, G, Polyline, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Line, Path, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 import { Text } from '../Text';
 import { useTokens } from '../theme';
 import { fonts, radius, space } from '../tokens';
@@ -152,20 +152,44 @@ export function Sparkline({ values, normal, width = 118, height = 44, color }: {
 
 /* ───────────────────────── BandLine (TrendLine look="v26", board `line`) ───────────────────────── */
 
-/** A wide trend with the band for your normal range and today's dot, drawn at its real width. */
-export function BandLine({ values, normal, height = 120, width, color, bandColor, label }: { values: number[]; normal: [number, number]; height?: number; width?: number; color?: string; bandColor?: string; label?: string }) {
+/**
+ * A trend line with a shaded band (board `line`). `normal` is the person's own range, either one range across the chart
+ * or a range per point (a band that follows a pace or a trend, so the line sits inside the band it means). Points with
+ * no range (`NaN`) leave the band out there. `baseline` draws a dotted line instead, for "where you began".
+ * Everything is kept inside the drawn area, so nothing looks as if it spills past the band.
+ */
+export function BandLine({ values, normal, baseline, height = 120, width, color, bandColor, bandOpacity = 1, label }: {
+  values: number[]; normal?: [number, number] | [number[], number[]]; baseline?: number; height?: number; width?: number;
+  color?: string; bandColor?: string; bandOpacity?: number; label?: string;
+}) {
   const t = useTokens();
   const [measured, onLayout] = useWidth();
-  const W = width ?? measured, pad = width && width < 120 ? 4 : 10, [lo, hi] = normal, ink = color ?? t.ink;
-  const min = Math.min(...values, lo), max = Math.max(...values, hi), last = values.length - 1;
+  const W = width ?? measured, small = !!width && width < 120, pad = small ? 4 : 10, ink = color ?? t.ink, last = values.length - 1;
+  const perPoint = !!normal && Array.isArray(normal[0]);
+  const los = normal ? (perPoint ? normal[0] as number[] : values.map(() => normal[0] as number)) : [];
+  const his = normal ? (perPoint ? normal[1] as number[] : values.map(() => normal[1] as number)) : [];
+  const known = [...values, ...los, ...his, ...(baseline === undefined ? [] : [baseline])].filter(Number.isFinite);
+  const min = Math.min(...known), max = Math.max(...known);
   const x = (k: number) => pad + k * (W - pad * 2) / Math.max(1, last);
   const y = (n: number) => height - pad - (n - min) / (max - min || 1) * (height - pad * 2);
+  // A per-point band is drawn as one shape over each run of points that have a range.
+  const runs: number[][] = [];
+  if (perPoint) los.forEach((lo, k) => { if (Number.isFinite(lo) && Number.isFinite(his[k])) { const run = runs[runs.length - 1]; if (run && run[run.length - 1] === k - 1) run.push(k); else runs.push([k]); } });
+  const fill = bandColor ?? t.surface2;
+  const fallback = normal ? `against your range of ${los[last] ?? los[0]} to ${his[last] ?? his[0]}` : 'over time';
   return (
-    <View onLayout={width ? undefined : onLayout} style={{ height, width }} accessible accessibilityRole="image" accessibilityLabel={label ?? `Trend against your normal range of ${lo} to ${hi}. Latest ${values[last]}.`}>
+    <View onLayout={width ? undefined : onLayout} style={{ height, width }} accessible accessibilityRole="image" accessibilityLabel={label ?? `Trend ${fallback}. Latest ${values[last]}.`}>
       {W ? <Svg width={W} height={height}>
-        <Rect x={0} y={y(hi)} width={W} height={Math.max(0, y(lo) - y(hi))} rx={Math.min(10, (y(lo) - y(hi)) / 2)} fill={bandColor ?? t.surface2} />
+        {normal && !perPoint ? <Rect x={0} y={y(his[0])} width={W} height={Math.max(0, y(los[0]) - y(his[0]))} rx={Math.min(10, (y(los[0]) - y(his[0])) / 2)} fill={fill} opacity={bandOpacity} /> : null}
+        {runs.map((run, i) => {
+          const top = run.map(k => `${x(k)},${y(his[k])}`), bottom = [...run].reverse().map(k => `${x(k)},${y(los[k])}`);
+          // A single point of range still shows as a short rounded block.
+          if (run.length === 1) { const k = run[0]; return <Rect key={i} x={x(k) - 6} y={y(his[k])} width={12} height={Math.max(2, y(los[k]) - y(his[k]))} rx={6} fill={fill} opacity={bandOpacity} />; }
+          return <Path key={i} d={`M${top.join(' L')} L${bottom.join(' L')} Z`} fill={fill} opacity={bandOpacity} strokeLinejoin="round" />;
+        })}
+        {baseline !== undefined ? <Line x1={pad} x2={W - pad} y1={y(baseline)} y2={y(baseline)} stroke={ink} strokeOpacity={0.45} strokeWidth={2} strokeDasharray="1 7" strokeLinecap="round" /> : null}
         <Polyline points={values.map((n, k) => `${x(k)},${y(n)}`).join(' ')} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        <Circle cx={x(last)} cy={y(values[last])} r={width && width < 120 ? 3.5 : 5} fill={ink} />
+        <Circle cx={x(last)} cy={y(values[last])} r={small ? 3.5 : 5} fill={ink} />
       </Svg> : null}
     </View>
   );
