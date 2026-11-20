@@ -648,14 +648,18 @@ export function MeasuresetupV26() {
 /* ───────────────────────── Save your progress (a sheet) ───────────────────────── */
 
 export function SigninV26() {
-  const nav = useNavigation(), { data, flag } = useSeed();
+  const nav = useNavigation(), { data, flag, joinAccount } = useSeed();
   const [step, setStep] = useState<'ways' | 'email' | 'code'>('ways');
   const [email, setEmail] = useState(''), [code, setCode] = useState('');
   const [busy, setBusy] = useState(false), [problem, setProblem] = useState<string | null>(null);
   const android = Platform.OS === 'android';
   const emailOk = /^\S+@\S+\.\S+$/.test(email.trim());
   const finish = () => { flag('signin-asked', true); nav.close(); };
-  const signedIn = (mode: 'account' | 'local-preview') => { flag(mode === 'account' ? 'signed-in' : 'signed-in-preview', true); feedback.primary(); finish(); };
+  // Saving progress keeps what was set up on this phone and merges it into the account.
+  const signedIn = async (result: { mode: 'account' | 'local-preview'; data: { userId: string } }) => {
+    if (result.mode === 'account') await joinAccount(result.data.userId, { restore: false });
+    flag(result.mode === 'account' ? 'signed-in' : 'signed-in-preview', true); feedback.primary(); finish();
+  };
   const go = (next: typeof step) => { setProblem(null); setStep(next); };
   const askCode = async () => {
     if (!emailOk || busy) return;
@@ -669,14 +673,14 @@ export function SigninV26() {
     setBusy(true); setProblem(null);
     const result = await verifyCode(email, code);
     setBusy(false);
-    if (result.ok) signedIn(result.mode); else { setProblem(problemWords[result.problem]); feedback.warn(); }
+    if (result.ok) await signedIn(result); else { setProblem(problemWords[result.problem]); feedback.warn(); }
   };
   const withProvider = async (provider: 'apple' | 'google') => {
     if (busy) return;
     setBusy(true); setProblem(null);
     const result = await signInWith(provider);
     setBusy(false);
-    if (result.ok) { signedIn(result.mode); return; }
+    if (result.ok) { await signedIn(result); return; }
     setProblem(problemWords[result.problem]);
     if (result.problem === 'not-ready') setStep('email');
   };

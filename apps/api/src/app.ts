@@ -2,19 +2,17 @@ import { z } from 'zod';
 import type { Auth, Principal } from './auth';
 import type { Db } from './db/client';
 import { devices } from './db/schema';
+import { MAX_PULL, MAX_PUSH, forget, forgettable, isTable, pull, push, refusedByPolicy } from './sync';
 
 type Route = (request: Request, principal: Principal) => Promise<Response>;
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 const fail = (status: number, code: string) => json({ error: code }, status);
 
-/** Postgres's "insufficient privilege" (42501), which row-level security raises, possibly wrapped by the driver. */
-function refusedByPolicy(error: unknown): boolean {
-  for (let e = error as { code?: unknown; errno?: unknown; cause?: unknown } | undefined, depth = 0; e && depth < 4; e = e.cause as typeof e, depth++) {
-    if (e.code === '42501' || e.errno === '42501') return true;
-  }
-  return false;
-}
+const uuid = z.string().uuid();
+/** The calling phone, from the `life-device` header: sync skips its own changes when it pulls. */
+const deviceOf = (request: Request) => { const id = request.headers.get('life-device'); return id && uuid.safeParse(id).success ? id : null; };
+const ForgetBody = z.object({ table: z.string(), ids: z.array(uuid).min(1).max(MAX_PUSH) });
 
 /** What a phone sends to register itself. Anything else in the body, `user_id` included, is ignored. */
 const DeviceBody = z.object({
@@ -55,6 +53,26 @@ export function createApi(options: { db: Db; auth: Auth; now?: () => number; cor
         .values({ id, user_id: principal.userId, platform, name: name ?? null, last_seen_at: seen })
         .onConflictDoUpdate({ target: devices.id, set: { platform, name: name ?? null, last_seen_at: seen } }));
       return json({ id }, 201);
+    },
+    'POST /sync/push': async (request, principal) => {
+      const body = await request.json().catch(() => null) as { operations?: unknown } | null;
+      if (!body || !Array.isArray(body.operations)) return fail(400, 'BAD_REQUEST');
+      if (body.operations.length > MAX_PUSH) return fail(413, 'TOO_MANY_OPERATIONS');
+      const operations = body.operations;
+      return json(await db.withUser(principal.userId, tx => push(tx, principal.userId, deviceOf(request), operations)));
+    },
+    'GET /sync/pull': async (request, principal) => {
+      const params = new URL(request.url).searchParams;
+      const raw = params.get('cursor'), cursor = raw ? Number(raw) : 0;
+      if (!Number.isSafeInteger(cursor) || cursor < 0) return fail(400, 'BAD_CURSOR');
+      const limit = Math.min(MAX_PULL, Math.max(1, Number(params.get('limit')) || MAX_PULL));
+      return json(await db.withUser(principal.userId, tx => pull(tx, deviceOf(request), cursor, limit)));
+    },
+    'POST /sync/forget': async (request, principal) => {
+      const parsed = ForgetBody.safeParse(await request.json().catch(() => null));
+      if (!parsed.success || !isTable(parsed.data.table) || !forgettable.has(parsed.data.table)) return fail(400, 'BAD_REQUEST');
+      const { table, ids } = parsed.data as { table: 'memory'; ids: string[] };
+      return json({ forgotten: await db.withUser(principal.userId, tx => forget(tx, table, ids)) });
     },
   };
   const handle = async (request: Request): Promise<Response> => {

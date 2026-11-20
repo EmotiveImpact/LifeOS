@@ -72,9 +72,15 @@ async function keep(response: Response): Promise<AccountResult<SignedIn>> {
   return { ok: true, mode: 'account', data: { userId: body.user.id, name: body.user.name ?? '', email: body.user.email ?? '' } };
 }
 
-async function registerDevice(token: string) {
+/** This phone's id for the server: random, made once, kept in SecureStore. Sync uses it to skip the phone's own changes. */
+export async function deviceId(): Promise<string> {
   let id = await sessionStore.get(DEVICE_KEY);
   if (!id) { id = Crypto.randomUUID(); await sessionStore.set(DEVICE_KEY, id); }
+  return id;
+}
+
+async function registerDevice(token: string) {
+  const id = await deviceId();
   const platform = Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web';
   const name = platform === 'ios' ? 'iPhone' : platform === 'android' ? 'Android phone' : 'Web preview';
   // A failed registration doesn't undo the sign-in: sync registers again on its first run.

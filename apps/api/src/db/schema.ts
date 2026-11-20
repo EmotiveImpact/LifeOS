@@ -107,10 +107,13 @@ export const devices = pgTable('devices', {
   last_seen_at: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
 }, t => [index('devices_user').on(t.user_id)]);
 
-/** Every change a phone has pushed, in arrival order: `seq` is the opaque, monotonic sync cursor (Phase 22). */
+/**
+ * Every change a phone has pushed, in arrival order: `seq` is the opaque, monotonic sync cursor (Phase 22). An op's
+ * `id` is unique per person, so pushing it twice stores it once, and one person can't block another's op id.
+ */
 export const syncOps = pgTable('sync_ops', {
   seq: bigserial('seq', { mode: 'number' }).primaryKey(),
-  id: text('id').notNull().unique(),
+  id: text('id').notNull(),
   user_id: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   device_id: text('device_id'),
   table_name: text('table_name').notNull(),
@@ -119,7 +122,7 @@ export const syncOps = pgTable('sync_ops', {
   payload: jsonb('payload').notNull(),
   at: text('at').notNull(),
   received_at: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
-}, t => [index('sync_ops_user_seq').on(t.user_id, t.seq)]);
+}, t => [index('sync_ops_user_seq').on(t.user_id, t.seq), uniqueIndex('sync_ops_user_op').on(t.user_id, t.id), index('sync_ops_user_row').on(t.user_id, t.table_name, t.row_id)]);
 
 /** Wearable and bank tokens (WHOOP, Oura, Open Banking), sealed with AES-GCM before they are stored (`src/seal.ts`). */
 export const oauthTokens = pgTable('oauth_tokens', {
