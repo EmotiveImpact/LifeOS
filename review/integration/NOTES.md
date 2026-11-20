@@ -37,7 +37,9 @@ No merge conflicts. Phase 20 added routes, so the typed route file needs regener
 | 20 Nov, ~20:05 UTC | `phase-23-files-push-account` (fast-forward) | ca591df | 529 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
 | 20 Nov, ~20:20 UTC | `claude/project-thread-8i27bq` (merge, calm motion and one look; HeroUI removed, so run `npm install` in `apps/mobile`) | 6bb06bc | 529 tests with Postgres, app typecheck, iOS and Android bundles |
 | 20 Nov, ~20:40 UTC | `phase-24-brain-router` (fast-forward) | 707d085 | 564 tests with Postgres, app and API typecheck, iOS and Android bundles |
-| 20 Nov, ~21:20 UTC | `phase-25-brain-jobs` (fast-forward) | 531b073 | 604 tests with Postgres, app and API typecheck, iOS and Android bundles |
+| 20 Nov, ~21:03 UTC | `phase-25-brain-jobs` (fast-forward) | 531b073 | 604 tests with Postgres, app and API typecheck, iOS and Android bundles |
+| 20 Nov, ~21:35 UTC | `claude/project-thread-8i27bq` (fast-forward, steady check-in drawer, closing motion on the web, words-only switch, Stabilise) | cde7742 | 604 tests with Postgres, app typecheck, iOS, Android and web bundles |
+| 20 Nov, ~22:00 UTC | `phase-26-health` (fast-forward) | 4f1a269 | 643 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
 
 ## Screenshots
 
