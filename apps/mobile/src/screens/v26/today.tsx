@@ -23,6 +23,7 @@ import {
   Body, Btn, Callout, Chip, Display, Duo, Eyebrow, Figure, Hero, Micro, NumWell, Page, PhotoBackdrop, QuietLink, Row, RowsCard, Sp, Statement, Thumb, Tick, Timeline, Between,
 } from './kit';
 import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
+import { levelPlan } from '@/state/you';
 
 const isMood = (id: string | undefined): id is FeelMoodId => !!id && id in FEEL_MOODS;
 const shortDate = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
@@ -126,7 +127,8 @@ export function TodayV26() {
 
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const level = engine.level.currentLevel;
-  const levelName = ['Stabilize', 'Protect', 'Build', 'Grow', 'Free'][Math.max(0, Math.min(4, level - 1))];
+  // The same four names as Your levels, so Today and that page never disagree.
+  const levelName = levelPlan[Math.max(0, Math.min(levelPlan.length - 1, level - 1))].name;
   const fuel = useFuelDay();
   const aimPct = Math.round(seed.finance.deposit / seed.finance.depositGoal * 100);
 

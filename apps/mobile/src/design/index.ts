@@ -7,6 +7,7 @@ export * from './lightFields';
 export * from './theme';
 export * from './fonts';
 export * from './feedback';
+export * from './sentenceIcons';
 export * from './Text';
 export * from './RichText';
 export * from './Press';

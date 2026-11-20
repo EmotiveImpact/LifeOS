@@ -7,17 +7,19 @@
  */
 import { Children, createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
-import { Stack, useNavigation as useRouterNavigation } from 'expo-router';
+import { Stack, useFocusEffect, useNavigation as useRouterNavigation } from 'expo-router';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Appear, Button, Card, Footer, Icon, LifeOrb, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
-  cardShadow, componentSize, photo, photoScrims, radius, space, useTokens,
+  cardShadow, componentSize, motion, photo, photoScrims, radius, space, useCalmMotion, useTokens,
   type Focal, type GlyphName, type SpineItem, type StatusKind, type Tone, type TopBarAction, type TwoToneSegment, type TypeStyle, type V26RowProps,
 } from '@/design';
 import { screens, type ScreenKey } from '@/navigation/screens';
 import { useNavigation } from '@/navigation/useNavigation';
+import { setWebExit, takeReturn } from '@/navigation/webExit';
 
 /* ───────────────────────── Copy ───────────────────────── */
 
@@ -271,8 +273,38 @@ export type PageProps = {
  * (each block sets its own space above, as the board does), then the foot.
  */
 export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, onPull, statusInk }: PageProps) {
-  const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets();
+  const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets(), calm = useCalmMotion();
   const meta = screens[screen];
+  const web = Platform.OS === 'web';
+  // Web preview only (webExit.ts): `leave` plays the page out before a close; `back` slides the revealed page in.
+  const leave = useSharedValue(0), back = useSharedValue(1), enter = useSharedValue(web ? 0 : 1);
+  useEffect(() => { if (web) enter.value = calm ? 1 : withSpring(1, motion.smooth); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useFocusEffect(useCallback(() => {
+    if (!web) return;
+    leave.value = 0;
+    if (takeReturn() && !calm) { back.value = 0; back.value = withSpring(1, motion.snappy); }
+    if (meta.kind === 'Tab') return;
+    return setWebExit(done => {
+      if (calm) return done();
+      leave.value = withTiming(1, LEAVE);
+      // A pushed page hands over just before its fade ends, so the page underneath shows with no empty frame between
+      // them; a sheet's page was in view all along, so the sheet finishes dropping first.
+      setTimeout(done, meta.kind === 'Sheet' ? LEAVE.duration : LEAVE.duration - 50);
+    }, meta.kind !== 'Sheet');
+  }, [web, calm, meta.kind, leave, back]));
+  const flow = useAnimatedStyle(() => {
+    if (!web) return {};
+    const k = 1 - back.value;
+    if (calm) return { opacity: 1 - leave.value };
+    return {
+      opacity: (1 - leave.value) * (1 - 0.4 * k),
+      transform: meta.kind === 'Push' || meta.kind === 'Tab'
+        ? [{ translateX: leave.value * 56 - k * 28 }]
+        : [{ translateX: -k * 28 }, { translateY: leave.value * 64 }],
+    };
+  });
+  const scrimIn = useAnimatedStyle(() => ({ opacity: enter.value * (1 - leave.value) }));
+  const sheetOut = useAnimatedStyle(() => ({ transform: [{ translateY: leave.value * (calm ? 0 : 420) }], opacity: calm ? 1 - leave.value : 1 }));
   const close = onClose ?? nav.close;
   const sheet = meta.kind === 'Sheet';
   const b: Bar = bar ?? (meta.kind === 'Tab' ? { kind: 'root', title: meta.title } : sheet ? { kind: 'sheet' } : meta.kind === 'Full screen' ? { kind: 'push', close: true } : { kind: 'push' });
@@ -301,16 +333,20 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
   if (fits && fit.web) {
     // The web preview has no native sheet, so draw one: dimmed page behind, the sheet hugging its content at the bottom.
     return (
-      <View nativeID={`screen-${screen}`} style={{ flex: 1, minHeight: 0, backgroundColor: t.scrim, justifyContent: 'flex-end' }}>
+      <View nativeID={`screen-${screen}`} style={{ flex: 1, minHeight: 0, justifyContent: 'flex-end' }}>
         <Stack.Screen options={{ statusBarStyle }} />
         <StatusBar style={statusBarStyle} />
+        {/* The page underneath stays in view and dims; the sheet rises over it, and drops away again on close. */}
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.scrim }, scrimIn]} />
         <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
-        <Appear rise={220} style={[styles.webSheet, { backgroundColor: bg, maxHeight: '94%' }]}>
-          {head}
-          {body}
-          {foot}
-          {bottom}
-        </Appear>
+        <Animated.View style={[{ maxHeight: '94%', flexShrink: 1, minHeight: 0 }, sheetOut]}>
+          <Appear rise={220} style={[styles.webSheet, { backgroundColor: bg }]}>
+            {head}
+            {body}
+            {foot}
+            {bottom}
+          </Appear>
+        </Animated.View>
       </View>
     );
   }
@@ -329,9 +365,18 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
   );
   // Phones get the system's own push, modal and sheet transitions. The browser preview has none, so a screen there
   // arrives the same calm way: a pushed page slides in a little from the right, a full-screen flow rises, both fading.
-  if (Platform.OS !== 'web' || meta.kind === 'Tab') return page;
-  return <Appear from={meta.kind === 'Push' ? 'right' : 'below'} rise={meta.kind === 'Push' ? 36 : 40} style={{ flex: 1, minHeight: 0 }}>{page}</Appear>;
+  if (!web) return page;
+  if (meta.kind === 'Tab') return <Animated.View style={[{ flex: 1, minHeight: 0 }, flow]}>{page}</Animated.View>;
+  return (
+    <Animated.View style={[{ flex: 1, minHeight: 0 }, flow]}>
+      <Appear from={meta.kind === 'Push' ? 'right' : 'below'} rise={meta.kind === 'Push' ? 36 : 40} style={{ flex: 1, minHeight: 0 }}>{page}</Appear>
+    </Animated.View>
+  );
 }
+
+/** How a page leaves in the web preview: short, moving at once and easing to a stop, so the page underneath shows
+ *  without a gap. A spring would settle too slowly to hand over in time. */
+const LEAVE = { duration: 180, easing: Easing.out(Easing.cubic) } as const;
 
 /**
  * Keeps a sheet only as tall as its content. On a phone it asks the native sheet to rest at the content's height

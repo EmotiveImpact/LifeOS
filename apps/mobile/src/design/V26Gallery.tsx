@@ -143,7 +143,7 @@ function TypeSection() {
       <TwoTone size="statement" segments={[{ text: 'Are you registered for ', tone: 'quiet' }, { text: 'Self Assessment?' }]} />
       <TwoTone size="lead" segments={[{ text: 'I’m arriving ', tone: 'quiet' }, { text: 'calm' }, { text: '.', tone: 'quiet' }]} />
       <View style={{ gap: 6 }}>
-        <Text variant="numeralXl">1<Text variant="unit" tone="ink2"> Stabilize</Text></Text>
+        <Text variant="numeralXl">1<Text variant="unit" tone="ink2"> Stabilise</Text></Text>
         <Text variant="numeralL">7h 10m</Text>
         <Text variant="heading">58<Text variant="unit" tone="ink2"> ms</Text></Text>
         <Text variant="titleSerif">Claim your tax rebate</Text>
@@ -245,7 +245,7 @@ function ChipsSection() {
         <SectionHead title="Coming up" link="Calendar" onLink={() => {}} />
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-        <StatusPill size="chip" label="Level 1 · Stabilize" />
+        <StatusPill size="chip" label="Level 1 · Stabilise" />
         <StatusPill size="chip" kind="live" label="Finish the P87 · 6 min" />
         <StatusPill size="chip" kind="done" label="Good recovery" />
         <StatusPill size="chip" kind="quiet" label="Usual" />

@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -18,7 +19,11 @@ function AppShell() {
   if (!hydrated) return null;
   return <><AiQueueRunner /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas }, animation: 'default', statusBarStyle: t.scheme === 'dark' ? 'light' : 'dark' }}>
     <Stack.Screen name="(tabs)" />
-    <Stack.Screen name="(sheets)" options={{ presentation: 'formSheet', sheetAllowedDetents: [.55, .92], sheetInitialDetentIndex: 'last', sheetExpandsWhenScrolledToEdge: false, sheetGrabberVisible: false, contentStyle: { backgroundColor: t.surface } }} />
+    {/* The browser has no native sheet and hides the page under a form sheet, so the preview presents sheets as a
+        transparent layer instead: the page stays in view, dimmed, and the sheet rises over it (Page draws it). */}
+    <Stack.Screen name="(sheets)" options={Platform.OS === 'web'
+      ? { presentation: 'transparentModal', animation: 'none', contentStyle: { backgroundColor: 'transparent' } }
+      : { presentation: 'formSheet', sheetAllowedDetents: [.55, .92], sheetInitialDetentIndex: 'last', sheetExpandsWhenScrolledToEdge: false, sheetGrabberVisible: false, contentStyle: { backgroundColor: t.surface } }} />
     <Stack.Screen name="(flows)" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
   </Stack><StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} /></>;
 }

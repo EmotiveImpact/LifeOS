@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Icon as Ionicons, type GlyphName } from '../Icon';
 import { feedback } from '../feedback';
 import { Press } from '../Press';
+import { useSentenceIcons } from '../sentenceIcons';
 import { Callout, Headline, Mono, Text, Title, type Tone } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
 import { atmospheres, durations, floatShadow, onAtmosphere, radius, springs, type Domain } from '../tokens';
@@ -27,6 +28,7 @@ export type TwoToneSegment = {
  */
 export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, align, style }: { segments: TwoToneSegment[]; /** V26: centred lines (Children, Help, About). */ align?: 'center'; /** V26: `display` is Today's 34pt briefing, `lead` the 20pt medium line ("I’m arriving calm."). */ size?: 'statement' | 'headline' | 'welcomeStatement' | 'display' | 'lead'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
   const t = useTokens();
+  const showIcons = useSentenceIcons();
   const quiet = onAtmos ? onAtmosphere.text2 : t.ink2;
   const ink = onAtmos ? onAtmosphere.text : t.ink;
   const variant = size === 'lead' ? 'headlineMedium' : size;
@@ -36,7 +38,7 @@ export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, a
   return (
     <View style={style}>
       <Text variant={variant} accessibilityRole="text" align={align}>
-        {segments.map((s, i) => (
+        {(showIcons ? segments : segments.map(s => (s.icon ? { ...s, icon: undefined } : s))).map((s, i) => (
           <Text key={i} variant={variant} style={[{ color: s.tone === 'quiet' ? quiet : ink }, s.icon && size === 'display' ? keepTogether : null]}>
             {s.avatar ? (
               <View style={{ width: glyph + 2, height: glyph + 2, borderRadius: (glyph + 2) / 2, backgroundColor: s.avatar.color, alignItems: 'center', justifyContent: 'center', transform: [{ translateY: 3 }] }}>

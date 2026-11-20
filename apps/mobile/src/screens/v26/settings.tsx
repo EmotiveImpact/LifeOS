@@ -337,6 +337,10 @@ export function AppearanceV26() {
         <ToggleTile icon="bell" title="Sounds" value={p.sounds} onChange={v => pref('sounds', v)} />
         <ToggleTile icon="pulse" title="Haptics" value={p.haptics} onChange={v => pref('haptics', v)} />
       </TileGrid>
+      <SectionHead title="Words" />
+      <RowsCard>
+        <SwitchRow icon="doc" title="Icons in sentences" sub={p.sentenceIcons !== false ? 'Small icons beside the key words' : 'Words only'} value={p.sentenceIcons !== false} onChange={v => pref('sentenceIcons', v)} />
+      </RowsCard>
       <SectionHead title="Pictures" />
       <RowsCard>
         <Row thumb={photos.walk} title="Pictures follow your mood" sub={p.look === 'mix' ? 'A mixed cast, in daylight' : 'Places only, in daylight'} right={<SwitchV26 value={p.followMood} onChange={v => pref('followMood', v)} accessibilityLabel="Pictures follow your mood" />} />

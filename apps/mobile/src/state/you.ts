@@ -86,7 +86,7 @@ export const knowsArea = (f: KnowsFilter): Area | null => f === 'All' ? null : f
 
 export const season = { label: 'Season 1 · Nov to Feb', toward: 'Your first home' };
 export const levelPlan = [
-  { name: 'Stabilize', line: 'Know where your cash is going; handle anything time-sensitive.', unlocks: ['30-day cash plan', 'Tax check', 'Sleep basics', '1 habit', 'Room for error', 'Remove before you add'] },
+  { name: 'Stabilise', line: 'Know where your cash is going; handle anything time-sensitive.', unlocks: ['30-day cash plan', 'Tax check', 'Sleep basics', '1 habit', 'Room for error', 'Remove before you add'] },
   { name: 'Set your routines', line: 'Bills, care and recurring costs on a routine you can keep.', unlocks: ['Money ledger, subscriptions', 'Body: readiness, fuel, journal, 3 habits', 'Routines: payday sweep, annual tax check'] },
   { name: 'Build momentum', line: 'Use the breathing room for one bigger decision, safely.', unlocks: ['Rent vs buy, income structure, bloodwork', 'Load, trends, journal insights, Teach it back', 'Routines: care review, subscription check'] },
   { name: 'Expand your options', line: 'Build assets, improve your safety nets, review what works.', unlocks: ['Protection review, growth path', 'Advanced sleep planning, habit graduation', 'Season reset: your new normal becomes level 1'] },
