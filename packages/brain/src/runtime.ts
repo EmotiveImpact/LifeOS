@@ -38,7 +38,7 @@ function supportResult(request: Request, crisis: CrisisSignal): Result {
   return { answer: safety.answer, detail: safety.detail, sources: [], proposals: [], route: { location: 'rules', model: 'life-safety', tier: tierFor(request.job) }, notices: [], safety };
 }
 
-export type RunOptions = { route?: RouteOptions; now?: () => number };
+export type RunOptions = { route?: RouteOptions; now?: () => number; timeoutMs?: number };
 
 export async function runBrain(request: Request, adapters: ModelAdapter[] = [], signal?: AbortSignal, options: RunOptions = {}): Promise<Result> {
   // Immediate signposting comes before validation, models and the network,
@@ -68,7 +68,7 @@ export async function runBrain(request: Request, adapters: ModelAdapter[] = [], 
     const abort = () => controller.abort();
     signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) controller.abort();
-    const timeout = setTimeout(() => controller.abort(), 45000);
+    const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 45000);
     try {
       // Race also bounds an adapter that fails to implement abort itself.
       const raw = await Promise.race([adapter.generate(sent, controller.signal), new Promise<never>((_resolve, reject) => {

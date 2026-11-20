@@ -89,6 +89,12 @@ describe('runBrain follows the route', () => {
     await expect(runBrain(consented(request('Tell me something kind')), [model('model-a', used)], undefined, { route: { remaining: { fast: 0 } } })).rejects.toMatchObject({ code: 'RATE_LIMITED' });
     expect(used).toEqual([]);
   });
+  test('a timed-out model leaves nothing changed', async () => {
+    const req = consented(request('Tell me something kind')); const before = JSON.stringify(req);
+    const stuck: ModelAdapter = { id: 'stuck', location: 'cloud', jobs: ['ask'], available: async () => true, generate: () => new Promise(() => {}) };
+    await expect(runBrain(req, [stuck], undefined, { timeoutMs: 20 })).rejects.toMatchObject({ code: 'TIMEOUT' });
+    expect(JSON.stringify(req)).toBe(before);
+  });
   test('the rules and crisis checks still answer before any route is planned', async () => {
     await expect(runBrain(request('I want to die'), [], undefined, { route: { remaining: { fast: 0, strong: 0, top: 0 } } })).resolves.toMatchObject({ route: { model: 'life-safety' } });
   });
