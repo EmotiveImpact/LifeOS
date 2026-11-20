@@ -63,7 +63,7 @@ Most important first.
 
 ## 5. Built, but not switched on
 
-1. **The core loops are built but not in the app you're trying.** Planning tomorrow in the evening, "I've got a few minutes", "pick up where you left off" and the step-by-step weekly recap were built and tested (30 tests) on their own branch. They were never merged into the main build, and they now clash with it in two files. This is the biggest gap between what exists and what you can see.
+1. **The core loops were built but missing from the app you're trying.** Planning tomorrow in the evening, "I've got a few minutes", "pick up where you left off" and the step-by-step weekly recap were built and tested (30 tests) on their own branch but never merged. Update, 21:57: the build has now merged them, along with Phase 26 (real health data). They'll show in the preview after its next redeploy.
 2. **Seven finished screens have no way in:** Morning brief, Today's numbers, Fitness age, Glucose, Fuel home, the breathing library, and the page for managing life Plus.
 3. **Notifications.** The engine already picks the day's one check-in, but nothing sends it until the day-engine phase.
 4. **The calendar** is still the sample day, labelled as sample.
@@ -72,7 +72,7 @@ Most important first.
 
 ## 6. Still to build
 
-- **Phase 26:** real health data (Apple Health, Health Connect, WHOOP, Oura).
+- **Phase 26:** real health data (Apple Health, Health Connect, WHOOP, Oura): merged at 21:57.
 - **Phase 27:** food photos, barcode and labels.
 - **Phase 28:** voice, including life's own voice on iPhone.
 - **Phase 29:** the day engine, notifications, widgets, Live Activity, the watch and Siri.
@@ -92,7 +92,7 @@ After those come the memory ones (Hindsight's fact extraction, Graphiti's "has t
 
 ## What I'd do next, in order
 
-1. Merge the core loops into the main build, so what you try matches what's built.
+1. ~~Merge the core loops into the main build.~~ Done at 21:57.
 2. Settle the name and orb (one tap on the card I've sent).
 3. One consistency pass across every page: opener rule, titles, icons in every opening sentence, the main button at the bottom, and "Life" as a name.
 4. Apple's menus, symbols and keyboard handling.
