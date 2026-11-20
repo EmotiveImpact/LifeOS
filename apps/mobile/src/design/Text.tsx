@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import { Text as RNText, type StyleProp, type TextProps, type TextStyle } from 'react-native';
-import { onAtmosphere, type TypeStyle, type as typeScale } from './tokens';
+import { onAtmosphere, photo, type TypeStyle, type as typeScale } from './tokens';
 import { useTokens } from './theme';
 
 /**
  * Text tones. `quiet` is only for the muted half of a two-tone sentence at 20px or larger.
  * The `paper*` tones are for text placed on an atmosphere.
  */
-export type Tone = 'ink' | 'ink2' | 'quiet' | 'ember' | 'gain' | 'paper' | 'paper2' | 'paperQuiet' | 'inverse';
+export type Tone = 'ink' | 'ink2' | 'quiet' | 'ember' | 'gain' | 'paper' | 'paper2' | 'paperQuiet' | 'inverse' | 'inverse2' | 'photoInk';
 
 export type LifeTextProps = Omit<TextProps, 'style'> & {
   variant?: TypeStyle;
@@ -38,6 +38,10 @@ export function useToneColor(tone: Tone): string {
       return onAtmosphere.quiet;
     case 'inverse':
       return t.canvas;
+    case 'inverse2':
+      return t.inverse2;
+    case 'photoInk':
+      return photo.ink;
   }
 }
 

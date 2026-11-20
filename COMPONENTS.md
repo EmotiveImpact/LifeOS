@@ -6,6 +6,7 @@
 - **Pre-existing components: 62** (all exported from `@/design`, all typecheck, both platforms bundle).
 - **Track A additions: all 45 rows below implemented and exported from `@/design`, with examples in `/design`.** LifeOrb is now v6. SceneView is the full owner-authorised Skia port: all 30 devices and 208 objects, clean or hand-drawn, with all-device gallery controls.
 - **Screens: all 220 unparked board entries have UI implementations or explicitly noted platform/state previews.** See `SCREENS.md` and `review/NOTES.md` for `[~]` limitations.
+- **V26 (Phase 13, 20 Nov 2026):** every piece in `BUILD_V26.md` Phase 13 is built and shown at `/design` (alone at `/design?only=v26`). See "V26 additions" at the end. Existing components take the V26 look only when a screen passes `look` (or the variant named below), so V23 screens are unchanged until they are restyled.
 
 ## In code ✅
 Surfaces and type: `Text`, `Title`, `TitleSerif`, `Headline`, `Statement`, `Body`, `Callout`, `Mono`, `Unit`, `Numeral`, `Press`, `Card` (no border, `cardShadow`), `Button`, `StatusPill`, `MetricRow`, `PromptBanner`, `ChoiceCard`, `Atmosphere`
@@ -66,3 +67,46 @@ Calmer restoration: `Icon` — the 18 exact owner-authored SVG paths from the or
 | `ShareBar` | One bar split into shares with labels (food quality) | foodquality | 4c |
 | `ModelCard` | An on-device model: name, size, what it does | aimodels | 11 |
 | `StatTile` | Small number + label tile (eaten, burned, water; your year) | fuelhome, yourbirthday | 4c |
+
+## V26 additions (Phase 13)
+Built to `review/v26/board.html` and `review/v26/kit.js`. New files sit in `src/design/components/V26*.tsx`; all are exported from `@/design` and shown in `src/design/V26Gallery.tsx`. "Opt in" is how a screen asks for the V26 look of an existing component.
+
+| Board helper | Component | New or extended | Opt in / main props | File |
+|---|---|---|---|---|
+| tokens | `type.display`, `heading`, `rowTitle`, `bodyL`, `bodyMedium`, `label`, `headlineMedium`; `tint`, `photo`, `photoScrims`, `floatLift`, `sheetShadow`; `space.tile`; radius `tile`, `photo`, `tail` | new tokens | `Text variant="display"` and so on | `tokens.ts` |
+| `status`, `rootBar`, `pushBar`, `textBar`, `sheetBar` | `TopBar` | extended | `look="v26"`; root `sub`, push `closeIcon`, flow `closeLabel`, `onImage` | `TopBar.tsx` |
+| `round` | `RoundButton` | new | `size` sm 32, default 40, lg 56, xl 72; `solid`, `dot`, `onPhoto`, `disabled` | `V26Chrome.tsx` |
+| `dock` | `Dock` | extended | `variant="float"`: the floating pill, current tab named | `Chrome.tsx` |
+| `btn`, `foot` | `Button`, `Footer` | `Footer` new | one primary, ghost and small; footer pinned above the home indicator | `V26Chrome.tsx` |
+| `secHead` | `SectionHead` | new | `title`, `link`, `onLink`, `first` | `V26Chrome.tsx` |
+| `chip` | `StatusPill` | extended | `size="chip"`, `kind` quiet, live, done; `onPhoto`, `icon` | `Surfaces.tsx` |
+| `says` | `LifeSays` | new | `eyebrow`, `orb` | `V26Chrome.tsx` |
+| pager | `DashPager` | new | `count`, `index`, `onPhoto` | `V26Chrome.tsx` |
+| icon well on tints | `Badge` | new | `icon` | `V26Chrome.tsx` |
+| `ruler` | `Ticks` | extended | `variant="ruler"` (36 bars) | `Progress.tsx` |
+| `row`, `thumbRow`, `dateRow`, `kv` | `ListRow`, `DateRow`, `KeyValue` | extended, `KeyValue` new | `look="v26"`; `thumb`, `thumbFocal`, `date`, `end`; `DateRow` `month` | `Lists.tsx`, `Instruments.tsx`, `V26Lists.tsx` |
+| `check`, `pick` | `Checklist`, `ChoiceCard` | extended | `Checklist look="round"` (`bare` inside a card); `ChoiceCard look="pick"` with `value` | `Lists.tsx`, `Surfaces.tsx` |
+| `acc` | `Accordion`, `AccordionGroup` | new | one open at a time, round plus or minus | `V26Lists.tsx` |
+| `tile`, `metric` | `MetricTile`, `TileGrid` | extended, `TileGrid` new | `look="v26"` (dot, scale, value, sub, `meter`, `parts`, `wide`, `slim`); `look="reading"` (sparkline against your normal); `TileGrid columns` 2 or 3 | `Lists.tsx`, `V26Tiles.tsx` |
+| `days14`, `dots`, `month` | `DotStrip`, `DotGrid` | new | `days`; `cells` with `on`, `miss`, `now`; `variant="month"` | `V26Data.tsx` |
+| `bars`, `spark`, `caps` | `MiniBars`, `Sparkline`, `CapsulePairs` | extended, two new | `MiniBars look="capsule"` (width-aware, today solid) | `Lists.tsx`, `V26Data.tsx` |
+| `line` | `TrendLine` | extended | `look="band"` with `band` | `Charts.tsx` |
+| Body | `NormalBandChart` | new | `values`, `normal`; today largest and labelled | `V26Data.tsx` |
+| Body | `Hypnogram` | extended | `look="tracks"` with `summary`: four rails and a totals key | `Charts.tsx` |
+| `scale` | `BecomingScale` | new | `marks` (0 to 100), newest largest | `V26Data.tsx` |
+| `toggle`, `slider`, `seg`, `filters` | `Toggle`, `Slider`, `Segmented`, `ChipGroup` | extended | `look="v26"` | `Controls.tsx`, `V26Controls.tsx` |
+| `stepper` | `CountStepper` | extended | `look="compact"` with `unit`, `step` | `Controls.tsx` |
+| `wheel`, `field` | `WheelPicker`, `Field` | new | `options`, `value`; `Field` as a TextInput when `onChangeText` is set | `V26Lists.tsx` |
+| `avatar`, `bubble` | `PersonAvatar`, `UserBubble`, `LifeReply` | extended | `look="v26"` | `Instruments.tsx`, `Talk.tsx` |
+| `voice`, `wave` | `BigMic`, `Waveform`, `VoiceNote` | extended, `VoiceNote` new | `BigMic look="v26"`, `Waveform look="note"` | `Talk.tsx`, `V26Lists.tsx` |
+| `.pcard`, `.pgrid` | `PhotoCard`, `PhotoGrid`, `PhotoFill` | new | chips on top, copy low on the card fade; `PhotoFill` keeps the focal point | `V26Photo.tsx`, `V26PhotoFill.tsx` |
+| `.full-photo` | `FullPhotoScreen` | new | the Welcome treatment | `V26Photo.tsx` |
+| `.deck`, `.decide` | `MoveDeck`, `DecideRow` | new | `cards`, `onDecide`, `behind` (1 or 2); swipe or tick and cross | `V26Deck.tsx` |
+| `.drawer` | `DecisionDrawer` | new | `leave`, `confirm`, `ask`; `undo` once decided | `V26Deck.tsx` |
+| `.sheet` | `Sheet` | extended in place | `sheetShadow` added (handle and 28pt corners were already there) | `Chrome.tsx` |
+| `feel`, `MOODS`, `moodAt` | `FeelField`, `FeelingDrawer`, `ArrivingCard`, `FEEL_MOODS`, `moodAt` | new | `moodAt` ported exactly from `kit.js`; Gesture Handler pan, Reanimated springs | `V26Feel.tsx` |
+| `.tl` | `ActivityTimeline` | extended | `look="spine"`; items take `state` done, now, later and `children` | `Progress.tsx`, `V26Lists.tsx` |
+| `.tint` | `TintCard`, `useAreaTint` | new | `area` (not on Body) | `V26Photo.tsx` |
+| display sentence | `TwoTone` | extended | `size="display"` and `"lead"`; inline icons stay with their word | `Story.tsx` |
+| photographs | `photos` | new | the board's pictures by name (`photos.food`) | `photos.ts` |
+

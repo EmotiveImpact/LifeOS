@@ -28,3 +28,13 @@ export * from './components/Learning';
 export * from './components/CameraViewport';
 export * from './components/ReorderRow';
 export * from './components/LabRange';
+// V26 (Phase 13): the board's pieces. See COMPONENTS.md, "V26 additions".
+export * from './photos';
+export * from './components/V26Chrome';
+export * from './components/V26Photo';
+export * from './components/V26Data';
+export * from './components/V26Lists';
+export * from './components/V26Tiles';
+export * from './components/V26Controls';
+export * from './components/V26Deck';
+export * from './components/V26Feel';

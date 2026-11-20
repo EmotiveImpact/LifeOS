@@ -10,6 +10,7 @@ import { areaColors, durations, palette, radius, space, type Area } from '../tok
 import { Card, StatusPill } from './Surfaces';
 import { LifeOrb, type OrbState } from './Orb';
 import { TrendLine } from './Charts';
+import { InitialsAvatar, V26Row } from './V26Lists';
 
 export function ChatIsland({ expanded = false, state = 'thinking', label = 'Checking your tax code…', sub = 'Your records stay on this phone' }: { expanded?: boolean; state?: OrbState; label?: string; sub?: string }) {
   const t = useTokens();
@@ -68,11 +69,13 @@ export function CalendarDay({ blocks }: { blocks: { at: string; title: string; s
   const t = useTokens();
   return <View style={{ gap: space.sm }}>{blocks.map(b => <View key={`${b.at}-${b.title}`} style={[s.row, { alignItems: 'flex-start' }]}><Text variant="callout" tone="ink2" style={{ width: 48, paddingTop: space.sm }}>{b.at}</Text><Card variant={b.free ? 'tile' : 'default'} onPress={b.onPress} accessibilityLabel={b.title} style={{ flex: 1, gap: space.xxs }}><Text variant="title">{b.title}</Text>{b.sub ? <Text variant="callout" tone="ink2">{b.sub}</Text> : null}</Card></View>)}</View>;
 }
-export function PersonAvatar({ name, area = 'you', size = 44 }: { name: string; area?: Area; size?: number }) {
+export function PersonAvatar({ name, area = 'you', size = 44, look }: { name: string; area?: Area; size?: number; /** V26 (board `avatar`): initials in a surface2 circle, 40pt, or 72pt when `size` is over 60. */ look?: 'v26' }) {
   const t = useTokens();
+  if (look === 'v26') return <InitialsAvatar initials={name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || '?'} lg={size > 60} />;
   return <View accessibilityLabel={name} style={{ width: size, height: size, borderRadius: size * .3, backgroundColor: areaColors[t.scheme][area], alignItems: 'center', justifyContent: 'center' }}><Text variant={size > 60 ? 'numeralL' : 'title'} style={{ color: t.canvas }}>{name.trim().slice(0, 1).toUpperCase()}</Text></View>;
 }
-export function DateRow({ name, date, kind = 'birthday', countdown, detail, day, onPress }: { name: string; date: string; kind?: 'birthday' | 'anniversary' | 'memorial'; countdown?: string; detail?: string; day?: string; onPress?: () => void }) {
+export function DateRow({ name, date, kind = 'birthday', countdown, detail, day, month, look, onPress }: { name: string; date: string; kind?: 'birthday' | 'anniversary' | 'memorial'; countdown?: string; detail?: string; day?: string; /** V26: the month for the date box ("NOV"). */ month?: string; /** V26 (board `dateRow`): a 48pt date box, title and line, the countdown quiet on the right. */ look?: 'v26'; onPress?: () => void }) {
+  if (look === 'v26') return <V26Row title={name} sub={detail ?? `${kind[0].toUpperCase()}${kind.slice(1)} · ${date}`} date={day && month ? { day, month } : undefined} end={kind !== 'memorial' ? countdown : undefined} onPress={onPress} />;
   return <Press onPress={onPress} accessibilityLabel={`${name}, ${kind}, ${date}`} style={[s.row, { paddingVertical: space.sm }]}>{day ? <Text variant="numeralL" align="center" style={{ width: 44 }}>{day}</Text> : <PersonAvatar name={name} area="home" />}<View style={{ flex: 1, gap: space.xxs }}><Text variant="title">{name}</Text><Text variant="callout" tone="ink2">{detail ?? `${kind[0].toUpperCase()}${kind.slice(1)} · ${date}`}</Text></View>{kind !== 'memorial' && countdown ? <Text variant="callout" tone="ink2">{countdown}</Text> : null}</Press>;
 }
 export function DocumentRow({ name, expires, actFrom, status, onPress }: { name: string; expires: string; actFrom?: string; status?: string; onPress?: () => void }) {

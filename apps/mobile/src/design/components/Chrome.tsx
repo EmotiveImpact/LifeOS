@@ -7,7 +7,7 @@ import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
-import { componentSize, radius, space, touch } from '../tokens';
+import { componentSize, floatLift, radius, sheetShadow, space, touch } from '../tokens';
 
 /* ───────────────────────── 21. DottedOrb ───────────────────────── */
 
@@ -72,9 +72,23 @@ export type DockItem = { key: string; label: string; icon: (color: string) => Re
 
 /** Owner-approved full-width navigation: steady, solid, all labels visible.
  * This sits in layout flow so screens end above it instead of underneath it. */
-export function Dock({ items, active, onChange }: { items: DockItem[]; active: string; onChange: (key: string) => void }) {
+export function Dock({ items, active, onChange, variant = 'bar' }: { items: DockItem[]; active: string; onChange: (key: string) => void; /** V26 `float`: a pill resting on the canvas; only the current tab is named. */ variant?: 'bar' | 'float' }) {
   const t = useTokens();
   const insets = useSafeAreaInsets();
+  if (variant === 'float') return (
+    <View style={{ flexShrink: 0, width: '100%', alignItems: 'center', paddingTop: space.xs, paddingBottom: Math.max(insets.bottom, 26), backgroundColor: t.canvas }}>
+      <View style={[styles.pill, { backgroundColor: t.surface, ...floatLift(t.scheme) }]} accessibilityRole="tablist">
+        {items.map(it => {
+          const selected = it.key === active;
+          const color = selected ? t.canvas : t.inkQuiet;
+          return <Press key={it.key} haptic="select" onPress={() => onChange(it.key)} onLongPress={it.onLongPress} delayLongPress={350} accessibilityRole="tab" accessibilityLabel={it.label} accessibilityState={{ selected }} style={[styles.pillItem, selected ? { backgroundColor: t.ink } : null]}>
+            {it.icon(color)}
+            {selected ? <Text variant="buttonCompact" numberOfLines={1} style={{ color }}>{it.label}</Text> : null}
+          </Press>;
+        })}
+      </View>
+    </View>
+  );
   return (
     <View style={{ flexShrink: 0, width: '100%', paddingBottom: insets.bottom, backgroundColor: t.dockBg }}>
       <View style={styles.dock} accessibilityRole="tablist">
@@ -128,6 +142,7 @@ export const Sheet = forwardRef<SheetHandle, SheetProps>(function Sheet({ childr
         if (i >= 0) feedback.snap();
       }}
       onDismiss={onClose}
+      style={sheetShadow}
       backgroundStyle={{ backgroundColor: t.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl }}
       handleIndicatorStyle={{ backgroundColor: t.surface3, width: 36, height: 5 }}
     >
@@ -141,4 +156,6 @@ export { BottomSheetModalProvider as SheetProvider } from '@gorhom/bottom-sheet'
 const styles = StyleSheet.create({
   dock: { height: componentSize.bottomNav, flexDirection: 'row', alignItems: 'center', gap: space.xxs, paddingHorizontal: space.xs, paddingVertical: space.xs },
   dockItem: { flex: 1, minWidth: touch.min, minHeight: touch.min, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', gap: space.xxs, paddingHorizontal: space.xxs },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: space.xxs, padding: 6, borderRadius: radius.full },
+  pillItem: { height: componentSize.dockItem, minWidth: 56, paddingHorizontal: space.md, borderRadius: radius.full, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs },
 });

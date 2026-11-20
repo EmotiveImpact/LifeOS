@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PanResponder, StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
@@ -15,6 +15,7 @@ import { Press } from '../Press';
 import { Body, Callout, Mono, Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
 import { durations, componentSize, onAtmosphere, radius, springs } from '../tokens';
+import { Ruler, SpineTimeline } from './V26Lists';
 
 /* ───────────────────────── 5. Ticks ───────────────────────── */
 
@@ -22,7 +23,8 @@ export type TicksProps = {
   count: number;
   /** How many are filled (streak/meter). */
   filled?: number;
-  variant?: 'streak' | 'meter' | 'scrubber';
+  /** V26 `ruler` (board `ruler`): short bars 3pt apart, 16pt tall, the reached ones in ink. `count` bars, `filled` reached. */
+  variant?: 'streak' | 'meter' | 'scrubber' | 'ruler';
   /** For `scrubber`: the selected index. */
   activeIndex?: number;
   /** For `scrubber`: called as the user drags across ticks. */
@@ -35,7 +37,12 @@ export type TicksProps = {
 };
 
 /** DESIGN.md §6.5: the one progress language. Thin ticks; the active one is ember and taller. */
-export function Ticks({ count, filled = 0, variant = 'streak', activeIndex, onScrub, scrubLabel, onAtmosphere: onAtmos, style, accessibilityLabel }: TicksProps) {
+export function Ticks(props: TicksProps) {
+  if (props.variant === 'ruler') return <Ruler pct={props.count ? (props.filled ?? 0) / props.count * 100 : 0} bars={props.count} style={props.style} />;
+  return <TicksV23 {...props} />;
+}
+
+function TicksV23({ count, filled = 0, variant = 'streak', activeIndex, onScrub, scrubLabel, onAtmosphere: onAtmos, style, accessibilityLabel }: TicksProps) {
   const t = useTokens();
   const empty = onAtmos ? onAtmosphere.tickEmpty : t.surface3;
   const full = onAtmos ? onAtmosphere.tickFilled : t.ink;
@@ -217,10 +224,11 @@ function StepNode({ state }: { state: 'done' | 'current' | 'todo' }) {
 
 /* ───────────────────────── 11. ActivityTimeline ───────────────────────── */
 
-export type ActivityItem = { time: string; date?: string; text: string; done?: boolean };
+export type ActivityItem = { time: string; date?: string; text: string; done?: boolean; /** V26 spine: `now` is the one ember dot. Defaults from `done`. */ state?: 'done' | 'now' | 'later'; children?: ReactNode };
 
-export function ActivityTimeline({ items, style }: { items: ActivityItem[]; style?: StyleProp<ViewStyle> }) {
+export function ActivityTimeline({ items, style, look }: { items: ActivityItem[]; style?: StyleProp<ViewStyle>; /** V26 `spine` (board `.tl`): a spine of dots, no line; the time as a micro label above the words. */ look?: 'spine' }) {
   const t = useTokens();
+  if (look === 'spine') return <SpineTimeline style={style} items={items.map(it => ({ when: it.date ? `${it.time} · ${it.date}` : it.time, text: it.text, state: it.state ?? (it.done === false ? 'later' : 'done'), children: it.children }))} />;
   return (
     <View style={style}>
       {items.map((it, i) => (

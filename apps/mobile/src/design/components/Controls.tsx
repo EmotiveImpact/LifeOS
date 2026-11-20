@@ -7,6 +7,7 @@ import { Press } from '../Press';
 import { Callout, Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
 import { areaColors, durations, radius, springs } from '../tokens';
+import { CompactStepper, FilterChips, SegmentedV26, SliderV26, SwitchV26 } from './V26Controls';
 
 /* ───────────────────────── CountStepper (SPEC §6.1) ───────────────────────── */
 
@@ -24,13 +25,22 @@ export type CountStepperProps = {
   max?: number;
   /** People figures only for people (§6.1). Doors for bedrooms, dots for days and other counts. */
   glyph?: CountGlyph;
+  /** V26 `compact` (board `stepper`): round minus, the 56pt number with its unit, round plus. No glyphs. */
+  look?: 'compact';
+  unit?: string;
+  step?: number;
 };
 
 /**
  * The count instrument: a big number, − / +, a glyph row and a live consequence line.
  * Use only for small whole numbers that change something real (SPEC §6.1). Never for money.
  */
-export function CountStepper({ value, onChange, question, consequence, min = 0, max = 16, glyph = 'people' }: CountStepperProps) {
+export function CountStepper(props: CountStepperProps) {
+  if (props.look === 'compact') return <CompactStepper value={props.value} onChange={props.onChange} min={props.min} max={props.max} unit={props.unit} label={props.question} step={props.step} />;
+  return <CountStepperV23 {...props} />;
+}
+
+function CountStepperV23({ value, onChange, question, consequence, min = 0, max = 16, glyph = 'people' }: CountStepperProps) {
   const t = useTokens();
   const calm = useCalmMotion();
   const set = (n: number) => {
@@ -118,10 +128,17 @@ export type SliderProps = {
   onChange: (v: number) => void;
   accessibilityLabel: string;
   style?: StyleProp<ViewStyle>;
+  /** V26 (board `slider`): a round 24pt knob on the floating lift. */
+  look?: 'v26';
 };
 
 /** Track + square-ish thumb. Selection haptic on each step (throttled). Used for portions, income, cash plan. */
-export function Slider({ value, min, max, step = 1, onChange, accessibilityLabel, style }: SliderProps) {
+export function Slider(props: SliderProps) {
+  if (props.look === 'v26') return <SliderV26 value={props.value} min={props.min} max={props.max} step={props.step} onChange={props.onChange} accessibilityLabel={props.accessibilityLabel} style={props.style} />;
+  return <SliderV23 {...props} />;
+}
+
+function SliderV23({ value, min, max, step = 1, onChange, accessibilityLabel, style }: SliderProps) {
   const t = useTokens();
   const [w, setW] = useState(0);
   const last = useRef(0);
@@ -173,7 +190,12 @@ export function Slider({ value, min, max, step = 1, onChange, accessibilityLabel
 
 /* ───────────────────────── Toggle ───────────────────────── */
 
-export function Toggle({ value, onChange, accessibilityLabel }: { value: boolean; onChange: (v: boolean) => void; accessibilityLabel: string }) {
+export function Toggle(props: { value: boolean; onChange: (v: boolean) => void; accessibilityLabel: string; /** V26 (board `sw`): 46×28, ink when on, never ember. */ look?: 'v26' }) {
+  if (props.look === 'v26') return <SwitchV26 value={props.value} onChange={props.onChange} accessibilityLabel={props.accessibilityLabel} />;
+  return <ToggleV23 {...props} />;
+}
+
+function ToggleV23({ value, onChange, accessibilityLabel }: { value: boolean; onChange: (v: boolean) => void; accessibilityLabel: string }) {
   const t = useTokens(), calm = useCalmMotion();
   const x = useSharedValue(value ? 18 : 0);
   useEffect(() => {
@@ -197,8 +219,9 @@ export function Toggle({ value, onChange, accessibilityLabel }: { value: boolean
 
 /* ───────────────────────── Segmented ───────────────────────── */
 
-export function Segmented<T extends string>({ options, value, onChange }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
+export function Segmented<T extends string>({ options, value, onChange, look }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void; /** V26 (board `seg`): 34pt options, the chosen one on a white pill with a shadow. */ look?: 'v26' }) {
   const t = useTokens();
+  if (look === 'v26') return <SegmentedV26 options={options} value={value} onChange={onChange} />;
   return (
     <View style={[styles.seg, { backgroundColor: t.surface2 }]} accessibilityRole="tablist">
       {options.map((o) => {
@@ -222,8 +245,9 @@ export function Segmented<T extends string>({ options, value, onChange }: { opti
 
 /* ───────────────────────── Chips (single-select) ───────────────────────── */
 
-export function ChipGroup<T extends string>({ options, value, onChange, wrap = true }: { options: { value: T; label: string }[]; value: T | null; onChange: (v: T) => void; wrap?: boolean }) {
+export function ChipGroup<T extends string>({ options, value, onChange, wrap = true, look }: { options: { value: T; label: string }[]; value: T | null; onChange: (v: T) => void; wrap?: boolean; /** V26 (board `filters`): 13pt pills, surface2 with ink2 words; the chosen one ink. */ look?: 'v26' }) {
   const t = useTokens();
+  if (look === 'v26') return <FilterChips options={options} value={value} onChange={onChange} wrap={wrap} />;
   return (
     <View style={{ flexDirection: 'row', flexWrap: wrap ? 'wrap' : 'nowrap', gap: 6 }}>
       {options.map((o) => {
