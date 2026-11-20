@@ -19,6 +19,8 @@ import { SHOW_SAMPLES } from '@/state/sample';
 import { ai } from '@/services/ai';
 import { SAMPLE_TALK, chunkTranscript, sampleStream, voice, type HeardChunk } from '@/services/voice';
 import { useBrainConversation, newConversation } from '@/services/useBrainConversation';
+import { useBrainJob } from '@/services/useBrainJob';
+import { proposalRecord } from '@/services/brainState';
 import { pickAttachment, removeAttachmentCopy } from '@/services/attachments';
 import { ConversationAttachments } from '../ConversationAttachments';
 import { Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, QuietLink, Row, RowsCard, Statement, Between } from './kit';
@@ -58,6 +60,14 @@ export function TalkV26() {
   const before = useRef<Pick<SeedData, 'records' | 'knowledge' | 'profile' | 'memories' | 'brain'> | null>(null);
   const filed = useRef<FiledRecord[]>(preset === 'filed' ? sampleProposals() : []);
   const mounted = useRef(true);
+  // What you said, kept for "Ask life to read it" when life's own rules found nothing to file.
+  const heard = useRef('');
+  const job = useBrainJob('Your talk');
+  useEffect(() => {
+    if (job.state.step !== 'done') return;
+    // What the model picked out is proposed for review, never filed (BUILD_V26 Phase 25).
+    set({ proposals: job.state.result.proposals.map(proposal => proposalRecord(proposal, 'talk')) });
+  }, [job.state]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; stopStream.current?.(); timers.current.forEach(clearTimeout); void voice.stop(); }; }, []);
   // Preview states (`?state=review|filed`) show the sample talk's own details, not whatever was waiting before.
   useEffect(() => { if (preset === 'review') set({ proposals: sampleProposals() }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -96,11 +106,12 @@ export function TalkV26() {
     return () => { cancelled = true; stopStream.current?.(); stopStream.current = null; };
   }, [phase, paused, run]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const restart = () => { stopStream.current?.(); timers.current.forEach(clearTimeout); void voice.stop(); setChunks([]); setLit([]); setSecs(0); setEnded(false); setPaused(false); setError(''); set({ proposals: [] }); setPhase('listening'); setRun(r => r + 1); };
+  const restart = () => { job.reset(); heard.current = ''; stopStream.current?.(); timers.current.forEach(clearTimeout); void voice.stop(); setChunks([]); setLit([]); setSecs(0); setEnded(false); setPaused(false); setError(''); set({ proposals: [] }); setPhase('listening'); setRun(r => r + 1); };
   const review = async () => {
     stopStream.current?.();
     const words = mode === 'live' ? (await voice.stop()) || chunks.map(c => c.text).join('') : '';
     const said = mode === 'live' ? await ai.talk(words) : null;
+    heard.current = mode === 'live' ? words : '';
     // Distress always goes to support, never to filing (BUILD_V26 review focus 5).
     if (said?.support) { set({ proposals: [] }); nav.replace('support'); return; }
     const proposals = said ? said.data : sampleProposals();
@@ -126,7 +137,18 @@ export function TalkV26() {
     ? (proposals.length
       ? <DecisionDrawer title={`File these ${proposals.length} ${proposals.length === 1 ? 'detail' : 'details'}?`} sub={`Into ${listAreas(proposals.map(p => p.area))}. You decide.`}
           leave={{ label: 'Leave them', onPress: restart }} confirm={{ label: `File all ${proposals.length}`, onPress: fileAll, haptic: null }} ask={{ label: 'Go through them one by one', onPress: () => nav.go('understood', params.setup ? { setup: '1' } : undefined) }} />
-      : <DecisionDrawer title="Nothing to file yet." sub="Keep talking, or type it instead." undo={{ label: 'Keep talking', onPress: restart }} />)
+      : job.state.step === 'ask'
+        ? <DecisionDrawer title="Send what you said to life’s AI?" sub={`Your words${job.state.request.context.memories.length ? ` and ${job.state.request.context.memories.length} ${job.state.request.context.memories.length === 1 ? 'memory' : 'memories'}` : ''} go to the life API and its model. Nothing is filed until you say so.`}
+            leave={{ label: 'Keep it here', onPress: job.reset }} confirm={{ label: 'Send it', icon: 'arrowUp', onPress: job.allow }} />
+        : job.state.step === 'working'
+          ? <DecisionDrawer title="Reading what you said…" sub="Nothing is filed until you say so." undo={{ label: 'Stop', onPress: job.reset }} />
+          : job.state.step === 'waiting'
+            ? <DecisionDrawer title="Saved for later." sub={`${job.state.note} It’ll be in your conversations.`} undo={{ label: 'Keep talking', onPress: restart }} />
+            : job.state.step === 'failed' || job.state.step === 'done'
+              ? <DecisionDrawer title="Nothing to file yet." sub={job.state.step === 'failed' ? job.state.message : 'life’s AI didn’t find anything to file either.'} undo={{ label: 'Keep talking', onPress: restart }} />
+              : job.available && heard.current
+                ? <DecisionDrawer title="Nothing to file yet." sub="Keep talking, or let life’s AI read what you said." leave={{ label: 'Keep talking', onPress: restart }} confirm={{ label: 'Ask life to read it', icon: 'spark', onPress: () => job.start('extract', heard.current) }} />
+                : <DecisionDrawer title="Nothing to file yet." sub="Keep talking, or type it instead." undo={{ label: 'Keep talking', onPress: restart }} />)
     : phase === 'filed'
       ? <DecisionDrawer title="Filed." sub={`${filed.current.length} ${filed.current.length === 1 ? 'detail is' : 'details are'} in their places.${mode === 'sample' ? ' Your rent situation has a new date.' : ''}`} undo={{ onPress: undo }} />
       : null;

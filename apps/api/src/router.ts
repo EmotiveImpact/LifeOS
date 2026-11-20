@@ -79,7 +79,7 @@ const RequestBody = z.object({
 
 export type AiReply = { status: number; body: unknown; headers?: Record<string, string> };
 const refuse = (status: number, error: string, message?: string): AiReply => ({ status, body: message ? { error, message } : { error } });
-const STATUS: Record<BrainError['code'], number> = { CONSENT_REQUIRED: 403, RATE_LIMITED: 429, INVALID_INPUT: 400, INVALID_OUTPUT: 502, TIMEOUT: 504, UNAVAILABLE: 503, CANCELLED: 503 };
+const STATUS: Record<BrainError['code'], number> = { CONSENT_REQUIRED: 403, RATE_LIMITED: 429, INVALID_INPUT: 400, INVALID_OUTPUT: 502, TIMEOUT: 504, UNAVAILABLE: 503, OFFLINE: 503, CANCELLED: 503 };
 
 type Standing = { privateMode: boolean; grants: ConsentGrant[]; used: Record<Tier, { day: number; month: number }>; spentMicros: number };
 

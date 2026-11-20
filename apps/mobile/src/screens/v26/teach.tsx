@@ -50,10 +50,13 @@ function TickOn() {
 
 /** What the telling-back covered: each link of the chain, the words that showed it, and how long it took. */
 type Told = { links: { label: string; ok: boolean; quote: string; gap: string; fix: string }[]; seconds: number };
+const readAnalysis = (raw?: string): { part: string; quote: string }[] => { try { const v = JSON.parse(raw ?? '') as { understood?: unknown }; return Array.isArray(v.understood) ? v.understood.filter((u): u is { part: string; quote: string } => !!u && typeof u.part === 'string' && typeof u.quote === 'string') : []; } catch { return []; } };
 function useTold(): Told {
   const { data } = useSeed();
   const text = data.drafts['tax-explanation'] ?? (SHOW_SAMPLES ? lesson.sampleTelling.filter(m => m.who === 'you').map(m => m.text).join(' ') : '');
-  const links = lesson.links.map(l => { const quote = quoteFor(text, l.words); return { label: l.label, ok: !!quote, quote, gap: l.gap, fix: l.fix }; });
+  // The phone's own model may have heard a part your words didn't name; its quote is always your own words.
+  const heard = readAnalysis(data.drafts['tax-analysis']);
+  const links = lesson.links.map(l => { const model = heard.find(u => u.part.toLowerCase() === l.label.toLowerCase())?.quote; const quote = model ?? quoteFor(text, l.words); return { label: l.label, ok: !!quote, quote, gap: l.gap, fix: l.fix }; });
   return { links, seconds: Number(data.choices['tellback-seconds'] ?? (SHOW_SAMPLES ? 41 : 0)) || 0 };
 }
 
@@ -316,7 +319,12 @@ export function TellbackV26() {
     if (!text) return;
     draft('tax-explanation', text); choose('tellback-seconds', String(seconds));
     setThinking(true); feedback.brief();
-    try { if ((await ai.analyse(text)).support) { setThinking(false); nav.replace('support'); return; } } catch { /* the local check below still runs */ }
+    draft('tax-analysis', '');
+    try {
+      const analysed = await ai.analyse(text, lesson.links.map(l => l.label));
+      if (analysed.support) { setThinking(false); nav.replace('support'); return; }
+      if (analysed.model) draft('tax-analysis', JSON.stringify(analysed.model));
+    } catch { /* the local check below still runs */ }
   };
   useEffect(() => {
     if (!thinking || params.state === 'done') return;

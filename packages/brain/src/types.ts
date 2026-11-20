@@ -2,7 +2,7 @@
 import type { SupportReply } from './safety.ts';
 import type { ConsentGrant } from './consent.ts';
 export type Area = 'you' | 'home' | 'work' | 'money' | 'health' | 'goal';
-export type Job = 'ask' | 'extract' | 'draft' | 'lesson' | 'analyse' | 'showMe' | 'food' | 'coach' | 'plan-explain' | 'read-document';
+export type Job = 'ask' | 'extract' | 'draft' | 'lesson' | 'analyse' | 'showMe' | 'food' | 'coach' | 'plan-explain' | 'read-document' | 'remember';
 /** Model strength, cheapest first. `top` is for big decisions only; `vision` reads photos. */
 export type Tier = 'fast' | 'strong' | 'top' | 'vision';
 export type ModelLocation = 'device' | 'server' | 'cloud';
@@ -48,7 +48,8 @@ export type Capability = { id: string; location: ModelLocation; jobs: Job[]; ava
  * (the phone then shows its own support screen). A model's answer can do neither. */
 export interface ModelAdapter { id: string; location: ModelLocation; jobs: Job[]; tiers?: Tier[]; maxContextChars?: number; relay?: boolean; available(): Promise<boolean>; generate(request: Request, signal: AbortSignal): Promise<unknown> }
 export class BrainError extends Error {
-  constructor(public code: 'UNAVAILABLE' | 'CONSENT_REQUIRED' | 'INVALID_INPUT' | 'INVALID_OUTPUT' | 'CANCELLED' | 'TIMEOUT' | 'RATE_LIMITED', message: string) { super(message); this.name = 'BrainError'; }
+  /** `OFFLINE`: the phone couldn't reach the life API. The request is kept and sent once the phone is back. */
+  constructor(public code: 'UNAVAILABLE' | 'OFFLINE' | 'CONSENT_REQUIRED' | 'INVALID_INPUT' | 'INVALID_OUTPUT' | 'CANCELLED' | 'TIMEOUT' | 'RATE_LIMITED', message: string) { super(message); this.name = 'BrainError'; }
 }
 /** A job's starting tier (router.ts BASE_TIERS; the tier table can move it). */
-export const tierFor = (job: Job): Tier => job === 'food' ? 'vision' : job === 'extract' || job === 'ask' ? 'fast' : 'strong';
+export const tierFor = (job: Job): Tier => job === 'food' ? 'vision' : job === 'extract' || job === 'ask' || job === 'remember' ? 'fast' : 'strong';

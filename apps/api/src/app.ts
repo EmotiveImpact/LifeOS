@@ -3,6 +3,7 @@ import { DeleteBody, FileIdBody, PushBody, SignBody, closeAccount, deleteFile, e
 import type { Auth, Principal } from './auth';
 import type { Db } from './db/client';
 import { devices } from './db/schema';
+import { SearchBody, listMemories, searchMemories } from './memory';
 import { aiCapabilities, runAi, type AiOptions } from './router';
 import type { Storage } from './storage';
 import { MAX_PULL, MAX_PUSH, forget, forgettable, isTable, pull, push, refusedByPolicy } from './sync';
@@ -123,6 +124,12 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       return response;
     },
     'GET /ai/capabilities': async (_request, principal) => json(await aiCapabilities(db, principal.userId, ai, now())),
+    'GET /memory': async (_request, principal) => json(await listMemories(db, principal.userId)),
+    'POST /memory/search': async (request, principal) => {
+      const parsed = SearchBody.safeParse(await readJson(request));
+      if (!parsed.success) return fail(400, 'BAD_REQUEST');
+      return json(await searchMemories(db, principal.userId, parsed.data, now()));
+    },
     'POST /sync/forget': async (request, principal) => {
       const parsed = ForgetBody.safeParse(await request.json().catch(() => null));
       if (!parsed.success || !isTable(parsed.data.table) || !forgettable.has(parsed.data.table)) return fail(400, 'BAD_REQUEST');

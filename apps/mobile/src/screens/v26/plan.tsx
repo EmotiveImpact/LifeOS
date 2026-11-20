@@ -16,6 +16,8 @@ import {
 import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
+import { useBrainJob } from '@/services/useBrainJob';
+import type { DraftData } from '@life/brain';
 import { money, seed, seedTaxClaim } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { invoices, sampleCleared, sampleClearedTotal, TOOLS } from '@/state/plan';
@@ -169,6 +171,13 @@ export function DraftV26() {
   const [copied, setCopied] = useState(false);
   const to = m.isTax ? 'HMRC · PAYE enquiries' : m.task.provider;
   const subject = m.isTax ? 'P800 refund: bank transfer' : `${m.title} enquiry`;
+  // "Write it with life's AI": the phone's own model first; the cloud asks first. Your details stay exactly as they are.
+  const job = useBrainJob(`Draft · ${m.title}`);
+  useEffect(() => {
+    const body = job.state.step === 'done' ? (job.state.result.data as DraftData | undefined)?.body : undefined;
+    if (body) { draft(m.task.id, body); feedback.select(); }
+  }, [job.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  const rewrite = () => job.start('draft', `Write a short, polite email to ${to} about ${m.title}. Keep every name, date, amount and reference exactly as written here, and add none. My draft:\n\n${m.draft}`);
   return (
     <Page screen="draft" bar={{ kind: 'sheet', title: 'Draft message' }}
       footer={<View style={{ flexDirection: 'row', gap: space.xs }}>
@@ -184,6 +193,16 @@ export function DraftV26() {
       <TextInput maxFontSizeMultiplier={1.3} multiline value={m.draft} onChangeText={v => draft(m.task.id, v)} accessibilityLabel="Draft message" selectionColor={t.ember}
         style={[styles.card, styles.letter, { color: t.ink, fontFamily: fonts.sans, marginTop: space.sm }, surface]} />
       <Callout style={{ marginTop: space.sm }}>Tap the text to edit. life never sends anything without you.</Callout>
+      {job.state.step === 'ask' ? (
+        <View style={[styles.card, { padding: space.md, marginTop: space.sm }, surface]}>
+          <Text variant="headline">Use life’s AI for this draft?</Text>
+          <Body style={{ marginTop: space.xs }} s="This sends the draft above to the life API and its model, which rewrites it. {You check every word before anything is sent.}" />
+          <View style={{ flexDirection: 'row', gap: space.xs, marginTop: space.sm }}><Chip label="Send the draft" onPress={job.allow} /><Chip label="Keep it here" tone="q" onPress={job.reset} /></View>
+        </View>
+      ) : job.state.step === 'working' ? <Callout style={{ marginTop: space.xs }}>Rewriting your draft…</Callout>
+        : job.state.step === 'waiting' ? <Callout style={{ marginTop: space.xs }}>{`${job.state.note} The new draft will be in your conversations.`}</Callout>
+        : job.state.step === 'failed' ? <Callout style={{ marginTop: space.xs }}>{job.state.message}</Callout>
+        : job.available ? <QuietLink label="Write it with life’s AI" center={false} onPress={rewrite} style={{ marginTop: space.xs }} /> : null}
     </Page>
   );
 }

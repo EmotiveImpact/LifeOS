@@ -17,6 +17,7 @@ import {
 import type { Area } from '@/design/tokens';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
+import { editMemory, liveMemory, purgeForgotten } from '@/services/memory';
 import { knowledgeLabels, money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import {
@@ -362,7 +363,7 @@ export function ExperimentV26() {
 /* ───────────────────────── What life remembers ───────────────────────── */
 
 /** A memory you can swipe left to forget (board `.tp-swipe`): the row slides and Forget waits underneath. */
-function SwipeMemory({ id, title, sub, source, peek, forgotten, onForget }: { id: string; title: string; sub: string; source: number; peek?: boolean; forgotten: boolean; onForget: () => void }) {
+function SwipeMemory({ id, title, sub, source, peek, forgotten, onForget, onEdit }: { id: string; title: string; sub: string; source: number; peek?: boolean; forgotten: boolean; onForget: () => void; onEdit: () => void }) {
   const t = useTokens(), [w, onLayout] = useWidth();
   const ref = useRef<{ scrollTo: (o: { x: number; animated?: boolean }) => void } | null>(null);
   const FORGET = 84;
@@ -373,7 +374,7 @@ function SwipeMemory({ id, title, sub, source, peek, forgotten, onForget }: { id
         <ScrollView ref={ref as never} horizontal showsHorizontalScrollIndicator={false} snapToOffsets={[0, FORGET]} decelerationRate="fast" bounces={false}
           contentOffset={peek ? { x: FORGET, y: 0 } : undefined} scrollEnabled={!forgotten}>
           <View style={[styles.swipeRow, { width: w, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-            <Row thumb={source} title={title} sub={forgotten ? 'Forgotten · life won’t use this' : sub} right={forgotten ? <Chip label="Undo" tone="q" onPress={onForget} /> : undefined} />
+            <Row thumb={source} title={title} sub={forgotten ? 'Forgotten · deleted when you leave' : sub} right={forgotten ? <Chip label="Undo" tone="q" onPress={onForget} /> : undefined} onPress={forgotten ? undefined : onEdit} />
           </View>
           <Press haptic="select" onPress={onForget} accessibilityLabel={`Forget ${title}`} style={styles.forget} key={id}>
             <Text variant="buttonCompact" tone="ember">Forget</Text>
@@ -385,13 +386,18 @@ function SwipeMemory({ id, title, sub, source, peek, forgotten, onForget }: { id
 }
 
 export function MemoryV26() {
-  const nav = useNavigation(), t = useTokens(), { data, flag } = useSeed();
+  const nav = useNavigation(), t = useTokens(), { data, flag, update } = useSeed();
   const [filter, setFilter] = useState<typeof memoryFilters[number]>('All');
   const [search, setSearch] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
   const hint = useRef(!data.flags['memory-hint-seen']).current;
   useEffect(() => { if (hint) flag('memory-hint-seen', true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const kept = data.memories.filter(m => !data.flags[`forgot-${m.id}`]);
+  // Forgetting deletes. Undo works while you're here; leaving the screen deletes what you forgot, on this phone and
+  // (by sync) on the server. Anything left forgotten by an earlier visit goes as the screen opens.
+  useEffect(() => { update(purgeForgotten); return () => update(purgeForgotten); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const kept = data.memories.filter(m => !data.flags[`forgot-${m.id}`] && liveMemory(m));
   const list = data.memories.filter(m => (filter === 'All' || m.category === filter) && (!search || `${m.text} ${m.source}`.toLowerCase().includes(search.toLowerCase())));
+  const save = () => { if (editing) update(c => ({ ...c, memories: editMemory(c.memories, editing.id, editing.text) })); setEditing(null); feedback.select(); };
   const total = kept.length + usedToday.length;
   return (
     <Page screen="memory" bar={{ kind: 'push', action: { kind: 'icon', icon: search === null ? 'search' : 'close', label: search === null ? 'Search memories' : 'Close search', onPress: () => setSearch(s => (s === null ? '' : null)) } }}>
@@ -409,10 +415,19 @@ export function MemoryV26() {
         </Shelf>
       ) : null}
       <SegmentedV26 options={memoryFilters.map(v => ({ value: v, label: v }))} value={filter} onChange={setFilter} style={{ marginTop: space.lg }} />
-      <Between style={{ marginTop: space.lg }}><Micro>OTHER MEMORIES</Micro><Callout>Swipe to forget</Callout></Between>
+      <Between style={{ marginTop: space.lg }}><Micro>OTHER MEMORIES</Micro><Callout>Tap to correct · swipe to forget</Callout></Between>
       <View style={{ gap: space.xs, marginTop: space.xs }}>
-        {list.length ? list.map((m, i) => (
-          <SwipeMemory key={m.id} id={m.id} title={m.text} sub={m.source} source={photos[memoryPhoto(m.id, m.category)]} peek={hint && i === 0} forgotten={!!data.flags[`forgot-${m.id}`]} onForget={() => flag(`forgot-${m.id}`)} />
+        {list.length ? list.map((m, i) => editing?.id === m.id ? (
+          <View key={m.id} style={[styles.editMemory, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+            <TextInput maxFontSizeMultiplier={1.3} autoFocus multiline value={editing.text} onChangeText={text => setEditing({ id: m.id, text })} maxLength={300}
+              accessibilityLabel="Correct this memory" selectionColor={t.ember} style={[styles.editInput, { color: t.ink }]} />
+            <View style={styles.editActions}>
+              <Chip label="Cancel" tone="q" onPress={() => setEditing(null)} />
+              <Chip label="Save" onPress={save} />
+            </View>
+          </View>
+        ) : (
+          <SwipeMemory key={m.id} id={m.id} title={m.text} sub={m.validTo ? `No longer true · ${m.source}` : m.source} source={photos[memoryPhoto(m.id, m.category)]} peek={hint && i === 0} forgotten={!!data.flags[`forgot-${m.id}`]} onForget={() => flag(`forgot-${m.id}`)} onEdit={() => setEditing({ id: m.id, text: m.text })} />
         )) : <Text variant="body" tone="ink2">{search ? 'Nothing matches that.' : 'Nothing remembered here yet.'}</Text>}
       </View>
       <Callout style={{ marginTop: space.md }}>life never remembers health details or money in ways you can’t see here.</Callout>
@@ -548,6 +563,9 @@ const styles = StyleSheet.create({
   swipe: { borderRadius: radius.tile, overflow: 'hidden' },
   swipeRow: { borderRadius: radius.tile, paddingHorizontal: space.sm },
   forget: { width: 84, alignItems: 'center', justifyContent: 'center' },
+  editMemory: { borderRadius: radius.tile, padding: space.md, gap: space.sm },
+  editInput: { fontFamily: fonts.sans, fontSize: 15, lineHeight: 21, minHeight: 44, padding: 0, textAlignVertical: 'top' },
+  editActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: space.xs },
   search: { flexDirection: 'row', alignItems: 'center', gap: space.xs, height: 48, borderRadius: radius.full, paddingHorizontal: space.md },
   searchInput: { flex: 1, fontFamily: fonts.sans, fontSize: 15, paddingVertical: 0 },
   duo: { flexDirection: 'row', alignItems: 'center' },

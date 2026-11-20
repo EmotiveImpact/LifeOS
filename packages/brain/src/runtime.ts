@@ -73,7 +73,7 @@ export async function runBrain(request: Request, adapters: ModelAdapter[] = [], 
   const preference = (id: string) => { const at = plan.models.indexOf(id); return at < 0 ? plan.models.length : at; };
   const candidates = adapters.filter(a => a.jobs.includes(request.job) && (!request.privateMode || a.location === 'device') && (!a.tiers || a.tiers.includes(plan.tier))).sort((a, b) => where[a.location] - where[b.location] || preference(a.id) - preference(b.id));
   let refused: ConsentCheck | null = null;
-  let unavailable: BrainError | null = null;
+  let unavailable: BrainError | null = null, offline: BrainError | null = null;
   for (const adapter of candidates) {
     if (!await adapter.available()) continue;
     if (signal?.aborted) throw new BrainError('CANCELLED', 'Stopped. Nothing was filed.');
@@ -104,10 +104,13 @@ export async function runBrain(request: Request, adapters: ModelAdapter[] = [], 
     } catch (error) {
       // A provider that is down or busy hands over to the next model in the tier. A timeout, a stop or a bad
       // answer ends the request: nothing is retried behind the person's back.
+      // No connection hands over the same way, and is reported as offline so the phone can keep the request.
       if (error instanceof BrainError && error.code === 'UNAVAILABLE' && !controller.signal.aborted) { unavailable = error; continue; }
+      if (error instanceof BrainError && error.code === 'OFFLINE' && !controller.signal.aborted) { offline = error; continue; }
       throw error;
     } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
   }
+  if (offline && !refused) throw offline;
   if (unavailable && !refused) throw unavailable;
   if (refused && !refused.ok) throw new BrainError('CONSENT_REQUIRED', refused.reason === 'HEALTH_NEEDS_CONSENT' ? 'This includes health details, so it needs your OK for this request before it leaves your phone.' : 'This needs a model outside your phone. Review what will be sent first.');
   throw new BrainError('UNAVAILABLE', request.privateMode ? 'No on-device model is available for this question. Your information has stayed on your phone. You can still use saved facts and engine calculations.' : 'No model is connected for this question yet. Your message is saved, but I won’t invent a reply.');

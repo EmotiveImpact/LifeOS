@@ -81,7 +81,7 @@ Photo reading and new lessons stay in the cloud and ask first. Pick the exact op
 
 ### 3.3c Looked at, not adopted (16 Nov 2026)
 - **Keiki** (your product on iMessage/WhatsApp), **Supermemory** (hosted AI memory) and **Maritime** (hosted agent computers) were assessed. None is part of the plan. Keiki is the most interesting (a possible "text life" channel later).
-- **Memory = mem0 (open source, Apache-2.0), self-hosted on our own Neon Postgres with pgvector.** mem0 pulls facts out of conversations, de-duplicates and updates them, and finds the relevant ones for each reply. It sits behind `memory.ts`, one memory space per user; "What life remembers" lists, edits and deletes them. No third party holds the facts. On-device embeddings for private mode.
+- **Memory: our own layer, mem0-style (owner, 20 Nov 2026; mem0 itself is not installed).** It pulls facts out of confirmed conversations, de-duplicates and updates them, closes ones that stop being true (valid-from and valid-to dates, as in Graphiti), and finds the relevant ones for each reply. It lives in `packages/brain/src/memory.ts`, runs the same on the phone and the life API, one memory space per user, on our own Neon Postgres; "What life remembers" lists, edits and deletes them. No third party holds the facts. Health memories stay on the phone unless the person turns on sync.
 - **"Do it for me" is parked.** Browser automation at scale is hard (sign-ins, sites blocking bots, cost, liability). If it comes back, it starts with email and letter tasks drafted by our own models and approved by the user.
 
 ### 3.4 A "decision model": yes, but in the right place
@@ -159,6 +159,7 @@ Phases run one at a time, each on its own branch, each ending at a 🛑 gate whe
 | 15 Nov 2026 | **Teach me comes from the Feynman app, in life's language.** |
 | 16 Nov 2026 | **Memory: mem0 (open source) self-hosted on Neon pgvector. Gemini 4 Hydrogen added as the first Fast-tier candidate for evals.** |
 | 16 Nov 2026 | **Keiki, Supermemory and Maritime looked at, not adopted. Memory: own Postgres + pgvector (mem0-style). "Do it for me" parked.** |
+| 20 Nov 2026 | **Memory: own the layer (mem0's loop written in our own TypeScript), no mem0 install. Health memories phone-only unless synced.** |
 | 16 Nov 2026 | **Fuel brought to Cal AI level (13 screens). Voice: Phonon on iPhone, Kitten TTS Nano elsewhere. On-device AI: built-in OS models first, small open models as the fallback download.** |
 | 16 Nov 2026 | **Build UI-first: Track A builds every screen with seed data and light checks; Track B makes it real and adds tests.** |
 | 16 Nov 2026 | **v17: orb is one family of the ring's dots (thinking, working, searching, listening, done); no dividers, card shadows; Fenny teaching language + drawing kit; body numbers; health features from the repos; Cal AI counters; SYSTEM_DESIGN.md.** |

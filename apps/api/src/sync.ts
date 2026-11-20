@@ -36,6 +36,9 @@ const specs = Object.fromEntries(Object.entries(phoneTables).map(([name, table])
 }])) as Record<TableName, { table: PgTable & Record<string, never>; columns: Column[] }>;
 /** Tables whose server copies a person can ask to be forgotten without a tombstone reaching their other phones. */
 export const forgettable = new Set<TableName>(['memory']);
+/** Tables whose content goes when the row is deleted: the tombstone keeps only its dates, and the earlier ops that
+ * carried the words are dropped, so a forgotten memory is gone from the server, not hidden. */
+export const wipedOnDelete = new Set<TableName>(['memory']);
 export const isTable = (name: unknown): name is TableName => typeof name === 'string' && Object.hasOwn(specs, name);
 
 function fits(column: Column, value: unknown): boolean {
@@ -103,6 +106,11 @@ async function apply(tx: Tx, userId: string, op: PushOp) {
   const at = op.payload.updated_at as string, deletedAt = op.payload.deleted_at as string;
   await tx.update(table).set({ updated_at: at, deleted_at: deletedAt } as never)
     .where(and(eq(t.id, op.rowId), sql`(${t.updated_at} < ${at} OR (${t.updated_at} = ${at} AND ${t.deleted_at} IS NULL))`));
+  if (wipedOnDelete.has(op.table)) {
+    const content = Object.fromEntries(columns.filter(c => !META.has(c.name)).map(c => [c.name, null]));
+    await tx.update(table).set(content as never).where(and(eq(t.id, op.rowId), sql`${t.deleted_at} IS NOT NULL`));
+    await tx.delete(syncOps).where(and(eq(syncOps.table_name, op.table), eq(syncOps.row_id, op.rowId), eq(syncOps.op, 'upsert'), sql`${syncOps.at} <= ${deletedAt}`));
+  }
 }
 
 /** Stores and applies a batch of ops for one person. */

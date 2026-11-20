@@ -6,6 +6,7 @@ import { engineSnapshot, seed, seedAim, seedMeal, seedPeople, seedProfile, seedP
 import { openProjectionStorage } from './persistence';
 import { removeAttachmentCopy } from '@/services/attachments';
 import type { ProjectionStorage } from './persistence.types';
+import type { QueuedAi } from '@/services/aiQueue';
 import type { UserProfile } from '@life/core/types';
 import { emptyBrainState, type BrainState } from '@life/brain';
 import { confirmBrainRecords } from '@/services/brainState';
@@ -19,6 +20,8 @@ export type SeedData = {
   people: typeof seedPeople; meal: MealItem[]; mealLogged: boolean; meals: { id: string; name: string; at: string; items: MealItem[]; day?: string; photo?: string; via?: 'photo' | 'said' | 'scan' | 'search' | 'saved' | 'quick' | 'menu' | 'label' | 'plan'; from?: string }[];
   habits: typeof seed.habits; journal: string[]; weightKg: number; heightCm: number; waistCm: number;
   learned: string[]; memories: MemoryEntry[];
+  /** AI requests waiting for a connection (services/aiQueue.ts). Kept on this phone only. */
+  aiQueue: QueuedAi[];
   prefs: { dark: boolean; sounds: boolean; haptics: boolean; handDrawn: boolean; hideNumbers: boolean; hideBalances: boolean; glimpses: boolean; followMood: boolean; look: 'mix' | 'places'; notifications: boolean; privateMode: boolean; addback: 'None' | 'Half' | 'All' };
   flags: Record<string, boolean>; choices: Record<string, string>; drafts: Record<string, string>;
 };
@@ -26,6 +29,7 @@ const initial: SeedData = {
   brain: emptyBrainState(),
   profile: seedProfile, onboardingDone: false, aim: seedAim, records: seedKnownRecords, proposals: seedRecords, knowledge: seedKnowledge, completed: [], missionSteps: {}, selectedMission: 'uk-hmrc-tax-code', pulseLog: seedPulseLog, people: seedPeople,
   meal: seedMeal, mealLogged: false, meals: [], habits: seed.habits, journal: [], weightKg: seed.body.weightKg, heightCm: seed.body.heightCm, waistCm: seed.body.waistCm, learned: [],
+  aiQueue: [],
   memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov', category: 'Money' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov', category: 'People' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov', category: 'Money' }],
   prefs: { dark: true, sounds: true, haptics: true, handDrawn: false, hideNumbers: false, hideBalances: false, glimpses: true, followMood: true, look: 'mix', notifications: true, privateMode: false, addback: 'Half' },
   flags: {}, choices: {}, drafts: {},

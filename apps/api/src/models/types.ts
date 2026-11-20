@@ -44,7 +44,7 @@ export type Fetch = (input: string, init?: RequestInit) => Promise<Response>;
 export type ProviderOptions = { apiKey: string; fetch?: Fetch; baseUrl?: string };
 
 /** Every job that needs only words. `food` needs a photo, so only vision models take it. */
-export const TEXT_JOBS: Job[] = ['ask', 'extract', 'draft', 'lesson', 'analyse', 'showMe', 'coach', 'plan-explain', 'read-document'];
+export const TEXT_JOBS: Job[] = ['ask', 'extract', 'draft', 'lesson', 'analyse', 'showMe', 'coach', 'plan-explain', 'read-document', 'remember'];
 export const jobsFor = (spec: ModelSpec): Job[] => (spec.vision ? [...TEXT_JOBS, 'food'] : TEXT_JOBS);
 
 /** Millionths of a dollar: tokens times the price per million tokens, exactly. */

@@ -12,7 +12,8 @@
     "analyse": "strong",
     "showMe": "strong",
     "food": "vision",
-    "read-document": "strong"
+    "read-document": "strong",
+    "remember": "fast"
   },
   "tiers": {
     "fast": ["claude-haiku-5-5", "gpt-6-luna"],

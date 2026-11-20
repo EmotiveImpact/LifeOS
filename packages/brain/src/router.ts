@@ -11,7 +11,7 @@
 import { BrainError, type Job, type Request, type Tier } from './types.ts';
 
 export const TIERS: readonly Tier[] = ['fast', 'strong', 'top', 'vision'];
-export const BASE_TIERS: Record<Job, Tier> = { extract: 'fast', ask: 'fast', coach: 'strong', 'plan-explain': 'strong', draft: 'strong', lesson: 'strong', analyse: 'strong', showMe: 'strong', food: 'vision', 'read-document': 'strong' };
+export const BASE_TIERS: Record<Job, Tier> = { extract: 'fast', ask: 'fast', coach: 'strong', 'plan-explain': 'strong', draft: 'strong', lesson: 'strong', analyse: 'strong', showMe: 'strong', food: 'vision', 'read-document': 'strong', remember: 'fast' };
 /** Model ids per tier, best first; the rest are warm fallbacks. */
 export type TierTable = { version: 1; source: 'evals' | 'default'; updated: string; jobs: Partial<Record<Job, Tier>>; tiers: Partial<Record<Tier, string[]>> };
 /** Calls left this period, per tier. A tier that isn't listed has no limit. */

@@ -2,10 +2,13 @@ import type { LifeDataStore } from './store';
 import { object } from './store';
 import type { TableName } from './schema';
 import { digest, stableId } from './ids';
+import { embed } from '@life/brain';
 
 const domainKeys = new Set(['profile', 'weightKg', 'heightCm', 'waistCm', 'prefs', 'records', 'filedRecords', 'aim', 'chiefAim', 'meals', 'habits', 'people', 'learned', 'memories', 'completed', 'missionSteps', ...syncedSettings()]);
 /** Choices, flags and whether setup is done travel with the account inside the prefs row, so a restored phone has them. */
 function syncedSettings() { return ['choices', 'flags', 'onboardingDone']; }
+/** A memory's attributes kept in its source column (services/memory.ts); `lastUsed` has its own column. */
+const MEMORY_ATTRIBUTES = ['kind', 'confidence', 'validFrom', 'validTo', 'uses'] as const;
 const array = (value: unknown): Record<string, unknown>[] => Array.isArray(value) ? value.map(object) : [];
 const dataObject = (value: unknown) => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 const uid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -71,7 +74,14 @@ async function commit(store: LifeDataStore, raw: unknown, importing: boolean, so
       }
     }
     for (const [i, topic] of (Array.isArray(input.learned) ? input.learned : []).entries()) await entity('learning_record', typeof topic === 'string' ? topic : String(i), { topic: typeof topic === 'string' ? topic : String(dataObject(topic).topic ?? ''), source: { type: 'local' } });
-    for (const memory of array(input.memories)) await entity('memory', String(memory.id), { text: memory.text ?? null, source: typeof memory.source === 'string' ? { label: memory.source, ...(memory.category ? { category: memory.category } : {}), ...(memory.recordId ? { recordId: memory.recordId } : {}) } : { ...dataObject(memory.source), ...(memory.category ? { category: memory.category } : {}), ...(memory.recordId ? { recordId: memory.recordId } : {}) }, last_used: memory.lastUsed ?? null });
+    for (const memory of array(input.memories)) {
+      // A memory's own attributes (services/memory.ts) travel in its source column, so phone and server keep the
+      // same columns; the vector goes in `embedding`, named by the embedder that made it.
+      const attributes = Object.fromEntries(MEMORY_ATTRIBUTES.filter(key => memory[key] !== undefined && memory[key] !== null).map(key => [key, memory[key]]));
+      const base = typeof memory.source === 'string' ? { label: memory.source } : dataObject(memory.source);
+      const text = typeof memory.text === 'string' ? memory.text : null;
+      await entity('memory', String(memory.id), { text, source: { ...base, ...(memory.category ? { category: memory.category } : {}), ...(memory.recordId ? { recordId: memory.recordId } : {}), ...attributes }, embedding: text ? embed(text) : null, last_used: memory.lastUsed ?? null });
+    }
     const completed = new Set(Array.isArray(input.completed) ? input.completed.map(String) : []);
     const steps = dataObject(input.missionSteps);
     const missionIds = new Set([...completed, ...Object.keys(steps).map(k => k.replace(/-\d+$/, ''))]);
@@ -152,7 +162,7 @@ export async function loadProjection<T>(store: LifeDataStore): Promise<T | null>
   const result = { ...ui, ...dataObject(synced), profile: p, weightKg: body?.weight_kg, heightCm: body?.height_cm, waistCm: body?.waist_cm,
     prefs: prefs ? { ...prefFields, look: prefs.look, sounds: Boolean(prefs.sounds), haptics: Boolean(prefs.haptics), handDrawn: Boolean(prefs.hand_drawn), hideNumbers: Boolean(prefs.hide_numbers), notifications: prefs.notifications, privateMode: Boolean(prefs.private_mode) } : {},
     records: [...facts, ...array(ui.recordDrafts)], aim: aim ? dataObject(aim.fields).value : null, meals, habits, people,
-    learned: list('learning_record').map(r => r.topic), memories: list('memory').map(r => ({ id: originalId('memory', r.id), text: r.text, source: typeof r.source === 'string' ? r.source : typeof dataObject(r.source).label === 'string' ? dataObject(r.source).label : JSON.stringify(r.source ?? {}), category: dataObject(r.source).category, recordId: dataObject(r.source).recordId })),
+    learned: list('learning_record').map(r => r.topic), memories: list('memory').filter(r => typeof r.text === 'string').map(r => ({ id: originalId('memory', r.id), text: r.text, source: typeof r.source === 'string' ? r.source : typeof dataObject(r.source).label === 'string' ? dataObject(r.source).label : JSON.stringify(r.source ?? {}), category: dataObject(r.source).category, recordId: dataObject(r.source).recordId, ...Object.fromEntries(MEMORY_ATTRIBUTES.filter(key => dataObject(r.source)[key] !== undefined).map(key => [key, dataObject(r.source)[key]])), ...(typeof r.last_used === 'string' ? { lastUsed: r.last_used } : {}) })),
     completed: missions.filter(r => dataObject(r.fields).completed).map(r => dataObject(r.fields).taskId), missionSteps: steps,
   };
   delete (result as Record<string, unknown>).recordDrafts;

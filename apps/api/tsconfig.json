@@ -12,7 +12,8 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": { "@life/brain": ["../../packages/brain/src/index.ts"] }
   },
   "include": ["src", "drizzle.config.ts", "../../tests/api"]
 }

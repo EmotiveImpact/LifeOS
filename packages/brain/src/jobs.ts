@@ -9,7 +9,8 @@
  *   you shared, or a small count up to twelve ("2 parts"). Drafts need your
  *   dates and reference numbers; lessons need "three steps".
  */
-import { BrainError, type Job, type Request } from './types.ts';
+import { BrainError, type Job, type Request, type Sensitivity } from './types.ts';
+import { MEMORY_KINDS, type MemoryKind } from './memory.ts';
 import { numbersIn, plainWords } from './proposals.ts';
 
 export type DraftData = { kind: 'email' | 'letter' | 'message' | 'form'; subject?: string; to?: string; body: string };
@@ -21,7 +22,11 @@ export type ShowMeData = { scene: Record<string, unknown> };
 export type FoodItem = { name: string; portion?: string; grams?: number; confidence: number };
 export type FoodData = { items: FoodItem[] };
 export type ReadDocumentData = { document: { kind: 'payslip' | 'bill' | 'letter' | 'statement' | 'other'; from?: string; summary: string } };
-export type JobData = { ask: undefined; extract: undefined; coach: undefined; 'plan-explain': undefined; draft: DraftData; lesson: LessonData; analyse: AnalyseData; showMe: ShowMeData; food: FoodData; 'read-document': ReadDocumentData };
+/** Memory upkeep: what is worth remembering from what the person said. Each one quotes their words; `replaces`
+ * names a memory in the request's context that this makes untrue. */
+export type RememberItem = { text: string; kind: MemoryKind; quote: string; sensitivity?: Sensitivity; replaces?: string };
+export type RememberData = { memories: RememberItem[] };
+export type JobData = { ask: undefined; extract: undefined; coach: undefined; 'plan-explain': undefined; draft: DraftData; lesson: LessonData; analyse: AnalyseData; showMe: ShowMeData; food: FoodData; 'read-document': ReadDocumentData; remember: RememberData };
 
 /** Only these jobs may propose changes to your records. */
 export const PROPOSING_JOBS: readonly Job[] = ['ask', 'extract', 'read-document'];
@@ -55,7 +60,8 @@ function grounded(value: string, request: Request, citations: readonly string[],
   }
 }
 
-/** Checks `data` for the job. Returns it unchanged, or throws. */
+/** Checks `data` for the job. Returns it, or throws. The one change it makes: a remembered detail that looks like
+ * health is marked health. */
 export function validateJobData(job: Job, data: unknown, request: Request, citations: readonly string[]): unknown {
   const evidence = numbersIn(groundingText(request));
   const g = (value: string) => grounded(value, request, citations, evidence);
@@ -127,6 +133,26 @@ export function validateJobData(job: Job, data: unknown, request: Request, citat
       }
       return data;
     }
+    case 'remember': {
+      check(isObject(data)); const d = data as Record<string, unknown>;
+      only(d, ['memories'], ['memories']);
+      check(Array.isArray(d.memories) && d.memories.length <= 8);
+      const said = plainWords([request.text, ...request.history.filter(m => m.role === 'user').map(m => m.text)].join('\n'));
+      const known = new Set(request.context.memories.map(m => m.id));
+      for (const raw of d.memories as unknown[]) {
+        check(isObject(raw)); const m = raw as Record<string, unknown>;
+        only(m, ['text', 'kind', 'quote', 'sensitivity', 'replaces'], ['text', 'kind', 'quote']);
+        check(text(m.text, 200) && text(m.quote, 400) && MEMORY_KINDS.includes(m.kind as MemoryKind) && said.includes(plainWords(m.quote as string)));
+        if (m.sensitivity !== undefined) check(['health', 'money', 'other'].includes(m.sensitivity as string));
+        if (m.replaces !== undefined) check(typeof m.replaces === 'string' && known.has(m.replaces));
+        // A memory's numbers come from the words it quotes, nowhere else.
+        const quoted = numbersIn(m.quote as string);
+        check(numbersIn(m.text as string).every(n => quoted.some(q => Math.abs(q - n) < 0.005)));
+        // Health stays health even when the model forgets to say so, so it never leaves the phone by accident.
+        if (looksHealth(`${m.text} ${m.quote}`)) m.sensitivity = 'health';
+      }
+      return data;
+    }
     case 'read-document': {
       check(isObject(data)); const d = data as Record<string, unknown>;
       only(d, ['document'], ['document']);
@@ -139,6 +165,10 @@ export function validateJobData(job: Job, data: unknown, request: Request, citat
     }
   }
 }
+
+const HEALTH = /\b(?:sleep|slept|insomnia|pain|ache|injur\w*|ill|illness|sick|period|pregnan\w*|fertility|medication|medicine|meds|pills?|prescri\w*|doctor|gp|hospital|therap\w*|anxi\w*|depress\w*|panic|diagnos\w*|blood|weight|diet\w*|calorie\w*|allerg\w*|asthma|diabet\w*|heart|mental health|mood|alcohol|drinking|smok\w*|vap\w*|iron|vitamin\w*)\b/i;
+/** A cautious test for health details in a memory: when in doubt, it is health. */
+export const looksHealth = (value: string) => HEALTH.test(value);
 
 /** Fills {{fact:id}} references in every string inside job data. */
 export function renderData(data: unknown, render: (value: string) => string): unknown {
@@ -160,4 +190,5 @@ export const JOB_SHAPES: Record<Job, string> = {
   showMe: 'answer, citations, proposals: [], data: { scene } for the drawing kit.',
   food: 'answer, citations, proposals: [], data: { items: [{ name, portion?, grams?, confidence 0 to 1 }] }. The person confirms every item.',
   'read-document': 'answer, citations, proposals quoted from the file, data: { document: { kind: payslip|bill|letter|statement|other, from?, summary } }.',
+  remember: 'answer (one line), citations, proposals: [], data: { memories: up to 8 of { text: a short sentence about the person no record holds, kind: preference|goal|person|pattern|event|fact, quote: their exact words, sensitivity?: health|money|other, replaces?: id of a supplied memory this makes untrue } }. Only what they said about themselves, never a question, a maybe or someone else\'s private details.',
 };
