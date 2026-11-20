@@ -3,3 +3,7 @@ export * from './planner';
 export * from './learning';
 export * from './notifications';
 export * from './loops';
+export * from './gaps';
+export * from './candidates';
+export * from './nudges';
+export * from './jobs';
