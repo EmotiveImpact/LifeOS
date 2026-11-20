@@ -118,7 +118,7 @@ function StaleTile({ label, scale, last }: { label: string; scale: string; last:
 
 export function EmptyTodayV26() {
   const t = useTokens(), nav = useNavigation(), { data } = useSeed(), { now } = useLocalDay(), search = useSearchOverlay();
-  const actions: TopBarAction[] = [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: search.open }, { kind: 'icon', icon: 'bell', label: 'From Life', onPress: () => nav.go('inbox') }];
+  const actions: TopBarAction[] = [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: search.open }];
   return (
     <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions }}>
       <Between>

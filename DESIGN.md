@@ -117,7 +117,7 @@ Fonts (load with `expo-font` / `@expo-google-fonts/*`; block the splash screen u
 
 Rules:
 - **Minimum 13px**, everywhere. The only exceptions are the weekday initials in `WeekStrip` and the dock labels (11px, 600).
-- **Sentence case.** No ALL-CAPS section labels. The one exception is the logo, `LIFE` in spaced capitals (the `Wordmark` component), used only where the name stands alone: welcome, sign-in, Plus and About. In sentences the name is a name: "Life found one gap". The orb never sits in the top bar; it shows only where Life is speaking or listening (Edem, 20 Nov 2026).
+- **Sentence case.** No ALL-CAPS section labels. The one exception is the logo, `LIFE` in spaced capitals (the `Wordmark` component), used only where the name stands alone: welcome, sign-in, Plus and About. In sentences the name is a name: "Life found one gap". The orb sits at the right end of the top bar on Today, Plan and You only, after their buttons: tapping it opens From Life, and an ember dot means something new is waiting. Deeper pages never carry it; elsewhere it shows only where Life is speaking or listening (Edem, 20 Nov 2026).
 - Serif is for **numbers and screen titles only**. Never serif for body or buttons.
 - Money: whole part in `ink`, decimals in `ink-quiet` (`£12,847` + `.50`). Units/denominators are sans `unit` style, top-aligned.
 - Dynamic Type: support scaling up to 1.3× without clipping (use `maxFontSizeMultiplier={1.3}` on display styles).

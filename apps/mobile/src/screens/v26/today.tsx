@@ -51,8 +51,9 @@ function useLogMood() {
 }
 
 /** The root bar every Today page shares: the orb, Today, the date, search and the bell. */
-function todayActions(onSearch: () => void, unread: boolean, onBell: () => void): TopBarAction[] {
-  return [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: onSearch }, { kind: 'icon', icon: 'bell', label: 'From Life', badge: unread, onPress: onBell }];
+/* "From Life" lives in the orb at the right of the bar now, so Today keeps only search. */
+function todayActions(onSearch: () => void): TopBarAction[] {
+  return [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: onSearch }];
 }
 
 /* ───────────────────────── Today ───────────────────────── */
@@ -137,7 +138,7 @@ export function TodayV26() {
   const aimPct = Math.round(seed.finance.deposit / seed.finance.depositGoal * 100);
 
   return (
-    <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions: todayActions(() => setSearching(true), !data.flags['inbox-read'], () => nav.go('inbox')) }} onPull={() => setSearching(true)}>
+    <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions: todayActions(() => setSearching(true)) }} onPull={() => setSearching(true)}>
       <Between>
         <Text variant="callout" tone="ink2" numberOfLines={1} style={{ flexShrink: 1 }}>{`${greeting}, ${data.profile.name}`}</Text>
         <Chip label={`Level ${level} · ${levelName}`} onPress={() => nav.go('levels')} />

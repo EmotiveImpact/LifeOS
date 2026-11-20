@@ -184,7 +184,7 @@ function BarsSection() {
   return (
     <Section id="bars" title="Top bars" note="How a screen opened decides its bar. Never two bars, never more than one action on a pushed screen.">
       <Label>ROOT · TWO BUTTONS AT MOST</Label>
-      <View style={frame}><TopBar look="v26" kind="root" title="Today" sub="Mon 16 Nov" actions={[{ kind: 'icon', icon: 'search', label: 'Search', onPress: none }, { kind: 'icon', icon: 'bell', label: 'From Life', onPress: none, badge: true }]} /></View>
+      <View style={frame}><TopBar look="v26" kind="root" title="Today" sub="Mon 16 Nov" actions={[{ kind: 'icon', icon: 'search', label: 'Search', onPress: none }]} orb={{ onPress: none, unread: true }} /></View>
       <Label>PUSH · BACK, TITLE, ONE SMART ACTION OR NONE</Label>
       <View style={frame}><TopBar look="v26" kind="push" title="Readiness" onBack={none} action={{ kind: 'icon', icon: 'info', label: 'How this is worked out', onPress: none }} /></View>
       <View style={frame}><TopBar look="v26" kind="push" title="Talk" closeIcon onBack={none} /></View>
