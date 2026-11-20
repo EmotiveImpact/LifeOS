@@ -11,6 +11,10 @@ on:
         description: Optional higher build number if this version already exists in App Store Connect
         type: string
         required: false
+      sample_life:
+        description: Show Ama's sample life (review builds for the owner). Turn off for builds real people use.
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -57,6 +61,7 @@ jobs:
       CI: '1'
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       BUILD_NUMBER: ${{ inputs.build_number || github.run_number }}
+      EXPO_PUBLIC_SAMPLE_DATA: ${{ inputs.sample_life && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
