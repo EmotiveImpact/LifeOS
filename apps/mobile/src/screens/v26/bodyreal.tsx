@@ -23,6 +23,8 @@ const store = Platform.OS === 'android' ? 'Health Connect' : 'Apple Health';
 const info = (label: string, onPress: () => void) => ({ kind: 'icon' as const, icon: 'info' as const, label, onPress });
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+/** Load on its 0–21 scale, to one decimal like the board's 9.4. */
+const lf = (n: number) => n.toFixed(1);
 
 /** Day letters under a week chart; the last is today. */
 const dayLetters = (week: string[]) => week.map((d, i) => (i === week.length - 1 ? 'Today' : new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'narrow', timeZone: 'UTC' })));
@@ -86,7 +88,7 @@ export function BodyRealV26() {
   const plan = sleep?.plan.find(p => p.goal === 'full') ?? sleep?.plan[0];
   const drivers = ready?.drivers.filter(d => d.kind === 'hrv' || d.kind === 'restingHr') ?? [];
   const share = ready ? () => {
-    const parts = [`Readiness ${ready.score}.`, sleep?.last ? `Slept ${dur(sleep.last.asleepMinutes)} of ${dur(sleep.need.minutes)}.` : '', load ? `Load ${load.today} of ${load.sweetSpot.low}–${load.sweetSpot.high}.` : ''];
+    const parts = [`Readiness ${ready.score}.`, sleep?.last ? `Slept ${dur(sleep.last.asleepMinutes)} of ${dur(sleep.need.minutes)}.` : '', load ? `Load ${lf(load.today)} of ${lf(load.sweetSpot.low)}–${lf(load.sweetSpot.high)}.` : ''];
     void Share.share({ message: parts.filter(Boolean).join(' ') });
   } : undefined;
   return (
@@ -130,8 +132,8 @@ export function BodyRealV26() {
         <V26Tile slim label="Sleep" value={sleep?.last ? dur(sleep.last.asleepMinutes) : '–'} sub={sleep ? `of ${dur(sleep.need.minutes)}` : 'no night yet'} onPress={sleep ? () => nav.go('sleep') : undefined}>
           {sleep ? <CapsuleBars values={sleep.week.map(m => (m === null ? null : m / 60))} height={50} dim={0.16} label={`Hours asleep this week${sleep.last ? `, last night ${dur(sleep.last.asleepMinutes)}` : ''}`} /> : null}
         </V26Tile>
-        <V26Tile slim label="Load" value={load ? String(load.today) : '–'} sub={load ? `aim ${load.sweetSpot.low}–${load.sweetSpot.high}` : 'needs heart rate'} onPress={load ? () => nav.go('load') : undefined}>
-          {load ? <BandLine values={load.week} normal={[load.sweetSpot.low, load.sweetSpot.high]} height={30} label={`Load this week against today’s aim of ${load.sweetSpot.low} to ${load.sweetSpot.high}`} /> : null}
+        <V26Tile slim label="Load" value={load ? lf(load.today) : '–'} sub={load ? `aim ${lf(load.sweetSpot.low)}–${lf(load.sweetSpot.high)}` : 'needs heart rate'} onPress={load ? () => nav.go('load') : undefined}>
+          {load ? <BandLine values={load.week} normal={[load.sweetSpot.low, load.sweetSpot.high]} height={30} label={`Load this week against today’s aim of ${lf(load.sweetSpot.low)} to ${lf(load.sweetSpot.high)}`} /> : null}
         </V26Tile>
         <V26Tile slim label="Stress" value={stress?.now !== null && stress?.now !== undefined ? String(stress.now) : '–'} sub={stress?.now !== null && stress?.now !== undefined ? stressWord(stress.now) : 'needs heart rate'} onPress={stress ? () => nav.go('stress') : undefined}>
           {stress ? <BandLine values={stress.week} normal={stress.usual ?? undefined} height={30} label="Stress this week against your usual" /> : null}
@@ -142,7 +144,7 @@ export function BodyRealV26() {
         <Box pad={space.md}><NightBar night={sleep.last} performance={sleep.performance} /></Box>
       </> : null}
       {drivers.length ? <>
-        <SectionHead title={ready && ready.band === 'low' ? 'What’s weighing on it' : 'Why you’re recovered'} link="Readiness" onLink={() => nav.go('readiness')} />
+        <SectionHead title={ready?.band === 'high' ? 'Why you’re recovered' : ready?.band === 'low' ? 'What’s weighing on it' : 'What’s behind today'} link="Readiness" onLink={() => nav.go('readiness')} />
         <RowsCard style={{ paddingVertical: space.xxs }}>
           {drivers.map(d => <Row key={d.kind} icon={d.kind === 'hrv' ? 'pulse' : 'heart'} title={DRIVER[d.kind].name} sub={deltaLine(d)} onPress={() => nav.go('readiness')} right={<WhyEnd value={`${Math.round(d.value)} ${DRIVER[d.kind].unit}`} tag={tagFor(d)} />} />)}
         </RowsCard>
@@ -153,7 +155,7 @@ export function BodyRealV26() {
         </RowsCard>
       ) : b.signals.signals.length ? (
         <RowsCard style={{ marginTop: space.sm }}>
-          <Row icon="pulse" title="Body signals" sub={b.signals.drifting.length ? `${plural(b.signals.drifting.length, 'signal')} off your normal` : `All ${b.signals.signals.length} inside your normal`} chevron onPress={() => nav.go('signals')} />
+          <Row icon="pulse" title="Body signals" sub={b.signals.drifting.length ? `${plural(b.signals.drifting.length, 'signal')} off your normal` : b.signals.signals.some(goodSide) ? 'Nothing to watch today' : `All ${b.signals.signals.length} inside your normal`} chevron onPress={() => nav.go('signals')} />
         </RowsCard>
       ) : null}
       <SectionHead title="Fuel" link="Log food" onLink={() => nav.go('snap')} />
@@ -232,11 +234,18 @@ const DRIVER: Record<ReadinessDriver['kind'], { name: string; unit: string; icon
   external: { name: 'Your wearable’s score', unit: '', icon: 'watch' },
 };
 
+/**
+ * How a reading compares, in the same terms as its tag: HRV and resting heart rate are judged on this week's
+ * average against your normal, breathing rate on last night.
+ */
 function deltaLine(d: ReadinessDriver): string {
-  if (d.delta === undefined || d.kind === 'sleep' || d.kind === 'external') return d.effect === 'usual' ? 'About usual' : d.effect === 'better' ? 'Helping today' : 'Weighing on today';
-  const n = Math.abs(d.kind === 'respiratoryRate' ? Math.round(d.delta * 10) / 10 : Math.round(d.delta)), unit = DRIVER[d.kind].unit.replace('/min', 'a minute');
-  if (n === 0) return 'Right on your normal';
-  return `${n} ${unit} ${d.delta > 0 ? 'above' : 'below'} your normal`;
+  if (d.kind === 'sleep' || d.kind === 'external') return d.effect === 'usual' ? 'About usual' : d.effect === 'better' ? 'Helping today' : 'Weighing on today';
+  const weekly = (d.kind === 'hrv' || d.kind === 'restingHr') && d.recent !== undefined && d.usual !== undefined;
+  const diff = weekly ? (d.recent as number) - (d.usual as number) : d.delta;
+  if (diff === undefined) return d.effect === 'usual' ? 'About usual' : d.effect === 'better' ? 'Helping today' : 'Weighing on today';
+  const n = Math.abs(d.kind === 'respiratoryRate' ? Math.round(diff * 10) / 10 : Math.round(diff)), unit = DRIVER[d.kind].unit.replace('/min', 'a minute');
+  if (n === 0) return weekly ? 'This week, right on your normal' : 'Right on your normal';
+  return `${weekly ? 'This week, ' : ''}${n} ${unit} ${diff > 0 ? 'above' : 'below'} your normal`;
 }
 const tagFor = (d: ReadinessDriver) => (d.effect === 'better' ? 'Better' : d.effect === 'usual' ? 'Usual' : d.kind === 'restingHr' || d.kind === 'respiratoryRate' ? 'Higher' : 'Lower');
 
@@ -298,17 +307,25 @@ export function SleepRealV26() {
         <Between><Text variant="title">Last 7 nights</Text><Text variant="callout" tone="ink2">band = what you needed</Text></Between>
         <View style={{ marginTop: space.xs }}><BandLine values={s.week.map(m => (m === null ? null : +(m / 60).toFixed(2)))} normal={[needH - 0.17, needH + 0.25]} height={104} label="Hours asleep on each of the last 7 nights, against what you needed" /></View>
         <Axis labels={dayNames(b.week)} lastInk />
-        <Callout style={{ marginTop: space.sm }}>{nights < 7 ? `${plural(nights, 'night')} with a reading this week. ${s.reached} reached your need.` : `${s.reached} nights reached your need.${s.debt.minutes > 0 ? ` The others add up to the ${dur(s.debt.minutes)}.` : ''}`}</Callout>
+        <Callout style={{ marginTop: space.sm }}>{reachedLine(nights, s.reached, s.debt.minutes)}</Callout>
       </Box>
       <TileGrid style={{ marginTop: space.sm }}>
         <V26Tile label="Sleep performance" value={s.performance !== null ? String(s.performance) : '–'} unit={s.performance !== null ? '%' : undefined} sub="Asleep ÷ needed" />
-        <V26Tile label="Fell asleep in" value={s.last?.latencyMinutes !== undefined ? String(Math.round(s.last.latencyMinutes)) : '–'} unit={s.last?.latencyMinutes !== undefined ? 'min' : undefined} sub={s.timings.learned ? 'Your usual is learned' : 'Needs time in bed'} />
+        <V26Tile label="Fell asleep in" value={s.last?.latencyMinutes !== undefined ? String(Math.round(s.last.latencyMinutes)) : '–'} unit={s.last?.latencyMinutes !== undefined ? 'min' : undefined} sub={s.last?.latencyMinutes !== undefined ? 'Last night' : 'Needs time in bed from your watch'} />
         <V26Tile wide label="Consistency" scale={s.consistency ? (s.consistency.minutes <= 30 ? 'Steady' : s.consistency.minutes <= 60 ? 'Fair' : 'Work on it') : undefined} value={s.consistency ? `±${s.consistency.minutes}` : '–'} unit={s.consistency ? 'min' : undefined}
           sub={s.consistency ? `How far your bedtime moves, night to night. Usually in bed by ${clock(s.consistency.usualBedtime)}.` : 'Needs a few more nights'} />
       </TileGrid>
       <Callout style={{ marginTop: space.md }}>{s.need.basis === 'learned' ? `Your need is learned from ${plural(s.need.nights, 'night')} you woke up recovered.` : 'Most adults need 7–9 hours (NHS). life learns your own need from mornings you wake up recovered.'}</Callout>
     </Page>
   );
+}
+
+function reachedLine(nights: number, reached: number, debt: number): string {
+  const short = debt > 0 ? ` Together the short ones come to ${dur(debt)}.` : '';
+  if (nights < 7) return `${plural(nights, 'night')} with a reading this week, ${reached} reaching your need.${short}`;
+  if (reached === 0) return `No night this week reached your need.${short}`;
+  if (reached === 7) return 'Every night this week reached your need.';
+  return `${reached} of 7 nights reached your need.${short}`;
 }
 
 /* ───────────────────────── Load ───────────────────────── */
@@ -326,19 +343,19 @@ export function LoadRealV26() {
   return (
     <Page screen="load" bar={{ kind: 'push', title: 'Load', action: info('How load works', () => nav.go('math')) }}>
       <Eyebrow>Today so far</Eyebrow>
-      <FigRow text={`${now}/21`} chip={<Chip label={where === 'in' ? 'In today’s range' : where === 'below' ? 'Under today’s range' : 'Over today’s range'} tone={where === 'in' ? 'done' : 'q'} />} />
-      <Statement s={`Today’s sweet spot is {${lo}–${hi}}, ${set}. ${where === 'in' ? '{You’re in it}, so the rest of today can be easy.' : where === 'below' ? `{About ${Math.max(1, Math.ceil(lo - now))} more} would land you in it.` : '{You’re past it}, so keep the rest of today easy.'}`} style={{ marginTop: space.sm }} />
+      <FigRow text={`${lf(now)}/21`} chip={<Chip label={where === 'in' ? 'In today’s range' : where === 'below' ? 'Under today’s range' : 'Over today’s range'} tone={where === 'in' ? 'done' : 'q'} />} />
+      <Statement s={`Today’s sweet spot is {${lf(lo)}–${lf(hi)}}, ${set}. ${where === 'in' ? '{You’re in it}, so the rest of today can be easy.' : where === 'below' ? `{About ${lf(Math.max(0.1, lo - now))} more} would land you in it.` : '{You’re past it}, so keep the rest of today easy.'}`} style={{ marginTop: space.sm }} />
       <TintCard area="goal" style={{ marginTop: space.lg }}>
         <Head icon="fitness" title="This week" right="band = sweet spot" />
         <View style={{ marginTop: space.xs, height: H }}>
           <View style={{ position: 'absolute', left: 0, right: 0, top: y(hi), height: y(lo) - y(hi), borderRadius: radius.sm, backgroundColor: t.surface }} />
-          <CapsuleBars values={l.week} labels={dayLetters(b.week).map(d => (d === 'Today' ? 'T' : d))} now={6} max={21} height={H} color={accent} dim={0.35} label={`Load on each of the last 7 days, with today’s sweet spot of ${lo} to ${hi} shaded`} />
+          <CapsuleBars values={l.week} labels={b.week.map(d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'narrow', timeZone: 'UTC' }))} now={6} max={21} height={H} color={accent} dim={0.35} label={`Load on each of the last 7 days, with today’s sweet spot of ${lf(lo)} to ${lf(hi)} shaded`} />
         </View>
         <Callout style={{ marginTop: space.xs }}>The band moves with your readiness each morning.</Callout>
       </TintCard>
       <TileGrid style={{ marginTop: space.sm }}>
         <V26Tile label="This week" value={l.ratio ? String(Math.round(l.ratio.ratio * 100)) : '–'} unit={l.ratio ? '%' : undefined} sub={l.ratio ? RATIO_WORDS[l.ratio.zone] : 'Needs four weeks of load'} />
-        <V26Tile label="Steps today" value={b.steps !== null ? b.steps.toLocaleString('en-GB') : '–'} sub={b.steps !== null ? 'Counted in today’s load' : 'None yet today'} />
+        <V26Tile label="Steps today" value={b.steps !== null ? b.steps.toLocaleString('en-GB') : '–'} sub={b.steps !== null ? 'So far today' : 'None yet today'} />
       </TileGrid>
       <Callout style={{ marginTop: space.md }}>{l.sweetSpot.basis === 'default' ? 'The sweet spot starts from a typical day and becomes yours after two weeks of load. An estimate of effort, not a fitness test.' : 'An estimate of effort, not a fitness test.'}</Callout>
     </Page>
@@ -353,6 +370,9 @@ const SIGNAL: Record<SignalKind, { name: string; unit: string; show: (v: number)
   restingHr: { name: 'Resting heart rate', unit: 'bpm', show: v => String(Math.round(v)) },
   spo2: { name: 'Blood oxygen', unit: '%', show: v => String(Math.round(v)) },
 };
+/** Outside your range on the side that isn't a worry (a lower resting heart rate, say). */
+const goodSide = (s: BodySignal) => !s.drifting && (s.position < 30 || s.position > 70);
+const signalChip = (s: BodySignal) => (s.drifting ? 'Off normal' : goodSide(s) ? (s.position < 30 ? 'Lower than usual' : 'Higher than usual') : 'In range');
 const signalSub = (s: BodySignal) => (s.kind === 'skinTemp' ? 'Against your usual' : `Usual ${SIGNAL[s.kind].show(s.usual)}`);
 
 export function SignalsRealV26() {
@@ -367,7 +387,7 @@ export function SignalsRealV26() {
         <Body s="This can happen when you’re coming down with something, after alcohol, or after a very hard day. {If you feel unwell, call NHS 111.}" style={{ marginTop: space.sm }} />
       </> : g.signals.length ? <>
         <Eyebrow>Against your own normal</Eyebrow>
-        <Display s={off ? `{${plural(off, 'signal')}} ${off === 1 ? 'is' : 'are'} off your normal today. {Worth watching.}` : `All {${plural(g.signals.length, 'signal')}} ${g.signals.length === 1 ? 'is' : 'are'} inside {your normal range} today.`} />
+        <Display s={off ? `{${plural(off, 'signal')}} ${off === 1 ? 'is' : 'are'} off your normal today. {Worth watching.}` : g.signals.some(goodSide) ? '{Nothing to watch} today. Each signal is in your normal range or on the good side of it.' : `All {${plural(g.signals.length, 'signal')}} ${g.signals.length === 1 ? 'is' : 'are'} inside {your normal range} today.`} />
       </> : <>
         <Eyebrow>Against your own normal</Eyebrow>
         <Display s={g.learning.length ? '{Learning your normal.} Signals show after two weeks of overnight readings.' : '{No overnight readings yet.} A watch or ring adds these.'} />
@@ -379,7 +399,7 @@ export function SignalsRealV26() {
             {g.signals.map(s => (
               <V26Tile key={s.kind} label={SIGNAL[s.kind].name} value={SIGNAL[s.kind].show(s.value)} unit={SIGNAL[s.kind].unit} sub={signalSub(s)} style={{ minHeight: 0, paddingHorizontal: space.sm }}>
                 <Gauge lo={30} hi={70} at={s.position} style={{ marginTop: 14 }} />
-                <Chip label={s.drifting ? 'Off normal' : 'In range'} tone={s.drifting ? undefined : 'q'} style={{ marginTop: space.sm }} />
+                <Chip label={signalChip(s)} tone={s.drifting ? undefined : 'q'} style={{ marginTop: space.sm }} />
               </V26Tile>
             ))}
           </TileGrid>
@@ -493,23 +513,16 @@ export function SourcesRealV26() {
 
 /* ───────────────────────── Pages that need more than readings so far ───────────────────────── */
 
-const LATER: Partial<Record<string, string>> = {
-  trends: 'Trends need a few weeks of readings.', hrv: 'HRV in detail needs two weeks of overnight readings.', illness: 'Shows only when two signals drift together.',
-  insights: 'Patterns need a month of readings and logs.', forecast: 'Tomorrow’s forecast needs a month of readings.', fitnessage: 'Fitness age needs workouts with heart rate.',
-  workout: 'Workouts arrive with the next reading update.', zones: 'Heart-rate zones need workouts with heart rate.', strain: 'Needs heart rate through the day.',
-};
-
-/** A Body page that has nothing real to show yet: says so and what it needs, never sample numbers. */
+/** A Body page not yet drawn from real readings: says so plainly, never sample numbers. */
 export function BodyLaterV26({ screen }: { screen: Parameters<typeof Page>[0]['screen'] }) {
-  const nav = useNavigation();
+  const nav = useNavigation(), { data } = useSeed(), any = data.health.days.length > 0;
   return (
     <Page screen={screen} bar={{ kind: 'push', title: 'Body' }}>
-      <Chip label="Builds as readings arrive" tone="q" />
-      <Display s="{Not enough yet.} This fills in from your own readings." />
-      <Body s={LATER[screen] ?? 'It needs more of your own readings first. Nothing here is made up while it waits.'} style={{ marginTop: space.sm }} />
+      <Chip label={any ? 'Not on your readings yet' : 'Waiting for readings'} tone="q" />
+      <Display s={any ? '{This page isn’t on your own readings yet.} It never shows made-up numbers instead.' : '{Nothing to show yet.} This fills in from your own readings.'} />
+      <Body s={any ? 'Body, Readiness, Sleep, Load, Stress and Body signals already use them.' : 'Connect Apple Health, Health Connect, WHOOP or Oura and life starts reading.'} style={{ marginTop: space.sm }} />
       <RowsCard style={{ marginTop: space.lg }}>
-        <Row icon="watch" title="Add a source" sub="A watch or ring brings more in" chevron onPress={() => nav.go('devices')} />
-        <Row icon="heart" title="Back to Body" chevron onPress={() => nav.go('body')} />
+        {any ? <Row icon="heart" title="Back to Body" chevron onPress={() => nav.go('body')} /> : <Row icon="watch" title="Connect a source" sub="Your phone, a watch or a ring" chevron onPress={() => nav.go('devices')} />}
       </RowsCard>
     </Page>
   );

@@ -84,6 +84,14 @@ describe('stress through the day', () => {
     const s = summariseDays(samples, { timeZone: TZ, age: 35 }).days.find(d => d.date === TODAY)!.stress!;
     expect(s.levels.filter(l => l !== null)).toHaveLength(1);
   });
+  test('a short walk to the kettle keeps the still part of the half hour, and the heart rate settling after it is left out', () => {
+    const samples = [...base, hr('11:00', 64), hr('11:05', 65), hr('11:10', 63), hr('11:20', 90), hr('11:25', 66), steps('11:12', 120)];
+    const s = summariseDays(samples, { timeZone: TZ, age: 35 }).days.find(d => d.date === TODAY)!.stress!;
+    const level = s.levels[Math.floor((at('11:00') - s.start) / (30 * 60_000))];
+    // 11:20 and 11:25 sit within 15 minutes of the walk; the three readings before it are still and calm.
+    expect(level).not.toBeNull();
+    expect(level!).toBeLessThan(1);
+  });
   test('no heart rate, no stress', () => {
     expect(summariseDays([steps('10:00', 800)], { timeZone: TZ }).days.find(d => d.date === TODAY)?.stress).toBeUndefined();
   });

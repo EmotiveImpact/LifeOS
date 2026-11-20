@@ -171,27 +171,44 @@ const OVERNIGHT: ReadonlySet<SampleType> = new Set(['hrv', 'respiratoryRate', 'o
 
 /* ───────────────────────── Stress windows ───────────────────────── */
 
-/** Steps in a half hour below which you count as still. */
-export const STILL_STEPS = 60;
+/** Steps around a heart-rate reading (the 15 minutes before it to 5 after) below which it counts as still. */
+export const STILL_STEPS = 40;
+export const STILL_BEFORE_MS = 15 * 60_000;
+export const STILL_AFTER_MS = 5 * 60_000;
 /** With no step count at all, a heart-rate reserve above this could be a walk, so it is left out. */
 export const STILL_HRR_WITHOUT_STEPS = 0.4;
 
+/** Steps taken around `at`, sharing out a long step record by how much of it falls inside. */
+function stepsNear(at: number, steps: readonly Reading[]): number {
+  const from = at - STILL_BEFORE_MS, to = at + STILL_AFTER_MS;
+  let total = 0;
+  for (const r of steps) {
+    if (r.endMs === r.startMs) { if (r.startMs >= from && r.startMs <= to) total += r.value; continue; }
+    const overlap = Math.min(r.endMs, to) - Math.max(r.startMs, from);
+    if (overlap > 0) total += r.value * overlap / (r.endMs - r.startMs);
+  }
+  return total;
+}
+
 /**
- * The life day in half hours: each window's average heart rate while awake, still when the steps in it stay under
- * 60 (or, with no step count that day, when the heart rate couldn't be a walk). Null when there is no heart rate.
+ * The life day in half hours: each window's average heart rate while awake and still. A reading is still when
+ * fewer than 40 steps were taken in the 15 minutes before it and the 5 after (so the heart rate settling after a
+ * walk isn't counted either), or, with no step count that day, when the heart rate couldn't be a walk. A window
+ * counts when at least two of its readings are still (or all of them, when it has just one), and uses only those,
+ * so a trip to the kettle doesn't lose the half hour. Null when there is no heart rate.
  */
 function stressFromReadings(date: DateKey, timeZone: string, heart: readonly Reading[], steps: readonly Reading[] | undefined, ctx: StressContext): DayStress | null {
   if (!heart.length) return null;
   const { start, end } = lifeDayBounds(date, timeZone);
   const size = WINDOW_MINUTES * 60_000, count = Math.round((end - start) / size);
+  const isStill = (r: Reading) => (steps ? stepsNear(r.startMs, steps) < STILL_STEPS : (r.value - ctx.restingHr) / (ctx.maxHr - ctx.restingHr) < STILL_HRR_WITHOUT_STEPS);
   const windows: StressWindow[] = Array.from({ length: count }, (_, i) => {
     const from = start + i * size, to = from + size;
-    const bpm = mean(heart.filter(r => r.startMs >= from && r.startMs < to).map(r => r.value));
-    if (bpm === null) return { start: from, still: false };
-    const still = steps
-      ? sum(steps.filter(r => r.startMs < to && r.endMs > from).map(r => r.value)) < STILL_STEPS
-      : (bpm - ctx.restingHr) / (ctx.maxHr - ctx.restingHr) < STILL_HRR_WITHOUT_STEPS;
-    return { start: from, bpm, still };
+    const inside = heart.filter(r => r.startMs >= from && r.startMs < to);
+    if (!inside.length) return { start: from, still: false };
+    const still = inside.filter(isStill);
+    if (still.length < Math.min(2, inside.length)) return { start: from, bpm: mean(inside.map(r => r.value)) ?? undefined, still: false };
+    return { start: from, bpm: mean(still.map(r => r.value)) ?? undefined, still: true };
   });
   const day = stressDay(windows, ctx);
   return day.average === null ? null : { ...day, start, windowMinutes: WINDOW_MINUTES };
