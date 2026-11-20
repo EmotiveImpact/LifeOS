@@ -2,8 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import type { ScreenKey } from '@/navigation/screens';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
-import { Screen } from './Screen';
-import { ParentStateContent } from './States';
+import { PermDeniedV26 } from './v26/states';
 import { Btn, Display, Page } from './v26/kit';
 import {
   BarcodeV26, ConfirmV26, FooddayV26, FoodsearchV26, FuelV26, FuelhomeV26, FixwordsV26, LabelscanV26, MealresultV26, MenuscanV26, QuicklogV26,
@@ -23,7 +22,7 @@ export function FuelScreen({ screen }: { screen: ScreenKey }) {
       <Display s="{Food, without the numbers.} Calorie features are for adults only. A varied diet, regular meals and feeling well matter more than a number." />
     </Page>
   );
-  if (screen === 'snap' && params.state === 'permdenied') return <Screen screen={screen}><ParentStateContent kind="permdenied" /></Screen>;
+  if (screen === 'snap' && (params.state === 'permdenied' || data.choices['camera-permission'] === 'declined')) return <PermDeniedV26 />;
   switch (screen) {
     case 'snap': return <SnapV26 />;
     case 'confirm': return <ConfirmV26 />;

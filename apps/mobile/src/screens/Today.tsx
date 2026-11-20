@@ -5,13 +5,15 @@ import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { Screen, layout } from './Screen';
-import { ParentStateContent } from './States';
+import { EmptyTodayV26, LoadingTodayV26 } from './v26/states';
+import { isDayOne } from '@/state/firstopen';
 import { CalendarV26, CheckinV26, CustomiseV26, EveningV26, FocusV26, InboxV26, MorningBriefV26, NudgeV26, PulseV26, RoutinesV26, TodayV26, WhyV26 } from './v26/today';
 
-/** Tab 1 · Today. Every screen is the V26 board's (`src/screens/v26/today.tsx`); empty and loading stay with States until Phase 20. */
+/** Tab 1 · Today. Every screen is the V26 board's (`src/screens/v26/today.tsx`); day one and loading are `v26/states.tsx`. */
 export function TodayScreen({ screen }: { screen: ScreenKey }) {
-  const params = useLocalSearchParams<{ state?: string }>();
-  if (screen === 'today' && (params.state === 'emptytoday' || params.state === 'loadingtoday')) return <Screen screen={screen} title="Today"><ParentStateContent kind={params.state} /></Screen>;
+  const params = useLocalSearchParams<{ state?: string }>(), { data } = useSeed();
+  if (screen === 'today' && params.state === 'loadingtoday') return <LoadingTodayV26 />;
+  if (screen === 'today' && (params.state === 'emptytoday' || (!params.state && isDayOne(data)))) return <EmptyTodayV26 />;
   switch (screen) {
     case 'today': return <TodayV26 />;
     case 'pulse': return <PulseV26 />;

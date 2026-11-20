@@ -2,31 +2,33 @@
 
 > Generated from board v17 (`design-board/life-design-board-v17.html`). **This is the build checklist.** One row per board screen: build it, match the board, tick it. Nothing outside this list gets built; nothing on it gets redesigned.
 > Open the board, find the screen by its key (each phone has id `s-<key>`), and match it: layout, copy, spacing, imagery, motion.
-**221 screens.** Routes use expo-router; sheets use `presentation: 'formSheet'`, full-screen flows `fullScreenModal`. States are not routes: they're how their parent screen looks in that state.
+**223 screens** (221 from the board, plus the 18+ check and health consent from the gap list). Routes use expo-router; sheets use `presentation: 'formSheet'`, full-screen flows `fullScreenModal`. States are not routes: they're how their parent screen looks in that state.
 
 Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the board in light and dark
 
 V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 board (`review/v26/board.html`, BUILD_V26.md Track A). The tick column still records the V23 build.
 
 
-## First open (14)
+## First open (16)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `welcome` | Welcome | Full screen | first launch | `/(flows)/onboarding/welcome` · fullScreenModal |
-| [x] | `question` | One question at a time | Full screen | Welcome | `/(flows)/onboarding/question` · fullScreenModal |
-| [x] | `tell` | Or just tell life | Full screen | Welcome → “Or just tell life” | `/(flows)/onboarding/tell` · fullScreenModal |
-| [x] | `building` | Building your plan | Full screen | end of setup | `/(flows)/onboarding/building` · fullScreenModal |
-| [x] | `where` | Where do you live? | Full screen | setup | `/(flows)/onboarding/where` · fullScreenModal |
-| [x] | `signin` | Save your progress | Sheet | after the plan is built | `/(sheets)/signin` · formSheet |
-| [x] | `healthprimer` | Before Apple Health asks | Full screen | setup or Body | `/(flows)/onboarding/healthprimer` · fullScreenModal |
-| [x] | `notifprimer` | One nudge a day, at most | Full screen | setup | `/(flows)/onboarding/notifprimer` · fullScreenModal |
-| [x] | `micprimer` | Before the mic asks | Full screen | first Talk | `/(flows)/onboarding/micprimer` · fullScreenModal |
-| [x] | `camprimer` | Before the camera asks | Full screen | first snap or scan | `/(flows)/onboarding/camprimer` · fullScreenModal |
-| [x] | `calprimer` | Before the calendar asks | Full screen | setup or Calendar-aware day | `/(flows)/onboarding/calprimer` · fullScreenModal |
-| [x] | `devicesetup` | Connect what you wear | Full screen | setup | `/(flows)/onboarding/devicesetup` · fullScreenModal |
-| [x] | `firstmove` | Your first move | Full screen | end of setup | `/(flows)/onboarding/firstmove` · fullScreenModal |
-| [x] | `measuresetup` | Your body, in three numbers | Full screen | setup, after where you live | `/(flows)/onboarding/measuresetup` · fullScreenModal |
+| [x] | `welcome` | Welcome **V26** | Full screen | first launch | `/(flows)/onboarding/welcome` · fullScreenModal |
+| [x] | `agecheck` | Your date of birth (18+ check) **V26** | Full screen | Welcome, before setup (gap list, Edem 20 Nov) | `/(flows)/onboarding/agecheck` · fullScreenModal |
+| [x] | `question` | One question at a time **V26** | Full screen | Welcome | `/(flows)/onboarding/question` · fullScreenModal |
+| [x] | `tell` | Or just tell life **V26** | Full screen | Welcome → “Or just tell life” | `/(flows)/onboarding/tell` · fullScreenModal |
+| [x] | `building` | Building your plan **V26** | Full screen | end of setup | `/(flows)/onboarding/building` · fullScreenModal |
+| [x] | `where` | Where do you live? **V26** | Full screen | setup | `/(flows)/onboarding/where` · fullScreenModal |
+| [x] | `signin` | Save your progress **V26** | Sheet | after the plan is built | `/(sheets)/signin` · formSheet |
+| [x] | `healthconsent` | Your health data (consent) **V26** | Full screen | setup after where you live, Body, or Settings (gap list, Edem 20 Nov) | `/(flows)/onboarding/healthconsent` · fullScreenModal |
+| [x] | `healthprimer` | Before Apple Health asks **V26** | Full screen | setup or Body | `/(flows)/onboarding/healthprimer` · fullScreenModal |
+| [x] | `notifprimer` | One nudge a day, at most **V26** | Full screen | setup | `/(flows)/onboarding/notifprimer` · fullScreenModal |
+| [x] | `micprimer` | Before the mic asks **V26** | Full screen | first Talk | `/(flows)/onboarding/micprimer` · fullScreenModal |
+| [x] | `camprimer` | Before the camera asks **V26** | Full screen | first snap or scan | `/(flows)/onboarding/camprimer` · fullScreenModal |
+| [x] | `calprimer` | Before the calendar asks **V26** | Full screen | setup or Calendar-aware day | `/(flows)/onboarding/calprimer` · fullScreenModal |
+| [x] | `devicesetup` | Connect what you wear **V26** | Full screen | setup | `/(flows)/onboarding/devicesetup` · fullScreenModal |
+| [x] | `firstmove` | Your first move **V26** | Full screen | end of setup | `/(flows)/onboarding/firstmove` · fullScreenModal |
+| [x] | `measuresetup` | Your body, in three numbers **V26** | Full screen | setup, after where you live | `/(flows)/onboarding/measuresetup` · fullScreenModal |
 
 ## Tab 1 · Today (13)
 
@@ -303,35 +305,35 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `emptytoday` | Today, on day one | State | Today on day one | state of its parent screen |
-| [x] | `offline` | Offline and errors | State | no connection | state of its parent screen |
-| [x] | `loadingtoday` | Today, loading | State | Today while loading | state of its parent screen |
-| [x] | `emptyplan` | Plan, on day one | State | Plan on day one | state of its parent screen |
-| [x] | `emptybody` | Body, with no device | State | Body with no device | state of its parent screen |
-| [x] | `connectfail` | A device stopped syncing | State | Body when a device stops syncing | state of its parent screen |
-| [x] | `support` | Need support now | Push | You → Help, or offered when needed | `/states/support` |
-| [x] | `permdenied` | A permission you said no to | State | a declined permission | state of its parent screen |
-| [x] | `syncissue` | Two phones disagree | Sheet | two devices disagree | `/(sheets)/syncissue` · formSheet |
-| [x] | `aidown` | life’s AI is having a moment | State | AI unavailable | state of its parent screen |
-| [x] | `forceupdate` | Update needed | Full screen | old version | `/(flows)/forceupdate` · fullScreenModal |
-| [x] | `signedout` | Welcome back | State | after sign-out or new phone | state of its parent screen |
+| [x] | `emptytoday` | Today, on day one **V26** | State | Today on day one | state of its parent screen |
+| [x] | `offline` | Offline and errors **V26** | State | no connection | state of its parent screen |
+| [x] | `loadingtoday` | Today, loading **V26** | State | Today while loading | state of its parent screen |
+| [x] | `emptyplan` | Plan, on day one **V26** | State | Plan on day one | state of its parent screen |
+| [x] | `emptybody` | Body, with no device **V26** | State | Body with no device | state of its parent screen |
+| [x] | `connectfail` | A device stopped syncing **V26** | State | Body when a device stops syncing | state of its parent screen |
+| [x] | `support` | Need support now **V26** | Push | You → Help, or offered when needed | `/states/support` |
+| [x] | `permdenied` | A permission you said no to **V26** | State | a declined permission | state of its parent screen |
+| [x] | `syncissue` | Two phones disagree **V26** | Sheet | two devices disagree | `/(sheets)/syncissue` · formSheet |
+| [x] | `aidown` | life’s AI is having a moment **V26** | State | AI unavailable | state of its parent screen |
+| [x] | `forceupdate` | Update needed **V26** | Full screen | old version | `/(flows)/forceupdate` · fullScreenModal |
+| [x] | `signedout` | Welcome back **V26** | State | after sign-out or new phone | state of its parent screen |
 
 ## Outside the app (6)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [~] | `widgets` | Widgets and Live Activity | Home / Lock Screen | iOS | platform target (Home / Lock Screen) · UI preview only; native target in Track B |
-| [~] | `sharecard` | Weekly recap, shared | Share sheet | Weekly recap → Share | platform target (Share sheet) · UI preview only; native target in Track B |
-| [~] | `watch` | Watch companion | Watch | Apple Watch / Wear OS | platform target (Watch) · UI preview only; native target in Track B |
-| [~] | `lockpush` | Notifications | Notification | Lock Screen | platform target (Notification) · UI preview only; native target in Track B |
-| [~] | `androidwidget` | Android widgets | Home screen | Android | platform target (Home screen) · UI preview only; native target in Track B |
-| [~] | `siri` | Siri and Shortcuts | Voice | Siri / Assistant | platform target (Voice) · UI preview only; native target in Track B |
+| [~] | `widgets` | Widgets and Live Activity **V26** | Home / Lock Screen | iOS | platform target (Home / Lock Screen) · drawn preview at `/outside/widgets` (development builds); native target in Phase 29 |
+| [x] | `sharecard` | Weekly recap, shared **V26** | Sheet | Weekly recap → Share | `/(sheets)/sharecard` · formSheet, then the system share sheet |
+| [~] | `watch` | Watch companion **V26** | Watch | Apple Watch / Wear OS | platform target (Watch) · drawn preview at `/outside/watch` (development builds); native target in Phase 29 |
+| [~] | `lockpush` | Notifications **V26** | Notification | Lock Screen | platform target (Notification) · drawn preview at `/outside/lockpush` (development builds); native target in Phase 29 |
+| [~] | `androidwidget` | Android widgets **V26** | Home screen | Android | platform target (Home screen) · drawn preview at `/outside/androidwidget` (development builds); native target in Phase 29 |
+| [~] | `siri` | Siri and Shortcuts **V26** | Voice | Siri / Assistant | platform target (Voice) · drawn preview at `/outside/siri` (development builds); native target in Phase 29 |
 
 ## The orb and motion (3)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `orb` | The orb, evolving | Component | everywhere | `@/design` + `/design` |
-| [x] | `topbars` | The top bar, everywhere | Component | everywhere | `@/design` + `/design` |
-| [x] | `orbnext` | Orb states, next | Component | everywhere | `@/design` + `/design` |
+| [x] | `orb` | The orb, evolving **V26** | Component | everywhere | `/outside/orb` (development builds), linked from `/design` |
+| [x] | `topbars` | The top bar, everywhere **V26** | Component | everywhere | `/outside/topbars` (development builds), linked from `/design` |
+| [x] | `orbnext` | Orb states, next **V26** | Component | everywhere | `/outside/orbnext` (development builds), linked from `/design` |
 
