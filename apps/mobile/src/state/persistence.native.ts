@@ -27,8 +27,8 @@ export async function openProjectionStorage(): Promise<ProjectionStorage> {
       mode: 'sqlite',
       load: () => store.loadProjection(),
       save: projection => store.commitProjection(projection),
-      clear: async () => {
-        await store.deleteEverything();
+      clear: async (scope = 'everywhere') => {
+        if (scope === 'this-phone') await store.eraseThisPhone(); else await store.deleteEverything();
         await AsyncStorage.removeItem(LEGACY_STATE_KEY);
       },
       exportEverything: () => store.exportEverything(),

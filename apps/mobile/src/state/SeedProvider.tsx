@@ -32,7 +32,9 @@ const initial: SeedData = {
 };
 type SeedContextValue = {
   data: SeedData; hydrated: boolean; storageError: boolean; storageMode: ProjectionStorage['mode'] | null;
-  retryStorage: () => void; exportEverything: () => Promise<unknown>; reset: () => Promise<boolean>;
+  retryStorage: () => void; exportEverything: () => Promise<unknown>;
+  /** Erases this life. `thisPhoneOnly` once the account has been closed on the server, so nothing is queued for it. */
+  reset: (options?: { thisPhoneOnly?: boolean }) => Promise<boolean>;
   set: (patch: Partial<SeedData>) => void;
   update: (apply: (current: SeedData) => SeedData) => void;
   pref: <K extends keyof SeedData['prefs']>(key: K, value: SeedData['prefs'][K]) => void;
@@ -173,13 +175,13 @@ export function SeedProvider({ children }: { children: ReactNode }) {
       return { setUp: latest.current.onboardingDone };
     },
     syncNow,
-    reset: async () => {
+    reset: async options => {
       if (!storage.current || resetting.current) return false;
       resetting.current = true;
       try {
         await writes.current;
         for (const thread of latest.current.brain.conversations) for (const attachment of thread.attachments) await removeAttachmentCopy(attachment);
-        await storage.current.clear();
+        await storage.current.clear(options?.thisPhoneOnly ? 'this-phone' : 'everywhere');
         const next = { ...initial, onboardingDone: false };
         lastQueued.current = JSON.stringify(next); revision.current = 0; committed.current = 0;
         resetting.current = next; latest.current = next; setData(next);

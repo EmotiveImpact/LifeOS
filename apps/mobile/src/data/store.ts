@@ -162,6 +162,19 @@ export class LifeDataStore {
    * Restoring onto a phone that has nothing of its own yet: its starter rows and queued ops go, and the next pull
    * starts from the beginning, so the account's life comes back whole instead of being overwritten by a blank one.
    */
+  /**
+   * Erases this phone and queues nothing for the server (Phase 23). For after the account has been closed on the
+   * server: `deleteEverything` would queue a delete for every row, and if the person changed their mind and signed in
+   * again within the grace period, those deletes would empty the account they chose to keep.
+   */
+  async eraseThisPhone() {
+    await this.driver.transaction(async tx => {
+      await tx.run('DELETE FROM outbox WHERE user_id = ?', [this.userId]);
+      for (const table of [...tableNames].reverse()) await tx.run(`DELETE FROM ${quote(table)} WHERE user_id = ?`, [this.userId]);
+      await tx.run('DELETE FROM sync_cursor WHERE user_id = ?', [this.userId]);
+      await tx.run('DELETE FROM local_state WHERE user_id = ?', [this.userId]);
+    });
+  }
   async clearForRestore() {
     await this.driver.transaction(async tx => {
       await tx.run('DELETE FROM outbox WHERE user_id = ?', [this.userId]);

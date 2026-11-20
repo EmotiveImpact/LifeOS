@@ -18,6 +18,15 @@ describe('settings', () => {
   test('a complete set of settings is accepted', () => {
     expect(readEnv(good).PORT).toBe(8787);
   });
+
+  test('a blank line in .env means unset: deleting an account still waits 30 days', () => {
+    const env = readEnv({ ...good, ACCOUNT_GRACE_DAYS: '', JOBS_SECRET: '', STORAGE_ENDPOINT: '' });
+    expect(env.ACCOUNT_GRACE_DAYS).toBe(30);
+    expect(env.JOBS_SECRET).toBeUndefined();
+    expect(env.STORAGE_ENDPOINT).toBeUndefined();
+    expect(readEnv({ ...good, ACCOUNT_GRACE_DAYS: '0' }).ACCOUNT_GRACE_DAYS).toBe(0);
+    expect(() => readEnv({ ...good, JOBS_SECRET: 'too-short' })).toThrow(/JOBS_SECRET/);
+  });
 });
 
 describe('sealed tokens', () => {

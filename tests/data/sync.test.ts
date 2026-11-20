@@ -110,6 +110,23 @@ describe('ids across phones', () => {
     expect((await s.loadProjection<Record<string, any>>())?.meals[0].name).toBe('Oats');
   });
 
+  test('after the account closes, erasing the phone queues nothing that could empty the account later', async () => {
+    const s = await store();
+    await s.commitProjection(life());
+    await s.adoptAccount('account-1', { restore: false });
+    await s.sync(quiet());
+    await s.repos.record.put({ kind: 'fact' });
+    await s.eraseThisPhone();
+    expect(await s.pending()).toEqual([]);
+    expect(await s.repos.profile.list()).toEqual([]);
+    expect(await s.repos.record.list()).toEqual([]);
+    expect(await s.readLocal('account-id')).toBeNull();
+    // Erasing with deleteEverything, by contrast, sends a delete for every row.
+    await s.commitProjection(life());
+    await s.deleteEverything();
+    expect((await s.pending()).every(o => o.op === 'delete')).toBe(true);
+  });
+
   test('restoring onto a phone with nothing of its own clears its starter rows first', async () => {
     const s = await store();
     await s.commitProjection(life({ onboardingDone: false }));
