@@ -4,14 +4,15 @@
  */
 import { useLocalSearchParams } from 'expo-router';
 import type { ScreenKey } from '@/navigation/screens';
-import { ParentStateContent } from './States';
-import { Screen } from './Screen';
+import { useSeed } from '@/state/SeedProvider';
+import { isDayOne } from '@/state/firstopen';
+import { EmptyPlanV26 } from './v26/states';
 import { AreaHealthV26, AreaHomeV26, AreaWorkV26, DraftV26, HistoryV26, MissionsV26, MissionV26, NewGoalV26, PlanV26, TtkV26, useMissionParam } from './v26/plan';
 
 export function PlanScreen({ screen }: { screen: ScreenKey }) {
-  const params = useLocalSearchParams<{ state?: string }>();
+  const params = useLocalSearchParams<{ state?: string }>(), { data } = useSeed();
   useMissionParam();
-  if (screen === 'plan' && params.state === 'emptyplan') return <Screen screen={screen} title="Plan"><ParentStateContent kind="emptyplan" /></Screen>;
+  if (screen === 'plan' && (params.state === 'emptyplan' || (!params.state && isDayOne(data)))) return <EmptyPlanV26 />;
   switch (screen) {
     case 'plan': return <PlanV26 />;
     case 'mission': return <MissionV26 />;

@@ -5,8 +5,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import type { ScreenKey } from '@/navigation/screens';
 import { SHOW_SAMPLES } from '@/state/sample';
-import { ParentStateContent } from './States';
-import { Screen } from './Screen';
+import { useSeed } from '@/state/SeedProvider';
+import { healthAllowed } from '@/state/firstopen';
+import { ConnectFailV26, EmptyBodyV26, HealthOffV26 } from './v26/states';
 import {
   BodyV26, BreatheV26, CoachV26, CycleV26, DetectedV26, DevicesV26, ForecastV26, HrvV26, IllnessV26, InsightsV26, JournalV26, LoadV26, MathV26, ReadinessV26, SignalsV26,
   SleepplanV26, SleepV26, StressV26, TrendsV26, WorkoutV26,
@@ -16,10 +17,16 @@ import {
   WorkoutdetailV26, ZonesV26,
 } from './v26/health';
 
+/** Body pages that read no health data: the breathing exercises and where data comes from. */
+const NO_HEALTH_DATA: ScreenKey[] = ['breathe', 'breathlib', 'devices', 'sources', 'provenance'];
+
 export function BodyScreen({ screen }: { screen: ScreenKey }) {
-  const params = useLocalSearchParams<{ state?: string }>();
-  const empty = params.state === 'emptybody' || params.state === 'connectfail' ? params.state : !SHOW_SAMPLES ? 'emptybody' : null;
-  if (screen === 'body' && empty) return <Screen screen={screen} title="Body"><ParentStateContent kind={empty} /></Screen>;
+  const params = useLocalSearchParams<{ state?: string }>(), { data } = useSeed();
+  const allowed = healthAllowed(data);
+  // Health data off (never agreed, declined or withdrawn): nothing about the body is read or shown, on any Body page.
+  if (!allowed && !NO_HEALTH_DATA.includes(screen)) return screen === 'body' ? <EmptyBodyV26 /> : <HealthOffV26 screen={screen} />;
+  if (screen === 'body' && params.state === 'connectfail') return <ConnectFailV26 />;
+  if (screen === 'body' && (params.state === 'emptybody' || !SHOW_SAMPLES)) return <EmptyBodyV26 />;
   switch (screen) {
     case 'body': return <BodyV26 />;
     case 'devices': return <DevicesV26 />;

@@ -3,8 +3,7 @@
  */
 import { useLocalSearchParams } from 'expo-router';
 import type { ScreenKey } from '@/navigation/screens';
-import { ParentStateContent } from './States';
-import { Screen } from './Screen';
+import { AidownV26 } from './v26/states';
 import { AskV26, AttachV26, ChatHistoryV26, ChatV26, EditFiledV26, ScanV26, TalkV26, UnderstoodV26 } from './v26/talk';
 
 export function TalkScreen({ screen }: { screen: ScreenKey }) {
@@ -15,7 +14,7 @@ export function TalkScreen({ screen }: { screen: ScreenKey }) {
     case 'ask': return <AskV26 />;
     case 'attach': return <AttachV26 />;
     case 'scan': return <ScanV26 />;
-    case 'chat': return params.state === 'aidown' ? <Screen screen={screen}><ParentStateContent kind="aidown" /></Screen> : <ChatV26 />;
+    case 'chat': return params.state === 'aidown' ? <AidownV26 /> : <ChatV26 />;
     case 'chathistory': return <ChatHistoryV26 />;
     default: return <EditFiledV26 />;
   }

@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "app.life.os",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "life uses the microphone only when you choose to talk.",
         "NSSpeechRecognitionUsageDescription": "life turns your words into text on this phone, with your permission.",

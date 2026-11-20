@@ -1,21 +1,52 @@
-import { useState } from 'react';
-import { Share, View } from 'react-native';
-import { Button, Card, ControlRow, LifeOrb, MetricRow, NotificationPreview, Text, Toggle, WatchFace, space } from '@/design';
-import { ParentStateContent, type ParentState } from './States';
+/**
+ * The design gallery's way into life outside the app, the orb pages and every designed state. Each opens the real V26
+ * screen (`v26/outside.tsx`, `v26/states.tsx`), so the gallery and the app never drift apart.
+ */
+import { View } from 'react-native';
+import { Text, space } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
-import { useSeed } from '@/state/SeedProvider';
-import { platform } from '@/services/platform';
+import type { ScreenKey } from '@/navigation/screens';
+import { Row, RowsCard } from './v26/kit';
+
+const OUTSIDE: { key: ScreenKey; title: string; sub: string; params?: Record<string, string> }[] = [
+  { key: 'widgets', title: 'Widgets and Live Activity', sub: 'Home Screen · tap the island for the Lock Screen' },
+  { key: 'widgets', title: 'Live Activity on the Lock Screen', sub: 'Lock Screen', params: { state: 'lock' } },
+  { key: 'sharecard', title: 'Weekly recap, shared', sub: 'Sheet · Hide numbers' },
+  { key: 'watch', title: 'Watch companion', sub: 'Apple Watch · Wear OS · tap Done' },
+  { key: 'lockpush', title: 'Notifications', sub: 'Lock Screen' },
+  { key: 'androidwidget', title: 'Android widgets', sub: 'Material You · tap the tick or the amount' },
+  { key: 'siri', title: 'Siri and Shortcuts', sub: 'Voice' },
+  { key: 'orb', title: 'The orb', sub: 'Six states' },
+  { key: 'topbars', title: 'The top bar', sub: 'Decided by how the screen opened' },
+  { key: 'orbnext', title: 'Orb states, next', sub: 'Watch the ring become each state' },
+];
+
+const STATES: { key: ScreenKey; title: string; params?: Record<string, string> }[] = [
+  { key: 'today', title: 'Today on day one', params: { state: 'emptytoday' } },
+  { key: 'today', title: 'Today, loading', params: { state: 'loadingtoday' } },
+  { key: 'plan', title: 'Plan on day one', params: { state: 'emptyplan' } },
+  { key: 'body', title: 'Body with no device', params: { state: 'emptybody' } },
+  { key: 'body', title: 'A device stopped syncing', params: { state: 'connectfail' } },
+  { key: 'money', title: 'Offline', params: { state: 'offline' } },
+  { key: 'snap', title: 'Camera off', params: { state: 'permdenied' } },
+  { key: 'syncissue', title: 'Two phones disagree' },
+  { key: 'chat', title: 'Chat paused', params: { state: 'aidown' } },
+  { key: 'forceupdate', title: 'Update needed' },
+  { key: 'support', title: 'Need support now' },
+  { key: 'welcome', title: 'Welcome back (signed out)', params: { state: 'signedout' } },
+  { key: 'agecheck', title: 'Your date of birth (18+ check)' },
+  { key: 'healthconsent', title: 'Your health data (consent)' },
+];
 
 export function PlatformGallery() {
-  const nav = useNavigation(), { set } = useSeed(), [hide, setHide] = useState(false), [done, setDone] = useState(false), snapshot = platform.widget();
-  return <View style={{ gap: space.xxl }}><Text variant="headline">Outside the app · local target previews</Text>
-    <Text variant="title">Widgets and Live Activity</Text><Card style={{ gap: space.sm }}><Text variant="callout" tone="ink2">Today’s move</Text><Text variant="headline">{snapshot.move}</Text><Text variant="callout" tone="ink2">Takes 6 min</Text><MetricRow items={[{ label: 'Readiness', value: String(snapshot.readiness) }, { label: 'Sleep', value: snapshot.sleep }, { label: 'Fuel', value: snapshot.fuel.toLocaleString('en-GB') }]} /><Button variant="secondary" label="Open today’s move" onPress={() => { set({ selectedMission: 'uk-hmrc-tax-code' }); nav.go('mission'); }} /></Card>
-    <Card style={{ gap: space.sm }}><Text variant="callout" tone="ink2">Lock Screen · Live Activity</Text><Text variant="title">HMRC rebate</Text><Text variant="body">{`Step ${snapshot.step} of ${snapshot.steps}`}</Text><Text variant="callout" tone="ink2">Add your software and kit</Text></Card>
-    <Text variant="title">Weekly recap, shared</Text><Card style={{ gap: space.md }}><Text variant="callout" tone="ink2">Week 46</Text><Text variant="statement">{hide ? 'I made room for what matters this week.' : 'I cleared 3 missions, slept 7h+ 5 nights and kept 3 habits.'}</Text><Text variant="callout" tone="ink2">Made with life</Text><ControlRow label="Hide numbers"><Toggle value={hide} onChange={setHide} accessibilityLabel="Hide numbers on share card" /></ControlRow><Button variant="secondary" label="Share" onPress={() => { void Share.share({ message: hide ? 'I made room for what matters this week. Made with life.' : 'I cleared 3 missions, slept 7h+ 5 nights and kept 3 habits. Made with life.' }); }} /></Card>
-    <Text variant="title">Watch companion</Text><WatchFace title="Today’s move" value="Move money to your buffer" onPress={() => setDone(!done)} /><Button variant="secondary" label={done ? 'Done · undo' : 'Done'} onPress={() => setDone(!done)} /><MetricRow items={[{ label: 'Readiness', value: String(snapshot.readiness) }, { label: 'Today', value: '2 of 3 done' }]} /><Button variant="secondary" label="Breathe" onPress={() => nav.go('breathe')} /><Text variant="callout" tone="ink2">Complications: readiness ring, today’s ticks, and next deadline. Never more than one nudge an hour on the wrist.</Text>
-    <Text variant="title">Notifications</Text><NotificationPreview title="Your tax record is worth checking" body="A tax rebate may be waiting. Two minutes to check." /><NotificationPreview title="20 free minutes" body="A short walk fits before 14:00." at="11:20" /><NotificationPreview title="Council tax due Friday" body="Paid by Direct Debit, nothing to do." at="Mon" />
-    <Text variant="title">Android widgets</Text><Card style={{ gap: space.sm }}><Text variant="callout" tone="ink2">life · today’s move</Text><Text variant="title">Move money to your buffer</Text><Button variant="secondary" label={done ? 'Done · undo' : 'Done'} onPress={() => setDone(!done)} /><MetricRow items={[{ label: 'Readiness', value: String(snapshot.readiness) }, { label: 'Left to spend', value: '£•••' }]} /></Card>
-    <Text variant="title">Siri and Shortcuts</Text><Card style={{ gap: space.md }}><Text variant="statement">“Tell life the dentist is on Friday at 3”</Text><LifeOrb size={40} /><Text variant="title">Filed: Dentist · Friday 15:00</Text><Text variant="callout" tone="ink2">Added to Health · reminder Thursday evening</Text></Card><Text variant="callout" tone="ink2">Track A renders target layouts only. Native iOS/Android widgets, ActivityKit, watch targets, notification delivery and Siri/Assistant registration are Track B.</Text>
-    <Text variant="headline">Designed parent states</Text>{(['emptytoday', 'offline', 'loadingtoday', 'emptyplan', 'emptybody', 'connectfail', 'permdenied', 'aidown', 'signedout'] as ParentState[]).map(kind => <Card key={kind} style={{ gap: space.md }}><Text variant="title">{kind}</Text><ParentStateContent kind={kind} /></Card>)}
-  </View>;
+  const nav = useNavigation();
+  return (
+    <View style={{ gap: space.md }}>
+      <Text variant="headline">Outside the app and the orb</Text>
+      <RowsCard>{OUTSIDE.map(o => <Row key={`${o.key}${o.params?.state ?? ''}`} title={o.title} sub={o.sub} onPress={() => nav.go(o.key, o.params)} />)}</RowsCard>
+      <Text variant="callout" tone="ink2">Drawn previews. Native widgets, Live Activities, the watch app, notification delivery and Siri come with Phase 29.</Text>
+      <Text variant="headline">Designed states</Text>
+      <RowsCard>{STATES.map(s => <Row key={`${s.key}${s.params?.state ?? ''}`} title={s.title} onPress={() => nav.go(s.key, s.params)} />)}</RowsCard>
+    </View>
+  );
 }
