@@ -36,6 +36,10 @@ Branch `phase-17-v26-fuel`, from `phase-16-v26-body`. 28 screens rebuilt to the 
 - Added for reachability: the Fuel hub has a "More about your food" list (nutrients, timing, quality, alcohol, progress, the week, import), menu scanning has an "I'll have this" button that logs the best dish, and What can I cook shows each recipe's steps.
 - The week's budget says Sunday will be about 150 lighter after Saturday's birthday dinner, worked out from the plan rather than the board's wording.
 
+## After your review (20 Nov)
+- **Drawers and sheets fit their content.** Every sheet is only as tall as what's in it: on a phone the page asks the native sheet to rest at its content's height (up to 92% of the screen), and the web preview now draws sheets as real sheets over a dimmed page. Drawers over a photograph (confirm, the logged meal, the menu, and Body's breathe and live workout) hug their content and the photograph takes the rest. The phone-side sizing hasn't been tried on a device yet.
+- **Charts stay inside their band.** The weight trend's band is now a fan from where you began, widening at a safe pace, so the line sits inside it. Weigh-ins follow your trend day by day, fitness age shades June to August only, net worth starts from a dotted line, and bands on tinted cards are a soft wash of the line's colour in light and dark.
+
 ## Checks
 - `npx tsc --noEmit -p .`: passes.
 - `npx expo export --platform ios`: passes. `npx expo export --platform android`: passes.
