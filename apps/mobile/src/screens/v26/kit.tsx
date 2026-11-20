@@ -38,13 +38,13 @@ export function two(s: string): TwoToneSegment[] {
 }
 
 /** The 34pt briefing (board `.display`), 10pt below whatever sits above it. */
-export function Display({ s, onPhoto, flush, style }: { s: string; onPhoto?: boolean; flush?: boolean; style?: StyleProp<ViewStyle> }) {
-  return <TwoTone size="display" segments={two(s)} onAtmosphere={onPhoto} style={[flush ? null : { marginTop: space.tile }, style]} />;
+export function Display({ s, onPhoto, flush, center, style }: { s: string; onPhoto?: boolean; flush?: boolean; center?: boolean; style?: StyleProp<ViewStyle> }) {
+  return <TwoTone size="display" segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={[flush ? null : { marginTop: space.tile }, style]} />;
 }
 
 /** The 24pt two-tone sentence (board `.statement`). */
-export function Statement({ s, onPhoto, size = 'statement', style }: { s: string; onPhoto?: boolean; size?: 'statement' | 'lead' | 'headline'; style?: StyleProp<ViewStyle> }) {
-  return <TwoTone size={size} segments={two(s)} onAtmosphere={onPhoto} style={style} />;
+export function Statement({ s, onPhoto, size = 'statement', center, style }: { s: string; onPhoto?: boolean; size?: 'statement' | 'lead' | 'headline'; center?: boolean; style?: StyleProp<ViewStyle> }) {
+  return <TwoTone size={size} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={style} />;
 }
 
 /** Quiet copy with the braced words in ink (board `.body`, `.callout`). */
@@ -277,7 +277,7 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
     : b.kind === 'push' ? <TopBar look="v26" kind="push" title={b.title} titleNode={b.titleNode} action={b.action} onBack={close} closeIcon={b.close} onImage={onPhoto} />
     : b.kind === 'sheet' ? (b.title ? <TopBar look="v26" kind="sheet" title={b.title} action={b.action} onClose={close} onImage={onPhoto} /> : <SheetHandle />)
     : b.kind === 'flow' ? <TopBar look="v26" kind="flow" closeLabel={b.left ?? 'Back'} closeIcon={b.leftIcon} step={b.step} action={b.action} onClose={close} onImage={onPhoto} />
-    : b.kind === 'photo' ? <View style={styles.photoBar}>{b.left ?? <View />}{b.right ?? (b.close === false ? null : <PhotoRound icon="close" label="Close" onPress={close} />)}</View>
+    : b.kind === 'photo' ? <View style={styles.photoBar}><View style={{ flexShrink: 1 }}>{b.left ?? null}</View><View>{b.right ?? (b.close === false ? null : <PhotoRound icon="close" label="Close" onPress={close} />)}</View></View>
     : null;
   const pad = { paddingHorizontal: space.gutter, paddingTop: space.xxs, paddingBottom: 28 + (footer || bottom || meta.kind === 'Tab' ? 0 : insets.bottom) };
   const body = scroll

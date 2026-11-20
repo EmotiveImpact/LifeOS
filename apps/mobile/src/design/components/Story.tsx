@@ -25,7 +25,7 @@ export type TwoToneSegment = {
  * DESIGN.md §6.2: the signature sentence. Quiet context in `ink-quiet`, what matters in full ink.
  * Write segments with their own spacing, e.g. [{text:'Nothing urgent — ', tone:'quiet'}, {text:'one form'}].
  */
-export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, style }: { segments: TwoToneSegment[]; /** V26: `display` is Today's 34pt briefing, `lead` the 20pt medium line ("I’m arriving calm."). */ size?: 'statement' | 'headline' | 'welcomeStatement' | 'display' | 'lead'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
+export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, align, style }: { segments: TwoToneSegment[]; /** V26: centred lines (Children, Help, About). */ align?: 'center'; /** V26: `display` is Today's 34pt briefing, `lead` the 20pt medium line ("I’m arriving calm."). */ size?: 'statement' | 'headline' | 'welcomeStatement' | 'display' | 'lead'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
   const t = useTokens();
   const quiet = onAtmos ? onAtmosphere.text2 : t.ink2;
   const ink = onAtmos ? onAtmosphere.text : t.ink;
@@ -35,7 +35,7 @@ export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, s
   const stroke = size === 'display' || size === 'statement' ? 2 : undefined;
   return (
     <View style={style}>
-      <Text variant={variant} accessibilityRole="text">
+      <Text variant={variant} accessibilityRole="text" align={align}>
         {segments.map((s, i) => (
           <Text key={i} variant={variant} style={[{ color: s.tone === 'quiet' ? quiet : ink }, s.icon && size === 'display' ? keepTogether : null]}>
             {s.avatar ? (

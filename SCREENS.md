@@ -239,65 +239,65 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `you` | You | Tab | tab bar | `/(tabs)/you` |
-| [x] | `household` | Household | Sheet | your details → lives with | `/(sheets)/household` · formSheet |
-| [x] | `mood` | Mood over time | Push | You → Mood | `/you/mood` |
-| [x] | `children` | Children | Sheet | your details | `/(sheets)/children` · formSheet |
-| [x] | `knows` | What life knows | Push | You → What life knows | `/you/knows` |
-| [x] | `levels` | Your levels | Push | You → Levels | `/you/levels` |
-| [x] | `experiment` | Experiment: caffeine | Push | You → Experiments | `/you/experiment` |
-| [x] | `memory` | What life remembers | Push | You → What life remembers | `/you/memory` |
-| [x] | `shared` | Shared life | Push | You → Shared | `/you/shared` |
-| [x] | `profile` | Your details | Push | You → your details | `/you/profile` |
+| [x] | `you` | You **V26** | Tab | tab bar | `/(tabs)/you` |
+| [x] | `household` | Household **V26** | Sheet | your details → lives with | `/(sheets)/household` · formSheet |
+| [x] | `mood` | Mood over time **V26** | Push | You → Mood | `/you/mood` |
+| [x] | `children` | Children **V26** | Sheet | your details | `/(sheets)/children` · formSheet |
+| [x] | `knows` | What life knows **V26** | Push | You → What life knows | `/you/knows` |
+| [x] | `levels` | Your levels **V26** | Push | You → Levels | `/you/levels` |
+| [x] | `experiment` | Experiment: caffeine **V26** | Push | You → Experiments | `/you/experiment` |
+| [x] | `memory` | What life remembers **V26** | Push | You → What life remembers | `/you/memory` |
+| [x] | `shared` | Shared life **V26** | Push | You → Shared | `/you/shared` |
+| [x] | `profile` | Your details **V26** | Push | You → your details | `/you/profile` |
 
 ## You · Know yourself (6)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `tests` | Know yourself | Push | You → Know yourself | `/you/self/tests` |
-| [x] | `testq` | One statement at a time | Full screen | Know yourself → a test | `/(flows)/testq` · fullScreenModal |
-| [x] | `bigfive` | Your personality | Push | end of the personality test | `/you/self/bigfive` |
-| [x] | `chronotype` | Your body clock | Push | Know yourself | `/you/self/chronotype` |
-| [x] | `values` | What matters most | Push | Know yourself | `/you/self/values` |
-| [x] | `measures` | Your body numbers | Push | You → Body numbers | `/you/self/measures` |
+| [x] | `tests` | Know yourself **V26** | Push | You → Know yourself | `/you/self/tests` |
+| [x] | `testq` | One statement at a time **V26** | Full screen | Know yourself → a test | `/(flows)/testq` · fullScreenModal |
+| [x] | `bigfive` | Your personality **V26** | Push | end of the personality test | `/you/self/bigfive` |
+| [x] | `chronotype` | Your body clock **V26** | Push | Know yourself | `/you/self/chronotype` |
+| [x] | `values` | What matters most **V26** | Push | Know yourself | `/you/self/values` |
+| [x] | `measures` | Your body numbers **V26** | Push | You → Body numbers | `/you/self/measures` |
 
 ## You · People and dates (5)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `people` | Your people | Push | You → People | `/you/people/people` |
-| [x] | `person` | A person | Push | People → a person | `/you/people/person` |
-| [x] | `addperson` | Add people from contacts | Sheet | People → + | `/(sheets)/addperson` · formSheet |
-| [x] | `birthdaynudge` | A birthday, on Today | Card | Today, 4 days before | component on Today / anywhere |
-| [x] | `dates` | Important dates | Push | People → Dates | `/you/people/dates` |
+| [x] | `people` | Your people **V26** | Push | You → People | `/you/people/people` |
+| [x] | `person` | A person **V26** | Push | People → a person | `/you/people/person` |
+| [x] | `addperson` | Add people from contacts **V26** | Sheet | People → + | `/(sheets)/addperson` · formSheet |
+| [x] | `birthdaynudge` | A birthday, on Today **V26** | Card | Today, 4 days before | component on Today / anywhere |
+| [x] | `dates` | Important dates **V26** | Push | People → Dates | `/you/people/dates` |
 
 ## You · Settings and account (14)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `plus` | life+ | Sheet | a locked feature or Settings | `/(sheets)/plus` · formSheet |
-| [x] | `settings` | Settings | Push | You → Settings | `/you/settings/settings` |
-| [x] | `notifs` | Notifications | Push | Settings | `/you/settings/notifs` |
-| [x] | `ondevice` | Private mode: AI on your phone | Push | Settings → Private mode | `/you/settings/ondevice` |
-| [x] | `yourai` | Your data in your AI | Push | Settings → Your AI | `/you/settings/yourai` |
-| [x] | `appearance` | Look, sound and feel | Push | Settings | `/you/settings/appearance` |
-| [x] | `services` | Connected services | Push | Settings | `/you/settings/services` |
-| [x] | `privacy` | Your data | Push | Settings | `/you/settings/privacy` |
-| [x] | `deleteacct` | Delete your account | Push | Your data | `/you/settings/deleteacct` |
-| [x] | `subscription` | Your life+ | Push | Settings → life+ | `/you/settings/subscription` |
-| [x] | `plussuccess` | Welcome to life+ | Full screen | after subscribing | `/(flows)/plussuccess` · fullScreenModal |
-| [x] | `help` | Help | Push | Settings | `/you/settings/help` |
-| [x] | `legal` | About life | Push | Settings | `/you/settings/legal` |
-| [x] | `aimodels` | What stays on your phone | Push | Private mode → What downloads | `/you/settings/aimodels` |
+| [x] | `plus` | life+ **V26** | Sheet | a locked feature or Settings | `/(sheets)/plus` · formSheet |
+| [x] | `settings` | Settings **V26** | Push | You → Settings | `/you/settings/settings` |
+| [x] | `notifs` | Notifications **V26** | Push | Settings | `/you/settings/notifs` |
+| [x] | `ondevice` | Private mode: AI on your phone **V26** | Push | Settings → Private mode | `/you/settings/ondevice` |
+| [x] | `yourai` | Your data in your AI **V26** | Push | Settings → Your AI | `/you/settings/yourai` |
+| [x] | `appearance` | Look, sound and feel **V26** | Push | Settings | `/you/settings/appearance` |
+| [x] | `services` | Connected services **V26** | Push | Settings | `/you/settings/services` |
+| [x] | `privacy` | Your data **V26** | Push | Settings | `/you/settings/privacy` |
+| [x] | `deleteacct` | Delete your account **V26** | Push | Your data | `/you/settings/deleteacct` |
+| [x] | `subscription` | Your life+ **V26** | Push | Settings → life+ | `/you/settings/subscription` |
+| [x] | `plussuccess` | Welcome to life+ **V26** | Full screen | after subscribing | `/(flows)/plussuccess` · fullScreenModal |
+| [x] | `help` | Help **V26** | Push | Settings | `/you/settings/help` |
+| [x] | `legal` | About life **V26** | Push | Settings | `/you/settings/legal` |
+| [x] | `aimodels` | What stays on your phone **V26** | Push | Private mode → What downloads | `/you/settings/aimodels` |
 
 ## Grow (4)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
-| [x] | `recap` | Weekly recap | Full screen | Sunday, on Today | `/(flows)/moments/recap` · fullScreenModal |
-| [x] | `vantage` | Vantage point | Full screen | when earned | `/(flows)/moments/vantage` · fullScreenModal |
-| [x] | `levelup` | Level up | Full screen | when earned | `/(flows)/moments/levelup` · fullScreenModal |
-| [x] | `yourbirthday` | Your year | Full screen | your birthday, on Today | `/(flows)/moments/yourbirthday` · fullScreenModal |
+| [x] | `recap` | Weekly recap **V26** | Full screen | Sunday, on Today | `/(flows)/moments/recap` · fullScreenModal |
+| [x] | `vantage` | Vantage point **V26** | Full screen | when earned | `/(flows)/moments/vantage` · fullScreenModal |
+| [x] | `levelup` | Level up **V26** | Full screen | when earned | `/(flows)/moments/levelup` · fullScreenModal |
+| [x] | `yourbirthday` | Your year **V26** | Full screen | your birthday, on Today | `/(flows)/moments/yourbirthday` · fullScreenModal |
 
 ## States (12)
 

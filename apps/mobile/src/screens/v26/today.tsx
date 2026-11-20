@@ -22,6 +22,7 @@ import { TODAY_MOVES, councilTax, dayShape, heavyCount, heavyWeek, hm, lighterDa
 import {
   Body, Btn, Callout, Chip, Display, Duo, Eyebrow, Figure, Hero, Micro, NumWell, Page, PhotoBackdrop, QuietLink, Row, RowsCard, Sp, Statement, Thumb, Tick, Timeline, Between,
 } from './kit';
+import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
 
 const isMood = (id: string | undefined): id is FeelMoodId => !!id && id in FEEL_MOODS;
 const shortDate = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
@@ -97,8 +98,10 @@ export function TodayV26() {
   const arriving = useArriving(day);
   const logMood = useLogMood();
   const metrics = useTodayMetrics();
+  // A birthday within four days leads the page as today's move (board `birthdaynudge`); ?state=birthday previews it.
+  const birthday = useBirthdayNudge(day, params.state === 'birthday');
   // Preview states for review: ?state=later | checked:<mood> | day. Otherwise the real day decides.
-  const preview = params.state && /^(later|open|checked:\w+|day)$/.test(params.state) ? params.state : null;
+  const preview = params.state && /^(later|open|checked:\w+|day|birthday)$/.test(params.state) ? params.state : null;
   const mood: FeelMoodId | null = preview?.startsWith('checked:') && isMood(preview.slice(8)) ? preview.slice(8) as FeelMoodId : preview === 'later' || preview === 'open' ? null : arriving.mood;
   const [drawer, setDrawer] = useState(preview ? preview === 'open' : !arriving.mood && !arriving.skipped);
   const [searching, setSearching] = useState(false);
@@ -133,6 +136,10 @@ export function TodayV26() {
         <Text variant="callout" tone="ink2" numberOfLines={1} style={{ flexShrink: 1 }}>{`${greeting}, ${data.profile.name}`}</Text>
         <Chip label={`Level ${level} · ${levelName}`} onPress={() => nav.go('levels')} />
       </Between>
+      {birthday ? <>
+        <Display s={birthdayBrief(birthday)} />
+        <BirthdayMoveV26 b={birthday} day={day} />
+      </> : <>
       <Display s={todayBrief(mood)} />
       <ArrivingCard mood={mood} onPress={() => setDrawer(true)} style={{ marginTop: space.lg }} />
 
@@ -161,6 +168,7 @@ export function TodayV26() {
           <QuietLink label="Choose again" ink center={false} onPress={() => decide('')} style={{ marginTop: space.sm }} />
         </View>
       )}
+      </>}
 
       <SectionHead title="Body" link="Apple Health · 6 min ago" onLink={() => nav.go('body')} />
       <TileGrid>
