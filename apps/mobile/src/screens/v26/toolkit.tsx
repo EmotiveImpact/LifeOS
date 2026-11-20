@@ -71,7 +71,7 @@ export function CashplanV26() {
         <Row icon="home" title="Essential bills" sub="Rent, council tax, utilities, phone" end={show(essentials)} endStrong />
         <Row icon="shield" title="Tax set-aside" sub="For your Self Assessment" end={show(tax)} endStrong />
       </RowsCard>
-      {saved ? <Callout style={{ marginTop: space.md }}>Saved on this phone. life checks it again on payday.</Callout> : null}
+      {saved ? <Callout style={{ marginTop: space.md }}>Saved on this phone. Life checks it again on payday.</Callout> : null}
     </Page>
   );
 }
@@ -85,8 +85,8 @@ export function TaxcheckV26() {
   return (
     <Page screen="taxcheck" bar={{ kind: 'push', title: 'Tax & NI', action: info('How this is checked', () => flag('tax-details')) }}
       footer={<Btn label="Check if it’s worth filling" onPress={() => { flag('ni-reviewed', true); set({ profile: { ...data.profile, taxReviewed: true } }); nav.go('chat', { question: 'How do I check gaps in my National Insurance record?' }); }} />}>
-      <BigPhoto source={photos.payslip} focal={{ y: 0.86 }} height={204} chip="Money · HMRC" chipRight="2024/25 · P800" line="You overpaid. Owed to you:" figure={`${show(seedTaxClaim.refund)} back`} sub="From your P800 and the work costs you told life about." style={{ marginTop: space.xxs }} />
-      {data.flags['tax-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="life works this out from your payslips, your P800 and the work costs you’ve told it. It doesn’t sign in to HMRC for you. Check the figure in your {Personal Tax Account} before you claim." /></Box> : null}
+      <BigPhoto source={photos.payslip} focal={{ y: 0.86 }} height={204} chip="Money · HMRC" chipRight="2024/25 · P800" line="You overpaid. Owed to you:" figure={`${show(seedTaxClaim.refund)} back`} sub="From your P800 and the work costs you told Life about." style={{ marginTop: space.xxs }} />
+      {data.flags['tax-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="Life works this out from your payslips, your P800 and the work costs you’ve told it. It doesn’t sign in to HMRC for you. Check the figure in your {Personal Tax Account} before you claim." /></Box> : null}
       <View style={[styles.years, { marginTop: space.sm }]}>
         {years.map(y => (
           <View key={y.y} style={[styles.year, { backgroundColor: y.now ? t.ink : t.surface }, y.now ? null : cardShadow(t.scheme)]}>
@@ -102,7 +102,7 @@ export function TaxcheckV26() {
         <Legend style={{ marginTop: space.sm }} items={[{ label: `${ni.years} qualifying years`, color: t.ink }, { label: `1 gap · ${ni.gapYear}`, color: t.ember }]} />
         <Body s={`Filling it costs roughly {${show(ni.indicativeCost)}} and adds about {${show(ni.indicativeAnnualPension)} a year} to your State Pension, for life. Check the exact figure with HMRC first.`} style={{ marginTop: space.sm }} />
       </TintCard>
-      <Callout style={{ marginTop: space.md }}>An estimate from what you’ve told life, not tax advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>An estimate from what you’ve told Life, not tax advice.</Callout>
     </Page>
   );
 }
@@ -124,9 +124,9 @@ export function IncomeV26() {
         <Cols style={{ marginTop: 14 }} items={[{ small: 'Sole trader', value: show(sole), sub: 'take-home' }, { small: 'Limited company', value: show(company), sub: `before ~${show(fees)} fees` }]} />
       </Hero>
       <Callout style={{ marginTop: space.sm }}>{`Take-home per year · tax year ${engine.income.taxYear} · before ~${money(fees)} accountant fees for a company`}</Callout>
-      {data.flags['income-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="A sole trader pays income tax and Class 4 NI on profit. A company pays corporation tax, then you take a small salary and dividends. life uses this year’s rates and your other income." /></Box> : null}
+      {data.flags['income-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="A sole trader pays income tax and Class 4 NI on profit. A company pays corporation tax, then you take a small salary and dividends. Life uses this year’s rates and your other income." /></Box> : null}
       <Btn label="Ask about the trade-offs" ghost onPress={() => nav.go('ask')} style={{ marginTop: space.md }} />
-      <Callout style={{ marginTop: space.md }}>An estimate from life’s engine, not tax advice. life suggests speaking to an accountant before switching.</Callout>
+      <Callout style={{ marginTop: space.md }}>An estimate from Life’s engine, not tax advice. Life suggests speaking to an accountant before switching.</Callout>
     </Page>
   );
 }
@@ -161,7 +161,7 @@ export function RentbuyV26() {
       </Box>
       {data.flags['rentbuy-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s={`The model compares owning (mortgage, upkeep, the home growing ${rentBuyInputs.homeGrowthPct}% a year, selling costs) with renting and investing whatever you’d save at ${rentBuyInputs.investmentReturnPct}% a year.`} /></Box> : null}
       <Row icon="home" title={`${bedrooms} bedrooms`} sub="Change the size of home" onPress={() => nav.go('bedrooms')} style={{ marginTop: space.xs }} />
-      <Callout style={{ marginTop: space.sm }}>A model from life’s engine, not financial advice.</Callout>
+      <Callout style={{ marginTop: space.sm }}>A model from Life’s engine, not financial advice.</Callout>
     </Page>
   );
 }
@@ -207,14 +207,14 @@ export function BloodV26() {
     flag('add-lab', false); setError(''); setValue(''); feedback.file();
   };
   return (
-    <Page screen="blood" bar={{ kind: 'push', title: 'Bloodwork', action: info('How life reads results', () => flag('blood-details')) }}
+    <Page screen="blood" bar={{ kind: 'push', title: 'Bloodwork', action: info('How Life reads results', () => flag('blood-details')) }}
       footer={<>
         <Btn label={adding ? 'Save this result' : 'Add a result'} icon={adding ? 'check' : 'add'} onPress={adding ? saveResult : () => flag('add-lab', true)} />
-        <Callout center>life explains results, it doesn’t diagnose. Always check with your GP.</Callout>
+        <Callout center>Life explains results, it doesn’t diagnose. Always check with your GP.</Callout>
       </>}>
       <Eyebrow>Health · 3 Nov · your last test</Eyebrow>
       <Display s={flagged.length ? `{${inRange} of ${rows.length} in range.} ${words[flagged.length] ?? flagged.length} worth a word with your {GP.}` : `{All ${rows.length} in range.} Nothing to raise right now.`} />
-      {data.flags['blood-details'] ? <Box pad={space.md} style={{ marginTop: space.md }}><Body s="Each marker is compared with the range printed on your report, or with a published guide when there isn’t one. Your GP knows your history; life only explains." /></Box> : null}
+      {data.flags['blood-details'] ? <Box pad={space.md} style={{ marginTop: space.md }}><Body s="Each marker is compared with the range printed on your report, or with a published guide when there isn’t one. Your GP knows your history; Life only explains." /></Box> : null}
       <TileGrid style={{ marginTop: space.xl }}>
         {rows.map(r => (
           <Box key={r.g.id} pad={space.md} style={{ minHeight: 118 }}>
@@ -264,7 +264,7 @@ export function ProtectV26() {
         <Body s={gap.id === 'prot-income' && selfEmployed ? 'Self-employed: {no sick pay.} Compare how long your savings last with what a policy would pay.' : gap.whyNeeded} style={{ marginTop: space.xxs }} />
         <Btn label="Talk it through" icon="arrow" trail onPress={() => nav.go('chat', { question: `How should I think about ${plain(gap.name).toLowerCase()}?` })} style={{ marginTop: space.md }} />
         <Press2 label={`Mark ${plain(gap.name).toLowerCase()} as sorted`} onPress={() => toggle(gap.id)} />
-      </Box> : <Callout style={{ marginTop: space.sm }}>Every check is done. life asks again in a year.</Callout>}
+      </Box> : <Callout style={{ marginTop: space.sm }}>Every check is done. Life asks again in a year.</Callout>}
       <RowsCard style={{ marginTop: space.sm }}>
         {rest.map(p => <Row key={p.id} lead={<Tick on={p.inPlace} />} title={plain(p.name)} sub={p.whyNeeded} right={<Chip label={p.inPlace ? 'Done' : p.urgency === 'Critical' ? 'Soon' : 'To do'} tone={p.inPlace ? 'done' : 'q'} />} onPress={() => toggle(p.id)} />)}
       </RowsCard>

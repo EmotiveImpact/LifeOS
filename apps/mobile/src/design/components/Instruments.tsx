@@ -107,7 +107,7 @@ export function WatchFace({ time = '09:41', title = 'Today’s move', value = 'C
   return <Press onPress={onPress} accessibilityLabel={`${title}. ${value}`} style={{ width: 196, height: 236, alignSelf: 'center', padding: space.lg, borderRadius: 48, backgroundColor: t.surface, gap: space.sm }}><Text variant="callout" align="right">{time}</Text><LifeOrb size={32} /><Text variant="callout" tone="ink2">{title}</Text><Text variant="headline">{value}</Text></Press>;
 }
 export function NotificationPreview({ title = 'A little room in your day', body = 'You’ve got 20 free minutes. One form gets your rebate moving.', at = 'now' }: { title?: string; body?: string; at?: string }) {
-  return <Card style={{ gap: space.xs }}><View style={s.row}><LifeOrb size={24} /><Text variant="callout" style={{ flex: 1 }}>life</Text><Text variant="callout" tone="ink2">{at}</Text></View><Text variant="title">{title}</Text><Text variant="body" tone="ink2">{body}</Text></Card>;
+  return <Card style={{ gap: space.xs }}><View style={s.row}><LifeOrb size={24} /><Text variant="callout" style={{ flex: 1 }}>Life</Text><Text variant="callout" tone="ink2">{at}</Text></View><Text variant="title">{title}</Text><Text variant="body" tone="ink2">{body}</Text></Card>;
 }
 export function ModelCard({ name, size, purpose, status, onPress }: { name: string; size: string; purpose: string; status?: string; onPress?: () => void }) {
   return <Card onPress={onPress} style={{ gap: space.xs }}><View style={[s.row, { justifyContent: 'space-between' }]}><Text variant="title">{name}</Text><Text variant="callout" tone="ink2">{size}</Text></View><Text variant="body" tone="ink2">{purpose}</Text>{status ? <StatusPill label={status} /> : null}</Card>;

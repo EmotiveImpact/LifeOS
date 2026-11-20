@@ -19,7 +19,7 @@ export const typesAllowed = (types: Partial<Record<HealthType, boolean>>): Set<S
 
 const READ_KEYS: HealthType[] = ['sleep', 'heart', 'workouts', 'food'];
 
-/** The kinds of reading allowed: on in the consent and on in Devices' "What life can read". */
+/** The kinds of reading allowed: on in the consent and on in Devices' "What Life can read". */
 export function allowedTypes(types: Partial<Record<HealthType, boolean>>, choices: Record<string, string>): Set<SampleType> {
   const on = Object.fromEntries(READ_KEYS.map(k => [k, !!types[k] && (choices[`health-read-${k}`] ?? 'on') === 'on'])) as Record<HealthType, boolean>;
   return typesAllowed(on);

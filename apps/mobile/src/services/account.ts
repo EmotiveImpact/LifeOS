@@ -176,7 +176,7 @@ export async function registerPushToken(token: string | null): Promise<boolean> 
 
 /** Words for each problem, for the sheet. */
 export const problemWords: Record<AccountProblem, string> = {
-  offline: 'life couldn’t reach the internet. Check your connection and try again.',
+  offline: 'Life couldn’t reach the internet. Check your connection and try again.',
   'bad-code': 'That code didn’t work. Check the email, or send a new code.',
   'too-many': 'Too many tries. Wait a minute, then send a new code.',
   'not-ready': 'That way of signing in arrives with the next update. Use email for now.',

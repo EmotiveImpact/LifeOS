@@ -34,6 +34,7 @@ export * from './components/LabRange';
 export * from './photos';
 export * from './components/V26Chrome';
 export * from './components/V26Menu';
+export * from './components/Wordmark';
 export * from './components/Appear';
 export * from './components/V26Photo';
 export * from './components/V26Data';

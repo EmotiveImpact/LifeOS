@@ -239,14 +239,14 @@ export function NudgeV26({ onClose }: { onClose?: () => void }) {
     </Duo>
   </>) : offer.reason === 'nothing-planned' ? <>
     <Btn label="Plan today" icon="arrow" trail onPress={() => { close(); nav.go('evening', { for: 'today' }); }} />
-    <QuietLink label="Ask life instead" onPress={() => { close(); nav.go('chat'); }} />
+    <QuietLink label="Ask Life instead" onPress={() => { close(); nav.go('chat'); }} />
   </> : offer.reason === 'all-done' ? <Btn label="See what moved" onPress={() => { close(); nav.go('recap'); }} />
     : skip.length ? <Btn label="Back to the first one" ghost onPress={() => setSkip([])} /> : undefined;
 
   return (
     <Page screen="nudge" onClose={close} footer={footer}
       bar={{ kind: 'push', close: true, action: { kind: 'node', node: <Chip label={gap ? `Sample · free ${gap.at}` : 'You choose the time'} tone={gap ? 'live' : 'q'} /> } }}>
-      <Eyebrow orb>life · one step</Eyebrow>
+      <Eyebrow orb>Life · one step</Eyebrow>
       {offer.kind === 'step' ? (
         <Display s={offer.resumed ? `Pick up {${offer.step.title}}. About {@clock ${offer.step.minutes} min}.` : `You have {@clock ${minutes} minutes}. {${offer.step.title}} fits.`} />
       ) : offer.reason === 'nothing-planned' ? (
@@ -262,7 +262,7 @@ export function NudgeV26({ onClose }: { onClose?: () => void }) {
       )}
 
       {offer.kind === 'none' && offer.reason === 'nothing-planned' ? (
-        <Body s="Plan what matters, or just ask life something. {Neither needs the other.}" style={{ marginTop: space.sm }} />
+        <Body s="Plan what matters, or just ask Life something. {Neither needs the other.}" style={{ marginTop: space.sm }} />
       ) : <>
         <Micro style={{ marginTop: space.lg }}>HOW MUCH TIME DO YOU HAVE?</Micro>
         <View style={[styles.wrap, { marginTop: space.xs }]}>
@@ -286,7 +286,7 @@ export function NudgeV26({ onClose }: { onClose?: () => void }) {
 
       {unsized.length ? <>
         <SectionHead title="Not sized yet" />
-        <Callout>life only offers a step once it knows roughly how long it takes.</Callout>
+        <Callout>Life only offers a step once it knows roughly how long it takes.</Callout>
         <RowsCard style={{ marginTop: space.xs }}>
           {unsized.map(u => (
             <View key={u.step.key} style={{ paddingVertical: space.xs }}>
@@ -314,7 +314,7 @@ export function NudgeV26({ onClose }: { onClose?: () => void }) {
         <RowsCard>{others.map(p => <Row key={p.id} lead={<Tick on={p.complete} />} title={p.text} sub={p.total ? statusOf(p) : 'No steps yet · add one'} onPress={p.total ? undefined : () => setStepFor(p.id)} />)}</RowsCard>
       </> : null}
 
-      {offer.kind !== 'none' || offer.reason !== 'nothing-planned' ? <QuietLink label="Ask life instead" onPress={() => { close(); nav.go('chat'); }} style={{ marginTop: space.lg }} /> : null}
+      {offer.kind !== 'none' || offer.reason !== 'nothing-planned' ? <QuietLink label="Ask Life instead" onPress={() => { close(); nav.go('chat'); }} style={{ marginTop: space.lg }} /> : null}
       <Callout style={{ marginTop: space.md }}>{gap ? 'The free time comes from the sample calendar in this build. ' : ''}life never sends, submits or pays for anything. You do it, then tick it.</Callout>
     </Page>
   );
@@ -342,12 +342,12 @@ export function WeekSteps() {
         <RowsCard style={{ marginTop: space.xs }}>{partial.map(p => <Row key={p.id} lead={<Tick icon="arrow" />} title={p.text} sub={statusOf(p)} />)}</RowsCard>
       </> : null}
       <SectionHead title="What counts for you" />
-      <Callout>Optional. Pick what feels like a win and life puts those first. Change it any time.</Callout>
+      <Callout>Optional. Pick what feels like a win and Life puts those first. Change it any time.</Callout>
       <View style={[styles.wrap, { marginTop: space.sm }]}>
         {WIN_AREAS.map(w => { const on = L.loops.wins.includes(w.id); return <Chip key={w.id} label={w.label} tone={on ? 'live' : 'q'} icon={on ? 'check' : 'add'} onPress={() => L.toggleWin(w.id)} />; })}
       </View>
       <RowsCard style={{ marginTop: space.md }}>
-        <Row icon="bell" title="How life checks in" sub={CHECK_IN_WORDS[L.loops.checkIn].label} onPress={() => nav.go('notifs')} />
+        <Row icon="bell" title="How Life checks in" sub={CHECK_IN_WORDS[L.loops.checkIn].label} onPress={() => nav.go('notifs')} />
       </RowsCard>
     </>
   );

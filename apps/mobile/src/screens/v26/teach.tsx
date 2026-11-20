@@ -90,7 +90,7 @@ export function TeachOfferV26() {
           </View>
         </View>
       </View>
-      {data.flags['teach-offer-info'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="life reads the code from your payslip. {M1} at the end means your tax is worked out on each month alone, usually a stopgap until your employer has your details. Check it in your {Personal Tax Account}." /></Box> : null}
+      {data.flags['teach-offer-info'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="Life reads the code from your payslip. {M1} at the end means your tax is worked out on each month alone, usually a stopgap until your employer has your details. Check it in your {Personal Tax Account}." /></Box> : null}
       <TileGrid style={{ marginTop: space.sm }}>
         <V26Tile label="Tax so far this year" value={`£${n(so.tax)}`} sub="On track" />
         <V26Tile label="National Insurance" value={`£${n(so.ni)}`} sub="Class 1" />
@@ -98,7 +98,7 @@ export function TeachOfferV26() {
       {!later ? <>
         <SectionHead title="It also appears in Talk" />
         <Box>
-          <View style={styles.inline}><LifeOrb size={18} /><Text variant="callout" tone="ink2">life, when you sound unsure</Text></View>
+          <View style={styles.inline}><LifeOrb size={18} /><Text variant="callout" tone="ink2">Life, when you sound unsure</Text></View>
           <Statement size="headline" s="No worries, this sounds new to you. Want a {two-minute lesson} first, then tell me in your own words?" style={{ marginTop: space.xs }} />
           <View style={[styles.pair, { marginTop: space.md }]}>
             <Btn label="Teach me" ghost sm onPress={start} style={{ flex: 1 }} />
@@ -368,7 +368,7 @@ export function TellbackV26() {
         {live ? <View style={{ alignItems: 'flex-end', opacity: 0.7 }}><ChatBubble text={live} /></View> : null}
       </View>
       {listen.error ? <Callout style={{ marginTop: space.md }}>{listen.error}</Callout> : null}
-      {!turns.length && !live ? <Callout style={{ marginTop: space.md }}>Say it out loud, in your own words. life listens and asks one question.</Callout> : null}
+      {!turns.length && !live ? <Callout style={{ marginTop: space.md }}>Say it out loud, in your own words. Life listens and asks one question.</Callout> : null}
     </Page>
   );
 }

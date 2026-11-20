@@ -14,8 +14,8 @@ export type QueuedAi = { id: string; request: Request; conversationId: string; a
 export type Delivery = { item: QueuedAi; result?: Result; error?: Error };
 export const MAX_QUEUED = 20;
 const MAX_AGE = 7 * 86_400_000;
-export const OFFLINE_NOTE = 'You’re offline. Your message is saved, and life will answer when you’re back online.';
-export const BUSY_NOTE = 'life’s AI is busy right now. Your message is saved, and life will answer when it’s back.';
+export const OFFLINE_NOTE = 'You’re offline. Your message is saved, and Life will answer when you’re back online.';
+export const BUSY_NOTE = 'Life’s AI is busy right now. Your message is saved, and Life will answer when it’s back.';
 /** Worth another try later: no connection, or every model busy. Anything else is final. */
 export const waits = (error: unknown): error is BrainError => error instanceof BrainError && error.code === 'OFFLINE';
 

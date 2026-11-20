@@ -138,16 +138,16 @@ export function TalkV26() {
       ? <DecisionDrawer title={`File these ${proposals.length} ${proposals.length === 1 ? 'detail' : 'details'}?`} sub={`Into ${listAreas(proposals.map(p => p.area))}. You decide.`}
           leave={{ label: 'Leave them', onPress: restart }} confirm={{ label: `File all ${proposals.length}`, onPress: fileAll, haptic: null }} ask={{ label: 'Go through them one by one', onPress: () => nav.go('understood', params.setup ? { setup: '1' } : undefined) }} />
       : job.state.step === 'ask'
-        ? <DecisionDrawer title="Send what you said to life’s AI?" sub={`Your words${job.state.request.context.memories.length ? ` and ${job.state.request.context.memories.length} ${job.state.request.context.memories.length === 1 ? 'memory' : 'memories'}` : ''} go to the life API and its model. Nothing is filed until you say so.`}
+        ? <DecisionDrawer title="Send what you said to Life’s AI?" sub={`Your words${job.state.request.context.memories.length ? ` and ${job.state.request.context.memories.length} ${job.state.request.context.memories.length === 1 ? 'memory' : 'memories'}` : ''} go to the Life API and its model. Nothing is filed until you say so.`}
             leave={{ label: 'Keep it here', onPress: job.reset }} confirm={{ label: 'Send it', icon: 'arrowUp', onPress: job.allow }} />
         : job.state.step === 'working'
           ? <DecisionDrawer title="Reading what you said…" sub="Nothing is filed until you say so." undo={{ label: 'Stop', onPress: job.reset }} />
           : job.state.step === 'waiting'
             ? <DecisionDrawer title="Saved for later." sub={`${job.state.note} It’ll be in your conversations.`} undo={{ label: 'Keep talking', onPress: restart }} />
             : job.state.step === 'failed' || job.state.step === 'done'
-              ? <DecisionDrawer title="Nothing to file yet." sub={job.state.step === 'failed' ? job.state.message : 'life’s AI didn’t find anything to file either.'} undo={{ label: 'Keep talking', onPress: restart }} />
+              ? <DecisionDrawer title="Nothing to file yet." sub={job.state.step === 'failed' ? job.state.message : 'Life’s AI didn’t find anything to file either.'} undo={{ label: 'Keep talking', onPress: restart }} />
               : job.available && heard.current
-                ? <DecisionDrawer title="Nothing to file yet." sub="Keep talking, or let life’s AI read what you said." leave={{ label: 'Keep talking', onPress: restart }} confirm={{ label: 'Ask life to read it', icon: 'spark', onPress: () => job.start('extract', heard.current) }} />
+                ? <DecisionDrawer title="Nothing to file yet." sub="Keep talking, or let Life’s AI read what you said." leave={{ label: 'Keep talking', onPress: restart }} confirm={{ label: 'Ask Life to read it', icon: 'spark', onPress: () => job.start('extract', heard.current) }} />
                 : <DecisionDrawer title="Nothing to file yet." sub="Keep talking, or type it instead." undo={{ label: 'Keep talking', onPress: restart }} />)
     : phase === 'filed'
       ? <DecisionDrawer title="Filed." sub={`${filed.current.length} ${filed.current.length === 1 ? 'detail is' : 'details are'} in their places.${mode === 'sample' ? ' Your rent situation has a new date.' : ''}`} undo={{ onPress: undo }} />
@@ -178,7 +178,7 @@ export function TalkV26() {
           return <AreaTile key={a} area={a} name={name} count={items.length} text={items.length ? items[items.length - 1].label! : 'Nothing yet'} hitKey={hit?.area === a ? hit.key : -1} />;
         })}
       </View>
-      {mode === 'sample' ? <Callout style={{ marginTop: space.md }}>Sample talk. On-device speech isn’t available here, so life plays an example.</Callout> : null}
+      {mode === 'sample' ? <Callout style={{ marginTop: space.md }}>Sample talk. On-device speech isn’t available here, so Life plays an example.</Callout> : null}
       {error ? <Callout style={{ marginTop: space.xs }}>{error}</Callout> : null}
     </Page>
   );
@@ -248,11 +248,11 @@ export function UnderstoodV26() {
         <Btn label={kept.length ? `File ${kept.length} ${kept.length === 1 ? 'detail' : 'details'}` : 'Nothing to file'} disabled={!kept.length} onPress={() => { confirmRecords(); flag('records-confirmed', true); feedback.file(); if (params.setup) nav.replace('where'); else nav.home(); }} />
         <Composer value={fix} onChange={setFix} placeholder="Fix something, like “the review is on 3 March”" onSend={() => { void sendFix(); }} />
       </>}>
-      <Text variant="titleSerif" accessibilityRole="header">What life understood from your talk</Text>
+      <Text variant="titleSerif" accessibilityRole="header">What Life understood from your talk</Text>
       <Eyebrow icon="clock" style={{ marginTop: space.xs }}>{`${when}${areas.length ? ` · ${listAreas(areas)}` : ''}`}</Eyebrow>
       <View style={[styles.wrapRow, { marginTop: space.md }]}><Chip label="Summary" icon="down" /><Chip label={`${kept.length} ${kept.length === 1 ? 'detail' : 'details'}`} tone="q" /></View>
       <Text variant="title" style={{ marginTop: space.xl }}>Overview</Text>
-      <Body style={{ marginTop: space.xs }} s={kept.length ? `You told life {${kept.length} ${kept.length === 1 ? 'thing' : 'things'}} worth keeping: ${kept.map(p => p.label).join('; ')}. Take out anything it got wrong before you file.` : 'Nothing is waiting to be filed. Keep talking, or type a fix below.'} />
+      <Body style={{ marginTop: space.xs }} s={kept.length ? `You told Life {${kept.length} ${kept.length === 1 ? 'thing' : 'things'}} worth keeping: ${kept.map(p => p.label).join('; ')}. Take out anything it got wrong before you file.` : 'Nothing is waiting to be filed. Keep talking, or type a fix below.'} />
       <RowsCard style={{ marginTop: space.md }}>
         {data.proposals.map(p => (
           <Row key={p.id} icon={iconFor(p.area)} title={p.label} sub={`${areaName(p.area)}${p.source.excerpt ? ` · ${p.source.excerpt}` : ''}`} onPress={() => toggle(p.id)}
@@ -292,19 +292,19 @@ export function AskV26() {
   const save = () => update(c => ({ ...c, flags: { ...c.flags, 'ask-saved': true }, records: [...c.records.filter(r => r.id !== 'decision-structure'), { id: 'decision-structure', kind: 'decision', area: 'work', label: `Revisit sole trader or company if profit passes ${money(revisit)}`, source: { type: 'chat', at: new Date().toISOString() }, status: 'confirmed' }] }));
   const unsave = () => update(c => ({ ...c, flags: { ...c.flags, 'ask-saved': false }, records: c.records.filter(r => r.id !== 'decision-structure') }));
   return (
-    <Page screen="ask" bar={{ kind: 'push', title: 'Ask life', close: true, action: { kind: 'icon', icon: 'clock', label: 'Your conversations', onPress: () => nav.go('chathistory') } }}
+    <Page screen="ask" bar={{ kind: 'push', title: 'Ask Life', close: true, action: { kind: 'icon', icon: 'clock', label: 'Your conversations', onPress: () => nav.go('chathistory') } }}
       bottom={saved
-        ? <DecisionDrawer title="Saved to Work." sub={`life will bring it back if profit passes ${money(revisit / 1000)}k.`} undo={{ onPress: unsave }} />
+        ? <DecisionDrawer title="Saved to Work." sub={`Life will bring it back if profit passes ${money(revisit / 1000)}k.`} undo={{ onPress: unsave }} />
         : <DecisionDrawer title="Save this to Work?" sub={`As a decision to revisit if profit passes ${money(revisit / 1000)}k.`}
             leave={{ label: 'Not now', onPress: nav.close }} confirm={{ label: 'Save to Work', onPress: () => { save(); feedback.file(); }, haptic: null }} ask={{ label: 'Ask a follow-up', icon: 'mic', onPress: () => nav.go('talk') }} />}>
       <View style={{ alignItems: 'flex-end' }}><ChatBubble text="Should I go limited company or stay a sole trader?" /></View>
-      <PhotoCard source={photos.gotit} focal={{ y: 0.39 }} height={214} chips={[{ label: 'life, from your numbers', orb: true }]} lead="For now," title={stay ? 'stay a sole trader.' : 'a company may pay.'} style={{ marginTop: space.md }} />
+      <PhotoCard source={photos.gotit} focal={{ y: 0.39 }} height={214} chips={[{ label: 'Life, from your numbers', orb: true }]} lead="For now," title={stay ? 'stay a sole trader.' : 'a company may pay.'} style={{ marginTop: space.md }} />
       <Body style={{ marginTop: space.sm }} s={`At your {${money(data.profile.annualIncome / 1000)}k} profit, the two come out within about {${money(Math.max(100, Math.round(gap / 100) * 100))} a year}, and a company adds around {${money(fees)}} in accountant fees.`} />
       <TintCard area="work" padding={space.md} style={{ marginTop: space.md }}>
         <Between><Micro>{`Take-home per year · ${engine.income.taxYear}`}</Micro><Chip label="Engine estimate" /></Between>
         <View style={{ marginTop: space.xs }}><KeyValue label="Sole trader" value={money(sole)} /><KeyValue label="Limited company" value={money(ltd)} /></View>
       </TintCard>
-      <Callout style={{ marginTop: space.md }}>An estimate from life’s engine, not tax advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>An estimate from Life’s engine, not tax advice.</Callout>
     </Page>
   );
 }
@@ -336,7 +336,7 @@ export function AttachV26() {
   return (
     <Page screen="attach" bar={{ kind: 'push', title: 'Attach', close: true }}>
       <Display s="{Add something} to the conversation." flush />
-      <PhotoCard source={photos.letter} focal={{ y: 0.6 }} height={204} chips={['life reads it for you']} topRight={corner('camera')} title="Scan a letter" sub="Use your camera. life files what matters." onPress={() => { void add('camera'); }} style={{ marginTop: space.lg }} />
+      <PhotoCard source={photos.letter} focal={{ y: 0.6 }} height={204} chips={['Life reads it for you']} topRight={corner('camera')} title="Scan a letter" sub="Use your camera. Life files what matters." onPress={() => { void add('camera'); }} style={{ marginTop: space.lg }} />
       <PhotoGrid style={{ marginTop: space.tile }}>
         <PhotoCard source={photos.food} focal={{ x: 0.38, y: 0.42 }} height={138} size="sm" topRight={corner('camera')} title="Camera" sub="Take a photo" onPress={() => { void add('camera'); }} />
         <PhotoCard source={photos.siblings} focal={{ y: 0.42 }} height={138} size="sm" topRight={corner('images')} title="Photos" sub="Choose an image" onPress={() => { void add('photos'); }} />
@@ -368,10 +368,10 @@ export function ScanV26() {
             <Micro style={{ marginTop: space.lg }}>Filed into your life</Micro>
             <View style={[styles.row2, { marginTop: space.xs }]}>
               <FiledTile area="money" name="Money" text={`${money(instalment, 2)} a month from 1 Dec. Added to your cash plan.`} onPress={() => nav.go('editfiled')} />
-              <FiledTile area="home" name="Home" text="Watch for a household change. life will remind you." onPress={() => nav.go('household')} />
+              <FiledTile area="home" name="Home" text="Watch for a household change. Life will remind you." onPress={() => nav.go('household')} />
             </View>
             <View style={[styles.row2, { marginTop: space.md, alignItems: 'center' }]}>
-              <Btn label="Ask life" ghost fit onPress={() => nav.go('chat', { question: 'Explain my council tax letter' })} />
+              <Btn label="Ask Life" ghost fit onPress={() => nav.go('chat', { question: 'Explain my council tax letter' })} />
               <View style={{ flex: 1 }}><Btn label={set ? 'Reminder saved' : 'Set up the direct debit'} onPress={() => { flag('direct-debit-preview', true); feedback.file(); }} /></View>
             </View>
           </View>
@@ -425,8 +425,8 @@ export function ChatV26() {
   useEffect(() => { if (params.question && !first.current) { first.current = true; void ask(params.question); } }, [params.question]); // eslint-disable-line react-hooks/exhaustive-deps
   const messages = conversation.current?.messages ?? [];
   const title = (
-    <Press haptic="select" onPress={() => nav.go('chathistory')} accessibilityLabel="life, your conversations" style={styles.chatTitle}>
-      <LifeOrb size={18} state={conversation.thinking ? 'thinking' : 'ring'} /><Text variant="title">life</Text>
+    <Press haptic="select" onPress={() => nav.go('chathistory')} accessibilityLabel="Life, your conversations" style={styles.chatTitle}>
+      <LifeOrb size={18} state={conversation.thinking ? 'thinking' : 'ring'} /><Text variant="title">Life</Text>
     </Press>
   );
   return (
@@ -442,7 +442,7 @@ export function ChatV26() {
             <Press key={s} haptic="select" onPress={() => { void ask(s); }} accessibilityLabel={s} style={[styles.sug, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><Text variant="buttonCompact">{s}</Text></Press>
           ))}
         </ScrollView>
-        <Composer value={text} onChange={setText} placeholder="Message life, or hold the mic" onAttach={() => nav.go('attach')} onMic={() => nav.go('talk')}
+        <Composer value={text} onChange={setText} placeholder="Message Life, or hold the mic" onAttach={() => nav.go('attach')} onMic={() => nav.go('talk')}
           onSend={() => { void ask(text.trim() || 'Read the attached text'); }} disabled={conversation.thinking || !!conversation.pending} />
       </>}>
       <View style={{ gap: 14 }}>
@@ -450,19 +450,19 @@ export function ChatV26() {
           ? messages.map(m => <ChatMessage key={m.id} message={m} onReview={() => { conversation.review(m.proposals ?? []); flag('records-confirmed', false); nav.go('understood'); }} />)
           : SHOW_SAMPLES ? <SampleThread /> : <>
             <Text variant="titleSerif" style={{ marginTop: space.md }}>What’s on your mind?</Text>
-            <Body s="Ask about your plan, tell life something to remember, or attach a document. {Nothing is saved until you say so.}" />
+            <Body s="Ask about your plan, tell Life something to remember, or attach a document. {Nothing is saved until you say so.}" />
           </>}
         {conversation.thinking ? <View style={styles.checking}><LifeOrb size={20} state="searching" /><Callout>Working on your message…</Callout></View> : null}
         {conversation.pending ? (
           <View style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
             <Text variant="headline">Use a model outside this phone?</Text>
-            <Body style={{ marginTop: space.xs }} s={`This sends your message, {${conversation.pending.request.history.length} recent turns}, ${conversation.pending.request.context.facts.length} matched facts, ${conversation.pending.request.context.memories.length} memories and text from ${conversation.pending.request.attachments.filter(f => f.text).length} attachments to the life API and its model. Original photos and file paths are not sent.`} />
+            <Body style={{ marginTop: space.xs }} s={`This sends your message, {${conversation.pending.request.history.length} recent turns}, ${conversation.pending.request.context.facts.length} matched facts, ${conversation.pending.request.context.memories.length} memories and text from ${conversation.pending.request.attachments.filter(f => f.text).length} attachments to the Life API and its model. Original photos and file paths are not sent.`} />
             <Btn label="Allow for this message" onPress={() => { void conversation.allowNetwork(); }} style={{ marginTop: space.md }} />
             <QuietLink label="Keep it on this phone" onPress={conversation.declineNetwork} style={{ marginTop: space.xs }} />
           </View>
         ) : null}
         {error ? <Callout>{error}</Callout> : null}
-        <Callout>{data.prefs.privateMode ? 'Private mode · nothing leaves this phone.' : 'Saved on this phone. life’s engine and what you’ve confirmed answer without a model.'}</Callout>
+        <Callout>{data.prefs.privateMode ? 'Private mode · nothing leaves this phone.' : 'Saved on this phone. Life’s engine and what you’ve confirmed answer without a model.'}</Callout>
       </View>
     </Page>
   );
@@ -490,7 +490,7 @@ function ChatMessage({ message, onReview }: { message: Message; onReview: () => 
         {message.detail ? <Body s={message.detail} /> : null}
         {message.sources?.map(s => <Callout key={s.id}>{`${s.sample ? 'Sample · ' : ''}${s.label}${s.at ? ` · ${new Date(s.at).toLocaleDateString('en-GB')}` : ''}`}</Callout>)}
       </View> : null}
-      {message.route ? <Callout>{message.route.startsWith('rules') ? 'From saved facts and life’s engine · on this phone' : message.route.startsWith('device') ? 'On-device AI' : 'AI-assisted · outside this phone'}</Callout> : null}
+      {message.route ? <Callout>{message.route.startsWith('rules') ? 'From saved facts and Life’s engine · on this phone' : message.route.startsWith('device') ? 'On-device AI' : 'AI-assisted · outside this phone'}</Callout> : null}
     </View>
   );
 }
@@ -516,7 +516,7 @@ function SampleThread() {
       {checking ? <View style={styles.checking}><LifeOrb size={20} state="searching" /><Callout>Checking London schemes and the NHS…</Callout></View> : null}
       {step >= 3 ? <Statement s="Congrats on going freelance. Two things {matter this week}: register for {Self Assessment} by 5 October, and start a {tax pot} so January isn’t a shock." /> : null}
       {step >= 4 ? <PhotoGrid>
-        <PhotoCard source={photos.payslip} focal={{ y: 0.82 }} height={184} size="sm" chips={[{ label: 'Due 5 Oct', dot: t.ember }]} title="Register as self-employed" sub="10 minutes on GOV.UK · life drafts every answer" onPress={() => nav.go('taxcheck')} />
+        <PhotoCard source={photos.payslip} focal={{ y: 0.82 }} height={184} size="sm" chips={[{ label: 'Due 5 Oct', dot: t.ember }]} title="Register as self-employed" sub="10 minutes on GOV.UK · Life drafts every answer" onPress={() => nav.go('taxcheck')} />
         <TintCard area="money" padding={space.md} style={{ height: 184 }} onPress={() => nav.go('cashplan')}>
           <Text variant="callout" tone="ink2">Tax pot</Text>
           <Text variant="numeralL" style={{ marginTop: 14 }}>25%</Text>
@@ -574,7 +574,7 @@ export function ChatHistoryV26() {
         </PhotoGrid>
       </> : null}
       <Btn label="New conversation" ghost onPress={() => { conversation.newThread(); nav.go('chat'); }} style={{ marginTop: space.lg }} />
-      <Callout style={{ marginTop: space.md }}>Nothing here is needed to use life. Everything useful is already filed in its place.</Callout>
+      <Callout style={{ marginTop: space.md }}>Nothing here is needed to use Life. Everything useful is already filed in its place.</Callout>
     </Page>
   );
 }
@@ -609,7 +609,7 @@ export function EditFiledV26() {
     <Page screen="editfiled" bar={{ kind: 'sheet', title: 'Filed from chat' }}
       footer={<>
         <Btn label="Save" onPress={save} />
-        <Between><QuietLink label={unfiled ? 'Undo unfile' : 'Unfile this'} ink center={false} onPress={() => { flag('council-unfiled'); update(c => ({ ...c, records: c.records.map(r => r.id === 'council-edited' ? { ...r, status: unfiled ? 'confirmed' : 'removed' } : r) })); }} /><Callout>life learns from the correction.</Callout></Between>
+        <Between><QuietLink label={unfiled ? 'Undo unfile' : 'Unfile this'} ink center={false} onPress={() => { flag('council-unfiled'); update(c => ({ ...c, records: c.records.map(r => r.id === 'council-edited' ? { ...r, status: unfiled ? 'confirmed' : 'removed' } : r) })); }} /><Callout>Life learns from the correction.</Callout></Between>
       </>}>
       <View style={styles.sentence}>
         {tok('what', what)}{word(' is ')}{tok('amount', `${money(amount)} a month`, ',')}{word(' due on the ')}{tok('due', due, ',')}{word(' filed in ')}{tok('where', 'Money → Bills', '.')}

@@ -23,7 +23,7 @@ const developmentLoopback = (url: URL) => __DEV__ && ['localhost', '127.0.0.1', 
 function apiBase(): string | null {
   if (!endpoint) return null;
   const url = new URL(endpoint);
-  if (url.username || url.password || url.search || url.hash || (url.protocol !== 'https:' && !developmentLoopback(url))) throw new BrainError('UNAVAILABLE', 'The life API needs a secure endpoint.');
+  if (url.username || url.password || url.search || url.hash || (url.protocol !== 'https:' && !developmentLoopback(url))) throw new BrainError('UNAVAILABLE', 'The Life API needs a secure endpoint.');
   return url.origin;
 }
 let tokenProvider: (() => Promise<string | null>) | null = null;
@@ -32,14 +32,14 @@ let tokenProvider: (() => Promise<string | null>) | null = null;
 export function setBrainSessionProvider(provider: (() => Promise<string | null>) | null) { tokenProvider = provider; }
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const base = apiBase();
-  if (!base) throw new BrainError('UNAVAILABLE', 'The life API is not connected.');
+  if (!base) throw new BrainError('UNAVAILABLE', 'The Life API is not connected.');
   const token = await tokenProvider?.();
   const headers = new Headers(init?.headers);
   if (token) headers.set('Authorization', `Bearer ${token}`);
   if (!token && developmentLoopback(new URL(base)) && Platform.OS === 'web') {
     const session = await fetch(`${base}/dev/session`, { method: 'POST', credentials: 'include', signal: init?.signal });
     if (!session.ok) throw new BrainError('UNAVAILABLE', 'The local API could not establish a development session.');
-  } else if (!token) throw new BrainError('UNAVAILABLE', 'Sign in is required before sending information to the life API.');
+  } else if (!token) throw new BrainError('UNAVAILABLE', 'Sign in is required before sending information to the Life API.');
   try { return await fetch(`${base}${path}`, { ...init, credentials: 'include', headers }); }
   catch (error) {
     // No connection: the request waits on this phone (services/aiQueue.ts) instead of failing. A stop is a stop.
@@ -55,7 +55,7 @@ async function refusal(response: Response): Promise<BrainError> {
     case 'CONSENT_REQUIRED': return new BrainError('CONSENT_REQUIRED', said ?? 'This needs your OK before it leaves your phone.');
     case 'RATE_LIMITED': return new BrainError('RATE_LIMITED', said ?? 'You’ve used today’s AI allowance. Your message is saved.');
     case 'PRIVATE_MODE': return new BrainError('UNAVAILABLE', 'Private mode is on, so this stays on your phone. Nothing was sent to a model.');
-    case 'INVALID_OUTPUT': return new BrainError('INVALID_OUTPUT', 'The answer didn’t pass life’s checks, so nothing was changed.');
+    case 'INVALID_OUTPUT': return new BrainError('INVALID_OUTPUT', 'The answer didn’t pass Life’s checks, so nothing was changed.');
     case 'TIMEOUT': return new BrainError('TIMEOUT', 'The request stopped. Nothing was filed.');
     // Every model busy or down: worth another try later, so it waits like an offline request.
     case 'UNAVAILABLE': return new BrainError('OFFLINE', BUSY_NOTE);
@@ -80,5 +80,5 @@ export const apiConfigured = !!endpoint;
 export const brain = {
   /** `options.rules: false` sends a job to a model on purpose ("Ask life to read it"); life's own rules answer first otherwise. */
   run: (request: Request, signal?: AbortSignal, options?: RunOptions) => runBrain(request, [deviceAdapter, networkAdapter], signal, options),
-  capabilities: async (): Promise<Capability[]> => [{ id: 'life-rules', location: 'device', jobs: ['ask', 'extract', 'plan-explain'], available: true }, { id: deviceAdapter.id, location: 'device', jobs: deviceAdapter.jobs, available: await deviceAdapter.available() }, { id: networkAdapter.id, location: 'cloud', jobs: networkAdapter.jobs, available: !!endpoint, reason: endpoint ? 'Requires authentication and per-request permission; provider availability is checked by the API.' : 'No life API endpoint configured.' }],
+  capabilities: async (): Promise<Capability[]> => [{ id: 'life-rules', location: 'device', jobs: ['ask', 'extract', 'plan-explain'], available: true }, { id: deviceAdapter.id, location: 'device', jobs: deviceAdapter.jobs, available: await deviceAdapter.available() }, { id: networkAdapter.id, location: 'cloud', jobs: networkAdapter.jobs, available: !!endpoint, reason: endpoint ? 'Requires authentication and per-request permission; provider availability is checked by the API.' : 'No Life API endpoint configured.' }],
 };

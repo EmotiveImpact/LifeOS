@@ -52,7 +52,7 @@ function useLogMood() {
 
 /** The root bar every Today page shares: the orb, Today, the date, search and the bell. */
 function todayActions(onSearch: () => void, unread: boolean, onBell: () => void): TopBarAction[] {
-  return [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: onSearch }, { kind: 'icon', icon: 'bell', label: 'From life', badge: unread, onPress: onBell }];
+  return [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: onSearch }, { kind: 'icon', icon: 'bell', label: 'From Life', badge: unread, onPress: onBell }];
 }
 
 /* ───────────────────────── Today ───────────────────────── */
@@ -192,7 +192,7 @@ export function TodayV26() {
 
       {q && !answered ? (
         <View style={[styles.card, { marginTop: space.xxl, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-          <Eyebrow orb>life is asking</Eyebrow>
+          <Eyebrow orb>Life is asking</Eyebrow>
           <Statement s={`${q.intro}{${q.focus}}`} style={{ marginTop: space.xs }} />
           <View style={[styles.row, { marginTop: space.md }]}>{q.choices.map(c => <Btn key={c} label={c} ghost sm fit onPress={() => answer(c)} />)}</View>
         </View>
@@ -213,8 +213,8 @@ export function TodayV26() {
         </View>
         <Icon name="chev" size={componentSize.iconXs} color={t.inkQuiet} />
       </Press>
-      <Press haptic="open" onPress={() => nav.go('knows')} accessibilityLabel={`life knows you, ${data.knowledge.overall}%`} style={[styles.card, { marginTop: space.sm, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-        <Between><Text variant="title">life knows you</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
+      <Press haptic="open" onPress={() => nav.go('knows')} accessibilityLabel={`Life knows you, ${data.knowledge.overall}%`} style={[styles.card, { marginTop: space.sm, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+        <Between><Text variant="title">Life knows you</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
         <Ruler pct={data.knowledge.overall} style={{ marginTop: space.sm }} />
         <Text variant="callout" tone="ink2" style={{ marginTop: space.tile }}>{`${data.knowledge.recordCount} things filed from your words and records.`}</Text>
       </Press>
@@ -291,9 +291,9 @@ export function CheckinV26() {
         </View>
       </PhotoCard>
       <Statement s={`You’ve felt drained or anxious on {${heavyCount} of the last 7 days}. That’s a lot to carry.`} style={{ marginTop: space.md }} />
-      <Body s="life can make the next few days lighter. And if it would help to talk to someone:" style={{ marginTop: space.sm }} />
+      <Body s="Life can make the next few days lighter. And if it would help to talk to someone:" style={{ marginTop: space.sm }} />
       <SupportRowsV26 style={{ marginTop: space.md }} />
-      <Callout style={{ marginTop: space.md }}>life isn’t a medical service. If you’re in danger right now, call 999.</Callout>
+      <Callout style={{ marginTop: space.md }}>Life isn’t a medical service. If you’re in danger right now, call 999.</Callout>
     </Page>
   );
 }
@@ -406,7 +406,7 @@ export function WhyV26() {
   return (
     <Page screen="why">
       <Eyebrow orb right={<RoundButton icon="close" size="sm" label="Close" onPress={nav.close} />}>Why today is lighter</Eyebrow>
-      <Statement s={back ? 'Put back. {The P87} is on {today} again, as it was.' : 'life moved {the P87} to tomorrow and kept {one small task} today.'} style={{ marginTop: space.sm }} />
+      <Statement s={back ? 'Put back. {The P87} is on {today} again, as it was.' : 'Life moved {the P87} to tomorrow and kept {one small task} today.'} style={{ marginTop: space.sm }} />
       <Micro style={{ marginTop: space.lg }}>THE THREE SIGNALS IT USED</Micro>
       <View style={[styles.row, { marginTop: space.xs, gap: space.xs }]}>
         <TintCard area="health" padding={12} style={styles.sig}><Text variant="micro" tone="ink2">Readiness</Text><Text variant="headline" style={styles.sigVal}>{String(lighterDay.readiness)}</Text><Text variant="micro" tone="ink2">Low for you</Text></TintCard>
@@ -434,16 +434,16 @@ export function CalendarV26() {
   return (
     <Page screen="calendar" bar={{ kind: 'push', title: 'Your day', action: { kind: 'icon', icon: 'calendar', label: 'Calendar access', onPress: () => nav.go('calprimer') } }}>
       <Eyebrow>{`${shortDate(now)} · ${dayShape.booked} booked`}</Eyebrow>
-      <Display s="A {busy day}. life found {@clock one 20-minute gap} for the {P87}." />
+      <Display s="A {busy day}. Life found {@clock one 20-minute gap} for the {P87}." />
       <View style={{ marginTop: space.xl, gap: 6 }}>
         {dayShape.blocks.map(b => (
           <View key={b.at} style={{ flexDirection: 'row', gap: space.tile }}>
             <Text variant="callout" tone={b.kind === 'gap' ? 'ink' : 'ink2'} style={{ width: 44, paddingTop: space.xs, fontVariant: ['tabular-nums'] }}>{b.at}</Text>
             {b.kind === 'gap' ? (
-              <Press haptic="open" onPress={() => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); nav.go('mission'); }} accessibilityLabel="Free for 20 minutes. life will nudge you here: finish the P87." style={[styles.block, styles.gap, { backgroundColor: t.emberTint }]}>
+              <Press haptic="open" onPress={() => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); nav.go('mission'); }} accessibilityLabel="Free for 20 minutes. Life will nudge you here: finish the P87." style={[styles.block, styles.gap, { backgroundColor: t.emberTint }]}>
                 <View style={{ flex: 1 }}>
                   <Micro sig>FREE · 20 MIN</Micro>
-                  <Text variant="title" style={{ marginTop: 6 }}>life will nudge you here</Text>
+                  <Text variant="title" style={{ marginTop: 6 }}>Life will nudge you here</Text>
                   <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>Finish the P87.</Text>
                 </View>
                 <Thumb source={photos.payslip} focal={{ y: 0.75 }} />
@@ -457,7 +457,7 @@ export function CalendarV26() {
           </View>
         ))}
       </View>
-      <Callout style={{ marginTop: space.md }}>life only reads when you’re busy or free, never the details of your events.</Callout>
+      <Callout style={{ marginTop: space.md }}>Life only reads when you’re busy or free, never the details of your events.</Callout>
     </Page>
   );
 }
@@ -492,8 +492,8 @@ export function InboxV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag, update } = useSeed();
   const read = !!data.flags['inbox-read'];
   return (
-    <Page screen="inbox" bar={{ kind: 'push', title: 'From life', action: { kind: 'node', node: <Chip label="Read all" onPress={() => flag('inbox-read', true)} /> } }}>
-      <Display s={read ? '{All read.} Nothing important lives only here.' : '{2 new} from life. Nothing important lives only here.'} style={{ marginTop: space.xxs }} />
+    <Page screen="inbox" bar={{ kind: 'push', title: 'From Life', action: { kind: 'node', node: <Chip label="Read all" onPress={() => flag('inbox-read', true)} /> } }}>
+      <Display s={read ? '{All read.} Nothing important lives only here.' : '{2 new} from Life. Nothing important lives only here.'} style={{ marginTop: space.xxs }} />
       <View style={{ marginTop: space.xl, paddingTop: 28 }}>
         <Press haptic="open" onPress={() => nav.go('today', { nudge: '1' })} accessibilityLabel="20 free minutes before 14:00. Nudge, 11:20" style={[styles.peek, { backgroundColor: t.surface3 }]}>
           <View style={styles.row}>{read ? null : <View style={[styles.unread, { backgroundColor: t.ember }]} />}<Text variant="micro" tone="quiet">20 free minutes before 14:00</Text></View>
@@ -501,7 +501,7 @@ export function InboxV26() {
         </Press>
         <PhotoCard source={photos.payslip} focal={{ y: 0.7 }} height={236} onPress={() => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); nav.go('mission'); }}
           chips={[read ? 'Earlier · 2h ago' : { label: 'New · 2h ago', dot: t.ember }]} chipRight="Tax rebate"
-          title={seedTaxClaim.refund ? `You’re likely owed ${money(seedTaxClaim.refund)}` : 'Your tax record is worth checking'} sub="From work expenses you told life about. One form claims it." />
+          title={seedTaxClaim.refund ? `You’re likely owed ${money(seedTaxClaim.refund)}` : 'Your tax record is worth checking'} sub="From work expenses you told Life about. One form claims it." />
       </View>
       <SectionHead title="Earlier" />
       <RowsCard>
@@ -599,7 +599,7 @@ export function SearchV26({ onClose }: { onClose: () => void }) {
               </Press>
             ))}
           </View>
-          <Btn label={query ? `Ask life: “${query}”` : 'Ask life a question'} ghost onPress={() => go(() => nav.go('chat', { question: query }))} style={{ marginTop: space.lg }} />
+          <Btn label={query ? `Ask Life: “${query}”` : 'Ask Life a question'} ghost onPress={() => go(() => nav.go('chat', { question: query }))} style={{ marginTop: space.lg }} />
         </ScrollView>
       </SafeAreaView>
     </View>

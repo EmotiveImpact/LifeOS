@@ -49,7 +49,7 @@ export function RecapV26() {
   const order: WeekKey[] = ['w44', 'w45', 'now'];
   // A real account has only this week until Sundays go by; the sample shows the board's three weeks.
   const missions = SHOW_SAMPLES ? weekStats.missions : data.completed.length;
-  const week = SHOW_SAMPLES ? weeks[picked] : { ...weeks.now, tag: 'This week', line: missions ? `You cleared {@checkCircle ${missions} mission${missions === 1 ? '' : 's'}} this week.` : 'Your first week with life. {Small steps count.}' };
+  const week = SHOW_SAMPLES ? weeks[picked] : { ...weeks.now, tag: 'This week', line: missions ? `You cleared {@checkCircle ${missions} mission${missions === 1 ? '' : 's'}} this week.` : 'Your first week with Life. {Small steps count.}' };
   const behind = SHOW_SAMPLES ? order.filter(k => k !== picked) : [];
   // The share card sheet (Phase 20) builds the picture and lets you hide the numbers before anything leaves.
   const share = () => { feedback.select(); nav.go('sharecard'); };
@@ -74,7 +74,7 @@ export function RecapV26() {
       ) : <Callout center style={{ marginTop: space.md }}>Tap a week behind the card to bring it forward.</Callout>}
       {picked === 'now' ? <WeekSteps /> : null}
       <View style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-        <Eyebrow orb>Reflection from life</Eyebrow>
+        <Eyebrow orb>Reflection from Life</Eyebrow>
         <Statement s="Progress came from {small, repeated steps}, not one big push." style={{ marginTop: space.xs }} />
       </View>
     </Page>

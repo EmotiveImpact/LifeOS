@@ -5,7 +5,6 @@ import { Press } from '../Press';
 import { Text } from '../Text';
 import { useTokens } from '../theme';
 import { componentSize, palette, radius, space, touch } from '../tokens';
-import { LifeOrb } from './Orb';
 import { RoundButton } from './V26Chrome';
 import { ActionMenu, type MenuItem } from './V26Menu';
 
@@ -84,8 +83,8 @@ function TopBarV26(props: TopBarProps) {
   const bg = onImage ? 'transparent' : props.kind === 'sheet' ? t.surface : t.canvas;
   if (props.kind === 'root') return (
     <View style={[styles.v26, { backgroundColor: bg }]}>
+      {/* No orb here (Edem, 20 Nov 2026): the orb only shows where life is speaking or listening. */}
       <View style={styles.v26Id}>
-        <LifeOrb size={22} color={onImage ? t.paper : t.ink} />
         <Text variant="title" tone={onImage ? 'paper' : 'ink'} accessibilityRole="header" numberOfLines={1} style={{ marginRight: 2, flexShrink: 1 }}>{props.title}</Text>
         {props.sub ? <Text variant="callout" tone={onImage ? 'paper2' : 'ink2'} numberOfLines={1}>{props.sub}</Text> : null}
       </View>

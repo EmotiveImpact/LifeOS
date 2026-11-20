@@ -95,7 +95,7 @@ export function PeopleV26() {
       ) : (
         <View style={[styles.empty, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Text variant="headline">No dates yet.</Text>
-          <Body s="Add the people you care about and life reminds you before their days." style={{ marginTop: space.xs }} />
+          <Body s="Add the people you care about and Life reminds you before their days." style={{ marginTop: space.xs }} />
           <Btn label="Add people" onPress={() => nav.go('addperson')} style={{ marginTop: space.md }} />
         </View>
       )}
@@ -205,7 +205,7 @@ export function PersonV26() {
                     </Press>
                   ))}
                 </View>
-              </> : <Body s="No date saved. Tell life their birthday and it plans the card, the gift and the message." />}
+              </> : <Body s="No date saved. Tell Life their birthday and it plans the card, the gift and the message." />}
               {person.note ? <Body s={person.note} style={{ marginTop: space.lg }} /> : null}
             </View>
           )}
@@ -257,7 +257,7 @@ export function AddpersonV26() {
   return (
     <Page screen="addperson" bar={{ kind: 'sheet', title: 'Add people' }}
       footer={typed
-        ? <><Btn label="Add this person" disabled={!name.trim()} onPress={addTyped} /><Callout center>Gift ideas and notes can come later. Just tell life.</Callout></>
+        ? <><Btn label="Add this person" disabled={!name.trim()} onPress={addTyped} /><Callout center>Gift ideas and notes can come later. Just tell Life.</Callout></>
         : <><Btn label={picked.length ? `Add ${picked.length} ${picked.length === 1 ? 'person' : 'people'}` : 'Tick someone to add'} disabled={!picked.length} onPress={addContacts} /><Callout center>Birthdays already in your contacts come straight across.</Callout></>}>
       <Statement s="Who do you want to {show up for?}" style={{ marginTop: space.xs }} />
       <SegmentedV26 options={[{ value: 'contacts', label: 'From contacts' }, { value: 'type', label: 'Type it in' }]} value={typed ? 'type' : 'contacts'} onChange={v => setTyped(v === 'type')} style={{ marginTop: space.md }} />
@@ -271,14 +271,14 @@ export function AddpersonV26() {
           <Row icon="bell" title="Nudge me to stay in touch" sub="Off unless you switch it on" right={<SwitchV26 value={!!data.flags['addperson-nudge']} onChange={v => flag('addperson-nudge', v)} accessibilityLabel="Nudge me to stay in touch" />} />
         </RowsCard>
       </> : <>
-        <Callout style={{ marginTop: space.md }}>life reads only the people you tick, and only their name and dates.</Callout>
+        <Callout style={{ marginTop: space.md }}>Life reads only the people you tick, and only their name and dates.</Callout>
         <RowsCard style={{ marginTop: space.sm }}>
           {contacts.map(c => {
             const on = picked.includes(c.id);
             return <Row key={c.id} lead={<InitialsAvatar initials={c.initials} />} title={c.name} sub={c.date ? `Birthday ${shortOf(c.date)}` : 'No birthday saved'} right={<Tick on={on} icon={on ? 'check' : 'add'} />} haptic="select" onPress={() => setPicked(p => on ? p.filter(x => x !== c.id) : [...p, c.id])} />;
           })}
         </RowsCard>
-        {noDate ? <Field label={`${noDate.name.split(' ')[0]}’s birthday`} value={missing} onChangeText={setMissing} placeholder="Add it now, or tell life later" style={{ marginTop: space.sm }} /> : null}
+        {noDate ? <Field label={`${noDate.name.split(' ')[0]}’s birthday`} value={missing} onChangeText={setMissing} placeholder="Add it now, or tell Life later" style={{ marginTop: space.sm }} /> : null}
       </>}
     </Page>
   );
@@ -322,7 +322,7 @@ export function BirthdayMoveV26({ b, day, onDone }: { b: DatedPerson; day: strin
         knob={{ icon: 'check', label: 'Card ordered', onPress: () => { flag(`person-${b.person.id}-0`, true); feedback.complete(); onDone?.(); } }}
         right={{ label: 'Not today', text: true, onPress: () => { choose(`birthday-nudge-${b.person.id}`, day); onDone?.(); } }} />
       <Callout center style={{ marginTop: space.sm }}>Tap the tick when it’s ordered.</Callout>
-      <LifeSays style={{ marginTop: space.lg }}>{`On ${weekday(b.at)} morning life will draft a message for you to send.`}</LifeSays>
+      <LifeSays style={{ marginTop: space.lg }}>{`On ${weekday(b.at)} morning Life will draft a message for you to send.`}</LifeSays>
     </View>
   );
 }

@@ -43,7 +43,7 @@ export function missionPriority(taskId: string): Priority | null {
 export const STARTERS: Priority[] = [
   { id: 'starter:paperwork', text: 'Get my paperwork ready', own: false, area: 'admin', steps: [
     { key: 'starter:paperwork:gather', title: 'Gather two documents you’ll need', minutes: 10, to: 'vault' },
-    { key: 'starter:paperwork:scan', title: 'Photograph them into life', minutes: 5, to: 'scan' },
+    { key: 'starter:paperwork:scan', title: 'Photograph them into Life', minutes: 5, to: 'scan' },
     { key: 'starter:paperwork:note', title: 'Note what’s still missing', minutes: 2 },
   ] },
   { id: 'starter:time', text: 'Make time for something I care about', own: false, area: 'time', steps: [
@@ -63,9 +63,9 @@ export const WIN_AREAS: { id: string; label: string }[] = [
 ];
 
 export const CHECK_IN_WORDS: Record<CheckInStyle, { label: string; line: string; sub: string }> = {
-  regular: { label: 'Regular', line: 'every evening', sub: 'life asks about tomorrow each evening, and about today in the morning if you haven’t planned.' },
-  noticed: { label: 'When needed', line: 'only when it notices something', sub: 'life asks only when there’s a reason, like a step you started and left.' },
-  off: { label: 'Off', line: 'never', sub: 'life won’t ask. Planning and your progress stay on Today whenever you want them.' },
+  regular: { label: 'Regular', line: 'every evening', sub: 'Life asks about tomorrow each evening, and about today in the morning if you haven’t planned.' },
+  noticed: { label: 'When needed', line: 'only when it notices something', sub: 'Life asks only when there’s a reason, like a step you started and left.' },
+  off: { label: 'Off', line: 'never', sub: 'Life won’t ask. Planning and your progress stay on Today whenever you want them.' },
 };
 
 /** Whether there's a calendar to read at all: only the sample day in a development build until real calendars connect. */

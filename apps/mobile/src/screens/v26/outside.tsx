@@ -183,7 +183,7 @@ export function ShareCardV26() {
     ? 'I cleared {missions}, slept {well} most nights and kept {my habits}.'
     : `I cleared {${shareWeek.missions} missions}, slept {7h+} ${nights.filter(Boolean).length} nights and kept {${shareWeek.habits} habits}.`;
   const plain = sentence.replace(/[{}]/g, '');
-  const share = () => { feedback.primary(); void Share.share({ message: `${plain} Made with life.` }); };
+  const share = () => { feedback.primary(); void Share.share({ message: `${plain} Made with Life.` }); };
   return (
     <Page screen="sharecard" bar={{ kind: 'sheet', title: 'Share your week' }}
       footer={<View style={styles.footRow}>
@@ -200,7 +200,7 @@ export function ShareCardV26() {
         <Text variant="titleSerif" style={{ marginTop: 14, color: photo.onPhoto2 }} accessibilityLabel={plain}>
           {two(sentence).map((s, i) => <Text key={i} variant="titleSerif" style={{ color: s.tone === 'quiet' ? photo.onPhoto2 : photo.onPhoto }}>{s.text}</Text>)}
         </Text>
-        <View style={[styles.made, { backgroundColor: photo.onPhoto }]}><LifeOrb size={18} color={photo.ink} /><Text variant="micro" style={{ color: photo.ink }}>Made with life</Text></View>
+        <View style={[styles.made, { backgroundColor: photo.onPhoto }]}><LifeOrb size={18} color={photo.ink} /><Text variant="micro" style={{ color: photo.ink }}>Made with Life</Text></View>
       </View>
       <Callout center style={{ marginTop: space.sm }}>Nothing personal on the card. No £ amounts unless you choose.</Callout>
     </Page>
@@ -230,7 +230,7 @@ export function WatchV26({ done: startDone = false }: { done?: boolean }) {
           <View style={[styles.side, { backgroundColor: t.surface3 }]} />
           <View style={[styles.face, { backgroundColor: photo.ink }]}>
             <Between>
-              <View style={[styles.inline, { gap: 6 }]}><LifeOrb size={20} state={done ? 'done' : 'ring'} color={photo.onPhoto} /><Text variant="buttonCompact" style={{ color: photo.onPhoto }}>life</Text></View>
+              <View style={[styles.inline, { gap: 6 }]}><LifeOrb size={20} state={done ? 'done' : 'ring'} color={photo.onPhoto} /><Text variant="buttonCompact" style={{ color: photo.onPhoto }}>Life</Text></View>
               <Text variant="buttonCompact" style={{ color: photo.onPhoto, fontVariant: ['tabular-nums'] }}>{PREVIEW_TIME}</Text>
             </Between>
             <Micro sig={!done} onPhoto style={{ marginTop: 14 }}>Today’s move</Micro>
@@ -262,7 +262,7 @@ export function WatchV26({ done: startDone = false }: { done?: boolean }) {
 function Note({ title, when, text, source, focal, children }: { title: string; when: string; text: string; source: number; focal?: { x?: number; y?: number }; children?: ReactNode }) {
   const t = useTokens();
   return (
-    <View accessible accessibilityLabel={`life, ${when}. ${title}. ${text}`} style={[styles.note, { backgroundColor: t.surface, ...floatLift(t.scheme) }]}>
+    <View accessible accessibilityLabel={`Life, ${when}. ${title}. ${text}`} style={[styles.note, { backgroundColor: t.surface, ...floatLift(t.scheme) }]}>
       <View style={[styles.mark, { backgroundColor: photo.ink }]}><LifeOrb size={22} color={photo.onPhoto} /></View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={[styles.inline, { justifyContent: 'space-between', alignItems: 'baseline' }]}><Text variant="title" numberOfLines={1} style={{ flexShrink: 1 }}>{title}</Text><Text variant="callout" tone="ink2">{when}</Text></View>
@@ -307,7 +307,7 @@ export function AndroidWidgetV26() {
         <Text variant="titleSerif" style={{ color: photo.onPhoto }}>{shortDay()}</Text>
         <Widget style={{ marginTop: space.lg, borderRadius: 28, paddingVertical: 18, paddingLeft: space.gutter, paddingRight: 18, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <View style={styles.inline}><LifeOrb size={18} /><Text variant="micro" tone="ink2">life · today’s move</Text></View>
+            <View style={styles.inline}><LifeOrb size={18} /><Text variant="micro" tone="ink2">Life · today’s move</Text></View>
             <Text variant="headline" tone={done ? 'ink2' : 'ink'} style={{ marginTop: space.xs }}>{w.move}</Text>
           </View>
           <Press haptic={done ? 'select' : 'file'} onPress={() => setDone(!done)} accessibilityLabel={done ? 'Done. Undo' : 'Mark as done'} style={[styles.tick, { backgroundColor: done ? t.gainTint : t.ink }]}>
@@ -343,17 +343,17 @@ export function AndroidWidgetV26() {
 /* ───────────────────────── Siri and Shortcuts ───────────────────────── */
 
 export function SiriV26() {
-  const t = useTokens(), said = platform.shortcut('Tell life the dentist is on Friday at 3');
+  const t = useTokens(), said = platform.shortcut('Tell Life the dentist is on Friday at 3');
   return (
     <Surface id="siri" wall={<Wallpaper source={photos.vantage} />}>
       <View style={{ flex: 1, minHeight: 0, paddingTop: 28, paddingHorizontal: space.gutter }}>
         <Eyebrow icon="mic" onPhoto>Hey Siri</Eyebrow>
-        <Display onPhoto s="“Tell life the {@calendar dentist} is on {Friday at 3}”" />
+        <Display onPhoto s="“Tell Life the {@calendar dentist} is on {Friday at 3}”" />
         <View style={{ flex: 1 }} />
         <Widget style={{ borderRadius: radius.xl, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm }}>
           <LifeOrb size={28} state="done" />
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Between><Text variant="micro" tone="ink2">life</Text><Chip label="Filed" icon="check" tone="done" /></Between>
+            <Between><Text variant="micro" tone="ink2">Life</Text><Chip label="Filed" icon="check" tone="done" /></Between>
             <Text variant="title" style={{ marginTop: 6 }}>{`Filed: ${said.proposed.label} · ${said.proposed.at}`}</Text>
             <View style={[styles.inline, { gap: 6, marginTop: 4 }]}><AreaDot area="health" /><Text variant="callout" tone="ink2" style={{ flexShrink: 1 }}>{`Added to ${said.proposed.area} · reminder Thursday evening`}</Text></View>
           </View>
@@ -374,9 +374,9 @@ export function SiriV26() {
 
 const ORB_STATES: [OrbState, string, string, string][] = [
   ['ring', 'Ring', 'The everyday mark: tab bar, headers, small sizes.', 'Default'],
-  ['thinking', 'Thinking', 'Only while life is working something out.', 'Over 1s'],
-  ['working', 'Working', 'While life builds or files something in front of you.', ''],
-  ['searching', 'Searching', 'While life checks or looks something up.', ''],
+  ['thinking', 'Thinking', 'Only while Life is working something out.', 'Over 1s'],
+  ['working', 'Working', 'While Life builds or files something in front of you.', ''],
+  ['searching', 'Searching', 'While Life checks or looks something up.', ''],
   ['listening', 'Listening', 'While you talk. It moves with your voice.', 'A pulse'],
   ['done', 'Done', 'On finish. Dots gather in, then open back out.', '1s'],
 ];
@@ -417,7 +417,7 @@ export function TopbarsV26() {
   return (
     <Page screen="topbars" bar={{ kind: 'push', title: 'The top bar' }}>
       <Display s="One rule for the top: {how it opened.}" flush style={{ marginTop: space.xxs }} />
-      {spec('ROOT · TODAY, PLAN, YOU', 'Two buttons at most', <TopBar look="v26" kind="root" title="Today" sub={shortDay()} actions={[{ kind: 'icon', icon: 'search', label: 'Search', onPress: none }, { kind: 'icon', icon: 'bell', label: 'From life', badge: true, onPress: none }]} />)}
+      {spec('ROOT · TODAY, PLAN, YOU', 'Two buttons at most', <TopBar look="v26" kind="root" title="Today" sub={shortDay()} actions={[{ kind: 'icon', icon: 'search', label: 'Search', onPress: none }, { kind: 'icon', icon: 'bell', label: 'From Life', badge: true, onPress: none }]} />)}
       {spec('PUSH', 'Back, title, one smart action or none', <TopBar look="v26" kind="push" title="Readiness" onBack={none} action={{ kind: 'icon', icon: 'info', label: 'How this is worked out', onPress: none }} />)}
       {spec('SHEET', 'A handle, a title, close', <TopBar look="v26" kind="sheet" title="Add something" onClose={none} />)}
       {spec('FULL-SCREEN FLOW', 'Back or close, and a step count', <TopBar look="v26" kind="flow" closeLabel="Back" step="2 of 3" onClose={none} />)}

@@ -23,7 +23,7 @@ export type RoundButtonProps = {
   solid?: boolean;
   /** Paper fill with a dark icon, for a button that sits on a photograph. */
   onPhoto?: boolean;
-  /** A small ember dot: something new from life. The one signal; use it once per bar. */
+  /** A small ember dot: something new from Life. The one signal; use it once per bar. */
   dot?: boolean;
   haptic?: FeedbackKind | null;
   disabled?: boolean;

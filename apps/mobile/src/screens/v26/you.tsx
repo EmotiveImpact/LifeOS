@@ -125,11 +125,11 @@ export function YouV26() {
         {becoming.marks.length ? <>
           <BecomingScale marks={becoming.marks} style={{ marginTop: space.md }} />
           <Callout style={{ marginTop: space.sm }}>{`Your last ${becoming.marks.length} reflections ${lean}.`}</Callout>
-        </> : <Callout style={{ marginTop: space.sm }}>life asks this now and then after a check-in. Your answers gather here.</Callout>}
+        </> : <Callout style={{ marginTop: space.sm }}>Life asks this now and then after a check-in. Your answers gather here.</Callout>}
       </Box>
 
       <TileGrid style={{ marginTop: space.sm }}>
-        <V26Tile label="life knows you" scale={`${data.knowledge.overall}%`} value={n(data.knowledge.recordCount)} sub="things filed" onPress={() => nav.go('knows')} />
+        <V26Tile label="Life knows you" scale={`${data.knowledge.overall}%`} value={n(data.knowledge.recordCount)} sub="things filed" onPress={() => nav.go('knows')} />
         <V26Tile label="Streak" scale={streak.best ? `best ${streak.best}` : undefined} value={String(streakDays)} unit={streakDays === 1 ? 'day' : 'days'} onPress={() => nav.go('habits')}>
           <DotStrip days={days} style={{ marginTop: space.sm }} />
         </V26Tile>
@@ -210,11 +210,11 @@ export function MoodV26() {
         ))}
       </View>
       {moodPatterns.length ? <>
-        <SectionHead title="What life noticed" />
+        <SectionHead title="What Life noticed" />
         <RowsCard>
           {moodPatterns.map(p => <Row key={p.title} thumb={photos[FEEL_MOODS[p.mood].photo]} title={p.title} sub={p.sub} right={<Chip label={p.tag} tone={p.applied ? 'done' : 'q'} />} onPress={p.applied ? () => nav.go('why') : undefined} />)}
         </RowsCard>
-      </> : <Callout style={{ marginTop: space.xl }}>After two weeks of check-ins, life shows the patterns it notices here.</Callout>}
+      </> : <Callout style={{ marginTop: space.xl }}>After two weeks of check-ins, Life shows the patterns it notices here.</Callout>}
     </Page>
   );
 }
@@ -228,11 +228,11 @@ export function KnowsV26() {
   const facts = data.records.filter(r => r.status !== 'proposed' && (!area || r.area === area));
   const exportData = async () => { try { await Share.share({ title: 'Your life data', message: JSON.stringify(await exportEverything(), null, 2) }); } catch { Alert.alert('Couldn’t export your data', 'Your data has not changed. Please try again.'); } };
   return (
-    <Page screen="knows" bar={{ kind: 'push', title: 'What life knows', action: { kind: 'icon', icon: 'info', label: 'How life uses this', onPress: () => nav.go('privacy') } }}
+    <Page screen="knows" bar={{ kind: 'push', title: 'What Life knows', action: { kind: 'icon', icon: 'info', label: 'How Life uses this', onPress: () => nav.go('privacy') } }}
       footer={<><Btn label="Export everything" icon="arrowUp" onPress={exportData} /><QuietLink label="Delete everything" onPress={() => nav.go('deleteacct')} /></>}>
       <Display s={`{${n(data.knowledge.recordCount)} things}, all from you or sources you connected.`} flush style={{ marginTop: space.xxs }} />
       <Box style={{ marginTop: space.xl }}>
-        <Between><Text variant="title">What life understands</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
+        <Between><Text variant="title">What Life understands</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
         {(Object.entries(data.knowledge.areas) as [Area, number][]).map(([a, pct]) => (
           <View key={a} style={[styles.areaLine, { marginTop: space.tile }]}>
             <View style={styles.areaName}><View style={[styles.dot, { backgroundColor: areaColors[t.scheme][a] }]} /><Text variant="callout" tone="ink">{knowledgeLabels[a]}</Text></View>
@@ -245,11 +245,11 @@ export function KnowsV26() {
       <RowsCard style={{ marginTop: space.sm }}>
         {facts.length ? facts.map(r => {
           const removed = r.status === 'removed';
-          return <Row key={r.id} thumb={photos[factPhoto(r)]} title={r.label} sub={removed ? 'Removed · life won’t use this' : r.source.excerpt ?? `From your ${r.source.type}`}
+          return <Row key={r.id} thumb={photos[factPhoto(r)]} title={r.label} sub={removed ? 'Removed · Life won’t use this' : r.source.excerpt ?? `From your ${r.source.type}`}
             right={<Chip label={removed ? 'Undo' : 'Remove'} tone="q" onPress={() => { set({ records: data.records.map(v => v.id === r.id ? { ...v, status: removed ? 'confirmed' : 'removed' } : v) }); feedback.select(); }} />} />;
-        }) : <Text variant="body" tone="ink2" style={{ paddingVertical: space.md }}>{filter === 'All' ? 'Nothing filed yet. Tell life something in Talk and it lands here.' : `Nothing filed under ${filter} yet.`}</Text>}
+        }) : <Text variant="body" tone="ink2" style={{ paddingVertical: space.md }}>{filter === 'All' ? 'Nothing filed yet. Tell Life something in Talk and it lands here.' : `Nothing filed under ${filter} yet.`}</Text>}
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Delete everything removes your data from this phone and life’s servers. It can’t be undone.</Callout>
+      <Callout style={{ marginTop: space.md }}>Delete everything removes your data from this phone and Life’s servers. It can’t be undone.</Callout>
     </Page>
   );
 }
@@ -335,7 +335,7 @@ export function ExperimentV26() {
   const e = experiment;
   if (!e) return (
     <Page screen="experiment" bar={{ kind: 'push', title: 'Experiment' }}>
-      {mine ? <PhotoCard source={photos.calmdesk} focal={{ y: 0.84 }} height={200} chips={['Day 1 of 14']} title={mine} sub="life is noting your baseline first" style={{ marginTop: space.xxs }} />
+      {mine ? <PhotoCard source={photos.calmdesk} focal={{ y: 0.84 }} height={200} chips={['Day 1 of 14']} title={mine} sub="Life is noting your baseline first" style={{ marginTop: space.xxs }} />
         : <Display s="{One small change}, two weeks, and your own numbers to judge it." flush style={{ marginTop: space.xxs }} />}
       <Micro style={{ marginTop: space.xl }}>{mine ? 'NEXT IDEAS TO TEST' : 'PICK ONE TO TRY'}</Micro>
       <View style={[styles.wrap, { marginTop: space.xs }]}>{nextExperiments.filter(x => x !== mine).map(x => <SoftChip key={x} label={x} onPress={() => { choose('experiment', x); feedback.select(); }} />)}</View>
@@ -404,11 +404,11 @@ export function MemoryV26() {
       {search !== null ? (
         <View style={[styles.search, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Icon name="search" size={18} color={t.ink2} />
-          <TextInput maxFontSizeMultiplier={1.3} autoFocus value={search} onChangeText={setSearch} placeholder="Search what life remembers" placeholderTextColor={t.inkQuiet} accessibilityLabel="Search what life remembers" selectionColor={t.ember} style={[styles.searchInput, { color: t.ink }]} />
+          <TextInput maxFontSizeMultiplier={1.3} autoFocus value={search} onChangeText={setSearch} placeholder="Search what Life remembers" placeholderTextColor={t.inkQuiet} accessibilityLabel="Search what Life remembers" selectionColor={t.ember} style={[styles.searchInput, { color: t.ink }]} />
         </View>
       ) : null}
-      <Eyebrow style={{ marginTop: search !== null ? space.md : 0 }}>What life remembers</Eyebrow>
-      <Display s={usedToday.length ? `{${total} things.} life used {${usedToday.length}} of them today.` : total ? `{${total} ${total === 1 ? 'thing' : 'things'}.} Each one says where it came from.` : '{Nothing yet.} What you tell life shows up here.'} />
+      <Eyebrow style={{ marginTop: search !== null ? space.md : 0 }}>What Life remembers</Eyebrow>
+      <Display s={usedToday.length ? `{${total} things.} Life used {${usedToday.length}} of them today.` : total ? `{${total} ${total === 1 ? 'thing' : 'things'}.} Each one says where it came from.` : '{Nothing yet.} What you tell Life shows up here.'} />
       {usedToday.length ? (
         <Shelf style={{ marginTop: space.lg }}>
           {usedToday.map(u => <PhotoCard key={u.title} source={photos[u.photo]} focal={u.focal} height={190} size="sm" chips={['Used today']} title={u.title} sub={u.sub} style={{ width: 200 }} />)}
@@ -430,8 +430,8 @@ export function MemoryV26() {
           <SwipeMemory key={m.id} id={m.id} title={m.text} sub={m.validTo ? `No longer true · ${m.source}` : m.source} source={photos[memoryPhoto(m.id, m.category)]} peek={hint && i === 0} forgotten={!!data.flags[`forgot-${m.id}`]} onForget={() => flag(`forgot-${m.id}`)} onEdit={() => setEditing({ id: m.id, text: m.text })} />
         )) : <Text variant="body" tone="ink2">{search ? 'Nothing matches that.' : 'Nothing remembered here yet.'}</Text>}
       </View>
-      <Callout style={{ marginTop: space.md }}>life never remembers health details or money in ways you can’t see here.</Callout>
-      {SHOW_SAMPLES ? null : <QuietLink label="What life knows" ink center={false} onPress={() => nav.go('knows')} style={{ marginTop: space.sm }} />}
+      <Callout style={{ marginTop: space.md }}>Life never remembers health details or money in ways you can’t see here.</Callout>
+      {SHOW_SAMPLES ? null : <QuietLink label="What Life knows" ink center={false} onPress={() => nav.go('knows')} style={{ marginTop: space.sm }} />}
     </Page>
   );
 }

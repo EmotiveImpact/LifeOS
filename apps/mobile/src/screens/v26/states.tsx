@@ -118,34 +118,34 @@ function StaleTile({ label, scale, last }: { label: string; scale: string; last:
 
 export function EmptyTodayV26() {
   const t = useTokens(), nav = useNavigation(), { data } = useSeed(), { now } = useLocalDay(), search = useSearchOverlay();
-  const actions: TopBarAction[] = [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: search.open }, { kind: 'icon', icon: 'bell', label: 'From life', onPress: () => nav.go('inbox') }];
+  const actions: TopBarAction[] = [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: search.open }, { kind: 'icon', icon: 'bell', label: 'From Life', onPress: () => nav.go('inbox') }];
   return (
     <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions }}>
       <Between>
         <Text variant="callout" tone="ink2" numberOfLines={1} style={{ flexShrink: 1 }}>{data.profile.name ? `Welcome, ${data.profile.name}` : 'Welcome'}</Text>
         <Chip label={`Day ${lifeDay(data, now)}`} tone="q" />
       </Between>
-      <Display s="Nothing here yet. {@mic Talk for a minute} and life will {fill this in.}" />
+      <Display s="Nothing here yet. {@mic Talk for a minute} and Life will {fill this in.}" />
       <SectionHead title="Your first move" link="About a minute" />
       <View style={{ height: 250 }}>
         <View pointerEvents="none" style={[styles.deckBack, { backgroundColor: t.surface3 }]} />
         <View style={[styles.deckFront, { borderRadius: radius.xl, ...floatLift(t.scheme) }]}>
-          <Press haptic="open" onPress={() => nav.go('talk')} accessibilityLabel="Say it out loud. Tell life what’s going on. Rent, a letter, a birthday. life files it." style={[styles.deckCard, { backgroundColor: t.surface2 }]}>
+          <Press haptic="open" onPress={() => nav.go('talk')} accessibilityLabel="Say it out loud. Tell Life what’s going on. Rent, a letter, a birthday. Life files it." style={[styles.deckCard, { backgroundColor: t.surface2 }]}>
             <PhotoFill source={photos.walk} focal={{ y: 0.44 }} />
             <LinearGradient pointerEvents="none" colors={photoScrims.deck.colors} locations={photoScrims.deck.locations} style={StyleSheet.absoluteFill} />
             <StatusPill size="chip" onPhoto label="Say it out loud" style={{ alignSelf: 'flex-start' }} />
             <View>
-              <Text variant="titleSerif" tone="paper" numberOfLines={2}>Tell life what’s going on</Text>
-              <Text variant="body" tone="paper2" style={{ marginTop: 6 }}>Rent, a letter, a birthday. life files it.</Text>
+              <Text variant="titleSerif" tone="paper" numberOfLines={2}>Tell Life what’s going on</Text>
+              <Text variant="body" tone="paper2" style={{ marginTop: 6 }}>Rent, a letter, a birthday. Life files it.</Text>
             </View>
           </Press>
         </View>
       </View>
-      <Btn label="Talk to life" icon="mic" onPress={() => nav.go('talk')} style={{ marginTop: space.md }} />
+      <Btn label="Talk to Life" icon="mic" onPress={() => nav.go('talk')} style={{ marginTop: space.md }} />
       <TodayLoops />
       <Callout center style={{ marginTop: space.sm }}>Nothing is saved until you say so.</Callout>
-      <Box onPress={() => nav.go('knows')} accessibilityLabel="life knows you, 0%" style={{ marginTop: space.lg }}>
-        <Between><Text variant="title">life knows you</Text><Text variant="title">0%</Text></Between>
+      <Box onPress={() => nav.go('knows')} accessibilityLabel="Life knows you, 0%" style={{ marginTop: space.lg }}>
+        <Between><Text variant="title">Life knows you</Text><Text variant="title">0%</Text></Between>
         <Ruler pct={0} style={{ marginTop: space.sm }} />
         <Callout style={{ marginTop: space.tile }}>Your moves, questions and things to know will appear here.</Callout>
       </Box>
@@ -173,7 +173,7 @@ export function LoadingTodayV26() {
     </View>
   );
   return (
-    <Page screen="today" bar={{ kind: 'photo', left: bar, right: <View style={styles.inline}><RoundButton icon="search" label="Search everything" onPress={search.open} /><RoundButton icon="bell" label="From life" onPress={() => nav.go('inbox')} /></View> }}>
+    <Page screen="today" bar={{ kind: 'photo', left: bar, right: <View style={styles.inline}><RoundButton icon="search" label="Search everything" onPress={search.open} /><RoundButton icon="bell" label="From Life" onPress={() => nav.go('inbox')} /></View> }}>
       <Press haptic="select" onPress={() => setLanded(true)} accessibilityLabel="Today is loading. Tap to show it" accessibilityRole="progressbar">
         <Between><Text variant="callout" tone="ink2" numberOfLines={1}>{`${greeting}, ${data.profile.name}`}</Text><Sk w={118} h={25} r={13} deep /></Between>
         <View style={styles.lines}><Sk w="92%" h={26} r={10} deep /><Sk w="70%" h={26} r={10} deep /><Sk w="86%" h={26} r={10} deep /><Sk w="48%" h={26} r={10} deep /></View>
@@ -210,7 +210,7 @@ export function EmptyPlanV26() {
   return (
     <Page screen="plan" bar={{ kind: 'root', title: 'Plan', actions: [{ kind: 'icon', icon: 'search', label: 'Search', onPress: search.open }, { kind: 'icon', icon: 'add', label: 'Add to plan', onPress: () => nav.go('newgoal') }] }}>
       <Eyebrow star>Your plan · day one</Eyebrow>
-      <Display s="{Nothing here yet.} Missions appear as life finds things worth doing." />
+      <Display s="{Nothing here yet.} Missions appear as Life finds things worth doing." />
       <PhotoCard source={photos.letter} focal={{ y: 0.58 }} height={270} chips={['Suggested first mission · 5 min']} title="Find money you’re owed" sub="Tax rebates, refunds, unclaimed schemes" style={{ marginTop: space.lg }}>
         <Btn label="Start" icon="arrow" trail onPhoto onPress={() => nav.go('taxcheck')} style={{ marginTop: space.md }} />
       </PhotoCard>
@@ -229,7 +229,7 @@ export function EmptyBodyV26() {
   const t = useTokens(), nav = useNavigation(), { data } = useSeed(), consent = useHealthConsent();
   if (!consent.allowed) return <HealthOffV26 screen="body" />;
   const steps = SHOW_SAMPLES ? phoneOnly.steps.toLocaleString('en-GB') : '–', sleep = SHOW_SAMPLES ? phoneOnly.sleep : '–';
-  const share = SHOW_SAMPLES ? () => { void Share.share({ message: `${steps} steps today, about ${sleep.replace('~', '')} of sleep. Made with life.` }); } : undefined;
+  const share = SHOW_SAMPLES ? () => { void Share.share({ message: `${steps} steps today, about ${sleep.replace('~', '')} of sleep. Made with Life.` }); } : undefined;
   const adds = [['Readiness', 'Needs heart-rate variability'], ['Sleep stages', 'Needs a watch or ring'], ['Load', 'Needs heart rate']];
   return (
     <Page screen="body" bar={{ kind: 'push', title: 'Body', action: share ? { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: share } : undefined }}
@@ -272,7 +272,7 @@ export function HealthOffV26({ screen }: { screen: ScreenKey }) {
         <ReadingPhoto source={photos.walk} focal={{ y: 0.46 }} label="Steps today" value="–" sub="Off until you say yes" />
         <ReadingPhoto source={photos.bedroom} focal={{ x: 0.3, y: 0.62 }} label="Sleep" value="–" sub="Off until you say yes" />
       </PhotoGrid>
-      <Body s="While it is off, life reads and keeps {nothing about your body}. Your plan, money and everything else still work." style={{ marginTop: space.md }} />
+      <Body s="While it is off, Life reads and keeps {nothing about your body}. Your plan, money and everything else still work." style={{ marginTop: space.md }} />
     </Page>
   );
 }
@@ -287,7 +287,7 @@ export function ConnectFailV26() {
     flag('device-retry', true);
   };
   return (
-    <Page screen="body" bar={{ kind: 'push', title: 'Body', action: { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: () => { void Share.share({ message: `Fuel ${fuel.eaten.toLocaleString('en-GB')} of ${fuel.budget.toLocaleString('en-GB')} kcal today. Made with life.` }); } } }}>
+    <Page screen="body" bar={{ kind: 'push', title: 'Body', action: { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: () => { void Share.share({ message: `Fuel ${fuel.eaten.toLocaleString('en-GB')} of ${fuel.budget.toLocaleString('en-GB')} kcal today. Made with Life.` }); } } }}>
       <Chip label={`${quietDevice.name} · ${quietDevice.last}`} icon="clock" tone="q" />
       <Display s={`{${quietDevice.name}} hasn’t synced {since ${quietDevice.last}.}`} />
       <PhotoCard source={photos.bedroom} focal={{ y: 0.52 }} height={236} size="md" chips={['The fix that usually works']} title={`Open the ${quietDevice.name} app once to send last night’s sleep.`} style={{ marginTop: space.lg }}>
@@ -332,7 +332,7 @@ export function OfflineV26() {
         <Between><Micro>Last 14 days</Micro><Micro>{`${offlineMoney.unsynced} not synced yet`}</Micro></Between>
         <DotGrid cells={offlineMoney.days14} columns={14} label={`${14 - offlineMoney.unsynced} of the last 14 days synced`} style={{ marginTop: space.sm }} />
         <Text variant="headline" style={{ marginTop: space.lg }}>Couldn’t reach your bank</Text>
-        <Body s={`Your last ${offlineMoney.unsynced} days of transactions haven’t synced. Nothing is lost, and life will try again when you’re back online.`} style={{ marginTop: space.xxs }} />
+        <Body s={`Your last ${offlineMoney.unsynced} days of transactions haven’t synced. Nothing is lost, and Life will try again when you’re back online.`} style={{ marginTop: space.xxs }} />
         <Btn label={data.flags['offline-retry'] ? 'Will try again when you’re back' : 'Try again'} icon="repeat" onPress={retry} style={{ marginTop: space.md }} />
       </Box>
       <SectionHead title="Saved on this phone" />
@@ -374,12 +374,12 @@ export function PermDeniedV26() {
         <View style={[styles.app, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><Icon name="camera" size={componentSize.icon} color={t.ink} /></View>
         <Chip label="Camera off" onPhoto style={{ alignSelf: 'center' }} />
       </View>
-      <Text variant="titleSerif" accessibilityRole="header" style={{ marginTop: space.lg }}>The camera is off for life</Text>
-      <Body s="To snap meals and letters, turn on the camera for life in Settings. {Everything else works without it.}" style={{ marginTop: space.xs }} />
+      <Text variant="titleSerif" accessibilityRole="header" style={{ marginTop: space.lg }}>The camera is off for Life</Text>
+      <Body s="To snap meals and letters, turn on the camera for Life in Settings. {Everything else works without it.}" style={{ marginTop: space.xs }} />
       <Box pad={space.md} style={{ marginTop: space.lg }}>
         <View style={styles.inline}>
           <View style={[styles.ic, { backgroundColor: t.surface2 }]}><Icon name="camera" size={componentSize.iconSm} color={t.ink} /></View>
-          <View style={{ flex: 1, minWidth: 0 }}><Text variant="rowTitle">Camera</Text><Text variant="callout" tone="ink2">Settings · life</Text></View>
+          <View style={{ flex: 1, minWidth: 0 }}><Text variant="rowTitle">Camera</Text><Text variant="callout" tone="ink2">Settings · Life</Text></View>
           <SwitchV26 value={false} onChange={() => { void settings(); }} accessibilityLabel="Camera, in Settings" />
         </View>
       </Box>
@@ -412,7 +412,7 @@ export function SyncIssueV26() {
       <Body s={`You changed it on two phones while offline: the ${syncConflict.here}th here, the ${syncConflict.there}th on ${syncConflict.where}.`} style={{ marginTop: space.xs }} />
       <View style={[styles.inline, { gap: space.tile, marginTop: space.md }]}>{choice(syncConflict.here, 'This phone')}{choice(syncConflict.there, 'Your other phone')}</View>
       <Btn label={`Keep the ${pick}th`} onPress={keep} style={{ marginTop: space.md }} />
-      <Callout center style={{ marginTop: space.sm }}>life never drops a change without asking.</Callout>
+      <Callout center style={{ marginTop: space.sm }}>Life never drops a change without asking.</Callout>
     </Page>
   );
 }
@@ -460,7 +460,7 @@ export function ForceupdateV26() {
   const last: DotCell[] = Array.from({ length: 12 }, () => 'on');
   const next: DotCell[] = Array.from({ length: 12 }, (_, k) => (k < into ? 'on' : k === into ? 'now' : ''));
   return (
-    <Page screen="forceupdate" bar={{ kind: 'push', close: true }} footer={<Btn label="Update life" icon="arrowDown" onPress={() => { feedback.primary(); flag('update-asked', true); }} />}>
+    <Page screen="forceupdate" bar={{ kind: 'push', close: true }} footer={<Btn label="Update Life" icon="arrowDown" onPress={() => { feedback.primary(); flag('update-asked', true); }} />}>
       <SerifPhoto source={photos.payslip} focal={{ y: 0.86 }} height={270} chip="A quick update" title="The new tax year started." sub="This version still uses last year’s rules." />
       <Box style={{ marginTop: space.sm }}>
         <Between><Micro>Last tax year</Micro><Micro>The rules on this phone</Micro></Between>
@@ -538,7 +538,7 @@ export function SupportV26() {
         <View style={{ flexShrink: 1 }}><Text variant="callout" tone="ink2">If you’re in danger right now</Text><Text variant="headline" style={{ marginTop: 2 }}>Call 999.</Text></View>
         <Btn label="Call" sm fit ghost onPress={() => call('tel:999')} style={{ backgroundColor: t.surface }} />
       </View>
-      <Callout style={{ marginTop: space.lg }}>life will go quiet on nudges for a few days unless you say otherwise.</Callout>
+      <Callout style={{ marginTop: space.lg }}>Life will go quiet on nudges for a few days unless you say otherwise.</Callout>
     </Page>
   );
 }

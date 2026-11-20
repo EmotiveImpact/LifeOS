@@ -56,14 +56,14 @@ export const connections: { name: string; dot: 'health' | 'you' | 'work' | 'home
 /** What stays on your phone: the four parts with their sizes. */
 export const modelParts: { key: string; title: string; size: string; text: string; uses: string[] }[] = [
   { key: 'in', title: 'Your voice in', size: '0–150 MB', text: 'Built into iOS 26, and Android where available. Otherwise Whisper (whisper.rn).', uses: ['Talk', 'Journal', 'Tell it back'] },
-  { key: 'out', title: 'life’s voice out', size: '~24 MB +', text: 'Phonon on iPhone, speaking as Maeve. Kitten TTS Nano elsewhere.', uses: ['Brief', 'Lessons', 'Replies'] },
+  { key: 'out', title: 'Life’s voice out', size: '~24 MB +', text: 'Phonon on iPhone, speaking as Maeve. Kitten TTS Nano elsewhere.', uses: ['Brief', 'Lessons', 'Replies'] },
   { key: 'think', title: 'Thinking and filing', size: '0–1.1 GB', text: 'Apple’s on-device model on Apple Intelligence phones with iOS 26, or Gemini Nano on supported Android. Otherwise a small open model, such as Qwen3 1.7B (4-bit), through llama.rn.', uses: ['Filing', 'Short drafts', 'Tips'] },
-  { key: 'memory', title: 'Memory search', size: '~30–90 MB', text: 'A small embedding model.', uses: ['Finding what life remembers'] },
+  { key: 'memory', title: 'Memory search', size: '~30–90 MB', text: 'A small embedding model.', uses: ['Finding what Life remembers'] },
 ];
 
 /** Help: the three likeliest answers. */
 export const helpAnswers = [
-  { key: 'moves', title: 'How life picks your moves', count: '2 min', text: 'life weighs what’s due, what you’re owed and what moves your Aim, then shows the one move that fits the time you have. {Tap “Why this?” on any move} to see its reason.', link: 'Read the guide', to: 'why' as ScreenKey },
+  { key: 'moves', title: 'How Life picks your moves', count: '2 min', text: 'Life weighs what’s due, what you’re owed and what moves your Aim, then shows the one move that fits the time you have. {Tap “Why this?” on any move} to see its reason.', link: 'Read the guide', to: 'why' as ScreenKey },
   { key: 'scores', title: 'How scores work', count: '', text: 'Readiness, sleep and load are worked out from your own readings and shown against {your own normal}. Wellness guidance, not a diagnosis.' },
   { key: 'report', title: 'Report a wrong number', count: '', text: 'Tell us which number looks off. {It goes to a person} on the team.', button: 'Report a number' },
 ];

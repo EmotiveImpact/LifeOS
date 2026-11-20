@@ -39,7 +39,7 @@ export function DottedOrb({ size = 56, state = 'idle', color }: { size?: number;
   const dot = Math.max(3, Math.round(size / 11));
   const r = size / 2 - dot;
   return (
-    <Animated.View style={[{ width: size, height: size }, spin]} accessibilityRole="image" accessibilityLabel={state === 'thinking' ? 'life is thinking' : 'life'}>
+    <Animated.View style={[{ width: size, height: size }, spin]} accessibilityRole="image" accessibilityLabel={state === 'thinking' ? 'Life is thinking' : 'Life'}>
       {Array.from({ length: DOTS }, (_, i) => (
         <OrbDot key={i} i={i} r={r} size={size} dot={dot} color={color ?? t.ink} phase={phase} thinking={state === 'thinking' && !calm} />
       ))}

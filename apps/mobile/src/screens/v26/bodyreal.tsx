@@ -315,7 +315,7 @@ export function SleepRealV26() {
         <V26Tile wide label="Consistency" scale={s.consistency ? (s.consistency.minutes <= 30 ? 'Steady' : s.consistency.minutes <= 60 ? 'Fair' : 'Work on it') : undefined} value={s.consistency ? `±${s.consistency.minutes}` : '–'} unit={s.consistency ? 'min' : undefined}
           sub={s.consistency ? `How far your bedtime moves, night to night. Usually in bed by ${clock(s.consistency.usualBedtime)}.` : 'Needs a few more nights'} />
       </TileGrid>
-      <Callout style={{ marginTop: space.md }}>{s.need.basis === 'learned' ? `Your need is learned from ${plural(s.need.nights, 'night')} you woke up recovered.` : 'Most adults need 7–9 hours (NHS). life learns your own need from mornings you wake up recovered.'}</Callout>
+      <Callout style={{ marginTop: space.md }}>{s.need.basis === 'learned' ? `Your need is learned from ${plural(s.need.nights, 'night')} you woke up recovered.` : 'Most adults need 7–9 hours (NHS). Life learns your own need from mornings you wake up recovered.'}</Callout>
     </Page>
   );
 }
@@ -411,7 +411,7 @@ export function SignalsRealV26() {
         </RowsCard>
       ) : null}
       {g.illness ? <Row icon="sun" title="Make today lighter" sub="Move the hard session and get to bed earlier" chevron onPress={() => nav.go('today')} style={{ marginTop: space.xs }} /> : null}
-      <Callout style={{ marginTop: space.md }}>Not a medical device. life compares you only with yourself and never diagnoses.</Callout>
+      <Callout style={{ marginTop: space.md }}>Not a medical device. Life compares you only with yourself and never diagnoses.</Callout>
     </Page>
   );
 }
@@ -474,7 +474,7 @@ export function SourcesRealV26() {
   return (
     <Page screen="sources" bar={{ kind: 'push', title: 'Your sources', action: { kind: 'icon', icon: 'add', label: 'Connect devices', onPress: () => nav.go('devices') } }}>
       <Eyebrow>{`Last read ${since(h.lastRead).toLowerCase()}`}</Eyebrow>
-      <Display s={h.sources.length ? `{${plural(h.sources.length, 'source')}}, each measure from the one that {reads it best}.` : '{No readings yet.} Connect a source and life reads it here.'} />
+      <Display s={h.sources.length ? `{${plural(h.sources.length, 'source')}}, each measure from the one that {reads it best}.` : '{No readings yet.} Connect a source and Life reads it here.'} />
       {h.sources.length ? (
         <Box pad={space.md} style={{ marginTop: space.xl }}>
           <Between><Micro>Source and what it gives</Micro><Micro>Kind</Micro></Between>
@@ -503,7 +503,7 @@ export function SourcesRealV26() {
               );
             })}
           </View>
-          <Callout style={{ marginTop: space.md }}>{data.choices[prefKey] ? `life uses ${nameOf(used)} for this from now on, because you chose it.` : `life used ${nameOf(latest.chosen)}: the device that measures this most closely.`}</Callout>
+          <Callout style={{ marginTop: space.md }}>{data.choices[prefKey] ? `Life uses ${nameOf(used)} for this from now on, because you chose it.` : `Life used ${nameOf(latest.chosen)}: the device that measures this most closely.`}</Callout>
         </TintCard>
       ) : null}
       <Callout style={{ marginTop: space.md }}>Health data stays on your phone. Disconnect any source in Devices.</Callout>
@@ -520,7 +520,7 @@ export function BodyLaterV26({ screen }: { screen: Parameters<typeof Page>[0]['s
     <Page screen={screen} bar={{ kind: 'push', title: 'Body' }}>
       <Chip label={any ? 'Not on your readings yet' : 'Waiting for readings'} tone="q" />
       <Display s={any ? '{This page isn’t on your own readings yet.} It never shows made-up numbers instead.' : '{Nothing to show yet.} This fills in from your own readings.'} />
-      <Body s={any ? 'Body, Readiness, Sleep, Load, Stress and Body signals already use them.' : 'Connect Apple Health, Health Connect, WHOOP or Oura and life starts reading.'} style={{ marginTop: space.sm }} />
+      <Body s={any ? 'Body, Readiness, Sleep, Load, Stress and Body signals already use them.' : 'Connect Apple Health, Health Connect, WHOOP or Oura and Life starts reading.'} style={{ marginTop: space.sm }} />
       <RowsCard style={{ marginTop: space.lg }}>
         {any ? <Row icon="heart" title="Back to Body" chevron onPress={() => nav.go('body')} /> : <Row icon="watch" title="Connect a source" sub="Your phone, a watch or a ring" chevron onPress={() => nav.go('devices')} />}
       </RowsCard>
