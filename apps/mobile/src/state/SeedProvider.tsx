@@ -8,6 +8,7 @@ import { removeAttachmentCopy } from '@/services/attachments';
 import type { ProjectionStorage } from './persistence.types';
 import type { UserProfile } from '@life/core/types';
 import { emptyBrainState, type BrainState } from '@life/brain';
+import { emptyLoops, type LoopsState } from '@life/core';
 import { confirmBrainRecords } from '@/services/brainState';
 import { currentTransport } from '@/services/syncTransport';
 
@@ -21,6 +22,8 @@ export type SeedData = {
   learned: string[]; memories: MemoryEntry[];
   prefs: { dark: boolean; sounds: boolean; haptics: boolean; handDrawn: boolean; hideNumbers: boolean; hideBalances: boolean; glimpses: boolean; followMood: boolean; look: 'mix' | 'places'; notifications: boolean; privateMode: boolean; addback: 'None' | 'Half' | 'All' };
   flags: Record<string, boolean>; choices: Record<string, string>; drafts: Record<string, string>;
+  /** The three core loops: plans by day, step ticks, check-in style and what counts as a win (`state/loops.ts`). */
+  loops: LoopsState;
 };
 const initial: SeedData = {
   brain: emptyBrainState(),
@@ -28,7 +31,7 @@ const initial: SeedData = {
   meal: seedMeal, mealLogged: false, meals: [], habits: seed.habits, journal: [], weightKg: seed.body.weightKg, heightCm: seed.body.heightCm, waistCm: seed.body.waistCm, learned: [],
   memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov', category: 'Money' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov', category: 'People' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov', category: 'Money' }],
   prefs: { dark: true, sounds: true, haptics: true, handDrawn: false, hideNumbers: false, hideBalances: false, glimpses: true, followMood: true, look: 'mix', notifications: true, privateMode: false, addback: 'Half' },
-  flags: {}, choices: {}, drafts: {},
+  flags: {}, choices: {}, drafts: {}, loops: emptyLoops(),
 };
 type SeedContextValue = {
   data: SeedData; hydrated: boolean; storageError: boolean; storageMode: ProjectionStorage['mode'] | null;

@@ -98,12 +98,64 @@ Read [SPEC](../../../SPEC.md), [BUILD_PLAN](../../../BUILD_PLAN.md), [AGENTS](..
 
 ## 5. Claude's response
 
-Append here before changing screens, schemas or engine behaviour:
+Written 20 November 2026, after building the slice. Nothing here has been merged or uploaded.
 
-- **Current working branch / commit:**
-- **Already working in the native app (evidence):**
+- **Current working branch / commit:** `claude/project-thread-txkwqs`, branched from `master` at `4f786b3` (master had not moved when this was written). The commit that adds this section carries the whole slice.
+
+- **Already working before this change (checked in the code, not the board):**
+  - Today is `/(tabs)/today` (`screens/v26/today.tsx`); `TodayHome.tsx`, named in §3, no longer exists.
+  - Close the day was `/(sheets)/evening`, but it asked about *today* and saved nothing.
+  - The nudge opened from Today with `?nudge=1`, using sample free time and a fixed step. Once dismissed, it never came back.
+  - Missions at `/plan/mission` already had steps ticked into `missionSteps` in the local store.
+  - The open composer is `/(flows)/chat`; the Weekly recap is `/(flows)/moments/recap`; Notifications is `/you/settings/notifs`, which set a nudge count rather than a check-in style.
+  - Local storage is the encrypted SQLite projection on the phone and AsyncStorage in the browser preview. It already survived relaunch and was covered by `tests/data/local-store.test.ts`.
+  - The V24 board (PR #1) shows design coverage for these screens. It does not prove that any of them worked.
+
+- **What changed (the three loops, one journey):**
+  - *Rules:* a new pure engine, `packages/core/src/day/loops.ts`, with 30 tests in `tests/day/loops.test.ts`. It covers:
+    - day keys on the 04:00 life day (the evening plans tomorrow, the morning plans today);
+    - saving, editing, clearing and skipping a day's list, in your order and capped at six;
+    - one step offered for 2, 5, 10 or 20 minutes, with plain reasons;
+    - started, done and undone;
+    - carry-over that is offered, never automatic;
+    - week progress, including partial work;
+    - check-in prompts and notification candidates for each style.
+  - *Storage:* `loops` joins the existing local store (`SeedData`) and syncs with the other settings in the prefs row. A mission step and a plan step share the same key, so one tick counts in both places. `tests/data/local-store.test.ts` now saves loops, reopens the database and checks they come back.
+  - *Plan ahead:* Close the day asks **“What’s most important to you tomorrow?”** in the evening and “today” in the morning (`?for=` overrides). You can pick several, type your own, reorder or remove them. Ideas are what's still going from the last list, missions you've started, then three plain starting points. “Not tonight” skips the question without hiding planning.
+  - *Today:* a resume card (“Pick up where you left off · started 09:00”, with Carry on and Done), What matters today with progress per priority, a calendar line, the question when your check-in style allows it, and rows for planning and what moved forward. The day-one Today for real users has these too.
+  - *Get unstuck:* the nudge offers one step that fits the time you pick, and explains why (where it is on your list, how long it takes, the time you said or the sample calendar gap). Start opens where the step happens. You can also choose Later or Something else, and when nothing else fits it says so and offers the first step again. A started step comes back first. If nothing fits, it says so and helps you size a step or write a first step for your own priority. It never invents one.
+  - *See what's changing:* the Weekly recap has a Step by step section showing ticked steps, part-way priorities and an optional “What counts for you” choice, plus a link to how life checks in. Notifications now offers Regular, When needed or Off instead of a count; Off removes the prompt and nothing else.
+  - The screens reuse the V26 kit as it is (Page, Btn, Row, RowsCard, Chip, Callout, Display, Statement, ReorderRow, the drawer photo pattern). No new screens, routes or styles.
+
 - **Still sample, stubbed or preview-only:**
-- **Which components, routes and persistence will be reused:**
-- **Smallest change spanning all three loops, and anything blocked by the current phase:**
-- **What to test and how to verify it:**
-- **Questions or alternative proposals for Augustus:**
+  - The calendar. Real calendars aren't connected; development builds read the sample day (`dayShape`) and every mention says “Sample calendar”. Real builds say “Calendar not connected yet. You choose the time.”
+  - The tax mission step sizes (1, 3 and 2 minutes) come from the board. Other missions' steps are unsized until you size them, so they are never offered before then.
+  - Already sample before this change, and not touched: Today's moves (`TODAY_MOVES`, Ama's), the morning brief, the inbox, the focus timer and the recap's weekly figures. Real builds also start with Ama's name and profile on Today's greeting.
+  - No push notifications are scheduled yet. `checkInNotifications()` produces the candidates and respects the one-a-day cap, but nothing sends them.
+
+- **Which components, routes and persistence were reused:** `/(tabs)/today`, `/(sheets)/evening`, Today's `?nudge=1`, `/(flows)/moments/recap`, `/you/settings/notifs`, `/plan/mission`, `/(flows)/chat`. Storage is the existing SQLite projection (and AsyncStorage in the browser), with `missionSteps` shared.
+
+- **Blocked by the current phase:** live calendar and push delivery (later phases); wearables and food were never prerequisites and are not touched.
+
+- **What was actually tested:**
+  - `bun test`: 545 pass, including the 30 new engine tests and the SQLite save and reopen test.
+  - `tsc` is clean. The iOS and Android `expo export` bundles both build.
+  - Playwright drove the exported **browser** build at 390×844 with a fixed clock in Europe/London. 54 of 54 checks passed on the sample build and 20 of 20 on a real (no sample) build. They covered:
+    - a fresh install (empty storage) and a relaunch (reload with storage kept), checked separately;
+    - planning on Friday at 20:30 and seeing the plan on Saturday at 09:00;
+    - the 10-minute offer “Gather two documents you’ll need” and the 2-minute offer “Sign in to Government Gateway”;
+    - starting a step, relaunching, then resuming and ticking it;
+    - a mission tick counting on Today;
+    - a first step for an own priority;
+    - the recap and wins;
+    - check-ins Off with planning still on Today;
+    - 00:30 still counting as Saturday, and 04:30 starting a fresh day with the unfinished priorities offered rather than added;
+    - skipping planning, with Ask and progress still there.
+  - In the browser preview a fresh install opens Today directly; native opens Welcome first. That was already so and was not changed.
+  - **No device, simulator or TestFlight run** was done for this change, and there is no build receipt.
+
+- **Questions for Augustus:**
+  1. Should the default check-in style be Regular (as built) or When needed?
+  2. The nudge-count setting is replaced by the check-in style. Is that right, or do you want both?
+  3. Should catalogue missions ship with step sizes, or should people size them as they go (as built)?
+  4. Should Today's moves and the morning brief be hidden in real builds until they use real data?

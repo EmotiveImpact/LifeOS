@@ -20,9 +20,13 @@ import { money, seed, seedTaxClaim } from '@/state/seed';
 import { useFuelDay } from '@/state/fuel';
 import { TODAY_MOVES, councilTax, dayShape, heavyCount, heavyWeek, hm, lighterDay, moveOrder, payday, readDecisions, todayBrief } from '@/state/today';
 import {
-  Body, Btn, Callout, Chip, Display, Duo, Eyebrow, Figure, Hero, Micro, NumWell, Page, PhotoBackdrop, QuietLink, Row, RowsCard, Sp, Statement, Thumb, Tick, Timeline, Between,
+  Body, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, PhotoBackdrop, QuietLink, Row, RowsCard, Sp, Statement, Thumb, Between,
 } from './kit';
 import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
+import { NudgeV26, TodayLoops } from './loops';
+
+// Plan ahead and Get unstuck live with the other core-loop screens; the Today chapter still exports them.
+export { EveningV26, NudgeV26 } from './loops';
 
 const isMood = (id: string | undefined): id is FeelMoodId => !!id && id in FEEL_MOODS;
 const shortDate = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
@@ -139,9 +143,11 @@ export function TodayV26() {
       {birthday ? <>
         <Display s={birthdayBrief(birthday)} />
         <BirthdayMoveV26 b={birthday} day={day} />
+        <TodayLoops />
       </> : <>
       <Display s={todayBrief(mood)} />
       <ArrivingCard mood={mood} onPress={() => setDrawer(true)} style={{ marginTop: space.lg }} />
+      <TodayLoops />
 
       {cards.length ? <>
         <SectionHead title="Today’s moves" link={`${dec.length + 1} of ${TODAY_MOVES.length}`} style={{ marginTop: space.xl }} />
@@ -218,62 +224,12 @@ export function TodayV26() {
           <FeelingDrawer initial={mood ?? 'calm'} onClose={() => { if (!mood) choose('pulse-skipped-day', day); setDrawer(false); }} onSet={m => { logMood(m); decide(''); setDrawer(false); }} />
         </SafeAreaProvider>
       </Modal>
-      <Modal visible={params.nudge === '1' && !data.flags['nudge-dismissed']} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => nav.replace('today')}>
+      <Modal visible={params.nudge === '1'} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => nav.replace('today')}>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}><NudgeV26 onClose={() => nav.replace('today')} /></SafeAreaProvider>
       </Modal>
       <Modal visible={searching} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => setSearching(false)}>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}><SearchV26 onClose={() => setSearching(false)} /></SafeAreaProvider>
       </Modal>
-    </Page>
-  );
-}
-
-/* ───────────────────────── Nudge ───────────────────────── */
-
-export function NudgeV26({ onClose }: { onClose?: () => void }) {
-  const nav = useNavigation(), { data, flag, update } = useSeed();
-  const later = !!data.flags['nudge-snoozed'];
-  const close = onClose ?? nav.close;
-  const refund = money(seedTaxClaim.refund), kit = money(seedTaxClaim.workExpenses);
-  const start = () => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); close(); nav.go('mission'); };
-  return (
-    <Page screen="nudge" onClose={close} bar={{ kind: 'push', close: true, action: { kind: 'node', node: <Chip label={later ? 'Moved to 6pm' : 'Free 13:40 to 14:00'} tone={later ? 'q' : 'live'} /> } }}
-      footer={later ? <Btn label="Do it now instead" ghost onPress={() => flag('nudge-snoozed', false)} /> : <>
-        <Btn label="Start step 1" icon="arrow" trail onPress={start} />
-        <Duo><Btn label="At 6pm" ghost sm onPress={() => flag('nudge-snoozed', true)} /><Btn label="Not this week" ghost sm onPress={() => { flag('nudge-dismissed', true); close(); }} /></Duo>
-      </>}>
-      <Eyebrow orb>{later ? 'life · noted' : 'life · just now'}</Eyebrow>
-      {later ? <>
-        <Display s={`Moved to {@clock 6pm}. The {P87} and your {${refund}} will keep.`} />
-        <Body s="life writes first {at most once a day}, so nothing else is coming before then." style={{ marginTop: space.sm }} />
-      </> : <>
-        <Display s={`You’re free until {@clock 2pm}. The {@doc P87} is all that stands between you and {${refund}}.`} />
-        <Body s="Three steps, about {6 minutes}." style={{ marginTop: space.sm }} />
-      </>}
-      <Hero source={photos.payslip} focal={{ y: 0.78 }} height={156} small="Tax rebate · HMRC" title="Claim your tax rebate" titleSize="headline" style={{ marginTop: space.xl }}>
-        <View style={{ marginVertical: -space.tile }}>
-          <Row lead={<NumWell n={1} />} title="Sign in to Government Gateway" end="1 min" />
-          <Row lead={<NumWell n={2} />} title={`Add ${kit} of software and kit`} end="3 min" />
-          <Row lead={<NumWell n={3} />} title="Submit and save the reference" end="2 min" />
-        </View>
-      </Hero>
-      <SectionHead title={later ? 'Your day now' : 'Why now'} link="Your day" onLink={() => nav.go('calendar')} />
-      <View style={[styles.card, styles.pad16, useCardStyle()]}>
-        <Timeline items={[
-          { when: '09:00', text: 'Design review', state: 'done' },
-          later ? { when: '13:40 · LEFT FREE', text: 'You chose to keep this one clear.', state: 'later' } : { when: '13:40 · FREE FOR 20 MINUTES', text: '{This is the gap.} Three steps fit inside it.', state: 'now' },
-          { when: '14:00', text: 'Deep work', state: 'later' },
-          ...(later ? [{ when: '18:00 · MOVED HERE', text: '{Claim your tax rebate.} About 6 minutes.', state: 'now' as const }] : []),
-        ]} />
-      </View>
-      <SectionHead title="Already in hand" />
-      <Row thumb={photos.payslip} thumbFocal={{ y: 0.75 }} title="Your payslip" sub="Filed · shows the emergency code" right={<Chip label="Ready" tone="q" />} />
-      <Row icon="folder" title={`Receipts for ${kit}`} sub="Software and kit · already added up" right={<Chip label="Ready" tone="q" />} />
-      <SectionHead title="After you send it" />
-      <View style={[styles.card, styles.pad16, useCardStyle()]}>
-        <Body s={`{life keeps watch for the reply} and tells you when the ${refund} is on its way. You don’t have to chase it.`} />
-      </View>
-      <Callout style={{ marginTop: space.md }}>One nudge a day at most, and never between 9pm and 8am.</Callout>
     </Page>
   );
 }
@@ -527,36 +483,6 @@ export function MorningBriefV26() {
   );
 }
 
-/* ───────────────────────── Close the day ───────────────────────── */
-
-export function EveningV26() {
-  const t = useTokens(), nav = useNavigation(), { data, flag, draft } = useSeed();
-  const { now } = useLocalDay();
-  const did = [{ t: 'Paid the energy bill', a: 'Money' }, { t: '20-minute run', a: 'Body' }, { t: 'Read your Aim', a: 'Aim' }];
-  return (
-    <Page screen="evening" scroll={false} backdrop={<PhotoBackdrop source={photos.calm} focal={{ y: 1 }} height={480} />}
-      bar={{ kind: 'photo', left: <View style={[styles.photoChip, { backgroundColor: photo.fill }]}><Text variant="micro" tone="paper">{`${now.toLocaleDateString('en-GB', { weekday: 'long' })}, done`}</Text></View> }}
-      bottom={
-        <View style={[styles.sheet, { backgroundColor: t.surface }]}>
-          {did.map(d => <Row key={d.t} lead={<Tick on />} title={d.t} end={d.a} style={{ minHeight: 46, paddingVertical: space.xxs }} />)}
-          <Row lead={<Tick icon="arrow" />} title="Call the dentist" sub="Moved to tomorrow, 9:30" end="Tomorrow" style={{ minHeight: 52, paddingVertical: space.xxs }} />
-          <Micro style={{ marginTop: space.sm }}>ONE LINE ABOUT TODAY?</Micro>
-          <TextInput maxFontSizeMultiplier={1.3} value={data.drafts.evening ?? ''} onChangeText={v => draft('evening', v)} placeholder="Felt sharper after the run." placeholderTextColor={t.inkQuiet} accessibilityLabel="One line about today"
-            style={[styles.note, { backgroundColor: t.surface2, color: t.ink, fontFamily: fonts.sans }]} selectionColor={t.ember} />
-          <Btn label="Close the day" onPress={() => { flag('day-closed', true); feedback.complete(); nav.close(); }} style={{ marginTop: space.md }} />
-        </View>
-      }>
-      <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: space.xl }}>
-        <View style={styles.ticks} accessibilityElementsHidden>
-          {[0, 1, 2].map(k => <View key={k} style={[styles.bigTick, { backgroundColor: photo.onPhoto }]}><Icon name="check" size={componentSize.iconSm} color={photo.ink} /></View>)}
-          <View style={[styles.bigTick, { backgroundColor: photo.fill }]}><Icon name="arrow" size={componentSize.iconSm} color={photo.onPhoto} /></View>
-        </View>
-        <Display onPhoto s="{3 of 4 moves.} A good day." style={{ marginTop: space.md }} />
-      </View>
-    </Page>
-  );
-}
-
 /* ───────────────────────── From life ───────────────────────── */
 
 export function InboxV26() {
@@ -679,7 +605,6 @@ export function SearchV26({ onClose }: { onClose: () => void }) {
 
 const styles = StyleSheet.create({
   card: { borderRadius: radius.lg, padding: space.cardPad },
-  pad16: { padding: space.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   then: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: space.xs },
@@ -699,11 +624,6 @@ const styles = StyleSheet.create({
   gap: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm, paddingLeft: 14 },
   listen: { flexDirection: 'row', alignItems: 'center', gap: space.tile, paddingVertical: space.xs, paddingLeft: space.xs, paddingRight: space.md, borderRadius: radius.full, alignSelf: 'flex-start', marginTop: space.lg },
   play: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  photoChip: { paddingVertical: 6, paddingHorizontal: space.tile, borderRadius: radius.full },
-  sheet: { borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingTop: space.tile, paddingHorizontal: space.lg, paddingBottom: 30, ...StyleSheet.flatten({}) },
-  note: { borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: space.md, fontSize: 15, lineHeight: 22, marginTop: space.xs },
-  ticks: { flexDirection: 'row', gap: space.xs },
-  bigTick: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   peek: { position: 'absolute', left: space.lg, right: space.lg, top: 0, height: 60, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, paddingVertical: 7, paddingHorizontal: space.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   unread: { width: 6, height: 6, borderRadius: 3 },
   searchBar: { height: 64, flexDirection: 'row', alignItems: 'center', gap: space.tile, paddingHorizontal: space.gutter },

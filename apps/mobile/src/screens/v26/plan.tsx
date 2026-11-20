@@ -16,6 +16,8 @@ import {
 import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
+import { missionPriority, missionStepList } from '@/state/loops';
+import { finishStep, readLoops, undoStep } from '@life/core';
 import { money, seed, seedTaxClaim } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { invoices, sampleCleared, sampleClearedTotal, TOOLS } from '@/state/plan';
@@ -102,7 +104,7 @@ function useMission() {
   const title = isTax ? 'Tax rebate' : isReferral ? 'Hospital referral' : task.shortTitle;
   const value = isTax ? seedTaxClaim.refund : task.estimatedValueAmount;
   const reference = isTax ? seedTaxClaim.reference : isReferral ? 'UBRN-4821-0934' : task.id.toUpperCase();
-  const steps = isTax ? ['Sign in to Government Gateway', `Add ${money(seedTaxClaim.workExpenses)} of software and kit`, 'Submit and save the reference'] : task.steps;
+  const steps = missionStepList(task.id).map(s => s.title);
   const area = isTax ? 'Money' : isReferral || task.category === 'health' ? 'Health' : task.lifeArea === 'home' ? 'Home' : 'Plan';
   const draft = data.drafts[task.id] ?? (isTax
     ? `Hello,\n\nI’m following up on my P800 calculation for 2024/25 (ref ${seedTaxClaim.reference}). I’ve also submitted form P87 today for ${money(seedTaxClaim.workExpenses)} of work equipment and software.\n\nPlease pay the refund by bank transfer to the account on my Personal Tax Account.\n\nThank you,\n${data.profile.name}`
@@ -111,13 +113,18 @@ function useMission() {
 }
 
 export function MissionV26() {
-  const nav = useNavigation(), { data, set, flag } = useSeed(), surface = useCardSurface();
+  const nav = useNavigation(), { data, set, update } = useSeed(), surface = useCardSurface();
   const m = useMission();
   const [copied, setCopied] = useState(false);
   const cleared = data.completed.includes(m.task.id);
   const stepKey = (i: number) => `${m.task.id}-${i}`;
   const left = m.steps.filter((_, i) => !data.missionSteps[stepKey(i)]).length;
-  const toggle = (i: number) => set({ missionSteps: { ...data.missionSteps, [stepKey(i)]: !data.missionSteps[stepKey(i)] } });
+  // A tick here is the same tick Get unstuck makes, with its time, so it shows in what moved forward.
+  const toggle = (i: number) => update(c => {
+    const key = stepKey(i), on = !c.missionSteps[key], priority = missionPriority(m.task.id) ?? { id: `mission:${m.task.id}`, text: m.title, own: false, mission: m.task.id, steps: [] };
+    const step = priority.steps[i] ?? { key, title: m.steps[i], mission: m.task.id };
+    return { ...c, missionSteps: { ...c.missionSteps, [key]: on }, loops: on ? finishStep(readLoops(c.loops), step, priority, Date.now()) : undoStep(readLoops(c.loops), key) };
+  });
   const clear = () => { set({ completed: cleared ? data.completed.filter(id => id !== m.task.id) : [...data.completed, m.task.id] }); if (!cleared) feedback.cleared(); };
   const go = () => {
     if (m.isTax) void Linking.openURL('https://www.gov.uk/guidance/claim-income-tax-relief-for-your-employment-expenses-p87');

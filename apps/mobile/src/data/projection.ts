@@ -4,8 +4,8 @@ import type { TableName } from './schema';
 import { digest, stableId } from './ids';
 
 const domainKeys = new Set(['profile', 'weightKg', 'heightCm', 'waistCm', 'prefs', 'records', 'filedRecords', 'aim', 'chiefAim', 'meals', 'habits', 'people', 'learned', 'memories', 'completed', 'missionSteps', ...syncedSettings()]);
-/** Choices, flags and whether setup is done travel with the account inside the prefs row, so a restored phone has them. */
-function syncedSettings() { return ['choices', 'flags', 'onboardingDone']; }
+/** Choices, flags, the core loops' plans and ticks, and whether setup is done travel with the account inside the prefs row, so a restored phone has them. */
+function syncedSettings() { return ['choices', 'flags', 'onboardingDone', 'loops']; }
 const array = (value: unknown): Record<string, unknown>[] => Array.isArray(value) ? value.map(object) : [];
 const dataObject = (value: unknown) => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 const uid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

@@ -19,6 +19,7 @@ import { money, seed } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { bornOn, gateTo, gateWords, levelPlan, levelupFirst, levelupMore, vantageReach, weekStats, weeks, yearReview, type WeekKey } from '@/state/you';
 import { Between, Body, Btn, Callout, Display, Eyebrow, Page, PeekStack, Statement, Timeline, drawerStyle, useDrawerPhoto } from './kit';
+import { WeekSteps } from './loops';
 import { OnPhotoRound, PaperChip } from './learn';
 
 const n = (v: number) => Math.round(v).toLocaleString('en-GB');
@@ -71,6 +72,7 @@ export function RecapV26() {
           {SHOW_SAMPLES ? <StatTile wide label="Health stack days" value={String(weekStats.stackDays)} unit="of 7" up={String(weekStats.stackDays)}><DotStrip days={weekStats.stackDots} style={{ marginTop: space.sm }} /></StatTile> : null}
         </TileGrid>
       ) : <Callout center style={{ marginTop: space.md }}>Tap a week behind the card to bring it forward.</Callout>}
+      {picked === 'now' ? <WeekSteps /> : null}
       <View style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
         <Eyebrow orb>Reflection from life</Eyebrow>
         <Statement s="Progress came from {small, repeated steps}, not one big push." style={{ marginTop: space.xs }} />
