@@ -44,6 +44,7 @@ No merge conflicts. Phase 20 added routes, so the typed route file needs regener
 | 20 Nov, ~22:05 UTC | Fix on `v26-integration`: stop tracking two `node_modules` links the core loops merge committed (root `.gitignore` now ignores links too) | e90e1b3 | 674 tests with Postgres, app typecheck |
 | 20 Nov, ~22:20 UTC | `claude/project-thread-8i27bq` (fast-forward, Life as the name, L I F E as the logo) | 3da3bc8 | 674 tests with Postgres, app typecheck, iOS and Android bundles |
 | 20 Nov, ~22:28 UTC | `claude/project-thread-8i27bq` (fast-forward, the orb back at the right of Today, Plan and You, opening From Life) | 272e485 | 674 tests with Postgres, app typecheck, iOS and Android bundles |
+| 20 Nov, ~22:50 UTC | `phase-27-food` (merge of integration, then fast-forward: food from photos, barcodes and labels, real targets) | see `git log` | 719 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
 
 ## Screenshots
 
