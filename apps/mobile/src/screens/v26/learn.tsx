@@ -200,7 +200,7 @@ export function LibraryV26() {
             onPress={() => openLens(c.lens)} style={styles.gridCell} />
         ))}
       </View>
-      <Callout style={{ marginTop: space.lg }}>Ideas are explained in life’s own words, not quoted. Read the originals for the full picture.</Callout>
+      <Callout style={{ marginTop: space.lg }}>Ideas are explained in Life’s own words, not quoted. Read the originals for the full picture.</Callout>
     </Page>
   );
 }
@@ -242,7 +242,7 @@ export function LensV26() {
         </Shelf>
       </> : null}
       {uses.length ? <>
-        <Text variant="title" style={{ marginTop: space.xl }}>Where life uses this lens</Text>
+        <Text variant="title" style={{ marginTop: space.xl }}>Where Life uses this lens</Text>
         <RowsCard style={{ marginTop: space.sm }}>
           {uses.map(u => {
             const locked = (u.level ?? 0) > level;
@@ -254,7 +254,7 @@ export function LensV26() {
         <SectionHead title="Read the originals" />
         <RowsCard>{books.map((b, k) => <Row key={b} icon="book" title={b} sub={k === 0 && books.length > 1 ? 'Book · the core of this lens' : 'Book'} />)}</RowsCard>
       </> : null}
-      <Callout style={{ marginTop: space.md }}>Ideas are explained in life’s own words, not quoted. Read the originals for the full picture.</Callout>
+      <Callout style={{ marginTop: space.md }}>Ideas are explained in Life’s own words, not quoted. Read the originals for the full picture.</Callout>
     </Page>
   );
 }
@@ -321,7 +321,7 @@ export function LensaskV26() {
       <View style={{ alignItems: 'flex-end' }}><ChatBubble text={question} /></View>
       <Micro style={{ marginTop: space.xl }}>SEE IT THROUGH</Micro>
       <FilterChips options={(['Taleb', 'Housel', 'Munger'] as LensName[]).map(v => ({ value: v, label: v }))} value={lens} onChange={v => { setLens(v); choose('lensask-lens', v); }} style={{ marginTop: space.xs }} />
-      <View style={[styles.inline, { marginTop: space.xl }]}><LifeOrb size={18} /><Text variant="callout" tone="ink2">{`life, through ${lens}’s lens`}</Text></View>
+      <View style={[styles.inline, { marginTop: space.xl }]}><LifeOrb size={18} /><Text variant="callout" tone="ink2">{`Life, through ${lens}’s lens`}</Text></View>
       <Statement s={lensAnswers(refund)[lens]} style={{ marginTop: space.xs }} />
       <Box style={{ marginTop: space.lg }}><PicCap total={refund} bet={cappedBet(refund)} /></Box>
       <Box pad={space.md} style={{ marginTop: space.sm }}>
@@ -330,7 +330,7 @@ export function LensaskV26() {
           <Btn label={saved ? 'Saved' : 'Save'} icon={saved ? 'check' : undefined} ghost sm fit onPress={save} disabled={saved} />
         </Between>
       </Box>
-      <Callout style={{ marginTop: space.md }}>General guidance using your numbers, not regulated financial advice. life speaks in its own voice, never as the thinker.</Callout>
+      <Callout style={{ marginTop: space.md }}>General guidance using your numbers, not regulated financial advice. Life speaks in its own voice, never as the thinker.</Callout>
     </Page>
   );
 }
@@ -363,7 +363,7 @@ export function RecallV26() {
         ))}
       </View>
       <View style={{ marginTop: space.sm }}>
-        {done ? <LifeSays>{right ? recall.right : recall.wrong}</LifeSays> : <Callout>life’s forgotten this one. Can you remind it?</Callout>}
+        {done ? <LifeSays>{right ? recall.right : recall.wrong}</LifeSays> : <Callout>Life’s forgotten this one. Can you remind it?</Callout>}
       </View>
       <Between style={{ marginTop: space.md }}>
         <Text variant="callout" tone="ink2">Next recall</Text>
@@ -522,7 +522,7 @@ export function HillV26() {
           </Press>
         ))}
       </Box>
-      <Callout style={{ marginTop: space.md }}>From the ideas in Think and Grow Rich (1937), explained in life’s words. Related lenses: Clear, Munger.</Callout>
+      <Callout style={{ marginTop: space.md }}>From the ideas in Think and Grow Rich (1937), explained in Life’s words. Related lenses: Clear, Munger.</Callout>
     </Page>
   );
 }

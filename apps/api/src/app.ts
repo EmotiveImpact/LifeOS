@@ -3,8 +3,11 @@ import { DeleteBody, FileIdBody, PushBody, SignBody, closeAccount, deleteFile, e
 import type { Auth, Principal } from './auth';
 import type { Db } from './db/client';
 import { devices } from './db/schema';
+import { SearchBody, listMemories, searchMemories } from './memory';
+import { aiCapabilities, runAi, type AiOptions } from './router';
 import type { Storage } from './storage';
 import { MAX_PULL, MAX_PUSH, forget, forgettable, isTable, pull, push, refusedByPolicy } from './sync';
+import { PROVIDERS, SamplesQuery, callbackPage, connectUrl, disconnect, finishConnect, isProvider, listConnections, wearableSamples, type WearableOptions } from './wearables';
 
 type Route = (request: Request, principal: Principal) => Promise<Response>;
 
@@ -31,7 +34,7 @@ const DeviceBody = z.object({
 function withCors(response: Response, origin: string): Response {
   const headers = new Headers(response.headers);
   headers.set('access-control-allow-origin', origin);
-  headers.set('access-control-expose-headers', 'set-auth-token');
+  headers.set('access-control-expose-headers', 'set-auth-token, life-model, life-tier');
   headers.append('vary', 'Origin');
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
@@ -52,10 +55,14 @@ export type ApiOptions = {
   graceDays?: number;
   /** The bearer secret the host's scheduler sends to `POST /jobs/sweep`. Without it the route is closed. */
   jobsSecret?: string;
+  /** Cloud models, tiers and allowances (`src/router.ts`). Without models, `/ai/run` answers 503 after its checks. */
+  ai?: AiOptions;
+  /** WHOOP and Oura (`src/wearables.ts`). Without it, `/wearables/*` answers 503. */
+  wearables?: WearableOptions;
 };
 
 export function createApi(options: ApiOptions): (request: Request) => Promise<Response> {
-  const { db, auth, now = Date.now, storage = null, graceDays = 30, jobsSecret } = options;
+  const { db, auth, now = Date.now, storage = null, graceDays = 30, jobsSecret, ai, wearables } = options;
   const cors = new Set(options.corsOrigins ?? []);
   const readJson = async (request: Request): Promise<unknown> => request.json().catch(() => null);
   const routes: Record<string, Route> = {
@@ -113,6 +120,37 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       if (!DeleteBody.safeParse(await readJson(request)).success) return fail(400, 'CONFIRM_REQUIRED');
       return json(await closeAccount(db, storage, principal.userId, now(), graceDays));
     },
+    'POST /ai/run': async (request, principal) => {
+      const reply = await runAi(db, principal.userId, await readJson(request), ai, now(), request.signal);
+      const response = json(reply.body, reply.status);
+      for (const [name, value] of Object.entries(reply.headers ?? {})) response.headers.set(name, value);
+      return response;
+    },
+    'GET /ai/capabilities': async (_request, principal) => json(await aiCapabilities(db, principal.userId, ai, now())),
+    'GET /memory': async (_request, principal) => json(await listMemories(db, principal.userId)),
+    'POST /memory/search': async (request, principal) => {
+      const parsed = SearchBody.safeParse(await readJson(request));
+      if (!parsed.success) return fail(400, 'BAD_REQUEST');
+      return json(await searchMemories(db, principal.userId, parsed.data, now()));
+    },
+    'GET /wearables': async (_request, principal) => (wearables ? json(await listConnections(db, wearables, principal.userId)) : json({ available: [], connections: [] })),
+    'GET /wearables/samples': async (request, principal) => {
+      if (!wearables) return fail(503, 'WEARABLES_NOT_CONFIGURED');
+      const params = new URL(request.url).searchParams;
+      const parsed = SamplesQuery.safeParse({ from: params.get('from'), to: params.get('to') });
+      if (!parsed.success) return fail(400, 'BAD_REQUEST');
+      return json(await wearableSamples(db, wearables, principal.userId, parsed.data.from, parsed.data.to, now()));
+    },
+    ...Object.fromEntries(PROVIDERS.flatMap(provider => [
+      [`POST /wearables/${provider}/connect`, async (_request: Request, principal: Principal) => {
+        const url = wearables ? await connectUrl(db, wearables, principal.userId, provider, now()) : null;
+        return url ? json({ url }) : fail(503, 'WEARABLES_NOT_CONFIGURED');
+      }],
+      [`POST /wearables/${provider}/disconnect`, async (_request: Request, principal: Principal) => {
+        if (!wearables) return fail(503, 'WEARABLES_NOT_CONFIGURED');
+        return await disconnect(db, wearables, principal.userId, provider) ? json({ disconnected: provider }) : fail(404, 'NOT_CONNECTED');
+      }],
+    ])) as Record<string, Route>,
     'POST /sync/forget': async (request, principal) => {
       const parsed = ForgetBody.safeParse(await request.json().catch(() => null));
       if (!parsed.success || !isTable(parsed.data.table) || !forgettable.has(parsed.data.table)) return fail(400, 'BAD_REQUEST');
@@ -130,6 +168,12 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
         const given = /^Bearer (.+)$/.exec(request.headers.get('authorization') ?? '')?.[1];
         if (!jobsSecret || !given || !sameSecret(given, jobsSecret)) return fail(401, 'UNAUTHENTICATED');
         return json(await purgeClosedAccounts(db, storage, now()));
+      }
+      // A wearable's sign-in page sends the browser back here, with no session: the signed, single-use state says who.
+      const callback = /^\/wearables\/([a-z]+)\/callback$/.exec(pathname);
+      if (callback && request.method === 'GET' && isProvider(callback[1])) {
+        if (!wearables) return fail(503, 'WEARABLES_NOT_CONFIGURED');
+        return callbackPage(await finishConnect(db, wearables, callback[1], new URL(request.url).searchParams, now()));
       }
       const principal = await auth.getPrincipal(request);
       if (!principal) return fail(401, 'UNAUTHENTICATED');

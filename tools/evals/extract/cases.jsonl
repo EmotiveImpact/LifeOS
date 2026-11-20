@@ -1,0 +1,40 @@
+{"id": "x01", "text": "My rent is £950 a month.", "expect": [{"field": "rent", "value": 950}]}
+{"id": "x02", "text": "I'm 31 and I live in London.", "expect": [{"field": "age", "value": 31}, {"field": "location", "value": "London"}]}
+{"id": "x03", "text": "I live with two flatmates in Hackney.", "expect": [{"field": "household", "value": 3}]}
+{"id": "x04", "text": "I earn £42,000 a year before tax.", "expect": [{"field": "income", "value": 42000}]}
+{"id": "x05", "text": "I've just gone freelance as a designer.", "expect": [{"field": "work", "value": "sole-trader"}]}
+{"id": "x06", "text": "I want to buy my first flat by 2028.", "expect": [{"field": "goal"}]}
+{"id": "x07", "text": "Council tax is £142 a month, due on the 1st.", "expect": [{"field": "bill", "details": {"payee": "council tax", "amount": 142, "dueDay": 1}}]}
+{"id": "x08", "text": "Netflix is £10.99 a month.", "expect": [{"field": "subscription", "details": {"service": "Netflix", "amount": 10.99}}]}
+{"id": "x09", "text": "Kofi's birthday is on 3 May.", "expect": [{"field": "date", "details": {"person": "Kofi", "occasion": "birthday", "when": {"day": 3, "month": 5}}}]}
+{"id": "x10", "text": "My passport expires in August 2027.", "expect": [{"field": "document", "details": {"document": "passport", "event": "expires", "when": {"month": 8, "year": 2027}}}]}
+{"id": "x11", "text": "I've got a dentist appointment on 4 December at 3pm.", "expect": [{"field": "appointment", "details": {"when": {"day": 4, "month": 12}}}]}
+{"id": "x12", "text": "Remember that I prefer walking meetings.", "expect": [{"field": "note"}]}
+{"id": "x13", "text": "Should I cancel my gym membership?", "expect": []}
+{"id": "x14", "text": "If I moved to Manchester my rent would be £700 a month.", "expect": []}
+{"id": "x15", "text": "I used to live in Berlin.", "expect": []}
+{"id": "x16", "text": "Maybe I'll start running next year, not sure.", "expect": []}
+{"id": "x17", "text": "What's my take-home this month?", "expect": []}
+{"id": "x18", "text": "Spotify is £11.99 a month and my phone contract with Three is £22 a month.", "expect": [{"field": "subscription", "details": {"service": "Spotify", "amount": 11.99}}, {"field": "bill", "details": {"payee": "Three", "amount": 22}}]}
+{"id": "x19", "text": "My sister Efua lives in Leeds.", "expect": [{"field": "person", "details": {"name": "Efua", "relation": "sister"}}, {"field": "note", "optional": true}], "note": "Where she lives is not a profile field; a note is acceptable too."}
+{"id": "x20", "text": "Our anniversary is 14 February.", "expect": [{"field": "date", "details": {"occasion": "anniversary", "when": {"day": 14, "month": 2}}}]}
+{"id": "x21", "text": "The car's MOT is due in March.", "expect": [{"field": "document", "details": {"document": "mot", "when": {"month": 3}}}]}
+{"id": "x22", "text": "I live alone now.", "expect": [{"field": "household", "value": 1}]}
+{"id": "x23", "text": "I'm employed full time at a logistics firm.", "expect": [{"field": "work", "value": "employed"}]}
+{"id": "x24", "text": "Octopus Energy takes £85 every month for gas and electric.", "expect": [{"field": "bill", "details": {"payee": "Octopus", "amount": 85}}]}
+{"id": "x25", "text": "Ugh, long day. Train was late again and I'm shattered.", "expect": []}
+{"id": "x26", "text": "I no longer pay for Disney+.", "expect": []}
+{"id": "x27", "text": "Mum's birthday is on 22 July.", "expect": [{"field": "date", "details": {"occasion": "birthday", "when": {"day": 22, "month": 7}}}]}
+{"id": "x28", "text": "I'm 29, I'm self-employed and my rent is £1,100 a month.", "expect": [{"field": "age", "value": 29}, {"field": "work", "value": "sole-trader"}, {"field": "rent", "value": 1100}]}
+{"id": "x29", "text": "My TV licence renews in April.", "expect": [{"field": "document", "details": {"document": "tv-licence", "when": {"month": 4}}}]}
+{"id": "x30", "text": "Imagine I earned £60k, how much tax would I pay?", "expect": []}
+{"id": "x31", "text": "Remember that Sunday evenings are hard for me.", "expect": [{"field": "note"}]}
+{"id": "x32", "text": "Water bill is £38 a month to Thames Water.", "expect": [{"field": "bill", "details": {"payee": "Thames Water", "amount": 38}}]}
+{"id": "x33", "text": "My home insurance renews on 9 October.", "expect": [{"field": "document", "details": {"document": "home-insurance", "when": {"day": 9, "month": 10}}}]}
+{"id": "x34", "text": "My GP appointment is on 2 January at 9:30am.", "expect": [{"field": "appointment", "details": {"when": {"day": 2, "month": 1}}}]}
+{"id": "x35", "text": "My friend Ade said his rent is £1,400 a month.", "expect": [{"field": "person", "optional": true}]}
+{"id": "x36", "text": "Can you remind me what I said about my sister?", "expect": []}
+{"id": "x37", "text": "I earn £3,500 a month after tax.", "expect": [{"field": "income"}]}
+{"id": "x38", "text": "I'm thinking of moving in with my partner Sam next year.", "expect": [{"field": "person", "optional": true}]}
+{"id": "x39", "text": "Amazon Prime is £8.99 a month and I pay iCloud £2.99 a month.", "expect": [{"field": "subscription", "details": {"service": "Amazon Prime", "amount": 8.99}}, {"field": "subscription", "details": {"service": "iCloud", "amount": 2.99}}]}
+{"id": "x40", "text": "Dad's birthday is 30 November and my brother Kwame is getting married on 12 June.", "expect": [{"field": "date", "details": {"occasion": "birthday", "when": {"day": 30, "month": 11}}}, {"field": "person", "optional": true}, {"field": "appointment", "optional": true}, {"field": "date", "optional": true}]}

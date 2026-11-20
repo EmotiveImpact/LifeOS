@@ -161,7 +161,7 @@ export function LifeReply({ segments, card, chips, onChip, thinking, look }: { s
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         {look === 'v26' ? <LifeOrb size={20} state={thinking ? 'thinking' : 'ring'} /> : <DottedOrb size={20} state={thinking ? 'thinking' : 'idle'} />}
-        <Callout tone="ink2">{thinking ? 'life is thinking…' : 'life'}</Callout>
+        <Callout tone="ink2">{thinking ? 'Life is thinking…' : 'Life'}</Callout>
       </View>
       {segments && !thinking ? <TwoTone segments={segments} size="headline" /> : null}
       {card && !thinking ? <Animated.View entering={FadeIn}>{card}</Animated.View> : null}

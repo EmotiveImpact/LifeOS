@@ -4,7 +4,7 @@
  * Health is wellness guidance, not a diagnosis.
  */
 import { useEffect, useState } from 'react';
-import { Platform, Share, StyleSheet, TextInput, View } from 'react-native';
+import { AppState, Platform, Share, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -27,6 +27,10 @@ import {
 import { Between, BigPhoto, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Micro, Page, PeekStack, PhotoBackdrop, PhotoRound, Row, RowsCard, Shelf, Statement, drawerStyle, useDrawerPhoto } from './kit';
 import { Axis, FigRow, Gauge, Head, Measure, RangeMark, XL } from './bodykit';
 import { Composer } from './talk';
+import { apiConfigured } from '@/services/brain';
+import { lastWearableProblems, readHealthNow } from '@/services/health/useHealthRunner';
+import { WEARABLES, connectWearable, disconnectWearable, wearableStatus, type Wearable, type WearableProblem } from '@/services/health/wearables';
+import { since } from '@/state/health';
 
 const h = seed.health;
 const info = (label: string, onPress: () => void) => ({ kind: 'icon' as const, icon: 'info' as const, label, onPress });
@@ -105,7 +109,7 @@ export function BodyV26() {
         </Between>
       </Box>
       <Box pad={space.md} style={{ marginTop: space.sm }}>
-        <Eyebrow orb>life noticed</Eyebrow>
+        <Eyebrow orb>Life noticed</Eyebrow>
         <Body s={`On days you walk {8,000+ steps}, you sleep {24 minutes longer}.`} style={{ marginTop: space.xs }} />
         <Press haptic="open" onPress={() => nav.go('healthdigest')} accessibilityLabel="Try it for two weeks" style={styles.link}>
           <Text variant="buttonCompact">Try it for two weeks</Text><Icon name="chev" size={16} color={t.ink} />
@@ -156,28 +160,61 @@ export function ReadinessV26() {
 const READS = [{ key: 'sleep', label: 'Sleep', on: true }, { key: 'heart', label: 'Heart rate and HRV', on: true }, { key: 'workouts', label: 'Workouts and steps', on: true }, { key: 'food', label: 'Food and water', on: true }, { key: 'weight', label: 'Weight', on: false }];
 
 export function DevicesV26() {
-  const { data, choose, flag } = useSeed(), t = useTokens();
+  const { data, choose, flag } = useSeed(), t = useTokens(), nav = useNavigation();
   const reads = (k: string, d: boolean) => (data.choices[`health-read-${k}`] ?? (d ? 'on' : 'off')) === 'on';
-  const others = [{ id: 'whoop', icon: 'watch' as const, name: 'WHOOP', gives: 'Recovery, strain, sleep', act: 'Connect' }, { id: 'oura', icon: 'moon' as const, name: 'Oura', gives: 'Readiness, sleep, temperature', act: 'Connect' }, { id: 'strap', icon: 'pulse' as const, name: 'Heart-rate strap', gives: 'Any Bluetooth strap: Polar, Garmin, Wahoo', act: 'Pair' }];
+  // The sample life shows the phone's store as connected; a real account shows what it actually connected.
+  const storeOn = SHOW_SAMPLES || !!data.flags['health-connected'];
+  const [problems, setProblems] = useState<WearableProblem[]>(lastWearableProblems());
+  const [busy, setBusy] = useState<string | null>(null);
+  // Back from a wearable's sign-in page: ask the life API what is connected now.
+  useEffect(() => {
+    if (!apiConfigured) return;
+    const check = async () => {
+      const status = await wearableStatus();
+      for (const w of WEARABLES) {
+        const on = status.connections.some(c => c.provider === w.id);
+        if (on !== !!data.flags[`device-${w.id}`]) { flag(`device-${w.id}`, on); if (on) readHealthNow(); }
+      }
+      setProblems(lastWearableProblems());
+    };
+    void check();
+    const sub = AppState.addEventListener('change', st => { if (st === 'active') void check(); });
+    return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const wearable = async (id: Wearable) => {
+    const on = !!data.flags[`device-${id}`], again = problems.some(p => p.provider === id && p.problem === 'reconnect');
+    if (!apiConfigured) { flag(`device-wanted-${id}`, !data.flags[`device-wanted-${id}`]); feedback.select(); return; }
+    setBusy(id);
+    try {
+      if (on && !again) { if (await disconnectWearable(id)) { flag(`device-${id}`, false); feedback.select(); } }
+      else if (!(await connectWearable(id))) { flag(`device-wanted-${id}`, true); feedback.select(); }
+    } finally { setBusy(null); }
+  };
+  const others = [
+    { id: 'whoop', icon: 'watch' as const, name: 'WHOOP', gives: 'Recovery, sleep, temperature' },
+    { id: 'oura', icon: 'moon' as const, name: 'Oura', gives: 'Readiness, sleep, temperature' },
+    { id: 'strap', icon: 'pulse' as const, name: 'Heart-rate strap', gives: 'Any Bluetooth strap: Polar, Garmin, Wahoo' },
+  ];
   return (
     <Page screen="devices" bar={{ kind: 'push', title: 'Devices' }}>
       <Eyebrow>Body · connections</Eyebrow>
-      <Display s="Bring your data in. {life reads only what you allow.}" />
+      <Display s="Bring your data in. {Life reads only what you allow.}" />
       <Body s={`Health data stays on your phone, never goes to ${Platform.OS === 'android' ? 'the cloud' : 'iCloud'} and is never used for ads.`} style={{ marginTop: space.sm }} />
       <TintCard area="health" style={{ marginTop: space.xl }}>
         <Between style={{ alignItems: 'flex-start' }}>
           <View style={{ flexDirection: 'row', gap: space.sm, flexShrink: 1 }}>
             <Badge icon="heart" />
-            <View style={{ flexShrink: 1 }}><Text variant="title">{source}</Text><Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>Sleep, heart, HRV, workouts, steps, food</Text></View>
+            <View style={{ flexShrink: 1 }}><Text variant="title">{source}</Text><Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>{storeOn && !SHOW_SAMPLES ? `Last read ${since(data.health.lastRead).toLowerCase()}` : 'Sleep, heart, HRV, workouts, steps'}</Text></View>
           </View>
-          <Chip label="On" tone="done" />
+          {storeOn ? <Chip label="On" tone="done" /> : <Chip label="Connect" icon="add" onPress={() => nav.go('healthprimer')} />}
         </Between>
         <Micro style={{ marginTop: space.lg }}>WHAT LIFE CAN READ · ONE BY ONE</Micro>
         <View style={{ marginTop: space.xs }}>
           {READS.map(x => (
             <Between key={x.key} style={{ minHeight: 44 }}>
               <Text variant="body">{x.label}</Text>
-              <SwitchV26 value={reads(x.key, x.on)} onChange={v => choose(`health-read-${x.key}`, v ? 'on' : 'off')} accessibilityLabel={`Let life read ${x.label.toLowerCase()}`} />
+              <SwitchV26 value={reads(x.key, x.on)} onChange={v => choose(`health-read-${x.key}`, v ? 'on' : 'off')} accessibilityLabel={`Let Life read ${x.label.toLowerCase()}`} />
             </Between>
           ))}
         </View>
@@ -185,25 +222,32 @@ export function DevicesV26() {
       <SectionHead title="Add another" link="when you’re ready" />
       <Shelf>
         {others.map(o => {
-          const asked = !!data.flags[`device-wanted-${o.id}`];
+          const live = o.id !== 'strap' && apiConfigured, on = !!data.flags[`device-${o.id}`], asked = !!data.flags[`device-wanted-${o.id}`];
+          const again = problems.some(p => p.provider === o.id && p.problem === 'reconnect');
+          const sub = again ? 'Sign in to it again to keep reading' : on ? 'Connected. Readings come in with your phone’s' : asked ? (live ? 'Not open yet. Life will remind you' : 'Life will remind you when this opens') : o.gives;
+          const label = busy === o.id ? 'Opening…' : again ? 'Connect again' : on ? 'Disconnect' : asked ? 'Noted' : o.id === 'strap' ? 'Pair' : 'Connect';
+          const press = () => {
+            if (o.id === 'strap') { flag(`device-wanted-${o.id}`, !asked); feedback.select(); return; }
+            void wearable(o.id as Wearable);
+          };
           return (
             <Box key={o.id} pad={space.md} style={{ width: 168 }}>
               <View style={[styles.thumb, { backgroundColor: t.surface2 }]}><Icon name={o.icon} size={22} color={t.ink} /></View>
               <Text variant="title" style={{ marginTop: space.sm }} numberOfLines={2}>{o.name}</Text>
-              <Text variant="callout" tone="ink2" style={{ marginTop: 2, flex: 1 }}>{asked ? 'life will remind you when this opens' : o.gives}</Text>
-              <Btn ghost sm label={asked ? 'Noted' : o.act} icon={asked ? 'check' : undefined} onPress={() => { flag(`device-wanted-${o.id}`, !asked); feedback.select(); }} style={{ marginTop: 14 }} />
+              <Text variant="callout" tone="ink2" style={{ marginTop: 2, flex: 1 }}>{sub}</Text>
+              <Btn ghost sm label={label} icon={on && !again ? undefined : asked && !on ? 'check' : undefined} disabled={busy === o.id} onPress={press} style={{ marginTop: 14 }} />
             </Box>
           );
         })}
       </Shelf>
-      <Callout style={{ marginTop: space.md }}>WHOOP and Oura connect through your account with them. Only a heart-rate strap pairs over Bluetooth.</Callout>
+      <Callout style={{ marginTop: space.md }}>WHOOP and Oura connect through your account with them, on their own sign-in page. Only a heart-rate strap pairs over Bluetooth.</Callout>
       <SectionHead title="Already works" />
       <RowsCard>
         <Row icon="watch" title="Garmin, Fitbit, Samsung and more" sub="Through Apple Health or Health Connect" right={<Chip label="Works" tone="q" />} />
         <Row icon="layers" title="Health Connect" sub="The same on Android phones" right={<Chip label="Android" tone="q" />} />
         <Row icon="add" title="Manual" sub="Sleep times, weight, water, workouts" right={<Chip label="Always" tone="q" />} />
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Disconnect any time. Ask, and life deletes everything it imported.</Callout>
+      <Callout style={{ marginTop: space.md }}>Disconnect any time. Ask, and Life deletes everything it imported.</Callout>
     </Page>
   );
 }
@@ -252,7 +296,7 @@ export function SleepV26() {
           <Axis labels={['earlier', 'your usual window', 'later']} />
         </V26Tile>
       </TileGrid>
-      <Callout style={{ marginTop: space.md }}>Most adults need 7–9 hours (NHS). life learns your own need from mornings you feel rested.</Callout>
+      <Callout style={{ marginTop: space.md }}>Most adults need 7–9 hours (NHS). Life learns your own need from mornings you feel rested.</Callout>
     </Page>
   );
 }
@@ -311,7 +355,7 @@ export function TrendsV26() {
   const d = trendData[range] ?? trendData['4 weeks'];
   return (
     <Page screen="trends" bar={{ kind: 'push', title: 'Trends' }}>
-      <Eyebrow star>life noticed a pattern</Eyebrow>
+      <Eyebrow star>Life noticed a pattern</Eyebrow>
       <Display s={`After {${pattern.hours}+ hours} of sleep, your readiness tends to be {${pattern.points} points higher} the next day.`} />
       <SectionHead title="Side by side" link="against your normal" />
       <SegmentedV26 options={[{ value: '4 weeks', label: '4 weeks' }, { value: '3 months', label: '3 months' }]} value={range} onChange={v => choose('trends-range', v)} />
@@ -325,7 +369,7 @@ export function TrendsV26() {
         <PhotoCard source={photos.bedroom} focal={{ y: 0.6 }} height={190} size="sm" chips={['Pattern']} title="Mondays" sub="You tend to feel drained after short Sunday nights" onPress={() => nav.go('insights')} />
         <PhotoCard source={photos.run} focal={{ x: 0.25, y: 0.68 }} height={190} size="sm" chips={['Pattern']} title="Training days" sub="Your protein tends to fall short" onPress={() => nav.go('fuel')} />
       </PhotoGrid>
-      <Callout style={{ marginTop: space.md }}>Patterns, not proof. life looks at your own data only.</Callout>
+      <Callout style={{ marginTop: space.md }}>Patterns, not proof. Life looks at your own data only.</Callout>
     </Page>
   );
 }
@@ -356,7 +400,7 @@ export function HrvV26() {
         <KeyValue label="Measure" value="SDNN*" />
         <Row title="How it’s calculated" sub="Methods and evidence" chevron onPress={() => nav.go('math')} />
       </Box>
-      <Callout style={{ marginTop: space.md }}>*Apple Health reports SDNN; Oura and chest straps give beat-to-beat data for RMSSD. life only compares like with like, against your own baseline.</Callout>
+      <Callout style={{ marginTop: space.md }}>*Apple Health reports SDNN; Oura and chest straps give beat-to-beat data for RMSSD. Life only compares like with like, against your own baseline.</Callout>
     </Page>
   );
 }
@@ -393,10 +437,10 @@ export function SignalsV26() {
       <RowsCard style={{ marginTop: space.sm }}>
         {drift
           ? <Row icon="check" title="Back to today" sub="All 4 signals in range" chevron onPress={() => setMode('')} />
-          : <Row icon="info" title="When signals drift" sub="life tells you gently. It often comes before feeling ill." chevron onPress={() => setMode('drift')} />}
+          : <Row icon="info" title="When signals drift" sub="Life tells you gently. It often comes before feeling ill." chevron onPress={() => setMode('drift')} />}
       </RowsCard>
-      {drift ? <Row icon="spark" title="What life changes on a day like this" chevron onPress={() => nav.go('signals', { state: 'illness' })} style={{ marginTop: space.xs }} /> : null}
-      <Callout style={{ marginTop: space.md }}>Not a medical device. life compares you only with yourself and never diagnoses.</Callout>
+      {drift ? <Row icon="spark" title="What Life changes on a day like this" chevron onPress={() => nav.go('signals', { state: 'illness' })} style={{ marginTop: space.xs }} /> : null}
+      <Callout style={{ marginTop: space.md }}>Not a medical device. Life compares you only with yourself and never diagnoses.</Callout>
     </Page>
   );
 }
@@ -417,10 +461,10 @@ export function IllnessV26() {
         <Callout style={{ marginTop: space.md }}>The shaded part of each line is your normal.</Callout>
       </TintCard>
       <Box style={{ marginTop: space.sm }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.tile }}><LifeOrb size={22} state="done" /><Text variant="buttonCompact">life has made today lighter</Text></View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.tile }}><LifeOrb size={22} state="done" /><Text variant="buttonCompact">Life has made today lighter</Text></View>
         <Cols items={[{ small: 'Workout', value: 'Thursday', sub: 'Moved' }, { small: 'Bed by', value: '22:30', sub: 'Tonight' }, { small: 'Water', value: 'Extra', sub: 'Today' }]} style={{ marginTop: space.md }} />
       </Box>
-      <Callout style={{ marginTop: space.md }}>life never names an illness. Not medical advice. If you feel unwell, contact NHS 111 or your GP.</Callout>
+      <Callout style={{ marginTop: space.md }}>Life never names an illness. Not medical advice. If you feel unwell, contact NHS 111 or your GP.</Callout>
     </Page>
   );
 }
@@ -597,7 +641,7 @@ export function InsightsV26() {
         {journalEffects.cost.map(eff)}
         <Axis labels={['lower', 'days without it', 'higher']} style={{ marginTop: 14 }} />
       </TintCard>
-      <Callout style={{ marginTop: space.md }}>Readiness on the day after, vs days without it. Patterns, not proof. life waits for 8 days of a tag before it shows one.</Callout>
+      <Callout style={{ marginTop: space.md }}>Readiness on the day after, vs days without it. Patterns, not proof. Life waits for 8 days of a tag before it shows one.</Callout>
     </Page>
   );
 }
@@ -664,7 +708,7 @@ export function DetectedV26() {
         {logged.length ? <RowsCard style={{ marginTop: space.xl }}>
           {logged.map(a => <Row key={a.id} icon="fitness" title={`${typeOf(a)} · ${a.mins}`} sub={`${a.when} · ${a.bpm}`} end={String(a.load)} endStrong />)}
         </RowsCard> : null}
-        <Callout center style={{ marginTop: space.md }}>life asks once about each one, then leaves it.</Callout>
+        <Callout center style={{ marginTop: space.md }}>Life asks once about each one, then leaves it.</Callout>
       </Page>
     );
   }
@@ -688,7 +732,7 @@ export function DetectedV26() {
       bottom={<DecisionDrawer title={`Log this as ${kind.as}?`} sub={`${a.mins} · load ${a.load}. You decide.`}
         leave={{ label: 'Not a workout', onPress: () => setFlags({ [`dismissed-${a.id}`]: true }) }}
         confirm={{ label: 'Log it', onPress: () => { setFlags({ [`confirmed-${a.id}`]: true }, [`detected-${a.id}`, type]); feedback.file(); }, haptic: null }}
-        ask={{ label: 'Ask life first', icon: 'help', onPress: () => nav.go('coach') }} />}>
+        ask={{ label: 'Ask Life first', icon: 'help', onPress: () => nav.go('coach') }} />}>
       {k ? <Chip label={`${k} of ${spotted.length} logged`} icon="check" tone="done" /> : null}
       <Display s={`Looks like you moved {${spotted.length === 2 ? 'twice' : `${spotted.length} times`}} without logging it.`} />
       {next ? <PeekStack peeks={[{ left: `${next.name}? · ${next.when} · ${next.mins}`, right: String(spotted.indexOf(next) + 1) }]} style={{ marginTop: space.md }}>{card}</PeekStack>
@@ -770,7 +814,7 @@ export function MathV26() {
         </View>
         <Callout style={{ marginTop: space.md }}>Shown after 14 days. Based on: HRV time-domain standards (Task Force, 1996)</Callout>
       </TintCard>
-      <Body s="Badges show how far to trust each one. They change as life checks each score against reference devices." style={{ marginTop: space.lg }} />
+      <Body s="Badges show how far to trust each one. They change as Life checks each score against reference devices." style={{ marginTop: space.lg }} />
       <View style={{ gap: space.xs, marginTop: space.md }}>
         {items.map(i => <Accordion key={i.key} title={i.title} count={i.badge} open={open === i.key} onToggle={() => setOpen(o => (o === i.key ? null : i.key))}>{i.body}</Accordion>)}
       </View>
@@ -799,7 +843,7 @@ export function CoachV26() {
         <Micro center>SAT 7 NOV · 08:12</Micro>
         <View style={{ alignItems: 'flex-end' }}><ChatBubble text="Why do I feel flat today?" /></View>
         <View>
-          <Eyebrow orb>life</Eyebrow>
+          <Eyebrow orb>Life</Eyebrow>
           <Statement s={`Three things line up: {@moon ${lighterDay.sleep} of sleep}, a {late caffeine} tag, and your {skin temperature} is up 0.6°C. {Keep today light.}`} style={{ marginTop: space.xs }} />
         </View>
         <TintCard area="health" padding={space.md}>
@@ -862,8 +906,8 @@ export function CycleV26() {
   const on = !!data.flags['cycle-opt-in'] || params.state === 'on';
   if (!on) return (
     <Page screen="cycle" bar={{ kind: 'push', title: 'Cycle' }} footer={<Btn label="Turn on cycle-aware readiness" onPress={() => { flag('cycle-opt-in', true); feedback.select(); }} />}>
-      <PhotoCard source={photos.walk} focal={{ y: 0.42 }} height={236} chips={[{ label: 'Private', icon: 'eyeOff' }]} title="Readiness that respects your cycle" sub="life can compare your signals with the same phase last month, so expected changes aren’t flagged." />
-      <Body s={`Nothing is read until you choose. life uses your cycle days from ${source} and keeps them on this phone.`} style={{ marginTop: space.lg }} />
+      <PhotoCard source={photos.walk} focal={{ y: 0.42 }} height={236} chips={[{ label: 'Private', icon: 'eyeOff' }]} title="Readiness that respects your cycle" sub="Life can compare your signals with the same phase last month, so expected changes aren’t flagged." />
+      <Body s={`Nothing is read until you choose. Life uses your cycle days from ${source} and keeps them on this phone.`} style={{ marginTop: space.lg }} />
       <Callout style={{ marginTop: space.md }}>Off by default. Stays on your phone. Not for contraception or diagnosis.</Callout>
     </Page>
   );

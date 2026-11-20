@@ -18,10 +18,10 @@ export type TopBarAction =
   | { kind: 'node'; node: ReactNode }
   /** Three dots that drop a native menu of two or more actions. A single action never hides behind dots: give it its own icon or words. */
   | { kind: 'menu'; label: string; items: MenuItem[] };
-/** `look: 'v26'` draws the board's bars (52pt, round 40pt buttons, the orb on root). Leave it unset for the V23 bars. */
+/** `look: 'v26'` draws the board's bars (52pt, round 40pt buttons, the orb at the right of root bars). Leave it unset for the V23 bars. */
 type BarLook = { look?: 'v26' };
 export type TopBarProps = BarLook & (
-  | { kind: 'root'; eyebrow?: string; title: string; /** V26: the quiet words after the title ("Mon 16 Nov"). */ sub?: string; actions?: TopBarAction[]; avatar?: ReactNode; onImage?: boolean }
+  | { kind: 'root'; eyebrow?: string; title: string; /** V26: the quiet words after the title ("Mon 16 Nov"). */ sub?: string; actions?: TopBarAction[]; avatar?: ReactNode; /** V26: the orb at the right end, opening what Life has to tell you. */ orb?: { onPress: () => void; unread?: boolean }; onImage?: boolean }
   | { kind: 'push'; title?: string; /** V26: something other than words in the middle (the orb and "life" on Chat). */ titleNode?: ReactNode; action?: TopBarAction; onBack: () => void; /** V26: a close cross in place of the back arrow. */ closeIcon?: boolean; onImage?: boolean }
   | { kind: 'sheet'; title: string; action?: TopBarAction; onClose: () => void; onImage?: boolean }
   | { kind: 'flow'; center?: ReactNode; step?: string; action?: TopBarAction; onClose: () => void; /** V26 text bar: the words on the left ("Back"). */ closeLabel?: string; closeIcon?: GlyphName; onImage?: boolean });
@@ -85,11 +85,13 @@ function TopBarV26(props: TopBarProps) {
   if (props.kind === 'root') return (
     <View style={[styles.v26, { backgroundColor: bg }]}>
       <View style={styles.v26Id}>
-        <LifeOrb size={22} color={onImage ? t.paper : t.ink} />
         <Text variant="title" tone={onImage ? 'paper' : 'ink'} accessibilityRole="header" numberOfLines={1} style={{ marginRight: 2, flexShrink: 1 }}>{props.title}</Text>
         {props.sub ? <Text variant="callout" tone={onImage ? 'paper2' : 'ink2'} numberOfLines={1}>{props.sub}</Text> : null}
       </View>
-      <View style={styles.actions}>{props.avatar}{props.actions?.slice(0, 2).map((a, i) => <ActionV26 key={i} action={a} onImage={onImage} />)}</View>
+      <View style={styles.actions}>
+        {props.avatar}{props.actions?.slice(0, 2).map((a, i) => <ActionV26 key={i} action={a} onImage={onImage} />)}
+        {props.orb ? <OrbButton {...props.orb} onImage={onImage} /> : null}
+      </View>
     </View>
   );
   if (props.kind === 'flow') return (
@@ -126,6 +128,18 @@ function TopBarV26(props: TopBarProps) {
   return bar;
 }
 
+/** The orb at the right end of Today, Plan and You (Edem, 20 Nov 2026): Life's own place in the bar.
+ * Tapping it opens "From Life"; an ember dot says something new is waiting. Never on deeper pages. */
+function OrbButton({ onPress, unread, onImage }: { onPress: () => void; unread?: boolean; onImage?: boolean }) {
+  const t = useTokens();
+  return (
+    <Press haptic="select" onPress={onPress} accessibilityLabel={unread ? 'From Life, something new' : 'From Life'} hitSlop={6} style={styles.v26Orb}>
+      <LifeOrb size={30} color={onImage ? t.paper : t.ink} />
+      {unread ? <View style={[styles.v26OrbDot, { backgroundColor: t.ember, borderColor: onImage ? 'transparent' : t.canvas }]} /> : null}
+    </Press>
+  );
+}
+
 function ActionV26({ action, onImage }: { action: TopBarAction; onImage?: boolean }) {
   if (action.kind === 'node') return <>{action.node}</>;
   if (action.kind === 'menu') return <ActionMenu items={action.items}>{open => <RoundButton icon="more" label={action.label} onPress={open} onPhoto={onImage} />}</ActionMenu>;
@@ -159,5 +173,7 @@ const styles = StyleSheet.create({
   v26: { height: componentSize.topBarV26, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.gutter, gap: space.xs },
   v26Id: { flexDirection: 'row', alignItems: 'center', gap: space.xs, flex: 1, minWidth: 0 },
   v26Txt: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: componentSize.round },
+  v26Orb: { width: componentSize.round, height: componentSize.round, alignItems: 'center', justifyContent: 'center' },
+  v26OrbDot: { position: 'absolute', top: 4, right: 3, width: 9, height: 9, borderRadius: radius.full, borderWidth: 1.5 },
   v26Handle: { width: 36, height: 5, borderRadius: 3, alignSelf: 'center', marginTop: space.xs },
 });

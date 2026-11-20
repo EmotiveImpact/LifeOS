@@ -140,7 +140,7 @@ function Toolbar({ mode, setMode, look, setLook }: { mode: string; setMode: (m: 
   );
   return (
     <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 10, gap: 8, backgroundColor: t.canvas }}>
-      <Text variant="headline">life · design gallery</Text>
+      <Text variant="headline">Life · design gallery</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {seg([['light', 'Light'], ['dark', 'Dark'], ['both', 'Both']], mode, (v) => setMode(v as 'light' | 'dark' | 'both'))}
         {seg([['p1', 'Look 1'], ['p2', 'Look 2'], ['p3', 'Look 3'], ['places', 'Places']], look, (v) => setLook(v as Look))}
@@ -317,7 +317,7 @@ function Column({ look, style }: { look: Look; style?: object }) {
       </Section>
 
       <Section title="timeline · orb">
-        <ActivityTimeline items={[{ time: '09:30', date: 'Today', text: 'Form P87 submitted.' }, { time: '16:12', date: '12 Nov', text: 'life spotted unclaimed expenses.' }]} />
+        <ActivityTimeline items={[{ time: '09:30', date: 'Today', text: 'Form P87 submitted.' }, { time: '16:12', date: '12 Nov', text: 'Life spotted unclaimed expenses.' }]} />
         <View style={{ flexDirection: 'row', gap: 24, alignItems: 'center' }}>
           <DottedOrb size={56} />
           <DottedOrb size={56} state="thinking" />
@@ -357,7 +357,7 @@ function Column({ look, style }: { look: Look; style?: object }) {
 
 
 const HOUSE = (n: number) =>
-  n === 1 ? 'Living alone: you may get 25% off council tax.' : n === 2 ? '2 people: check Marriage Allowance (up to £252 a year).' : n < 16 ? `${n} people: the single-person discount no longer applies.` : '16+ people: life will ask a few questions about your living setup.';
+  n === 1 ? 'Living alone: you may get 25% off council tax.' : n === 2 ? '2 people: check Marriage Allowance (up to £252 a year).' : n < 16 ? `${n} people: the single-person discount no longer applies.` : '16+ people: Life will ask a few questions about your living setup.';
 const WORDS = 'So I\'m 27, I live in London with two flatmates and I\'ve gone self-employed. I think I overpaid tax last year.'.split(' ').map((w) => ({
   text: w,
   area: (/27,|London/.test(w) ? 'you' : /flatmates/.test(w) ? 'home' : /self-employed/.test(w) ? 'work' : /overpaid|tax/.test(w) ? 'money' : undefined) as 'you' | 'home' | 'work' | 'money' | undefined,
@@ -428,7 +428,7 @@ function MoreComponents({ look }: { look: Look }) {
             <RecordRow key="2" area="health" badge="!" label="Heart referral, 11 weeks" destination="New mission · urgent" removed={removed.includes(2)} onToggleRemove={() => setRemoved((r) => (r.includes(2) ? r.filter((x) => x !== 2) : [...r, 2]))} />,
           ]}
         </RowGroup>
-        <ChangeSummary>2 new missions, 1 of them urgent. life knows you 64% → 81%.</ChangeSummary>
+        <ChangeSummary>2 new missions, 1 of them urgent. Life knows you 64% → 81%.</ChangeSummary>
       </Section>
 
       <Section title="body">
@@ -466,14 +466,14 @@ function MoreComponents({ look }: { look: Look }) {
         </View>
         <UserBubble text="Should I go limited company or stay a sole trader?" />
         <LifeReply segments={[{ text: 'At your ', tone: 'quiet' }, { text: '£48k ' }, { text: 'profit the two come out within about ', tone: 'quiet' }, { text: '£100 a year.' }]} chips={['What about at £60k?', 'Save this']} onChip={() => {}} />
-        <FileCard prompt="Save to Work as a decision to revisit if profit passes £60k?" savedText="Saved to Work. life will bring it back if your profit passes £60k." onSave={() => {}} />
+        <FileCard prompt="Save to Work as a decision to revisit if profit passes £60k?" savedText="Saved to Work. Life will bring it back if your profit passes £60k." onSave={() => {}} />
         <Composer value={msg} onChangeText={setMsg} onSend={() => setMsg('')} onAttach={() => setAttach(true)} />
         <AttachMenu
           visible={attach}
           onClose={() => setAttach(false)}
           onPick={() => {}}
           options={[
-            { key: 'letter', title: 'Scan a letter', sub: 'HMRC, council, NHS: life reads it', icon: 'document-text-outline' },
+            { key: 'letter', title: 'Scan a letter', sub: 'HMRC, council, NHS: Life reads it', icon: 'document-text-outline' },
             { key: 'camera', title: 'Camera', icon: 'camera-outline' },
             { key: 'photos', title: 'Photos', icon: 'images-outline' },
             { key: 'files', title: 'Files', icon: 'folder-outline' },

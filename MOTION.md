@@ -8,7 +8,7 @@
 
 > **Owner rule (Edem, 20 Nov 2026):** Apple and Google level smoothness between states, not over the top. No wobbly buttons, no bounce on arrival. Things arrive from 90% or more, never from nothing.
 >
-> **Web preview:** phones use the native stack transitions. The web preview has none, so `Page` (`screens/v26/kit.tsx`) slides pushed pages in from the right and raises full-screen flows from below, web only. `app.json` sets expo-router `asyncRoutes.web: false` so every page is in the first bundle; with lazy routes each page open showed a blank screen for about 300 ms before popping in.
+> **Web preview:** phones use the native stack transitions. The web preview has none, so `Page` (`screens/v26/kit.tsx`) slides pushed pages in from the right and raises full-screen flows from below, web only. Closing runs through `navigation/webExit.ts`: the top page slides out (180 ms) before the route changes, and the page it reveals slides back in from the left. Sheets are presented as transparent layers on web, so the page underneath stays in view behind the dim. `app.json` sets expo-router `asyncRoutes.web: false` so every page is in the first bundle; with lazy routes each page open showed a blank screen for about 300 ms before popping in.
 
 1. **Motion explains, it doesn't decorate.** Something moves only to show where it came from, where it went, or that it changed.
 2. **Springs, not curves.** Everything uses springs so it can be interrupted mid-flight and still feels physical. No linear easing, ever.

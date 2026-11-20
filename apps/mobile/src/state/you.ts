@@ -44,7 +44,7 @@ export function householdLine(n: number) {
   return n === 1 ? 'Living alone: you may get {25% off} council tax.' : `${n} at home: the {25% single person discount} usually stops.`;
 }
 export function childrenLine(n: number) {
-  return n === 0 ? 'None: nothing extra to claim here.' : `${n} ${n === 1 ? 'child' : 'children'}: you may be able to claim {Child Benefit}. life will check.`;
+  return n === 0 ? 'None: nothing extra to claim here.' : `${n} ${n === 1 ? 'child' : 'children'}: you may be able to claim {Child Benefit}. Life will check.`;
 }
 
 /* ── Mood over time ── */
@@ -69,7 +69,7 @@ export const moodSummary = SHOW_SAMPLES ? 'Mostly {calm}, but {drained on Monday
 export const moodPatterns: { mood: FeelMoodId; title: string; sub: string; tag: string; applied?: boolean }[] = SHOW_SAMPLES ? [
   { mood: 'drained', title: 'Mondays are heavy', sub: 'After Sundays with less than 6 hours’ sleep', tag: 'Pattern' },
   { mood: 'calm', title: 'Calmer after admin days', sub: 'Clearing a mission lifts the next day', tag: 'Pattern' },
-  { mood: 'peaceful', title: 'Keeping Mondays light', sub: 'life now plans one small task for Mondays', tag: 'Applied', applied: true },
+  { mood: 'peaceful', title: 'Keeping Mondays light', sub: 'Life now plans one small task for Mondays', tag: 'Applied', applied: true },
 ] : [];
 
 /* ── What life knows ── */
@@ -86,7 +86,7 @@ export const knowsArea = (f: KnowsFilter): Area | null => f === 'All' ? null : f
 
 export const season = { label: 'Season 1 · Nov to Feb', toward: 'Your first home' };
 export const levelPlan = [
-  { name: 'Stabilize', line: 'Know where your cash is going; handle anything time-sensitive.', unlocks: ['30-day cash plan', 'Tax check', 'Sleep basics', '1 habit', 'Room for error', 'Remove before you add'] },
+  { name: 'Stabilise', line: 'Know where your cash is going; handle anything time-sensitive.', unlocks: ['30-day cash plan', 'Tax check', 'Sleep basics', '1 habit', 'Room for error', 'Remove before you add'] },
   { name: 'Set your routines', line: 'Bills, care and recurring costs on a routine you can keep.', unlocks: ['Money ledger, subscriptions', 'Body: readiness, fuel, journal, 3 habits', 'Routines: payday sweep, annual tax check'] },
   { name: 'Build momentum', line: 'Use the breathing room for one bigger decision, safely.', unlocks: ['Rent vs buy, income structure, bloodwork', 'Load, trends, journal insights, Teach it back', 'Routines: care review, subscription check'] },
   { name: 'Expand your options', line: 'Build assets, improve your safety nets, review what works.', unlocks: ['Protection review, growth path', 'Advanced sleep planning, habit graduation', 'Season reset: your new normal becomes level 1'] },
@@ -105,7 +105,7 @@ export const experiment = SHOW_SAMPLES ? {
     { name: 'Deep sleep', now: '1h 22m', base: '1h 05m', a: 100, b: 79 },
     { name: 'Readiness', now: '66', base: '59', a: 100, b: 89 },
   ],
-  says: '5 more days and life will tell you if it’s a real effect for you or just noise.',
+  says: '5 more days and Life will tell you if it’s a real effect for you or just noise.',
 } : null;
 export const nextExperiments = ['Morning daylight', 'Bedtime 22:45', 'No screens in bed'];
 
@@ -157,10 +157,10 @@ export function bornOn(profile: object, short = false): string | null {
 
 export type TestKey = 'personality' | 'clock' | 'values' | 'money';
 export const tests: { key: TestKey; photo: PhotoName; focal: Focal; name: string; what: string; why: string; time: string; to: ScreenKey }[] = [
-  { key: 'personality', photo: 'desk', focal: { x: 0.78, y: 0.3 }, name: 'Personality', what: 'The Big Five · 10 min', why: 'How life words nudges, and how much it nudges', time: '10 min', to: 'bigfive' },
-  { key: 'clock', photo: 'calmdesk', focal: { y: 0.92 }, name: 'Your body clock', what: 'Morning or evening type · 2 min', why: 'When life plans focus, workouts and wind-down', time: '2 min', to: 'chronotype' },
+  { key: 'personality', photo: 'desk', focal: { x: 0.78, y: 0.3 }, name: 'Personality', what: 'The Big Five · 10 min', why: 'How Life words nudges, and how much it nudges', time: '10 min', to: 'bigfive' },
+  { key: 'clock', photo: 'calmdesk', focal: { y: 0.92 }, name: 'Your body clock', what: 'Morning or evening type · 2 min', why: 'When Life plans focus, workouts and wind-down', time: '2 min', to: 'chronotype' },
   { key: 'values', photo: 'freedom', focal: { y: 0.78 }, name: 'What matters most', what: 'Values', why: 'Shapes your Aim and bigger decisions', time: '3 min', to: 'values' },
-  { key: 'money', photo: 'payslip', focal: { y: 0.89 }, name: 'You and money', what: 'Money mindset', why: 'How life talks about spending and saving', time: '3 min', to: 'tests' },
+  { key: 'money', photo: 'payslip', focal: { y: 0.89 }, name: 'You and money', what: 'Money mindset', why: 'How Life talks about spending and saving', time: '3 min', to: 'tests' },
 ];
 /** Which tests the sample life has done. */
 export const sampleTestsDone: TestKey[] = SHOW_SAMPLES ? ['personality', 'clock'] : [];
@@ -174,7 +174,7 @@ export const moneyStatements = ['I feel calmer when I know where every pound is 
 export const bigFive = {
   sentence: 'You’re {curious} and {warm}, you {follow through}, and you recharge {on your own}.',
   traits: [
-    { name: 'Openness', plain: 'Curious, likes new ideas', at: 80, so: 'life offers more experiments and new ideas' },
+    { name: 'Openness', plain: 'Curious, likes new ideas', at: 80, so: 'Life offers more experiments and new ideas' },
     { name: 'Conscientiousness', plain: 'Organised, follows through', at: 74, so: 'Fewer reminders; plans stay as you set them' },
     { name: 'Extraversion', plain: 'Energised by people', at: 26, so: 'Suggestions that work solo come first' },
     { name: 'Agreeableness', plain: 'Warm, cooperative', at: 76, so: 'Drafts stay friendly but firm when money’s at stake' },
@@ -222,10 +222,10 @@ export const vantageReach = ['', 'your cash plan, your tax and anything urgent',
 
 /** Level up: the four pages of the moment. The first one speaks to the level just reached. */
 export const levelupFirst: Record<number, { title: string; line: string }> = {
-  1: { title: 'You’ve made a start.', line: 'life knows enough to help. Next, {your cash plan} and {anything urgent}.' },
-  2: { title: 'You’re on stable ground.', line: 'Your cash plan is saved and {nothing is overdue}. Next, life puts {bills and care on a routine}.' },
-  3: { title: 'Your routines are running.', line: 'Bills and care {look after themselves}. Next, life helps with {one bigger decision}.' },
-  4: { title: 'You’ve built real momentum.', line: 'You made a big call {safely}. Next, life helps you {build assets and safety nets}.' },
+  1: { title: 'You’ve made a start.', line: 'Life knows enough to help. Next, {your cash plan} and {anything urgent}.' },
+  2: { title: 'You’re on stable ground.', line: 'Your cash plan is saved and {nothing is overdue}. Next, Life puts {bills and care on a routine}.' },
+  3: { title: 'Your routines are running.', line: 'Bills and care {look after themselves}. Next, Life helps with {one bigger decision}.' },
+  4: { title: 'You’ve built real momentum.', line: 'You made a big call {safely}. Next, Life helps you {build assets and safety nets}.' },
 };
 export const levelupMore: { chip: string; title: string; line: string; photo: PhotoName; focal: Focal; to: 'body' | 'routines' | 'aim' }[] = [
   { chip: 'New: Body', title: 'Sleep, readiness and fuel.', line: 'Plan your day around {how you slept}, from a watch or ring {you connect}.', photo: 'run', focal: { y: 0.45 }, to: 'body' },

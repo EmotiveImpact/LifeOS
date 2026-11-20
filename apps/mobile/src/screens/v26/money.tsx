@@ -99,7 +99,7 @@ export function MoneyV26() {
         <Row icon="trend" title="Net worth" sub={`${show(netWorth)} · up ${show(f.netWorthGain)} this year`} onPress={() => nav.go('networth')} />
         <Row icon="shield" title="Connect your bank" sub={data.choices.bank ? `${data.choices.bank} chosen · read-only` : 'Read-only'} right={<Chip label="Preview" tone="q" />} onPress={() => nav.go('connectbank')} />
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Balances are the ones you’ve given life. No bank is connected. Guidance, not advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>Balances are the ones you’ve given Life. No bank is connected. Guidance, not advice.</Callout>
     </Page>
   );
 }
@@ -157,7 +157,7 @@ export function SubsV26() {
         <SectionHead title="Cancelled" link={`${show(sum(cancelled.map(x => x.monthlyCost)) * 12, 2)} a year kept`} />
         <RowsCard>{cancelled.map(x => <Row key={x.id} lead={<Letter ch={x.name.charAt(0)} />} title={x.name} sub="Marked cancelled by you" right={<Chip label="Undo" onPress={() => setCancelled(x.id, false)} />} />)}</RowsCard>
       </> : null}
-      <Callout style={{ marginTop: space.md }}>life opens the provider’s cancel page. Nothing is cancelled without you.</Callout>
+      <Callout style={{ marginTop: space.md }}>Life opens the provider’s cancel page. Nothing is cancelled without you.</Callout>
     </Page>
   );
 }
@@ -187,7 +187,7 @@ export function AreaMoneyV26() {
         <Row icon="wallet" title="Money and ledger" sub={`${show(f.balance, 2)} across ${f.accounts.length} accounts`} onPress={() => nav.go('money')} />
         <Row icon="repeat" title="Subscriptions" sub={`${show(subs.monthly, 2)} a month`} onPress={() => nav.go('subs')} />
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Progress, not a score. life works it out from what you’ve told it.</Callout>
+      <Callout style={{ marginTop: space.md }}>Progress, not a score. Life works it out from what you’ve told it.</Callout>
     </Page>
   );
 }
@@ -230,7 +230,7 @@ export function TxnV26() {
         {isShop ? <PickRow label="Repeats" value="About weekly" set /> : <PickRow label="Recorded as" value={x.detail} set />}
       </View>
       {data.flags['txn-category-edit'] ? <FilterChips wrap options={CATEGORIES.map(v => ({ value: v, label: v }))} value={category as (typeof CATEGORIES)[number]} onChange={v => { choose(`category-${x.name}`, v); flag('txn-category-edit', false); feedback.select(); }} style={{ marginTop: space.sm }} /> : null}
-      <Callout center style={{ marginTop: space.sm }}>{split2 ? 'Split saved on this phone. Nothing is sent to Sam.' : 'Change the category once and life remembers.'}</Callout>
+      <Callout center style={{ marginTop: space.sm }}>{split2 ? 'Split saved on this phone. Nothing is sent to Sam.' : 'Change the category once and Life remembers.'}</Callout>
     </Page>
   );
 }
@@ -253,7 +253,7 @@ export function BillV26() {
         <Chip label={alone ? `You could pay ${show(saving)} less a month` : 'Check your household discount'} tone="live" />
         <Statement s={alone ? 'You live alone, so the {25% single person discount} applies.' : 'You share your home, so the {single person discount} may not apply.'} style={{ marginTop: space.sm }} />
         <LifeSays style={{ marginTop: space.md }}>I’ll fill in the council’s form, show it to you, then send it and watch for the reply.</LifeSays>
-        <Btn label={alone ? 'Claim it for me' : 'Check with life'} onPress={() => { set({ selectedMission: 'uk-single-person-council' }); nav.go('mission'); }} style={{ marginTop: space.md }} />
+        <Btn label={alone ? 'Claim it for me' : 'Check with Life'} onPress={() => { set({ selectedMission: 'uk-single-person-council' }); nav.go('mission'); }} style={{ marginTop: space.md }} />
         <Callout center style={{ marginTop: space.sm }}>{`About ${show(f.councilTaxMonthly - saving)} a month if the council agrees. Nothing is sent without your OK.`}</Callout>
       </Box>
       <Box style={{ marginTop: space.sm }}>
@@ -261,7 +261,7 @@ export function BillV26() {
         <DotGrid cells={Array(12).fill('on') as DotCell[]} columns={12} style={{ marginTop: space.md }} label="12 payments made, one each month" />
         <View style={[styles.months, { marginTop: space.xs }]}>{'DJFMAMJJASON'.split('').map((m, k) => <Text key={k} variant="micro" tone="ink2" style={{ flex: 1, textAlign: 'center' }}>{m}</Text>)}</View>
       </Box>
-      <Callout style={{ marginTop: space.md }}>An estimate from what you’ve told life. Your council decides. Guidance, not advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>An estimate from what you’ve told Life. Your council decides. Guidance, not advice.</Callout>
     </Page>
   );
 }
@@ -302,7 +302,7 @@ export function BudgetV26() {
       <RowsCard>
         {covered.map(b => <Row key={b.name} photo={b.name === 'Rent' ? photos.terrace : photos.payslip} title={b.name} sub={`${show(b.spent)} of ${show(b.limit)}`} right={<Chip label={b.spent >= b.limit ? 'Covered' : 'Filling'} tone={b.spent >= b.limit ? 'done' : 'q'} />} />)}
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Worked out from the payments you’ve given life. Guidance, not advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>Worked out from the payments you’ve given Life. Guidance, not advice.</Callout>
     </Page>
   );
 }
@@ -340,7 +340,7 @@ export function NetWorthV26() {
         </View>
         {owe.some(n => /student/i.test(n.name)) ? <Callout style={{ marginTop: 2 }}>The student loan doesn’t act like debt. Repayments move with what you earn.</Callout> : null}
       </Box>
-      <Callout style={{ marginTop: space.md }}>Pensions and property count. Values are the last ones you gave life. Guidance, not advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>Pensions and property count. Values are the last ones you gave Life. Guidance, not advice.</Callout>
     </Page>
   );
 }
@@ -358,9 +358,9 @@ export function ConnectBankV26() {
       </>}>
       <View style={[styles.shield, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><Icon name="shield" size={24} color={t.ink} /></View>
       <Display s="See {all your money} in one place." style={{ marginTop: space.md }} />
-      <Body s="Read-only, through a regulated Open Banking provider. {This is a preview:} connecting isn’t switched on yet. life keeps your choice and asks when it is." style={{ marginTop: space.xs }} />
+      <Body s="Read-only, through a regulated Open Banking provider. {This is a preview:} connecting isn’t switched on yet. Life keeps your choice and asks when it is." style={{ marginTop: space.xs }} />
       <RowsCard style={{ marginTop: space.lg }}>
-        <Row icon="eye" title="Read-only" sub="life can’t move money" />
+        <Row icon="eye" title="Read-only" sub="Life can’t move money" />
         <Row icon="shield" title="Your login stays with your bank" sub="You approve in your bank’s app" />
         <Row icon="clock" title="Ends after 90 days" sub="Renew in one tap" />
       </RowsCard>
@@ -413,7 +413,7 @@ export function VaultV26() {
             </View>
           </Box>
         </PeekStack>
-      ) : <Callout style={{ marginTop: space.lg }}>Nothing to act on. Scan a letter or a document and life keeps its dates for you.</Callout>}
+      ) : <Callout style={{ marginTop: space.lg }}>Nothing to act on. Scan a letter or a document and Life keeps its dates for you.</Callout>}
       {sorted.length ? <SectionHead title="Filed" link={`${sorted.length} sorted`} /> : null}
       {passport ? <PhotoCard source={photos.passport} focal={{ y: 0.83 }} height={170} size="md" chips={[`In ${monthsTo(docDates.passport)} months`]} chipRight={{ label: 'Copy saved', icon: 'check' }} title="Passport" sub={passport.summary} onPress={() => open('passport')} /> : null}
       {others.length ? <RowsCard style={{ marginTop: space.sm }}>
@@ -443,7 +443,7 @@ export function DocDetailV26() {
       removed ? { label: 'Undo removal', icon: 'repeat', onPress: () => flag(`document-removed-${doc.id}`, false) } : { label: 'Remove this copy', icon: 'trash', destructive: true, onPress: () => flag(`document-removed-${doc.id}`, true) },
     ] } }}>
       <BigPhoto source={passport ? photos.passport : photos.letter} focal={{ y: passport ? 1 : 0.6 }} height={300} chip={`Expires ${doc.expires}`} chipRight={removed ? undefined : { label: 'Copy saved', icon: 'check' }}
-        figure={months !== undefined ? `${months} months` : doc.expires} sub={months !== undefined ? `left on your ${doc.name.toLowerCase()}. ${months > renewMonths ? 'Nothing to do yet.' : 'Time to renew.'}` : 'The date life keeps for you.'} style={{ marginTop: space.xxs }} />
+        figure={months !== undefined ? `${months} months` : doc.expires} sub={months !== undefined ? `left on your ${doc.name.toLowerCase()}. ${months > renewMonths ? 'Nothing to do yet.' : 'Time to renew.'}` : 'The date Life keeps for you.'} style={{ marginTop: space.xxs }} />
       {months !== undefined ? <Box style={{ marginTop: space.sm }}>
         <Between><Text variant="title">The countdown</Text><Text variant="callout" tone="ink2">one dot a month</Text></Between>
         <DotGrid cells={cells} columns={Math.max(cells.length, 12)} style={{ marginTop: space.md }} label={`${months} months left, renew in the last ${renewMonths}`} />
@@ -452,7 +452,7 @@ export function DocDetailV26() {
       <SectionHead title="When to act" />
       <Timeline items={[
         { when: 'YOUR COPY', text: removed ? 'Copy removed from this phone.' : passport ? 'Photo page saved on this phone.' : 'Saved on this phone.', state: 'done' },
-        { when: doc.actFrom.toUpperCase(), text: reminder ? 'life will remind you.' : 'No reminder. You’ll keep track.', state: 'now', children: (
+        { when: doc.actFrom.toUpperCase(), text: reminder ? 'Life will remind you.' : 'No reminder. You’ll keep track.', state: 'now', children: (
           <Box pad={space.md} style={{ marginTop: space.sm }}>
             <Between><Text variant="title">{reminder ? 'Reminder set' : 'Reminder off'}</Text><SwitchV26 value={reminder} onChange={v => { flag(`document-reminder-${doc.id}`, v); feedback.select(); }} accessibilityLabel={`Remind me in ${doc.actFrom}`} /></Between>
             <Callout style={{ marginTop: space.xs }}>{passport ? 'Six months before expiry, with time to spare for summer travel.' : 'With time to compare and book.'}</Callout>
@@ -477,7 +477,7 @@ export function RenewalV26() {
   return (
     <Page screen="renewal" bar={{ kind: 'push', action: { kind: 'icon', icon: 'info', label: 'Why this shows here', onPress: () => nav.go('why') } }}
       footer={<>
-        <Btn label={looking ? 'life looks from 22 Jan' : 'Compare quotes'} icon={looking ? 'check' : 'search'} onPress={() => { flag('renew-look'); feedback.select(); }} />
+        <Btn label={looking ? 'Life looks from 22 Jan' : 'Compare quotes'} icon={looking ? 'check' : 'search'} onPress={() => { flag('renew-look'); feedback.select(); }} />
         <Callout center>Guidance, not advice. Nothing switches without you.</Callout>
       </>}>
       <Eyebrow right={<Chip label="Best window" tone="live" />}>Car insurance · renews 14 February</Eyebrow>
@@ -488,7 +488,7 @@ export function RenewalV26() {
           <Text variant="callout" tone="ink2">A better quote</Text>
           <View style={{ marginTop: 22 }}><LifeOrb size={44} state={looking ? 'searching' : 'ring'} /></View>
           <View style={{ flex: 1 }} />
-          <Text variant="callout" tone="ink2">{looking ? 'life starts looking on 22 Jan and shows you what it finds. You choose.' : 'Not found yet. life looks from 22 Jan, when you say. You choose.'}</Text>
+          <Text variant="callout" tone="ink2">{looking ? 'Life starts looking on 22 Jan and shows you what it finds. You choose.' : 'Not found yet. Life looks from 22 Jan, when you say. You choose.'}</Text>
         </TintCard>
       </PhotoGrid>
       <Callout style={{ marginTop: space.sm }}>Prices are usually lowest around three weeks before renewal.</Callout>

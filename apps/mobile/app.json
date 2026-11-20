@@ -29,10 +29,28 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#F6F5F1"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_HEART_RATE_VARIABILITY",
+        "android.permission.health.READ_OXYGEN_SATURATION",
+        "android.permission.health.READ_RESPIRATORY_RATE",
+        "android.permission.health.READ_RESTING_HEART_RATE",
+        "android.permission.health.READ_SKIN_TEMPERATURE",
+        "android.permission.health.READ_SLEEP",
+        "android.permission.health.READ_STEPS"
+      ]
     },
     "plugins": [
-      ["expo-router", { "asyncRoutes": { "web": false } }],
+      [
+        "expo-router",
+        {
+          "asyncRoutes": {
+            "web": false
+          }
+        }
+      ],
       "expo-font",
       [
         "expo-splash-screen",
@@ -44,13 +62,34 @@
       ],
       "expo-status-bar",
       "expo-audio",
-      ["expo-image-picker", {
-        "photosPermission": "life uses only the photos you choose to attach.",
-        "cameraPermission": "life uses the camera when you choose to scan a letter or take a photo.",
-        "microphonePermission": "life uses the microphone only when you choose to talk."
-      }],
-      ["expo-sqlite", { "useSQLCipher": true }],
-      "expo-secure-store"
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "life uses only the photos you choose to attach.",
+          "cameraPermission": "life uses the camera when you choose to scan a letter or take a photo.",
+          "microphonePermission": "life uses the microphone only when you choose to talk."
+        }
+      ],
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
+      "expo-secure-store",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "life reads only the sleep, heart and activity you switch on, to show your readiness and plan your day. It stays on your phone.",
+          "NSHealthUpdateUsageDescription": false,
+          "background": false
+        }
+      ],
+      "react-native-health-connect",
+      [
+        "./plugins/withAndroidMinSdk",
+        26
+      ]
     ],
     "experiments": {
       "typedRoutes": true

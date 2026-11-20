@@ -18,6 +18,10 @@ export type SyncResult = { status: 'offline' | 'synced'; pending: number; applie
 
 /** Health memories stay on this phone unless the person turns on "Sync health memories" (owner decision 4, 20 Nov). */
 export const HEALTH_MEMORY_SYNC = 'sync-health-memories';
+/** A forgotten memory keeps only its dates, here as on the server (apps/api/src/sync.ts). */
+const wipedOnDelete = new Set<TableName>(['memory']);
+const META = new Set(['id', 'user_id', 'created_at', 'updated_at', 'deleted_at']);
+const blankContent = (table: TableName, row: DataRow): DataRow => ({ ...row, ...Object.fromEntries(columns[table].filter(c => !META.has(c.key)).map(c => [c.key, null])) });
 export const isHealthMemory = (table: TableName, row: Record<string, unknown>) => {
   if (table !== 'memory' || !row.source || typeof row.source !== 'object') return false;
   const source = row.source as Record<string, unknown>;
@@ -126,7 +130,9 @@ export class LifeDataStore {
   }
   private async remove(tx: SqlExecutor, table: TableName, id: string) {
     this.check(table); const row = await this.read(tx, table, id); if (!row || row.deleted_at) return;
-    const at = this.stamp(row.updated_at); const deleted = { ...row, updated_at: at, deleted_at: at };
+    const at = this.stamp(row.updated_at); const deleted = { ...(wipedOnDelete.has(table) ? blankContent(table, row) : row), updated_at: at, deleted_at: at };
+    // Unsent edits of a forgotten memory still hold its words: they go, and only the delete is sent.
+    if (wipedOnDelete.has(table)) await tx.run('DELETE FROM outbox WHERE user_id = ? AND table_name = ? AND row_id = ?', [this.userId, table, id]);
     await this.writeRaw(tx, table, deleted); await this.enqueue(tx, table, deleted, 'delete');
   }
   async atomic<T>(body: (tx: WriteTransaction) => Promise<T>): Promise<T> {
@@ -261,7 +267,7 @@ export class LifeDataStore {
         if (owner && owner.user_id !== this.userId) throw new Error('Row ID unavailable');
         if (change.op === 'delete' && !row.deleted_at) throw new Error('Missing remote tombstone');
         const blank = Object.fromEntries(columns[change.table].map(c => [c.key, null]));
-        await this.writeRaw(tx, change.table, { ...blank, ...current, ...row } as DataRow);
+        await this.writeRaw(tx, change.table, { ...blank, ...(change.op === 'delete' && wipedOnDelete.has(change.table) ? {} : current), ...row } as DataRow);
         applied++;
       }
       await tx.run('INSERT INTO sync_cursor(user_id,cursor) VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET cursor=excluded.cursor', [this.userId, response.cursor]);

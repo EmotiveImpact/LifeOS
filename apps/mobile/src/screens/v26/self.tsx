@@ -57,7 +57,7 @@ export function TestsV26() {
   };
   return (
     <Page screen="tests" bar={{ kind: 'push' }}>
-      <TitleCard source={photos.journal} focal={{ y: 0.51 }} height={220} chip={`${count} of ${tests.length} done`} title="Know yourself" sub="So life can fit you, not the average person." style={{ marginTop: space.xxs }} />
+      <TitleCard source={photos.journal} focal={{ y: 0.51 }} height={220} chip={`${count} of ${tests.length} done`} title="Know yourself" sub="So Life can fit you, not the average person." style={{ marginTop: space.xxs }} />
       <View style={[styles.grid, { marginTop: space.sm }]}>
         {tests.map(x => {
           const d = done(x.key);
@@ -155,7 +155,7 @@ function TraitLine({ at }: { at: number }) {
 
 export function BigfiveV26() {
   const t = useTokens(), { data } = useSeed();
-  const share = () => { void Share.share({ message: `My Big Five, from life: ${bigFive.traits.map(x => `${x.name} ${x.plain.toLowerCase()}`).join('; ')}.` }); };
+  const share = () => { void Share.share({ message: `My Big Five, from Life: ${bigFive.traits.map(x => `${x.name} ${x.plain.toLowerCase()}`).join('; ')}.` }); };
   return (
     <Page screen="bigfive" bar={{ kind: 'push', title: 'Personality', action: { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: share } }}>
       <View style={styles.eyebrow}>
@@ -236,8 +236,8 @@ export function ValuesV26() {
         })}
       </View>
       <Box style={{ marginTop: space.sm }}>
-        <Micro>How life uses this</Micro>
-        <LifeSays style={{ marginTop: space.sm }}><Body s={`When a choice is close, life shows which option fits {${values[0]}} and {${values[1]}} best, not just which pays more.`} tone="ink" /></LifeSays>
+        <Micro>How Life uses this</Micro>
+        <LifeSays style={{ marginTop: space.sm }}><Body s={`When a choice is close, Life shows which option fits {${values[0]}} and {${values[1]}} best, not just which pays more.`} tone="ink" /></LifeSays>
         <Callout style={{ marginTop: space.sm }}>They sit under your Chief Aim.</Callout>
       </Box>
     </Page>
@@ -281,7 +281,7 @@ export function MeasuresV26() {
   const toggle = (k: string) => setOpen(o => (o === k ? null : k));
   return (
     <Page screen="measures" bar={{ kind: 'push', title: 'Body numbers' }}>
-      <Eyebrow>Everything life knows about your body</Eyebrow>
+      <Eyebrow>Everything Life knows about your body</Eyebrow>
       <Display s="{Ten numbers.} Each shows where it’s from and what it changes." />
       <TintCard area="you" style={{ marginTop: space.xl }}>
         <Head icon="trend" title="Smart scale" right="updates itself" />
@@ -301,7 +301,7 @@ export function MeasuresV26() {
         <V26Tile label="BMI" scale="Calculated" value={bmi.toFixed(1)} sub="A rough screen only" onPress={() => nav.go('bmi')} />
         <V26Tile label="Activity level" scale="Weekly" value={b.activity} sub="Measured. Changes food targets" />
       </TileGrid>
-      <SectionHead title="You tell life" link="asked about once a month" />
+      <SectionHead title="You tell Life" link="asked about once a month" />
       <View style={{ gap: space.xs }}>
         <Ask name="Height" changes="Changes food targets, BMI, load" value={`${Math.round(data.heightCm)} cm`} open={open === 'height'} onPress={() => toggle('height')}>
           <Field label="Height in cm" value={String(Math.round(data.heightCm))} onChangeText={num('heightCm')} keyboardType="numeric" />

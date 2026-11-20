@@ -3,6 +3,7 @@
  * (samples.ts) or supplied directly by a wearable's own daily summary. Every row carries the zone it was lived in.
  */
 import type { DateKey } from '../time/zone';
+import type { StressDay } from './stress';
 
 export type HrvMethod = 'sdnn' | 'rmssd';
 
@@ -40,6 +41,8 @@ export interface DailyHealth {
   respiratoryRate?: number;
   /** Skin or wrist temperature against your own normal, °C. */
   skinTempDelta?: number;
+  /** A watch's absolute overnight wrist temperature, °C; `withSkinTempDeltas` (days.ts) turns it into a change. */
+  skinTemp?: number;
   /** Blood oxygen, percent (0–100). */
   spo2?: number;
   steps?: number;
@@ -48,6 +51,15 @@ export interface DailyHealth {
   trimp?: number;
   /** A wearable's own recovery or readiness score, 0–100, used as one input and named as its source. */
   externalRecovery?: { value: number; source: string };
+  /** The day's stress in half hours (stress.ts), from heart rate while still. */
+  stress?: DayStress;
+}
+
+/** A day's stress: each window's level from the life day's start (null when moving or unmeasured). */
+export interface DayStress extends StressDay {
+  /** UTC milliseconds the first window starts (the life day's start). */
+  start: number;
+  windowMinutes: number;
 }
 
 /** How sure a number is (SPEC §3.8 honesty badges). */

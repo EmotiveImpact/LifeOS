@@ -2,12 +2,16 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import { AppState, useColorScheme } from 'react-native';
 import { Uniwind } from 'uniwind';
 import { setFeedbackPrefs } from '@/design/feedback';
+import { setSentenceIcons } from '@/design/sentenceIcons';
 import { engineSnapshot, seed, seedAim, seedMeal, seedPeople, seedProfile, seedPulseLog, seedRecords, seedKnownRecords, seedKnowledge, type ChiefAim, type FiledRecord, type MealItem, type MemoryEntry, seedMemoryCategories } from './seed';
 import { openProjectionStorage } from './persistence';
 import { removeAttachmentCopy } from '@/services/attachments';
 import type { ProjectionStorage } from './persistence.types';
+import type { QueuedAi } from '@/services/aiQueue';
+import { emptyHealth, type HealthState } from '@/services/health/ingest';
 import type { UserProfile } from '@life/core/types';
 import { emptyBrainState, type BrainState } from '@life/brain';
+import { emptyLoops, type LoopsState } from '@life/core';
 import { confirmBrainRecords } from '@/services/brainState';
 import { currentTransport } from '@/services/syncTransport';
 
@@ -19,16 +23,24 @@ export type SeedData = {
   people: typeof seedPeople; meal: MealItem[]; mealLogged: boolean; meals: { id: string; name: string; at: string; items: MealItem[]; day?: string; photo?: string; via?: 'photo' | 'said' | 'scan' | 'search' | 'saved' | 'quick' | 'menu' | 'label' | 'plan'; from?: string }[];
   habits: typeof seed.habits; journal: string[]; weightKg: number; heightCm: number; waistCm: number;
   learned: string[]; memories: MemoryEntry[];
-  prefs: { dark: boolean; sounds: boolean; haptics: boolean; handDrawn: boolean; hideNumbers: boolean; hideBalances: boolean; glimpses: boolean; followMood: boolean; look: 'mix' | 'places'; notifications: boolean; privateMode: boolean; addback: 'None' | 'Half' | 'All' };
+  /** AI requests waiting for a connection (services/aiQueue.ts). Kept on this phone only. */
+  aiQueue: QueuedAi[];
+  /** Health readings, one row per day (services/health/ingest.ts). Kept on this phone only. */
+  health: HealthState;
+  prefs: { dark: boolean; sounds: boolean; haptics: boolean; handDrawn: boolean; hideNumbers: boolean; hideBalances: boolean; glimpses: boolean; followMood: boolean; look: 'mix' | 'places'; notifications: boolean; privateMode: boolean; addback: 'None' | 'Half' | 'All'; /** Small icons beside key words in sentences; off shows words only. */ sentenceIcons: boolean };
   flags: Record<string, boolean>; choices: Record<string, string>; drafts: Record<string, string>;
+  /** The three core loops: plans by day, step ticks, check-in style and what counts as a win (`state/loops.ts`). */
+  loops: LoopsState;
 };
 const initial: SeedData = {
   brain: emptyBrainState(),
   profile: seedProfile, onboardingDone: false, aim: seedAim, records: seedKnownRecords, proposals: seedRecords, knowledge: seedKnowledge, completed: [], missionSteps: {}, selectedMission: 'uk-hmrc-tax-code', pulseLog: seedPulseLog, people: seedPeople,
   meal: seedMeal, mealLogged: false, meals: [], habits: seed.habits, journal: [], weightKg: seed.body.weightKg, heightCm: seed.body.heightCm, waistCm: seed.body.waistCm, learned: [],
+  aiQueue: [],
+  health: emptyHealth(),
   memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov', category: 'Money' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov', category: 'People' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov', category: 'Money' }],
-  prefs: { dark: true, sounds: true, haptics: true, handDrawn: false, hideNumbers: false, hideBalances: false, glimpses: true, followMood: true, look: 'mix', notifications: true, privateMode: false, addback: 'Half' },
-  flags: {}, choices: {}, drafts: {},
+  prefs: { dark: true, sounds: true, haptics: true, handDrawn: false, hideNumbers: false, hideBalances: false, glimpses: true, followMood: true, look: 'mix', notifications: true, privateMode: false, addback: 'Half', sentenceIcons: true },
+  flags: {}, choices: {}, drafts: {}, loops: emptyLoops(),
 };
 type SeedContextValue = {
   data: SeedData; hydrated: boolean; storageError: boolean; storageMode: ProjectionStorage['mode'] | null;
@@ -52,7 +64,7 @@ type SeedContextValue = {
 function hydrate(loaded: unknown): SeedData {
   if (loaded !== null && (typeof loaded !== 'object' || Array.isArray(loaded))) throw new Error('Invalid local projection');
   const saved = (loaded ?? {}) as Partial<SeedData>;
-  return { ...initial, ...saved, memories: (saved.memories ?? initial.memories).map(memory => ({ ...memory, category: memory.category ?? seedMemoryCategories[memory.id] })), prefs: { ...initial.prefs, ...saved.prefs }, knowledge: { ...initial.knowledge, ...saved.knowledge, areas: { ...initial.knowledge.areas, ...saved.knowledge?.areas } } };
+  return { ...initial, ...saved, health: { ...emptyHealth(), ...saved.health }, memories: (saved.memories ?? initial.memories).map(memory => ({ ...memory, category: memory.category ?? seedMemoryCategories[memory.id] })), prefs: { ...initial.prefs, ...saved.prefs }, knowledge: { ...initial.knowledge, ...saved.knowledge, areas: { ...initial.knowledge.areas, ...saved.knowledge?.areas } } };
 }
 const SYNC_AFTER_CHANGE_MS = 3000;
 const Context = createContext<SeedContextValue | null>(null);
@@ -95,6 +107,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     Uniwind.setTheme((data.choices.appearance === 'System' ? systemScheme === 'dark' : data.prefs.dark) ? 'dark' : 'light');
     setFeedbackPrefs({ sound: data.prefs.sounds, haptics: data.prefs.haptics });
+    setSentenceIcons(data.prefs.sentenceIcons !== false); // saved lives from before the switch keep their icons
   }, [data.prefs, data.choices.appearance, systemScheme]);
 
   useEffect(() => {

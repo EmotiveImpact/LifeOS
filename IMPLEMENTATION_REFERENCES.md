@@ -32,7 +32,7 @@
 | Sync to Postgres (Neon) | [powersync-ja/powersync-js](https://github.com/powersync-ja/powersync-js) | Apache-2.0 | Only if our own push/pull sync gets hard: local-first SQLite ↔ Postgres (MASTER_PLAN §3.1) |
 | Auth | [better-auth/better-auth](https://github.com/better-auth/better-auth) | MIT | Sign in with Apple, Google, email in our API, with Neon Postgres |
 | Wearable aggregator (self-hosted) | [the-momentum/open-wearables](https://github.com/the-momentum/open-wearables) | MIT | One API for many wearables (Garmin, Polar, Suunto…) without paying Terra; evaluate for Phase 4b v2 |
-| AI memory | [mem0ai/mem0](https://github.com/mem0ai/mem0) | Apache-2.0 | **Used: life's memory engine**, self-hosted on Neon pgvector behind `memory.ts` (Phase 3) |
+| AI memory | [mem0ai/mem0](https://github.com/mem0ai/mem0) | Apache-2.0 | **Pattern only, not installed** (owner, 20 Nov 2026): life owns its memory layer, `packages/brain/src/memory.ts`, borrowing mem0's add, merge, update loop and Graphiti's dated facts (Phase 25) |
 | App framework | [expo/expo](https://github.com/expo/expo) | MIT | Examples for config plugins, EAS builds, background tasks |
 
 ## 2. Health and WHOOP-style scoring

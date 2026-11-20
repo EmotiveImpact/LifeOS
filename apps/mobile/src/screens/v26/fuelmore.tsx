@@ -540,7 +540,7 @@ export function WeekbudgetV26() {
         <Callout style={{ marginTop: space.xs }}>Monday to Friday are eaten. Saturday and Sunday are the plan.</Callout>
       </TintCard>
       <PhotoCard source={photos.birthday} focal={{ x: .55, y: .62, zoom: 1 }} height={176} size="md" style={{ marginTop: space.sm }} chips={[week.birthday]}
-        title="Saturday is a birthday dinner" sub={`life will keep Sunday about ${n(day.target - week.plan[1])} lighter, so the week still balances.`} />
+        title="Saturday is a birthday dinner" sub={`Life will keep Sunday about ${n(day.target - week.plan[1])} lighter, so the week still balances.`} />
       <Box pad={space.md} style={{ marginTop: space.sm }}>
         <Between>
           <View style={{ flex: 1, minWidth: 0 }}><Text variant="title">Carry unused calories to the weekend</Text><Text variant="callout" tone="ink2">Your choice. Off until you turn it on.</Text></View>
@@ -580,7 +580,7 @@ function WindowBox({ label }: { label: string }) {
 export function MealtimingV26() {
   const nav = useNavigation(), { choose } = useSeed();
   return (
-    <Page screen="mealtiming" bar={{ kind: 'push', title: 'Meal timing', action: info('How life found this', () => nav.go('math')) }}
+    <Page screen="mealtiming" bar={{ kind: 'push', title: 'Meal timing', action: info('How Life found this', () => nav.go('math')) }}
       footer={<Btn label="Try finishing by 20:30 for two weeks" onPress={() => { choose('experiment', 'Finish dinner by 20:30'); nav.go('experiment'); }} />}>
       <Eyebrow>Meals and your sleep</Eyebrow>
       <Display s={`When dinner ends {after ${timing.late}:00}, you sleep {${timing.lessSleep} minutes less} and your HRV is {lower}.`} />
@@ -690,7 +690,7 @@ export function ImportfoodV26() {
     <Page screen="importfood" bar={{ kind: 'push', title: 'Import' }}>
       <View style={[styles.importIcon, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><Icon name="arrowDown" size={22} color={t.ink} /></View>
       <Display s="Start from {your real history}, not from zero." style={{ marginTop: space.lg }} />
-      <Body s="Bring your past food and weight from another app, so life’s targets and patterns begin with what you’ve already logged." style={{ marginTop: space.sm }} />
+      <Body s="Bring your past food and weight from another app, so Life’s targets and patterns begin with what you’ve already logged." style={{ marginTop: space.sm }} />
       <View style={{ marginTop: space.lg }}>
         {source('health', 'heart', 'Apple Health', 'Food and weight from other apps', 'Connect', () => { flag('food-import-health', true); feedback.select(); })}
         {source('mfp', 'doc', 'MyFitnessPal', 'Export a CSV, then pick it here', 'Choose file', () => void choose_('mfp'))}

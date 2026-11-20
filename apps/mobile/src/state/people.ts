@@ -68,7 +68,7 @@ export const kofiCase = {
   idea2: { when: 'SEPTEMBER · IN TALK', text: '“His old one’s falling apart.”', gift: 'Running vest', giftSub: 'Gift idea, from what you said' },
   card: { when: 'BY WEDNESDAY', text: 'Order a card, so it lands for Saturday.', post: 'Second-class post takes until Friday.' },
   gift: { when: 'BEFORE SATURDAY', text: 'Get the gift, from your two ideas.' },
-  message: { when: 'SATURDAY MORNING', text: 'Message on the day. life drafts it, you send it.', draft: 'Happy birthday, Kofi! Hope 31 starts well. Call you tonight.' },
+  message: { when: 'SATURDAY MORNING', text: 'Message on the day. Life drafts it, you send it.', draft: 'Happy birthday, Kofi! Hope 31 starts well. Call you tonight.' },
   lastSpoke: 'Sunday · phone call',
 };
 export const planSteps = ['Order a card', 'Get the gift', 'Message on the day'];

@@ -1,6 +1,7 @@
 import type { Context, Fact, Memory, Move, Source } from '@life/brain';
 import { computeIncomeBreakdown, computeLifeScore, getEligibleTasks } from '@life/core/engine';
 import type { SeedData } from '@/state/SeedProvider';
+import { liveMemory } from './memory';
 
 /** The engine, not a prompt, calculates every financial/score fact. The demo
  * profile remains explicitly sample until each relevant field is confirmed. */
@@ -18,7 +19,8 @@ export function brainContext(data: SeedData): Context {
   // under consent that names health (packages/brain/src/consent.ts).
   for (const record of data.records.filter(record => record.status === 'confirmed')) facts.push({ id: `record:${record.id}`, label: record.label, value: record.label, ...(record.area === 'health' ? { sensitivity: 'health' as const } : {}), source: { id: `record:${record.id}`, label: `${confirmed.has(record.id) ? 'Confirmed' : 'Sample'} · ${record.source.type}`, kind: 'record', at: record.source.at, sample: !confirmed.has(record.id) } });
   const liveRecords = new Set(data.records.filter(record => record.status === 'confirmed').map(record => record.id));
-  const memories: Memory[] = data.memories.filter(memory => !data.flags[`forgot-${memory.id}`] && (!memory.recordId || liveRecords.has(memory.recordId))).map(memory => ({ id: memory.id, text: memory.text, recordId: memory.recordId, ...(memory.category === 'Body' ? { sensitivity: 'health' as const } : {}), source: { id: `memory:${memory.id}`, kind: 'memory', label: memory.source, sample: !memory.recordId && ['rent', 'kofi', 'aim'].includes(memory.id) } }));
+  // Forgotten (deleted, or flagged on an older build), closed and orphaned memories never reach a model.
+  const memories: Memory[] = data.memories.filter(memory => !data.flags[`forgot-${memory.id}`] && liveMemory(memory) && (!memory.recordId || liveRecords.has(memory.recordId))).map(memory => ({ id: memory.id, text: memory.text, recordId: memory.recordId, ...(memory.category === 'Body' ? { sensitivity: 'health' as const } : {}), source: { id: `memory:${memory.id}`, kind: 'memory', label: memory.source, sample: !memory.recordId && ['rent', 'kofi', 'aim'].includes(memory.id) } }));
   // Values remain engine-owned. Do not infer deadlines or readiness from a
   // fixture, and do not claim a contextual bandit is already learning.
   const rank = { urgent: 0, high: 1, recommended: 2 };

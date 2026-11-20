@@ -1,6 +1,7 @@
 import type { Proposal } from '@life/brain';
 import type { SeedData } from '@/state/SeedProvider';
-import type { FiledRecord, MemoryCategory } from '@/state/seed';
+import type { FiledRecord } from '@/state/seed';
+import { rememberConfirmed } from './memory';
 import type { UserProfile } from '@life/core/types';
 
 // Profile facts replace one known record each; notes and the record kinds
@@ -20,16 +21,9 @@ export function proposalRecord(proposal: Proposal, source: 'talk' | 'chat' | 'do
   return { id: ids[proposal.field] || proposal.id, brainField: proposal.field, kind: proposal.field === 'goal' ? 'goal' : 'fact', area: proposal.area, label: proposal.field === 'income' || proposal.field === 'rent' ? `${proposal.label}: ${proposal.value}` : proposal.label, value: proposal.value, profilePatch, source: { type: source, at, excerpt: proposal.quote }, status: 'proposed' };
 }
 
-/** Confirmation is the sole bridge from a proposed model/rules result to memory.
- * Profile patching remains in the existing confirmation transaction. */
-export function confirmBrainRecords(data: SeedData): Pick<SeedData, 'brain' | 'memories'> {
-  const accepted = data.proposals.filter(record => record.status !== 'removed' && 'brainField' in record);
-  const categories: Partial<Record<FiledRecord['area'], MemoryCategory>> = { money: 'Money', home: 'Money', work: 'Money', goal: 'Money', health: 'Body', you: 'People' };
-  const memories = [...data.memories];
-  for (const record of accepted) {
-    const memory = { id: `confirmed:${record.id}`, recordId: record.id, text: record.label, source: `Confirmed from ${record.source.type} · ${new Date(record.source.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`, category: categories[record.area] };
-    const index = memories.findIndex(existing => existing.id === memory.id);
-    if (index < 0) memories.push(memory); else memories[index] = memory;
-  }
-  return { memories, brain: { ...data.brain, confirmedRecordIds: [...new Set([...data.brain.confirmedRecordIds, ...accepted.map(record => record.id)])] } };
+/** Confirmation is the sole bridge from a proposed model/rules result to memory, through the memory loop
+ * (services/memory.ts). Profile patching remains in the existing confirmation transaction. */
+export function confirmBrainRecords(data: SeedData, now = Date.now()): Pick<SeedData, 'brain' | 'memories'> {
+  const accepted = data.proposals.filter(record => record.status !== 'removed' && 'brainField' in record) as (FiledRecord & { brainField: Proposal['field'] })[];
+  return { memories: accepted.length ? rememberConfirmed(data.memories, accepted, now) : data.memories, brain: { ...data.brain, confirmedRecordIds: [...new Set([...data.brain.confirmedRecordIds, ...accepted.map(record => record.id)])] } };
 }

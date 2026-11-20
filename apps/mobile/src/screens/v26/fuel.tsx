@@ -246,7 +246,7 @@ export function SnapV26() {
           {error ? <Body s={error} tone="ink" style={{ marginTop: space.md }} /> : (
             <View style={styles.saysRow}>
               <LifeOrb size={20} state="searching" />
-              <Text variant="body" style={{ flex: 1 }}>{SHOW_SAMPLES ? `life sees ${seen.length} things so far: ${list}.` : 'Tap the shutter to take a photo of your plate.'}</Text>
+              <Text variant="body" style={{ flex: 1 }}>{SHOW_SAMPLES ? `Life sees ${seen.length} things so far: ${list}.` : 'Tap the shutter to take a photo of your plate.'}</Text>
             </View>
           )}
           <Callout style={{ marginTop: space.xs }}>Portions are estimates. You can adjust them next.</Callout>
@@ -348,7 +348,7 @@ export function ConfirmV26() {
             </ScrollItems>
           ) : (
             <View style={{ paddingTop: space.md }}>
-              <Statement s="What’s in it? Add each part and life will total it." />
+              <Statement s="What’s in it? Add each part and Life will total it." />
               <View style={[styles.wrapRow, { marginTop: space.md }]}>
                 <SoftChip icon="search" label="Search for a food" onPress={() => nav.go('foodsearch', { add: '1' })} />
                 <SoftChip icon="mic" label="Say it" onPress={() => nav.go('sayit', { add: '1' })} />
@@ -958,7 +958,7 @@ export function SayitV26() {
         <Btn label={listening ? 'Stop' : 'Say it again'} icon="mic" ghost onPress={() => void listen()} style={{ marginTop: space.xs }} />
       </>}>
       <View style={{ alignItems: 'center', paddingTop: space.xxs }}><LifeOrb size={72} state={listening ? 'listening' : 'ring'} /></View>
-      <Callout center style={{ marginTop: space.xxs }}>{listening ? 'Listening…' : typing ? 'Type it, or tap Say it again' : 'What life heard'}</Callout>
+      <Callout center style={{ marginTop: space.xxs }}>{listening ? 'Listening…' : typing ? 'Type it, or tap Say it again' : 'What Life heard'}</Callout>
       {typing ? (
         <TextInput maxFontSizeMultiplier={1.3} value={text} onChangeText={setText} multiline placeholder="I had a chicken wrap and a large oat latte around 1." placeholderTextColor={t.inkQuiet}
           style={[styles.sayInput, { color: t.ink }]} accessibilityLabel="What you ate" />
@@ -984,7 +984,7 @@ export function SayitV26() {
           </PhotoGrid>
           <Callout center style={{ marginTop: space.sm }}>{items.length === 1 ? 'Tap it to edit it.' : 'Tap either one to edit it.'}</Callout>
         </>
-      ) : text.trim() ? <Body s="life didn’t find a food it knows in that. Try naming it plainly, or search for it." style={{ marginTop: space.md }} /> : null}
+      ) : text.trim() ? <Body s="Life didn’t find a food it knows in that. Try naming it plainly, or search for it." style={{ marginTop: space.md }} /> : null}
       <View style={[styles.saysRow, { marginTop: space.md }]}><Icon name="shield" size={18} color={t.ink} /><Text variant="callout" tone="ink2" style={{ flex: 1 }}>Your voice is turned into text on your phone. Nothing is recorded or sent.</Text></View>
     </Page>
   );
@@ -1043,7 +1043,7 @@ export function FixwordsV26() {
           ))}
         </RowsCard>
       ) : <Body s="Say what was different: half the rice, no sauce, extra chicken." style={{ marginTop: space.md }} />}
-      <Callout style={{ marginTop: space.sm }}>Corrections teach life your usual portions.</Callout>
+      <Callout style={{ marginTop: space.sm }}>Corrections teach Life your usual portions.</Callout>
     </Page>
   );
 }

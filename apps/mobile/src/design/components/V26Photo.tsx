@@ -8,6 +8,7 @@ import { Text } from '../Text';
 import { useTokens } from '../theme';
 import { areaColors, cardShadow, componentSize, photo, photoScrims, radius, space, tint, type Area } from '../tokens';
 import { LifeOrb } from './Orb';
+import { Wordmark } from './Wordmark';
 import { StatusPill } from './Surfaces';
 import { TwoTone, type TwoToneSegment } from './Story';
 import { DashPager, RoundButton } from './V26Chrome';
@@ -125,7 +126,7 @@ export function FullPhotoScreen({ source, focal, title, statement, pager, onNext
       <PhotoFill source={source} focal={focal} settle />
       <LinearGradient pointerEvents="none" colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} />
       <View style={[styles.photoBar, { marginTop: insets.top }]}>
-        {brand ? <View style={styles.brand}><LifeOrb size={22} color={photo.onPhoto} /><Text variant="headline" tone="paper">life</Text></View> : <View />}
+        {brand ? <View style={styles.brand}><Wordmark variant="headline" color={photo.onPhoto} /></View> : <View />}
         {onSkip ? <Press haptic="select" onPress={onSkip} accessibilityLabel={skipLabel} hitSlop={12}><Text variant="button" tone="paper">{skipLabel}</Text></Press> : null}
       </View>
       <View style={{ flex: 1 }} />

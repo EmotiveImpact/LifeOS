@@ -1,0 +1,32 @@
+{
+  "note": "Ama's sample life (the same person as the app's sample data), as the phone would send it with an ask request. Health facts and memories are marked so consent rules apply.",
+  "context": {
+    "sample": true,
+    "facts": [
+      { "id": "income.netMonthly", "label": "Monthly take-home", "value": "£2,410", "source": { "id": "engine:income", "label": "Income calculator", "kind": "engine", "sample": true } },
+      { "id": "income.taxReserveMonthly", "label": "Monthly tax reserve", "value": "£380", "source": { "id": "engine:income", "label": "Income calculator", "kind": "engine", "sample": true } },
+      { "id": "money.leftToSpend", "label": "Left to spend until payday", "value": "£418", "source": { "id": "engine:budget", "label": "Spending plan", "kind": "engine", "sample": true } },
+      { "id": "money.payday", "label": "Payday", "value": "the 28th", "source": { "id": "profile:payday", "label": "Your profile", "kind": "profile", "sample": true } },
+      { "id": "rent.monthly", "label": "Rent", "value": "£950 a month", "source": { "id": "record:rent", "label": "Rent", "kind": "record", "sample": true } },
+      { "id": "bills.councilTax", "label": "Council tax", "value": "£142 on the 1st", "source": { "id": "record:council-tax", "label": "Council tax", "kind": "record", "sample": true } },
+      { "id": "savings.deposit", "label": "Deposit savings", "value": "£6,200", "source": { "id": "record:savings", "label": "Savings", "kind": "record", "sample": true } },
+      { "id": "goal.deposit", "label": "Deposit goal", "value": "£25,000 by 2028", "source": { "id": "record:goal-deposit", "label": "Deposit goal", "kind": "record", "sample": true } },
+      { "id": "body.sleepAvg", "label": "Average sleep this week", "value": "6h 40m", "source": { "id": "engine:body", "label": "Body summary", "kind": "engine", "sample": true }, "sensitivity": "health" },
+      { "id": "body.readiness", "label": "Readiness today", "value": "62 out of 100", "source": { "id": "engine:body", "label": "Body summary", "kind": "engine", "sample": true }, "sensitivity": "health" },
+      { "id": "habit.water", "label": "Water habit", "value": "9 of the last 14 days", "source": { "id": "record:habit-water", "label": "Water habit", "kind": "record", "sample": true } },
+      { "id": "life.score", "label": "life score", "value": "71", "source": { "id": "engine:score", "label": "life’s planning score", "kind": "engine", "sample": true } },
+      { "id": "docs.passport", "label": "Passport expiry", "value": "August 2027", "source": { "id": "record:passport", "label": "Passport", "kind": "record", "sample": true } },
+      { "id": "dates.kofi", "label": "Kofi’s birthday", "value": "3 May", "source": { "id": "record:kofi-birthday", "label": "Kofi’s birthday", "kind": "record", "sample": true } }
+    ],
+    "memories": [
+      { "id": "m-walk", "text": "Prefers walking meetings", "source": { "id": "memory:m-walk", "label": "Talk", "kind": "memory", "sample": true } },
+      { "id": "m-sunday", "text": "Finds Sunday evenings hard", "source": { "id": "memory:m-sunday", "label": "Talk", "kind": "memory", "sample": true } },
+      { "id": "m-efua", "text": "Sister Efua lives in Leeds", "source": { "id": "memory:m-efua", "label": "Talk", "kind": "memory", "sample": true } },
+      { "id": "m-iron", "text": "Low iron in March", "source": { "id": "memory:m-iron", "label": "Talk", "kind": "memory", "sample": true }, "sensitivity": "health" },
+      { "id": "m-gym", "text": "Wants to get back to the gym twice a week", "source": { "id": "memory:m-gym", "label": "Talk", "kind": "memory", "sample": true } }
+    ],
+    "moves": [
+      { "id": "move-council", "title": "Set up the council tax direct debit", "reasons": ["It is due on the 1st and paying by direct debit means it can’t be missed."], "area": "money", "urgent": true }
+    ]
+  }
+}

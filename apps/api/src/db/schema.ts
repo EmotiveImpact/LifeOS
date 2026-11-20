@@ -141,13 +141,19 @@ export const oauthTokens = pgTable('oauth_tokens', {
 export const lessonCache = pgTable('lesson_cache', { key: text('key').primaryKey(), body: jsonb('body').notNull(), created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow() });
 export const sceneCache = pgTable('scene_cache', { key: text('key').primaryKey(), body: jsonb('body').notNull(), created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow() });
 
-/** The AI cost ledger: one row per model call, durable, per user and job (Phase 24 fills it). */
+/**
+ * The AI cost ledger: one row per billed model call, durable, per user and job (`src/router.ts`). `tier` is what the
+ * allowances count; `outcome` is `ok`, `rejected` (the answer failed life's checks) or `declined` (the model refused
+ * or its reply was cut off), because those calls cost money too.
+ */
 export const aiUsage = pgTable('ai_usage', {
   id: text('id').primaryKey(),
   user_id: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   job: text('job').notNull(),
   model: text('model').notNull(),
   location: text('location').notNull(),
+  tier: text('tier').notNull().default('fast'),
+  outcome: text('outcome').notNull().default('ok'),
   input_tokens: integer('input_tokens').notNull().default(0),
   output_tokens: integer('output_tokens').notNull().default(0),
   cost_micros: bigint('cost_micros', { mode: 'number' }).notNull().default(0),

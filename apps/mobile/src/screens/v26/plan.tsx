@@ -16,6 +16,10 @@ import {
 import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
+import { useBrainJob } from '@/services/useBrainJob';
+import type { DraftData } from '@life/brain';
+import { missionPriority, missionStepList } from '@/state/loops';
+import { finishStep, readLoops, undoStep } from '@life/core';
 import { money, seed, seedTaxClaim } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { invoices, sampleCleared, sampleClearedTotal, TOOLS } from '@/state/plan';
@@ -50,7 +54,7 @@ export function PlanV26() {
   ].filter(Boolean);
   const waiting = [
     !done('uk-single-person-council') ? <Row key="ct" icon="doc" title="Council tax request" sub="Sent 9 Nov · waiting for a reply" right={<Chip label="Waiting" tone="q" />} onPress={() => openMission('uk-single-person-council')} /> : null,
-    !done('nhs-outpatient-referral') ? <Row key="ref" icon="heart" title="Heart referral" sub="About 11 weeks · life keeps watch" right={<Chip label="Waiting" tone="q" />} onPress={() => openMission('nhs-outpatient-referral')} /> : null,
+    !done('nhs-outpatient-referral') ? <Row key="ref" icon="heart" title="Heart referral" sub="About 11 weeks · Life keeps watch" right={<Chip label="Waiting" tone="q" />} onPress={() => openMission('nhs-outpatient-referral')} /> : null,
   ].filter(Boolean);
   const area = (p: PhotoName, name: string, tag: string, line: string, to: ScreenKey, focal?: { x?: number; y?: number }) => (
     <PhotoCard source={photos[p]} focal={focal} height={168} size="md" chips={[tag]} title={name} sub={line} onPress={() => nav.go(to)} />
@@ -71,7 +75,7 @@ export function PlanV26() {
         {area('areawork', 'Work', `${invoices.unpaid} unpaid`, `Invoices · ${money(invoices.total)}`, 'areawork')}
       </PhotoGrid>
       <AccordionGroup initial="ready" style={{ marginTop: space.lg }} items={[
-        { key: 'ready', title: 'Ready when you are', count: ready.length, content: <>{ready}<QuietLink label="What life has found for you" ink center={false} onPress={() => nav.go('ttk')} style={{ marginTop: space.xs }} /></> },
+        { key: 'ready', title: 'Ready when you are', count: ready.length, content: <>{ready}<QuietLink label="What Life has found for you" ink center={false} onPress={() => nav.go('ttk')} style={{ marginTop: space.xs }} /></> },
         { key: 'situations', title: 'Situations', count: 1, content: <Row photo={photos.keys} title="My rent is going up" sub="From March · 2 open steps" onPress={() => nav.go('areahome')} /> },
         { key: 'waiting', title: 'Waiting, not forgotten', count: waiting.length, content: <>{waiting.length ? waiting : <Callout>Nothing waiting on anyone else.</Callout>}<QuietLink label="All missions" ink center={false} onPress={() => nav.go('missions')} style={{ marginTop: space.xs }} /></> },
         { key: 'tools', title: 'Your tools', count: TOOLS.length, content: <>
@@ -102,7 +106,7 @@ function useMission() {
   const title = isTax ? 'Tax rebate' : isReferral ? 'Hospital referral' : task.shortTitle;
   const value = isTax ? seedTaxClaim.refund : task.estimatedValueAmount;
   const reference = isTax ? seedTaxClaim.reference : isReferral ? 'UBRN-4821-0934' : task.id.toUpperCase();
-  const steps = isTax ? ['Sign in to Government Gateway', `Add ${money(seedTaxClaim.workExpenses)} of software and kit`, 'Submit and save the reference'] : task.steps;
+  const steps = missionStepList(task.id).map(s => s.title);
   const area = isTax ? 'Money' : isReferral || task.category === 'health' ? 'Health' : task.lifeArea === 'home' ? 'Home' : 'Plan';
   const draft = data.drafts[task.id] ?? (isTax
     ? `Hello,\n\nI’m following up on my P800 calculation for 2024/25 (ref ${seedTaxClaim.reference}). I’ve also submitted form P87 today for ${money(seedTaxClaim.workExpenses)} of work equipment and software.\n\nPlease pay the refund by bank transfer to the account on my Personal Tax Account.\n\nThank you,\n${data.profile.name}`
@@ -111,13 +115,18 @@ function useMission() {
 }
 
 export function MissionV26() {
-  const nav = useNavigation(), { data, set, flag } = useSeed(), surface = useCardSurface();
+  const nav = useNavigation(), { data, set, update } = useSeed(), surface = useCardSurface();
   const m = useMission();
   const [copied, setCopied] = useState(false);
   const cleared = data.completed.includes(m.task.id);
   const stepKey = (i: number) => `${m.task.id}-${i}`;
   const left = m.steps.filter((_, i) => !data.missionSteps[stepKey(i)]).length;
-  const toggle = (i: number) => set({ missionSteps: { ...data.missionSteps, [stepKey(i)]: !data.missionSteps[stepKey(i)] } });
+  // A tick here is the same tick Get unstuck makes, with its time, so it shows in what moved forward.
+  const toggle = (i: number) => update(c => {
+    const key = stepKey(i), on = !c.missionSteps[key], priority = missionPriority(m.task.id) ?? { id: `mission:${m.task.id}`, text: m.title, own: false, mission: m.task.id, steps: [] };
+    const step = priority.steps[i] ?? { key, title: m.steps[i], mission: m.task.id };
+    return { ...c, missionSteps: { ...c.missionSteps, [key]: on }, loops: on ? finishStep(readLoops(c.loops), step, priority, Date.now()) : undoStep(readLoops(c.loops), key) };
+  });
   const clear = () => { set({ completed: cleared ? data.completed.filter(id => id !== m.task.id) : [...data.completed, m.task.id] }); if (!cleared) feedback.cleared(); };
   const go = () => {
     if (m.isTax) void Linking.openURL('https://www.gov.uk/guidance/claim-income-tax-relief-for-your-employment-expenses-p87');
@@ -136,22 +145,22 @@ export function MissionV26() {
       <Eyebrow>{`${m.area} · ${m.task.provider}`}</Eyebrow>
       <Display s={headline} />
       <Timeline style={{ marginTop: space.lg }} items={[
-        { when: m.isTax ? 'THU 12 NOV' : 'ADDED', text: m.isTax ? 'life noticed an emergency tax code on your March payslip.' : 'Added to your plan from what you told life.', state: 'done' },
+        { when: m.isTax ? 'THU 12 NOV' : 'ADDED', text: m.isTax ? 'Life noticed an emergency tax code on your March payslip.' : 'Added to your plan from what you told Life.', state: 'done' },
         ...(m.isTax ? [{ when: 'FRI 13 NOV', text: '“I think I overpaid when I changed jobs.”', state: 'done' as const, children: <VoiceNote duration="0:34" style={{ marginTop: space.xs }} /> }] : []),
-        { when: cleared ? 'CLEARED' : 'TODAY', text: cleared ? 'Cleared. life keeps the reference.' : left ? (left === 1 ? 'One step left.' : `${left} steps left.`) : 'Every step ticked.', state: cleared ? 'done' : 'now', children: cleared ? undefined : (
+        { when: cleared ? 'CLEARED' : 'TODAY', text: cleared ? 'Cleared. Life keeps the reference.' : left ? (left === 1 ? 'One step left.' : `${left} steps left.`) : 'Every step ticked.', state: cleared ? 'done' : 'now', children: cleared ? undefined : (
           <View style={[styles.card, { marginTop: space.sm, padding: space.md }, surface]}>
             <Chip label={m.isTax ? 'Finish the P87 · 6 min' : `${m.task.shortTitle}`} tone="live" />
             <CheckRows items={m.steps.map((label, i) => ({ label, done: !!data.missionSteps[stepKey(i)] }))} onToggle={toggle} style={{ marginTop: space.xs }} />
             <Btn label={left ? 'Continue' : 'Mark as cleared'} icon="arrow" trail onPress={left ? go : clear} style={{ marginTop: space.md }} />
           </View>
         ) },
-        { when: m.isTax ? 'ABOUT 22 NOV' : 'AFTER', text: m.isTax ? 'HMRC replies. life will watch for it and tell you.' : 'life watches for the reply and tells you.', state: 'later' },
+        { when: m.isTax ? 'ABOUT 22 NOV' : 'AFTER', text: m.isTax ? 'HMRC replies. Life will watch for it and tell you.' : 'Life watches for the reply and tells you.', state: 'later' },
       ]} />
       <View style={[styles.card, styles.between, { marginTop: space.lg, padding: space.md }, surface]}>
         <View style={{ flex: 1 }}><Micro>Reference</Micro><Text variant="title" style={{ marginTop: space.xxs, fontVariant: ['tabular-nums'] }}>{m.reference}</Text></View>
         <Chip label={copied ? 'Copied' : 'Copy'} icon="copy" onPress={async () => { await Clipboard.setStringAsync(m.reference); setCopied(true); feedback.select(); }} />
       </View>
-      <Callout style={{ marginTop: space.md }}>{m.isTax ? 'An estimate from your payslip and what you told life, not tax advice.' : 'Guidance from what you’ve told life, not advice.'}</Callout>
+      <Callout style={{ marginTop: space.md }}>{m.isTax ? 'An estimate from your payslip and what you told Life, not tax advice.' : 'Guidance from what you’ve told Life, not advice.'}</Callout>
     </Page>
   );
 }
@@ -169,6 +178,13 @@ export function DraftV26() {
   const [copied, setCopied] = useState(false);
   const to = m.isTax ? 'HMRC · PAYE enquiries' : m.task.provider;
   const subject = m.isTax ? 'P800 refund: bank transfer' : `${m.title} enquiry`;
+  // "Write it with life's AI": the phone's own model first; the cloud asks first. Your details stay exactly as they are.
+  const job = useBrainJob(`Draft · ${m.title}`);
+  useEffect(() => {
+    const body = job.state.step === 'done' ? (job.state.result.data as DraftData | undefined)?.body : undefined;
+    if (body) { draft(m.task.id, body); feedback.select(); }
+  }, [job.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  const rewrite = () => job.start('draft', `Write a short, polite email to ${to} about ${m.title}. Keep every name, date, amount and reference exactly as written here, and add none. My draft:\n\n${m.draft}`);
   return (
     <Page screen="draft" bar={{ kind: 'sheet', title: 'Draft message' }}
       footer={<View style={{ flexDirection: 'row', gap: space.xs }}>
@@ -183,7 +199,17 @@ export function DraftV26() {
       <View style={{ gap: space.xs, marginTop: space.sm }}><Field label="To" value={to} /><Field label="Subject" value={subject} /></View>
       <TextInput maxFontSizeMultiplier={1.3} multiline value={m.draft} onChangeText={v => draft(m.task.id, v)} accessibilityLabel="Draft message" selectionColor={t.ember}
         style={[styles.card, styles.letter, { color: t.ink, fontFamily: fonts.sans, marginTop: space.sm }, surface]} />
-      <Callout style={{ marginTop: space.sm }}>Tap the text to edit. life never sends anything without you.</Callout>
+      <Callout style={{ marginTop: space.sm }}>Tap the text to edit. Life never sends anything without you.</Callout>
+      {job.state.step === 'ask' ? (
+        <View style={[styles.card, { padding: space.md, marginTop: space.sm }, surface]}>
+          <Text variant="headline">Use Life’s AI for this draft?</Text>
+          <Body style={{ marginTop: space.xs }} s="This sends the draft above to the Life API and its model, which rewrites it. {You check every word before anything is sent.}" />
+          <View style={{ flexDirection: 'row', gap: space.xs, marginTop: space.sm }}><Chip label="Send the draft" onPress={job.allow} /><Chip label="Keep it here" tone="q" onPress={job.reset} /></View>
+        </View>
+      ) : job.state.step === 'working' ? <Callout style={{ marginTop: space.xs }}>Rewriting your draft…</Callout>
+        : job.state.step === 'waiting' ? <Callout style={{ marginTop: space.xs }}>{`${job.state.note} The new draft will be in your conversations.`}</Callout>
+        : job.state.step === 'failed' ? <Callout style={{ marginTop: space.xs }}>{job.state.message}</Callout>
+        : job.available ? <QuietLink label="Write it with Life’s AI" center={false} onPress={rewrite} style={{ marginTop: space.xs }} /> : null}
     </Page>
   );
 }
@@ -201,7 +227,7 @@ export function TtkV26() {
   return (
     <Page screen="ttk" bar={{ kind: 'push', title: 'Things to know' }}>
       <Eyebrow star>{`${Math.min(3, records.length + (rebate ? 1 : 0))} new`}</Eyebrow>
-      <Display s="What life has {found for you}, and {where it came from}." />
+      <Display s="What Life has {found for you}, and {where it came from}." />
       <FilterChips options={(['All', 'You', 'Home', 'Work', 'Money', 'Health', 'Goals'] as const).map(v => ({ value: v, label: v }))} value={filter} onChange={setFilter} style={{ marginTop: space.lg }} />
       {rebate ? <PhotoCard source={photos.payslip} focal={{ y: 0.72 }} height={220} chips={['Money · from your talk · 12 Nov']} title={money(seedTaxClaim.refund)} sub="You’re likely owed a tax rebate for 2024/25 work expenses." onPress={() => nav.go('mission')} style={{ marginTop: space.md }} /> : null}
       {records.slice(0, 8).map(r => (
@@ -277,7 +303,7 @@ export function MissionsV26() {
       </PhotoGrid> : null}
       {waiting.length ? <>
         <SectionHead title="Waiting, not forgotten" link={String(waiting.length)} />
-        <RowsCard>{waiting.map(v => <Row key={v.id} photo={photos[v.category === 'health' ? 'bench' : 'letter']} title={v.shortTitle} sub="Sent · life watches for the reply" right={<Chip label="Waiting" tone="q" />} onPress={() => openMission(v.id)} />)}</RowsCard>
+        <RowsCard>{waiting.map(v => <Row key={v.id} photo={photos[v.category === 'health' ? 'bench' : 'letter']} title={v.shortTitle} sub="Sent · Life watches for the reply" right={<Chip label="Waiting" tone="q" />} onPress={() => openMission(v.id)} />)}</RowsCard>
       </> : null}
       <Press haptic="open" onPress={() => nav.go('history')} accessibilityLabel={`${clearedN} cleared, what they were worth`} style={[styles.card, styles.between, { padding: space.md, marginTop: space.sm }, surface]}>
         <Text variant="title">{`${clearedN} cleared`}</Text>
@@ -309,7 +335,7 @@ export function NewGoalV26() {
             style={[styles.goalInput, { color: t.ink, backgroundColor: t.surface2, fontFamily: fonts.sansMedium }]} />
         : <Press haptic="select" onPress={() => setTyping(true)} accessibilityLabel={`Edit: ${said}`} style={{ alignItems: 'flex-end', marginTop: space.xxs }}><ChatBubble text={said} /></Press>}
       {goal ? <>
-        <Eyebrow orb style={{ marginTop: space.lg }}>life would make this</Eyebrow>
+        <Eyebrow orb style={{ marginTop: space.lg }}>Life would make this</Eyebrow>
         <PhotoCard source={photos.bedroom} focal={{ y: 0.78 }} height={190} chips={['Goal · 3 steps']} title={goal} style={{ marginTop: space.sm }} />
         <Timeline style={{ marginTop: space.lg }} items={[
           { when: 'FIRST MOVE', text: 'Work out what you can afford', state: 'now' },
@@ -381,7 +407,7 @@ export function AreaHealthV26() {
         <TintCard area="money" padding={space.md} style={{ flex: 1 }}><Text variant="callout" tone="ink2">Prescriptions</Text><Text variant="numeralL" style={{ marginTop: space.xs }}>£60<Text variant="unit" tone="ink2"> a year</Text></Text><Callout>Prepayment could save this</Callout></TintCard>
       </View>
       <RowsCard style={{ marginTop: space.sm }}><Row icon="doc" title="Bloodwork reader" sub="Tool" right={<Chip label="Level 3" tone="q" />} onPress={() => openTool('blood', 3, 'Bloodwork reader')} /></RowsCard>
-      <Callout style={{ marginTop: space.md }}>Wellness admin from what you’ve told life, not medical advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>Wellness admin from what you’ve told Life, not medical advice.</Callout>
     </Page>
   );
 }

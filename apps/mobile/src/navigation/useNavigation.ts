@@ -1,6 +1,7 @@
 import { useRouter, type Href } from 'expo-router';
 import { useSeed } from '@/state/SeedProvider';
 import { screens, type ScreenKey } from './screens';
+import { runWebExit } from './webExit';
 const cameraRoutes: ScreenKey[] = ['snap', 'barcode', 'labelscan', 'scan'];
 export function useNavigation() {
   const router = useRouter(), { data } = useSeed();
@@ -14,7 +15,8 @@ export function useNavigation() {
       if (route) router.push((nextParams ? { pathname: route, params: nextParams } : route) as Href);
     },
     replace: (key: ScreenKey) => { const route = screens[key].route; if (route) router.replace(route as Href); },
-    close: () => { if (router.canGoBack()) router.back(); else router.replace('/(tabs)/today' as Href); },
+    // In the web preview the page animates out first (webExit.ts); on a phone this runs at once.
+    close: () => runWebExit(() => { if (router.canGoBack()) router.back(); else router.replace('/(tabs)/today' as Href); }),
     home: () => router.replace('/(tabs)/today' as Href),
   };
 }

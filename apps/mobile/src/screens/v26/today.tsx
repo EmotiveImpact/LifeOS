@@ -20,9 +20,14 @@ import { money, seed, seedTaxClaim } from '@/state/seed';
 import { useFuelDay } from '@/state/fuel';
 import { TODAY_MOVES, councilTax, dayShape, heavyCount, heavyWeek, hm, lighterDay, moveOrder, payday, readDecisions, todayBrief } from '@/state/today';
 import {
-  Body, Btn, Callout, Chip, Display, Duo, Eyebrow, Figure, Hero, Micro, NumWell, Page, PhotoBackdrop, QuietLink, Row, RowsCard, Sp, Statement, Thumb, Tick, Timeline, Between,
+  Body, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, PhotoBackdrop, QuietLink, Row, RowsCard, Sp, Statement, Thumb, Between,
 } from './kit';
 import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
+import { levelPlan } from '@/state/you';
+import { NudgeV26, TodayLoops } from './loops';
+
+// Plan ahead and Get unstuck live with the other core-loop screens; the Today chapter still exports them.
+export { EveningV26, NudgeV26 } from './loops';
 
 const isMood = (id: string | undefined): id is FeelMoodId => !!id && id in FEEL_MOODS;
 const shortDate = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
@@ -46,8 +51,9 @@ function useLogMood() {
 }
 
 /** The root bar every Today page shares: the orb, Today, the date, search and the bell. */
-function todayActions(onSearch: () => void, unread: boolean, onBell: () => void): TopBarAction[] {
-  return [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: onSearch }, { kind: 'icon', icon: 'bell', label: 'From life', badge: unread, onPress: onBell }];
+/* "From Life" lives in the orb at the right of the bar now, so Today keeps only search. */
+function todayActions(onSearch: () => void): TopBarAction[] {
+  return [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: onSearch }];
 }
 
 /* ───────────────────────── Today ───────────────────────── */
@@ -126,12 +132,13 @@ export function TodayV26() {
 
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const level = engine.level.currentLevel;
-  const levelName = ['Stabilize', 'Protect', 'Build', 'Grow', 'Free'][Math.max(0, Math.min(4, level - 1))];
+  // The same four names as Your levels, so Today and that page never disagree.
+  const levelName = levelPlan[Math.max(0, Math.min(levelPlan.length - 1, level - 1))].name;
   const fuel = useFuelDay();
   const aimPct = Math.round(seed.finance.deposit / seed.finance.depositGoal * 100);
 
   return (
-    <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions: todayActions(() => setSearching(true), !data.flags['inbox-read'], () => nav.go('inbox')) }} onPull={() => setSearching(true)}>
+    <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions: todayActions(() => setSearching(true)) }} onPull={() => setSearching(true)}>
       <Between>
         <Text variant="callout" tone="ink2" numberOfLines={1} style={{ flexShrink: 1 }}>{`${greeting}, ${data.profile.name}`}</Text>
         <Chip label={`Level ${level} · ${levelName}`} onPress={() => nav.go('levels')} />
@@ -139,9 +146,11 @@ export function TodayV26() {
       {birthday ? <>
         <Display s={birthdayBrief(birthday)} />
         <BirthdayMoveV26 b={birthday} day={day} />
+        <TodayLoops />
       </> : <>
       <Display s={todayBrief(mood)} />
       <ArrivingCard mood={mood} onPress={() => setDrawer(true)} style={{ marginTop: space.lg }} />
+      <TodayLoops />
 
       {cards.length ? <>
         <SectionHead title="Today’s moves" link={`${dec.length + 1} of ${TODAY_MOVES.length}`} style={{ marginTop: space.xl }} />
@@ -184,7 +193,7 @@ export function TodayV26() {
 
       {q && !answered ? (
         <View style={[styles.card, { marginTop: space.xxl, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-          <Eyebrow orb>life is asking</Eyebrow>
+          <Eyebrow orb>Life is asking</Eyebrow>
           <Statement s={`${q.intro}{${q.focus}}`} style={{ marginTop: space.xs }} />
           <View style={[styles.row, { marginTop: space.md }]}>{q.choices.map(c => <Btn key={c} label={c} ghost sm fit onPress={() => answer(c)} />)}</View>
         </View>
@@ -205,8 +214,8 @@ export function TodayV26() {
         </View>
         <Icon name="chev" size={componentSize.iconXs} color={t.inkQuiet} />
       </Press>
-      <Press haptic="open" onPress={() => nav.go('knows')} accessibilityLabel={`life knows you, ${data.knowledge.overall}%`} style={[styles.card, { marginTop: space.sm, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-        <Between><Text variant="title">life knows you</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
+      <Press haptic="open" onPress={() => nav.go('knows')} accessibilityLabel={`Life knows you, ${data.knowledge.overall}%`} style={[styles.card, { marginTop: space.sm, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+        <Between><Text variant="title">Life knows you</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
         <Ruler pct={data.knowledge.overall} style={{ marginTop: space.sm }} />
         <Text variant="callout" tone="ink2" style={{ marginTop: space.tile }}>{`${data.knowledge.recordCount} things filed from your words and records.`}</Text>
       </Press>
@@ -219,62 +228,12 @@ export function TodayV26() {
           <Appear rise={120}><FeelingDrawer initial={mood ?? 'calm'} onClose={() => { if (!mood) choose('pulse-skipped-day', day); setDrawer(false); }} onSet={m => { logMood(m); decide(''); setDrawer(false); }} /></Appear>
         </SafeAreaProvider>
       </Modal>
-      <Modal visible={params.nudge === '1' && !data.flags['nudge-dismissed']} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => nav.replace('today')}>
+      <Modal visible={params.nudge === '1'} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => nav.replace('today')}>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}><NudgeV26 onClose={() => nav.replace('today')} /></SafeAreaProvider>
       </Modal>
       <Modal visible={searching} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => setSearching(false)}>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}><SearchV26 onClose={() => setSearching(false)} /></SafeAreaProvider>
       </Modal>
-    </Page>
-  );
-}
-
-/* ───────────────────────── Nudge ───────────────────────── */
-
-export function NudgeV26({ onClose }: { onClose?: () => void }) {
-  const nav = useNavigation(), { data, flag, update } = useSeed();
-  const later = !!data.flags['nudge-snoozed'];
-  const close = onClose ?? nav.close;
-  const refund = money(seedTaxClaim.refund), kit = money(seedTaxClaim.workExpenses);
-  const start = () => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); close(); nav.go('mission'); };
-  return (
-    <Page screen="nudge" onClose={close} bar={{ kind: 'push', close: true, action: { kind: 'node', node: <Chip label={later ? 'Moved to 6pm' : 'Free 13:40 to 14:00'} tone={later ? 'q' : 'live'} /> } }}
-      footer={later ? <Btn label="Do it now instead" ghost onPress={() => flag('nudge-snoozed', false)} /> : <>
-        <Btn label="Start step 1" icon="arrow" trail onPress={start} />
-        <Duo><Btn label="At 6pm" ghost sm onPress={() => flag('nudge-snoozed', true)} /><Btn label="Not this week" ghost sm onPress={() => { flag('nudge-dismissed', true); close(); }} /></Duo>
-      </>}>
-      <Eyebrow orb>{later ? 'life · noted' : 'life · just now'}</Eyebrow>
-      {later ? <>
-        <Display s={`Moved to {@clock 6pm}. The {P87} and your {${refund}} will keep.`} />
-        <Body s="life writes first {at most once a day}, so nothing else is coming before then." style={{ marginTop: space.sm }} />
-      </> : <>
-        <Display s={`You’re free until {@clock 2pm}. The {@doc P87} is all that stands between you and {${refund}}.`} />
-        <Body s="Three steps, about {6 minutes}." style={{ marginTop: space.sm }} />
-      </>}
-      <Hero source={photos.payslip} focal={{ y: 0.78 }} height={156} small="Tax rebate · HMRC" title="Claim your tax rebate" titleSize="headline" style={{ marginTop: space.xl }}>
-        <View style={{ marginVertical: -space.tile }}>
-          <Row lead={<NumWell n={1} />} title="Sign in to Government Gateway" end="1 min" />
-          <Row lead={<NumWell n={2} />} title={`Add ${kit} of software and kit`} end="3 min" />
-          <Row lead={<NumWell n={3} />} title="Submit and save the reference" end="2 min" />
-        </View>
-      </Hero>
-      <SectionHead title={later ? 'Your day now' : 'Why now'} link="Your day" onLink={() => nav.go('calendar')} />
-      <View style={[styles.card, styles.pad16, useCardStyle()]}>
-        <Timeline items={[
-          { when: '09:00', text: 'Design review', state: 'done' },
-          later ? { when: '13:40 · LEFT FREE', text: 'You chose to keep this one clear.', state: 'later' } : { when: '13:40 · FREE FOR 20 MINUTES', text: '{This is the gap.} Three steps fit inside it.', state: 'now' },
-          { when: '14:00', text: 'Deep work', state: 'later' },
-          ...(later ? [{ when: '18:00 · MOVED HERE', text: '{Claim your tax rebate.} About 6 minutes.', state: 'now' as const }] : []),
-        ]} />
-      </View>
-      <SectionHead title="Already in hand" />
-      <Row thumb={photos.payslip} thumbFocal={{ y: 0.75 }} title="Your payslip" sub="Filed · shows the emergency code" right={<Chip label="Ready" tone="q" />} />
-      <Row icon="folder" title={`Receipts for ${kit}`} sub="Software and kit · already added up" right={<Chip label="Ready" tone="q" />} />
-      <SectionHead title="After you send it" />
-      <View style={[styles.card, styles.pad16, useCardStyle()]}>
-        <Body s={`{life keeps watch for the reply} and tells you when the ${refund} is on its way. You don’t have to chase it.`} />
-      </View>
-      <Callout style={{ marginTop: space.md }}>One nudge a day at most, and never between 9pm and 8am.</Callout>
     </Page>
   );
 }
@@ -333,9 +292,9 @@ export function CheckinV26() {
         </View>
       </PhotoCard>
       <Statement s={`You’ve felt drained or anxious on {${heavyCount} of the last 7 days}. That’s a lot to carry.`} style={{ marginTop: space.md }} />
-      <Body s="life can make the next few days lighter. And if it would help to talk to someone:" style={{ marginTop: space.sm }} />
+      <Body s="Life can make the next few days lighter. And if it would help to talk to someone:" style={{ marginTop: space.sm }} />
       <SupportRowsV26 style={{ marginTop: space.md }} />
-      <Callout style={{ marginTop: space.md }}>life isn’t a medical service. If you’re in danger right now, call 999.</Callout>
+      <Callout style={{ marginTop: space.md }}>Life isn’t a medical service. If you’re in danger right now, call 999.</Callout>
     </Page>
   );
 }
@@ -448,7 +407,7 @@ export function WhyV26() {
   return (
     <Page screen="why">
       <Eyebrow orb right={<RoundButton icon="close" size="sm" label="Close" onPress={nav.close} />}>Why today is lighter</Eyebrow>
-      <Statement s={back ? 'Put back. {The P87} is on {today} again, as it was.' : 'life moved {the P87} to tomorrow and kept {one small task} today.'} style={{ marginTop: space.sm }} />
+      <Statement s={back ? 'Put back. {The P87} is on {today} again, as it was.' : 'Life moved {the P87} to tomorrow and kept {one small task} today.'} style={{ marginTop: space.sm }} />
       <Micro style={{ marginTop: space.lg }}>THE THREE SIGNALS IT USED</Micro>
       <View style={[styles.row, { marginTop: space.xs, gap: space.xs }]}>
         <TintCard area="health" padding={12} style={styles.sig}><Text variant="micro" tone="ink2">Readiness</Text><Text variant="headline" style={styles.sigVal}>{String(lighterDay.readiness)}</Text><Text variant="micro" tone="ink2">Low for you</Text></TintCard>
@@ -476,16 +435,16 @@ export function CalendarV26() {
   return (
     <Page screen="calendar" bar={{ kind: 'push', title: 'Your day', action: { kind: 'icon', icon: 'calendar', label: 'Calendar access', onPress: () => nav.go('calprimer') } }}>
       <Eyebrow>{`${shortDate(now)} · ${dayShape.booked} booked`}</Eyebrow>
-      <Display s="A {busy day}. life found {@clock one 20-minute gap} for the {P87}." />
+      <Display s="A {busy day}. Life found {@clock one 20-minute gap} for the {P87}." />
       <View style={{ marginTop: space.xl, gap: 6 }}>
         {dayShape.blocks.map(b => (
           <View key={b.at} style={{ flexDirection: 'row', gap: space.tile }}>
             <Text variant="callout" tone={b.kind === 'gap' ? 'ink' : 'ink2'} style={{ width: 44, paddingTop: space.xs, fontVariant: ['tabular-nums'] }}>{b.at}</Text>
             {b.kind === 'gap' ? (
-              <Press haptic="open" onPress={() => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); nav.go('mission'); }} accessibilityLabel="Free for 20 minutes. life will nudge you here: finish the P87." style={[styles.block, styles.gap, { backgroundColor: t.emberTint }]}>
+              <Press haptic="open" onPress={() => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); nav.go('mission'); }} accessibilityLabel="Free for 20 minutes. Life will nudge you here: finish the P87." style={[styles.block, styles.gap, { backgroundColor: t.emberTint }]}>
                 <View style={{ flex: 1 }}>
                   <Micro sig>FREE · 20 MIN</Micro>
-                  <Text variant="title" style={{ marginTop: 6 }}>life will nudge you here</Text>
+                  <Text variant="title" style={{ marginTop: 6 }}>Life will nudge you here</Text>
                   <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>Finish the P87.</Text>
                 </View>
                 <Thumb source={photos.payslip} focal={{ y: 0.75 }} />
@@ -499,7 +458,7 @@ export function CalendarV26() {
           </View>
         ))}
       </View>
-      <Callout style={{ marginTop: space.md }}>life only reads when you’re busy or free, never the details of your events.</Callout>
+      <Callout style={{ marginTop: space.md }}>Life only reads when you’re busy or free, never the details of your events.</Callout>
     </Page>
   );
 }
@@ -528,44 +487,14 @@ export function MorningBriefV26() {
   );
 }
 
-/* ───────────────────────── Close the day ───────────────────────── */
-
-export function EveningV26() {
-  const t = useTokens(), nav = useNavigation(), { data, flag, draft } = useSeed();
-  const { now } = useLocalDay();
-  const did = [{ t: 'Paid the energy bill', a: 'Money' }, { t: '20-minute run', a: 'Body' }, { t: 'Read your Aim', a: 'Aim' }];
-  return (
-    <Page screen="evening" scroll={false} backdrop={<PhotoBackdrop source={photos.calm} focal={{ y: 1 }} height={480} />}
-      bar={{ kind: 'photo', left: <View style={[styles.photoChip, { backgroundColor: photo.fill }]}><Text variant="micro" tone="paper">{`${now.toLocaleDateString('en-GB', { weekday: 'long' })}, done`}</Text></View> }}
-      bottom={
-        <View style={[styles.sheet, { backgroundColor: t.surface }]}>
-          {did.map(d => <Row key={d.t} lead={<Tick on />} title={d.t} end={d.a} style={{ minHeight: 46, paddingVertical: space.xxs }} />)}
-          <Row lead={<Tick icon="arrow" />} title="Call the dentist" sub="Moved to tomorrow, 9:30" end="Tomorrow" style={{ minHeight: 52, paddingVertical: space.xxs }} />
-          <Micro style={{ marginTop: space.sm }}>ONE LINE ABOUT TODAY?</Micro>
-          <TextInput maxFontSizeMultiplier={1.3} value={data.drafts.evening ?? ''} onChangeText={v => draft('evening', v)} placeholder="Felt sharper after the run." placeholderTextColor={t.inkQuiet} accessibilityLabel="One line about today"
-            style={[styles.note, { backgroundColor: t.surface2, color: t.ink, fontFamily: fonts.sans }]} selectionColor={t.ember} />
-          <Btn label="Close the day" onPress={() => { flag('day-closed', true); feedback.complete(); nav.close(); }} style={{ marginTop: space.md }} />
-        </View>
-      }>
-      <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: space.xl }}>
-        <View style={styles.ticks} accessibilityElementsHidden>
-          {[0, 1, 2].map(k => <View key={k} style={[styles.bigTick, { backgroundColor: photo.onPhoto }]}><Icon name="check" size={componentSize.iconSm} color={photo.ink} /></View>)}
-          <View style={[styles.bigTick, { backgroundColor: photo.fill }]}><Icon name="arrow" size={componentSize.iconSm} color={photo.onPhoto} /></View>
-        </View>
-        <Display onPhoto s="{3 of 4 moves.} A good day." style={{ marginTop: space.md }} />
-      </View>
-    </Page>
-  );
-}
-
 /* ───────────────────────── From life ───────────────────────── */
 
 export function InboxV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag, update } = useSeed();
   const read = !!data.flags['inbox-read'];
   return (
-    <Page screen="inbox" bar={{ kind: 'push', title: 'From life', action: { kind: 'node', node: <Chip label="Read all" onPress={() => flag('inbox-read', true)} /> } }}>
-      <Display s={read ? '{All read.} Nothing important lives only here.' : '{2 new} from life. Nothing important lives only here.'} style={{ marginTop: space.xxs }} />
+    <Page screen="inbox" bar={{ kind: 'push', title: 'From Life', action: { kind: 'node', node: <Chip label="Read all" onPress={() => flag('inbox-read', true)} /> } }}>
+      <Display s={read ? '{All read.} Nothing important lives only here.' : '{2 new} from Life. Nothing important lives only here.'} style={{ marginTop: space.xxs }} />
       <View style={{ marginTop: space.xl, paddingTop: 28 }}>
         <Press haptic="open" onPress={() => nav.go('today', { nudge: '1' })} accessibilityLabel="20 free minutes before 14:00. Nudge, 11:20" style={[styles.peek, { backgroundColor: t.surface3 }]}>
           <View style={styles.row}>{read ? null : <View style={[styles.unread, { backgroundColor: t.ember }]} />}<Text variant="micro" tone="quiet">20 free minutes before 14:00</Text></View>
@@ -573,7 +502,7 @@ export function InboxV26() {
         </Press>
         <PhotoCard source={photos.payslip} focal={{ y: 0.7 }} height={236} onPress={() => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); nav.go('mission'); }}
           chips={[read ? 'Earlier · 2h ago' : { label: 'New · 2h ago', dot: t.ember }]} chipRight="Tax rebate"
-          title={seedTaxClaim.refund ? `You’re likely owed ${money(seedTaxClaim.refund)}` : 'Your tax record is worth checking'} sub="From work expenses you told life about. One form claims it." />
+          title={seedTaxClaim.refund ? `You’re likely owed ${money(seedTaxClaim.refund)}` : 'Your tax record is worth checking'} sub="From work expenses you told Life about. One form claims it." />
       </View>
       <SectionHead title="Earlier" />
       <RowsCard>
@@ -671,7 +600,7 @@ export function SearchV26({ onClose }: { onClose: () => void }) {
               </Press>
             ))}
           </View>
-          <Btn label={query ? `Ask life: “${query}”` : 'Ask life a question'} ghost onPress={() => go(() => nav.go('chat', { question: query }))} style={{ marginTop: space.lg }} />
+          <Btn label={query ? `Ask Life: “${query}”` : 'Ask Life a question'} ghost onPress={() => go(() => nav.go('chat', { question: query }))} style={{ marginTop: space.lg }} />
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -680,7 +609,6 @@ export function SearchV26({ onClose }: { onClose: () => void }) {
 
 const styles = StyleSheet.create({
   card: { borderRadius: radius.lg, padding: space.cardPad },
-  pad16: { padding: space.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   then: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: space.xs },
@@ -700,11 +628,6 @@ const styles = StyleSheet.create({
   gap: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm, paddingLeft: 14 },
   listen: { flexDirection: 'row', alignItems: 'center', gap: space.tile, paddingVertical: space.xs, paddingLeft: space.xs, paddingRight: space.md, borderRadius: radius.full, alignSelf: 'flex-start', marginTop: space.lg },
   play: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  photoChip: { paddingVertical: 6, paddingHorizontal: space.tile, borderRadius: radius.full },
-  sheet: { borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingTop: space.tile, paddingHorizontal: space.lg, paddingBottom: 30, ...StyleSheet.flatten({}) },
-  note: { borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: space.md, fontSize: 15, lineHeight: 22, marginTop: space.xs },
-  ticks: { flexDirection: 'row', gap: space.xs },
-  bigTick: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   peek: { position: 'absolute', left: space.lg, right: space.lg, top: 0, height: 60, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, paddingVertical: 7, paddingHorizontal: space.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   unread: { width: 6, height: 6, borderRadius: 3 },
   searchBar: { height: 64, flexDirection: 'row', alignItems: 'center', gap: space.tile, paddingHorizontal: space.gutter },

@@ -16,13 +16,16 @@ import { settledTranscript } from '@life/brain';
 import {
   CompactStepper, Field, FilterChips, FullPhotoScreen, Icon, LifeOrb, PhotoCard, PhotoFill, PhotoGrid, PickRow, Press, RoundButton, SegmentedV26,
   SwitchV26, Text, TintCard, TwoTone, V26Tile, TileGrid, cardShadow, componentSize, feedback, floatLift, photo, photoScrims, photos, radius,
-  space, useCalmMotion, useTokens, type GlyphName,
+  space, useCalmMotion, useTokens, Wordmark, type GlyphName,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { SHOW_SAMPLES } from '@/state/sample';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
-import { health, records } from '@/services/local';
+import { records } from '@/services/local';
+import { phoneHealth } from '@/services/health/phone';
+import { typesAllowed } from '@/services/health/mapping';
+import { readHealthNow } from '@/services/health/useHealthRunner';
 import { problemWords, sendCode, signInWith, verifyCode } from '@/services/account';
 import { voice } from '@/services/voice';
 import {
@@ -101,7 +104,7 @@ export function WelcomeV26() {
   return (
     <View nativeID="screen-welcome" style={{ flex: 1, backgroundColor: photo.ink }}>
       <PhotoStatus />
-      <FullPhotoScreen source={photos.friends} focal={{ x: 0.42 }} title="Life, handled." statement={two('life finds {what you’re owed}, {what’s due} and {what’s next}.')}
+      <FullPhotoScreen source={photos.friends} focal={{ x: 0.42 }} title="Life, handled." statement={two('Life finds {what you’re owed}, {what’s due} and {what’s next}.')}
         pager={{ count: 3, index: 0 }} onNext={start} nextLabel="Get started" onSkip={skip} />
     </View>
   );
@@ -130,7 +133,7 @@ export function AgecheckV26() {
       <View style={{ alignItems: 'flex-start', marginTop: space.lg }}><MarkTile /></View>
       <Text variant="title" style={{ marginTop: space.md }}>Before we start</Text>
       <Display s="{When were you born?}" style={{ marginTop: space.xxs }} />
-      <Body s="life asks once. Your date of birth sets {age rules}, like pensions and the Lifetime ISA, and it stays {on this phone}." style={{ marginTop: space.xs }} />
+      <Body s="Life asks once. Your date of birth sets {age rules}, like pensions and the Lifetime ISA, and it stays {on this phone}." style={{ marginTop: space.xs }} />
       <View style={styles.dob}>
         <Field label="Day" value={d} placeholder="DD" onChangeText={v => setD(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
         <Field label="Month" value={m} placeholder="MM" onChangeText={v => setM(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
@@ -146,7 +149,7 @@ function UnderAge() {
   return (
     <Page screen="agecheck" bar={{ kind: 'none' }} center footer={<Btn label={`Call Childline · ${CHILDLINE.number}`} ghost icon="people" onPress={() => { void Linking.openURL(CHILDLINE.url); }} />}>
       <MarkTile />
-      <Display s="{life is for adults,} for now." style={{ marginTop: space.lg }} />
+      <Display s="{Life is for adults,} for now." style={{ marginTop: space.lg }} />
       <Body s="It works with money, health and food targets in ways that are built for people {18 and over}. We haven’t kept your date of birth." style={{ marginTop: space.sm }} />
       <Body s={`If something’s on your mind, {Childline} is free and confidential, any time: {${CHILDLINE.number}} or ${CHILDLINE.web}.`} style={{ marginTop: space.md }} />
     </Page>
@@ -163,10 +166,10 @@ export function QuestionV26() {
   const work = WORK.find(w => w.value === data.choices['setup-work']);
   return (
     <Page screen="question" bar={{ kind: 'flow', left: 'Back', step: '1 of 3' }} contentStyle={{ flexGrow: 1 }}
-      footer={<><Btn label="Next: where you live" onPress={() => nav.go('where')} /><QuietLink label="Or just tell life" onPress={() => nav.go('tell')} /></>}>
+      footer={<><Btn label="Next: where you live" onPress={() => nav.go('where')} /><QuietLink label="Or just tell Life" onPress={() => nav.go('tell')} /></>}>
       <View style={styles.centre}>
         <MarkTile />
-        <Text variant="title" style={{ marginTop: space.md }}>Welcome to life</Text>
+        <Text variant="title" style={{ marginTop: space.md }}>Welcome to Life</Text>
         <Body s="{What would make the biggest difference this year?}" variant="display" align="center" style={{ marginTop: space.xxs }} />
       </View>
       <View style={{ gap: space.sm }}>
@@ -220,13 +223,13 @@ export function TellV26() {
   return (
     <Page screen="tell" bar={{ kind: 'flow', left: 'Back', action: { kind: 'text', label: typing ? 'Talk instead' : 'Type instead', onPress: () => setTyping(v => !v) } }} contentStyle={{ flexGrow: 1 }}
       footer={typing
-        ? <><Btn label="Show me what life understood" disabled={!words.trim()} onPress={() => { void review(); }} /><Callout center>You’ll see everything it understood before anything is saved.</Callout></>
+        ? <><Btn label="Show me what Life understood" disabled={!words.trim()} onPress={() => { void review(); }} /><Callout center>You’ll see everything it understood before anything is saved.</Callout></>
         : <View style={{ alignItems: 'center', gap: space.sm }}>
           <RoundButton icon="mic" size="xl" solid={listening} haptic="primary" label={listening ? 'Listening. Tap when you’re done' : 'Start talking'} onPress={() => { void mic(); }} />
-          <View><Callout center tone="ink">Talk for a minute and life will set itself up.</Callout><Callout center>You’ll see everything it understood before anything is saved.</Callout></View>
+          <View><Callout center tone="ink">Talk for a minute and Life will set itself up.</Callout><Callout center>You’ll see everything it understood before anything is saved.</Callout></View>
         </View>}>
       <Eyebrow>Faster than questions</Eyebrow>
-      <Display s="{Tell life about you,} in your own words." />
+      <Display s="{Tell Life about you,} in your own words." />
       {typing ? (
         <Field label="Your words" value={words} placeholder="I live in Manchester with my partner, I work as a nurse…" onChangeText={setWords} style={{ marginTop: space.lg }} />
       ) : (
@@ -261,7 +264,7 @@ export function BuildingV26() {
   const see = () => { if (!done) { setDone(true); return; } if (asked) nav.replace('firstmove'); else nav.go('signin'); };
   return (
     <Page screen="building" bar={{ kind: 'push', title: 'Building your plan', close: true }}
-      footer={<><Btn label="See my plan" ghost={!done} icon={done ? 'arrow' : undefined} trail onPress={see} /><Callout center>Estimates from what you told life and published rules, not a link to HMRC or the NHS.</Callout></>}>
+      footer={<><Btn label="See my plan" ghost={!done} icon={done ? 'arrow' : undefined} trail onPress={see} /><Callout center>Estimates from what you told Life and published rules, not a link to HMRC or the NHS.</Callout></>}>
       <View style={styles.inline}>
         <LifeOrb size={52} state={done ? 'done' : 'working'} />
         <View style={{ flex: 1 }}>
@@ -341,12 +344,12 @@ export function HealthconsentV26() {
       <Eyebrow icon="heart">Your health data</Eyebrow>
       {consent.consent
         ? <Display s={`{You said yes} on {${longDate(consent.consent.at)}}.`} />
-        : <Display s="Can life use your {@heart health data}?" />}
+        : <Display s="Can Life use your {@heart health data}?" />}
       <Body s={consent.consent
-        ? 'life uses the kinds below to plan your day. You can take your yes back here or in Settings, and life stops using them straight away.'
+        ? 'Life uses the kinds below to plan your day. You can take your yes back here or in Settings, and Life stops using them straight away.'
         : consent.withdrawnAt
-          ? `You took your yes back on {${longDate(consent.withdrawnAt)}}. life isn’t using your health data. Say yes again any time.`
-          : 'Health data is special under UK law, so life asks for a {clear yes} before it reads or keeps any.'} style={{ marginTop: space.sm }} />
+          ? `You took your yes back on {${longDate(consent.withdrawnAt)}}. Life isn’t using your health data. Say yes again any time.`
+          : 'Health data is special under UK law, so Life asks for a {clear yes} before it reads or keeps any.'} style={{ marginTop: space.sm }} />
       <Micro style={{ marginTop: space.xl }}>WHAT IT COVERS</Micro>
       <RowsCard style={{ marginTop: space.sm }}>
         <Row icon="person" title="Your body numbers" sub="Height, weight and waist, for food targets and healthy ranges" />
@@ -356,9 +359,9 @@ export function HealthconsentV26() {
       <Micro style={{ marginTop: space.lg }}>WHAT LIFE PROMISES</Micro>
       <RowsCard style={{ marginTop: space.sm }}>
         <Row icon="shield" title="Kept on this phone, encrypted" sub="Never in iCloud, never for ads, never sold" />
-        <Row icon="eyeOff" title="Yours to take back" sub="Withdraw here or in Settings, and life stops at once" />
+        <Row icon="eyeOff" title="Yours to take back" sub="Withdraw here or in Settings, and Life stops at once" />
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Wellness guidance from your own readings, not a diagnosis. life keeps a note of your answer and the date, so you can see it here later.</Callout>
+      <Callout style={{ marginTop: space.md }}>Wellness guidance from your own readings, not a diagnosis. Life keeps a note of your answer and the date, so you can see it here later.</Callout>
     </Page>
   );
 }
@@ -373,8 +376,11 @@ export function HealthprimerV26() {
   const go = async () => {
     // Asking here is the explicit, per-type yes (SPEC 9.3): it records the consent with the types switched on.
     if (consent.given) consent.setTypes(types); else consent.give(data.onboardingDone ? 'body' : 'first open', types);
-    await health.connect(healthName);
+    // The system's own sheet asks next; life reads only the kinds switched on here.
+    const allowed = typesAllowed(types);
+    if (await phoneHealth.available()) await phoneHealth.requestAccess(allowed);
     flag('health-connected', true); flag(`device-${healthName}`, true);
+    readHealthNow();
     HEALTH_TYPES.forEach(h => choose(`health-primer-${h.key}`, types[h.key] ? 'on' : 'off'));
     feedback.primary();
     leave();
@@ -389,7 +395,7 @@ export function HealthprimerV26() {
             topRight={<SwitchV26 value={types[h.key]} onChange={v => setTypes(c => ({ ...c, [h.key]: v }))} accessibilityLabel={h.title} />} />
         ))}
       </PhotoGrid>
-      <Callout style={{ marginTop: space.sm }}>{`Stays on your phone. Never in iCloud, never for ads. Change it any time in Settings.${consent.given ? '' : ' Continuing is your yes to life using the kinds switched on.'}`}</Callout>
+      <Callout style={{ marginTop: space.sm }}>{`Stays on your phone. Never in iCloud, never for ads. Change it any time in Settings.${consent.given ? '' : ' Continuing is your yes to Life using the kinds switched on.'}`}</Callout>
     </Page>
   );
 }
@@ -406,12 +412,12 @@ export function NotifprimerV26() {
         <PhotoFill source={photos.calmdesk} focal={{ y: 0.7 }} />
         <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
         <View style={[styles.nudgeCard, { backgroundColor: t.surface, ...floatLift(t.scheme) }]}>
-          <Between><View style={styles.inline}><LifeOrb size={20} /><Text variant="buttonCompact">life</Text></View><Callout>now</Callout></Between>
+          <Between><View style={styles.inline}><LifeOrb size={20} /><Text variant="buttonCompact">Life</Text></View><Callout>now</Callout></Between>
           <Text variant="body" style={{ marginTop: 6 }}>{`You’ve got 20 free minutes. Finish the P87 and ${money(seedTaxClaim.refund)} starts moving.`}</Text>
         </View>
         <Text variant="callout" style={{ color: photo.onPhoto2 }}>An example nudge</Text>
       </View>
-      <Display s="Can life {tap you on the shoulder?}" style={{ marginTop: space.lg }} />
+      <Display s="Can Life {tap you on the shoulder?}" style={{ marginTop: space.lg }} />
       <Body s="One nudge a day at most, only when it’s worth it. Never between 9pm and 8am." style={{ marginTop: space.xs }} />
       <View style={[styles.card, { marginTop: space.md, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
         <Between>
@@ -454,8 +460,8 @@ export function MicprimerV26() {
     <Page screen="micprimer" contentStyle={{ flexGrow: 1 }} footer={<><Btn label="Allow the microphone" icon="mic" onPress={() => { void allow(); }} /><QuietLink label="I’ll type instead" onPress={() => { choose('mic-permission', 'declined'); nav.replace('chat'); }} /></>}>
       <View style={styles.bigOrb}><LifeOrb size={220} state="listening" /></View>
       <Eyebrow icon="mic">Before the mic asks</Eyebrow>
-      <Display s="{Talk to life,} out loud." />
-      <Body s="life only listens {while you’re talking to it}. Your voice becomes {text on your phone} where it can, and the recording is {never kept}." style={{ marginTop: space.xs }} />
+      <Display s="{Talk to Life,} out loud." />
+      <Body s="Life only listens {while you’re talking to it}. Your voice becomes {text on your phone} where it can, and the recording is {never kept}." style={{ marginTop: space.xs }} />
       {problem ? <Callout tone="ink" style={{ marginTop: space.sm }}>{problem}</Callout> : null}
     </Page>
   );
@@ -496,7 +502,7 @@ export function CamprimerV26() {
         </View>
       </View>
       <View onLayout={drawer.onLayout} style={[drawerStyle, styles.drawer, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.md) + space.xxs }]}>
-        <Display s="Snap it, and {life reads it.}" flush />
+        <Display s="Snap it, and {Life reads it.}" flush />
         <View style={{ marginTop: space.xs }}>{CAMERA_USES.map(u => <Row key={u.title} photo={photos[u.photo]} thumbFocal={u.focal} title={u.title} sub={u.sub} />)}</View>
         <Callout style={{ marginTop: space.sm }}>Photos are read, then deleted unless you keep them.</Callout>
         <Btn label="Allow the camera" onPress={() => { void allow(); }} style={{ marginTop: space.sm }} />
@@ -526,7 +532,7 @@ export function CalprimerV26() {
     <Page screen="calprimer" footer={<><Btn label="Allow calendar access" onPress={() => { flag('calendar-preview', true); feedback.primary(); nav.replace(params.next === 'calendar' || !params.next ? 'calendar' : 'calendar'); }} /><QuietLink label="Not now" onPress={() => { choose('calendar-permission', 'declined'); nav.close(); }} /></>}>
       <View style={{ alignItems: 'flex-start' }}><MarkTile icon="calendar" /></View>
       <Display s="Nudges that {fit your day.}" style={{ marginTop: space.md }} />
-      <Body s="life looks at {when you’re busy}, never at what the meeting is about, and {never changes your calendar}." style={{ marginTop: space.xs }} />
+      <Body s="Life looks at {when you’re busy}, never at what the meeting is about, and {never changes your calendar}." style={{ marginTop: space.xs }} />
       <View style={[styles.card, { marginTop: space.lg, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
         <Between><Micro>WHAT LIFE SEES</Micro><Micro>READ ONLY</Micro></Between>
         <Timeline style={{ marginTop: space.sm }} items={[
@@ -562,7 +568,7 @@ export function DevicesetupV26() {
       </View>
       <View onLayout={drawer.onLayout} style={[drawerStyle, styles.drawer, { paddingTop: 18, backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.md) + space.xxs }]}>
         <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
-          <Callout>life reads sleep, heart rate and workouts from it. You can add more later.</Callout>
+          <Callout>Life reads sleep, heart rate and workouts from it. You can add more later.</Callout>
           <View style={{ marginTop: 6 }}>
             {WEAR.map((w, n) => <Row key={w.key} icon={w.icon} title={w.title} sub={w.sub} haptic="select" right={<Pick on={n === k} />} onPress={() => setK(n)} />)}
           </View>
@@ -583,7 +589,7 @@ export function FirstmoveV26() {
   return (
     <Page screen="firstmove" scroll={false} contentStyle={{ justifyContent: 'flex-end' }}
       backdrop={<PhotoBackdropFull />}
-      bar={{ kind: 'photo', left: <View style={styles.inline}><LifeOrb size={22} state="done" color={photo.onPhoto} /><Text variant="headline" tone="paper">life</Text></View>,
+      bar={{ kind: 'photo', left: <Wordmark variant="headline" color={photo.onPhoto} />,
         right: <Press haptic="select" onPress={finish} accessibilityLabel="Close" hitSlop={4} style={[styles.round, { backgroundColor: photo.fill }]}><Icon name="close" size={componentSize.iconSm} color={photo.onPhoto} /></Press> }}
       footer={<><Btn label="Do it now" icon="arrow" trail onPhoto onPress={doIt} /><PaperLink label="Go to Today" onPress={finish} /></>}>
       <Chip label="Your first move · 2 minutes" icon="clock" onPhoto />
@@ -703,8 +709,9 @@ export function SigninV26() {
           <QuietLink label="Change email" onPress={() => go('email')} />
         </View>
       </> : <>
+        <Wordmark variant="callout" tone="ink2" style={{ marginBottom: space.xs }} />
         <Statement s="{Keep your plan safe.} Sign in so it survives a new phone." />
-        <Body s="life never posts anything and never sells your data." style={{ marginTop: space.xs }} />
+        <Body s="Life never posts anything and never sells your data." style={{ marginTop: space.xs }} />
         {step === 'email' ? <>
           <Field label="Your email" value={email} placeholder="you@example.com" onChangeText={setEmail} keyboardType="email-address" autoComplete="email" style={{ marginTop: space.lg }} />
           <Btn label="Send me a code" disabled={busy || !emailOk} onPress={() => { void askCode(); }} style={{ marginTop: space.sm }} />

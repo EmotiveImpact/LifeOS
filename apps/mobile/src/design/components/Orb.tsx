@@ -88,7 +88,7 @@ export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { s
     });
   }, false);
   useEffect(() => { frame.setActive(!calm); return () => frame.setActive(false); }, [frame, calm]);
-  return <View style={{ width: size, height: size }} accessibilityRole="image" accessibilityLabel={state === 'ring' ? 'life' : `life is ${state === 'voice' ? 'listening' : state}`}>
+  return <View style={{ width: size, height: size }} accessibilityRole="image" accessibilityLabel={state === 'ring' ? 'Life' : `Life is ${state === 'voice' ? 'listening' : state}`}>
     <Svg width={size} height={size} style={{ position: 'absolute' }} pointerEvents="none">
       {PAIRS.map(([a, b]) => <OrbEdge key={`${a}-${b}`} a={a} b={b} points={points} edges={edges} time={time} size={size} color={ink} dot={dot} />)}
     </Svg>

@@ -27,7 +27,7 @@ const STEPS = [
   { key: 'what', title: 'What, {exactly?}', sub: 'Make it concrete enough that you’d know the day you’ve got it.', suggestion: 'Own a two-bed flat in South London', photo: 'desk', next: 'Next: by when?' },
   { key: 'when', title: 'By {when?}', sub: 'A month and a year gives your plan somewhere to start.', suggestion: 'June 2029', photo: 'aimwrite', next: 'Next: what you’ll give' },
   { key: 'give', title: 'What will you {give for it?}', sub: 'Everything has a price: time, money, effort. Name yours.', suggestion: `Save ${money(seed.finance.savingsMonthly)} a month and grow my design rate by 20%`, photo: 'aimdesk', next: 'Next: your first plan' },
-  { key: 'plan', title: 'Your {first plan}', sub: 'It doesn’t need to be perfect. life will improve it with you.', suggestion: 'Lifetime ISA first, then a mortgage in principle by 2028', photo: 'keyshome', next: 'Save my Aim' },
+  { key: 'plan', title: 'Your {first plan}', sub: 'It doesn’t need to be perfect. Life will improve it with you.', suggestion: 'Lifetime ISA first, then a mortgage in principle by 2028', photo: 'keyshome', next: 'Save my Aim' },
 ] as const;
 type StepKey = (typeof STEPS)[number]['key'];
 
@@ -70,7 +70,7 @@ export function AimNewV26() {
       </View>
       <View style={{ flexDirection: 'row', marginTop: space.sm }}>
         {usedSuggestion
-          ? <Chip label="From what life already knows · undo" icon="check" tone="done" onPress={() => { setAim({ ...aim, [s.key]: suggested[s.key] ?? '' }); setSuggested({ ...suggested, [s.key]: undefined }); }} />
+          ? <Chip label="From what Life already knows · undo" icon="check" tone="done" onPress={() => { setAim({ ...aim, [s.key]: suggested[s.key] ?? '' }); setSuggested({ ...suggested, [s.key]: undefined }); }} />
           : <Press haptic="select" onPress={() => { setSuggested({ ...suggested, [s.key]: value }); setAim({ ...aim, [s.key]: s.suggestion }); }} accessibilityLabel={`Suggest: ${s.suggestion}`} style={[styles.suggest, { backgroundColor: t.surface, flexShrink: 1 }]}>
               <LifeOrb size={18} /><Text variant="buttonCompact" numberOfLines={1} style={{ flexShrink: 1 }}>{`Suggest: ${s.suggestion}`}</Text>
             </Press>}
@@ -123,7 +123,7 @@ export function AimV26() {
       bar={{ kind: 'photo', left: <PhotoRound icon="back" label="Back" onPress={nav.close} />, right: <View style={styles.acts}>
         <PhotoRound icon="arrowUp" label="Share" onPress={() => { void Share.share({ message: statement }); }} />
         <ActionMenu items={[
-          { label: 'Edit your Aim', sub: 'life keeps the history', icon: 'edit', onPress: () => nav.go('aimnew') },
+          { label: 'Edit your Aim', sub: 'Life keeps the history', icon: 'edit', onPress: () => nav.go('aimnew') },
           { label: 'This month’s gambit', icon: 'spark', onPress: () => nav.go('gambit') },
           { label: 'See a glimpse', sub: 'What it will feel like', icon: 'eye', onPress: () => nav.go('glimpse') },
         ]}>{open => <PhotoRound icon="more" label="Aim actions" onPress={open} />}</ActionMenu>
@@ -165,7 +165,7 @@ export function AimV26() {
           <Press haptic="open" onPress={() => nav.go('aimnew')} accessibilityLabel="Edit your Aim" style={[styles.acts, { marginTop: space.lg, alignItems: 'center', alignSelf: 'flex-start' }]}>
             <Text variant="buttonCompact">Edit your Aim</Text><Icon name="chev" size={16} color={t.ink} />
           </Press>
-          <Callout style={{ marginTop: space.xxs }}>Aims can change, and life keeps the history.</Callout>
+          <Callout style={{ marginTop: space.xxs }}>Aims can change, and Life keeps the history.</Callout>
         </View>
       </ScrollView>
     </Page>
@@ -196,7 +196,7 @@ export function GambitV26() {
       <Timeline items={[
         { when: 'FIRST', text: g.t1, state: 'now', children: <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>{g.s1}</Text> },
         { when: 'THEN', text: g.t2, state: 'later', children: <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>{g.s2}</Text> },
-        { when: 'WEEKLY CHECK-IN', text: 'Two minutes with life, at a time you choose.', state: 'later', children: <SegmentedV26 options={TIMES.map(v => ({ value: v, label: v }))} value={time} onChange={setTime} style={{ marginTop: space.sm }} /> },
+        { when: 'WEEKLY CHECK-IN', text: 'Two minutes with Life, at a time you choose.', state: 'later', children: <SegmentedV26 options={TIMES.map(v => ({ value: v, label: v }))} value={time} onChange={setTime} style={{ marginTop: space.sm }} /> },
       ]} />
       <SectionHead title="Suggestions from your Aim" link="tap to swap" />
       <RowsCard>
