@@ -103,6 +103,24 @@ Reference pins from the 20 Nov sweep; what each teaches is in `IMPLEMENTATION_RE
 | [WebsiteBeaver/react-native-document-scanner-plugin](https://github.com/WebsiteBeaver/react-native-document-scanner-plugin/tree/fc189f5513cd) | MIT | master | `fc189f5513cd` | 2026-01-01 | Not copied (MIT) | Letter scanning with edge detection. Candidate package. |
 | [FormidableLabs/victory-native-xl](https://github.com/FormidableLabs/victory-native-xl/tree/51cc8739a75d) | MIT | main | `51cc8739a75d` | 2026-10-20 | Not copied (MIT) | Skia charts that fit their box. Candidate package (uses our Skia). |
 
+## Repo sweep pins, second pass (20 Nov 2026)
+Gaps the first pass missed; see `IMPLEMENTATION_REFERENCES.md` §7.8, and §7.9 for exact files to take from earlier pins. Same rules: nothing copied or installed yet.
+
+| Repo | Licence | Branch | Pinned commit | Date | What we do | How |
+|---|---|---|---|---|---|---|
+| [nandorojo/zeego](https://github.com/nandorojo/zeego/tree/51613943b61f) | MIT | master | `51613943b61f` | 2026-01-27 | Not copied (MIT) | Native menus for the "…" ActionMenu. Candidate package. |
+| [kirillzyusko/react-native-keyboard-controller](https://github.com/kirillzyusko/react-native-keyboard-controller/tree/67112625ed80) | MIT | main | `67112625ed80` | 2026-11-20 | Not copied (MIT) | Keyboard-aware drawers and a sticky Talk composer. Candidate package. |
+| [Shopify/flash-list](https://github.com/Shopify/flash-list/tree/9b5e7f8b028b) | MIT | main | `9b5e7f8b028b` | 2026-09-15 | Not copied (MIT) | Virtualised lists for Phase 30. Candidate package. |
+| [EvanBacon/expo-apple-targets](https://github.com/EvanBacon/expo-apple-targets/tree/538b661d252a) | MIT | main | `538b661d252a` | 2026-06-03 | Not copied (MIT) | Widget, App Intent (Siri), control and watch targets for Phase 29. `packages/apple-targets/src/with-widget.ts`. |
+| [asg017/sqlite-vec](https://github.com/asg017/sqlite-vec/tree/fe941716ad86) | MIT or Apache-2.0 | main | `fe941716ad86` | 2026-05-17 | Not copied (dual licence) | On-phone memory search; reach it through the `expo-sqlite` `withSQLiteVecExtension` option, not a separate install. |
+| [RevenueCat/react-native-purchases](https://github.com/RevenueCat/react-native-purchases/tree/d559058f64ca) | MIT | main | `d559058f64ca` | 2026-11-20 | Not copied (MIT) | Billing SDK for the chosen RevenueCat setup. Candidate package. |
+| [wix/react-native-calendars](https://github.com/wix/react-native-calendars/tree/808c6e100511) | MIT | master | `808c6e100511` | 2026-01-29 | Not copied (MIT) | Calendar and agenda views. Candidate package. |
+| [pipecat-ai/smart-turn](https://github.com/pipecat-ai/smart-turn/tree/1a3f4bf034f1) | BSD-2-Clause | main | `1a3f4bf034f1` | 2026-01-22 | Not copied (BSD-2-Clause) | Open end-of-turn model so Talk waits for you to finish; Pipecat has a CoreML runner for it. |
+| [snakers4/silero-vad](https://github.com/snakers4/silero-vad/tree/066409f3d9db) | MIT | master | `066409f3d9db` | 2026-10-22 | Not copied (MIT) | Speech detector (ONNX) to start and stop listening. |
+| [pipecat-ai/pipecat](https://github.com/pipecat-ai/pipecat/tree/ce25f81ba0fc) | BSD-2-Clause | main | `ce25f81ba0fc` | 2026-11-20 | Not copied (BSD-2-Clause) | Turn-taking and interruption handling. `src/pipecat/turns/user_turn_strategies.py`. |
+| [mobile-dev-inc/Maestro](https://github.com/mobile-dev-inc/Maestro/tree/d9561331af38) | Apache-2.0 | main | `d9561331af38` | 2026-11-20 | Not copied (Apache-2.0, a tool) | Phase 30 end-to-end flows. |
+| [getsentry/sentry-react-native](https://github.com/getsentry/sentry-react-native/tree/453da97d212f) | MIT | main | `453da97d212f` | 2026-11-19 | Not copied (MIT) | Phase 30 crash reports; scrub health text first. Candidate package. |
+
 ## Copied folders
 - `vendor/fenny/` — Feynman-voice-app at `fc32865ed16f` (docs, api, scene, teach, ui, voice: the Phonon Expo module and the Kitten TTS package). Owner’s code.
 - `vendor/atria/` — Atria at `8fedbbdfb6a2`: 18 Swift files + `docs/METRIC_VALIDATION_PLAN.md` + `LICENSE` (MIT) and `LICENSE-APACHE`.

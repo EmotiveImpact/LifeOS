@@ -107,7 +107,7 @@ Our version adds: the confirm/edit step, UK CoFID / Open Food Facts lookups, per
 - Claude checks at each gate that no 🟡/🔴 code was copied.
 
 ## 7. Repo sweep (20 Nov 2026)
-About 90 repos checked for activity, quality and licence; the strongest are below and pinned in `vendor/REFERENCES.lock.md` under "Repo sweep pins". **Nothing here is installed or copied yet.** 🟢 means the code may be ported with the notice kept (header comment plus `THIRD_PARTY_NOTICES.md`); 🟡 means read for ideas only. Installing any of these as a package still needs the usual approval and an exact version pin. Ranked shortlist and new feature ideas: `/mnt/project-files/repo-sweep/README.md`.
+About 90 repos checked for activity, quality and licence in a first pass, then about 30 more in a second pass (§7.8) plus exact files to take from the pins we already have (§7.9). The strongest are below and pinned in `vendor/REFERENCES.lock.md` under "Repo sweep pins". **Nothing here is installed or copied yet.** 🟢 means the code may be ported with the notice kept (header comment plus `THIRD_PARTY_NOTICES.md`); 🟡 means read for ideas only. Installing any of these as a package still needs the usual approval and an exact version pin. Ranked shortlist and new feature ideas: `/mnt/project-files/repo-sweep/README.md`.
 
 ### 7.1 Memory and the AI brain
 | Area | Repo | Licence | Take |
@@ -167,9 +167,45 @@ About 90 repos checked for activity, quality and licence; the strongest are belo
 | Letter scanning | [WebsiteBeaver/react-native-document-scanner-plugin](https://github.com/WebsiteBeaver/react-native-document-scanner-plugin) | 🟢 MIT | Edge detection and perspective correction for Documents |
 | Charts | [FormidableLabs/victory-native-xl](https://github.com/FormidableLabs/victory-native-xl) | 🟢 MIT | Skia charts sized to their container, which suits the "charts sit fully inside their box" rule. Alternative: `margelo/react-native-graph` (MIT) |
 
+### 7.8 Second pass: gaps the first sweep missed
+| Area | Repo | Licence | Take |
+|---|---|---|---|
+| Native menus for "…" | [nandorojo/zeego](https://github.com/nandorojo/zeego) | 🟢 MIT | Real iOS and Android drop-down and context menus for the ActionMenu, so "…" behaves like Apple's own |
+| Keyboard and sheets | [kirillzyusko/react-native-keyboard-controller](https://github.com/kirillzyusko/react-native-keyboard-controller) | 🟢 MIT | Keyboard that moves in step with the screen, inputs that stay visible in drawers, a sticky composer for Talk. Pieces: `KeyboardAwareScrollView`, `KeyboardStickyView` |
+| Long lists | [Shopify/flash-list](https://github.com/Shopify/flash-list) | 🟢 MIT | Fast virtualised lists for timelines, money and memory (Phase 30 performance) |
+| Widgets, Siri, Live Activities | [EvanBacon/expo-apple-targets](https://github.com/EvanBacon/expo-apple-targets) | 🟢 MIT | Adds widget, control, App Intent (Siri and Shortcuts), share extension and watch targets from an Expo app (Phase 29). Files: `packages/apple-targets/src/with-widget.ts`, `apps/widget-demo/targets/widget/AppIntent.swift` |
+| Memory search on the phone | [asg017/sqlite-vec](https://github.com/asg017/sqlite-vec) | 🟢 MIT or Apache-2.0 | Vector search inside SQLite. `expo-sqlite` already ships it behind the `withSQLiteVecExtension` config option, so health memories can stay on the phone and still be found by meaning |
+| Subscriptions | [RevenueCat/react-native-purchases](https://github.com/RevenueCat/react-native-purchases) | 🟢 MIT | The SDK for the billing we chose (RevenueCat: free trial, then £7.99 a month or £79.99 a year), including its paywall package |
+| Calendar views | [wix/react-native-calendars](https://github.com/wix/react-native-calendars) | 🟢 MIT | Month, week and agenda views for important dates and the planner |
+| Knowing when you've finished speaking | [pipecat-ai/smart-turn](https://github.com/pipecat-ai/smart-turn) | 🟢 BSD-2-Clause | Small open model that hears whether a sentence is finished (23 languages, runs on CPU; Pipecat has a CoreML runner for it). Stops Talk cutting people off mid-thought |
+| Voice activity | [snakers4/silero-vad](https://github.com/snakers4/silero-vad) | 🟢 MIT | Tiny ONNX speech detector to start and stop listening |
+| Talk turn-taking | [pipecat-ai/pipecat](https://github.com/pipecat-ai/pipecat) | 🟢 BSD-2-Clause | How a voice agent handles interruptions and turns. Files: `src/pipecat/turns/user_turn_strategies.py`, `src/pipecat/audio/turn/smart_turn/local_coreml_smart_turn.py` |
+| Phone tests | [mobile-dev-inc/Maestro](https://github.com/mobile-dev-inc/Maestro) | 🟢 Apache-2.0 | The end-to-end flows Phase 30 already names (onboarding, Talk to file, snap a meal) |
+| Crash reports | [getsentry/sentry-react-native](https://github.com/getsentry/sentry-react-native) | 🟢 MIT | Phase 30 crash and performance reports; scrub health text before sending |
+
+**First-party Expo pieces worth using (no new repo needed):** `expo-sqlite` options `useSQLCipher` (encrypt the phone database) and `withSQLiteVecExtension` (on-phone memory search); `expo-glass-effect` and `@expo/ui` (native iOS glass and SwiftUI controls for the Apple feel); `expo-symbols` (SF Symbols, for icons set inside text); `expo-widgets`; and `react-native-screens` form sheets with `fitToContents` detents, so drawers are only as tall as their content.
+
+### 7.9 Exact files to take from pins we already have
+| Repo | Licence | Files | Take |
+|---|---|---|---|
+| mem0ai/mem0 | 🟢 Apache-2.0 | `mem0/configs/prompts.py` | `FACT_RETRIEVAL_PROMPT` (pull facts from a chat), `DEFAULT_UPDATE_MEMORY_PROMPT` (decide add, update, delete or leave alone), `PROCEDURAL_MEMORY_SYSTEM_PROMPT`. Strong starting prompts for our own layer |
+| vectorize-io/hindsight | 🟢 MIT | `hindsight-api-slim/hindsight_api/engine/retain/fact_extraction.py`, `hindsight-docs/docs/developer/retain.md` | How a message becomes typed, dated facts before storage |
+| getzep/graphiti | 🟢 Apache-2.0 | `graphiti_core/prompts/dedupe_edges.py`, `graphiti_core/prompts/extract_edges.py`; in `graphiti_core/utils/maintenance/edge_operations.py`: `resolve_edge_contradictions`, `_apply_temporal_invalidation` | The "has this new fact made an old one false?" prompt (it is told never to guess) and the code that closes the old fact with an end date |
+| actualbudget/actual | 🟢 MIT | `packages/loot-core/src/server/schedules/find-schedules.ts`, `packages/loot-core/src/shared/schedules.ts`, `packages/loot-core/src/server/rules/rule.ts`, `packages/loot-core/src/server/rules/condition.ts`, `packages/sync-server/src/app-gocardless/app-gocardless.ts` | Spots recurring bills from past transactions with no setup; plain rules that auto-file spending ("if payee contains Tesco, then Food"); UK and EU bank import |
+| clusterzx/paperless-ai | 🟢 MIT | `src/server/calendar/scanner.ts`, `src/server/processing/prompt.ts`, `src/server/processing/promptRules.ts` | The scanner prompt finds the dates a letter asks you to act on (payment due, cancellation deadline, renewal, warranty and ID expiry) and never invents one. Letters become reminders |
+| a-ghorbani/pocketpal-ai | 🟢 MIT | `src/hooks/useMemoryCheck.ts`, `src/services/voice/memoryFit.ts`, `src/services/asr/whisperFits.ts` | "Will this model fit on this phone?" checks before a download |
+| callstackincubator/ai | 🟢 MIT | `packages/apple-llm/src/index.ts` | Calling Apple's on-device model from React Native |
+| wanasit/chrono | 🟢 MIT | `src/locales/en/index.ts` | The casual English parsers ("tomorrow evening", "in two weeks"); add en-GB date order |
+
 ### Looked at, not pinned
 - `letta-ai/letta` (Apache-2.0): now a landing page; the code moved to `letta-ai/letta-code`. The memory-blocks idea is noted in the sweep README.
 - `bloodyhealth/drip` (GPL-3.0): GitHub mirror last updated 2022. Ideas only for transparent cycle maths.
 - `andymatuschak/orbit` (mostly Apache-2.0): quiet since 2024. The idea of review prompts inside reading is noted.
 - `mattpocock/evalite`: archived; use promptfoo.
 - `mrousavy/react-native-vision-camera` now lives at `margelo/react-native-vision-camera` (same project).
+- `invertase/notifee` (Apache-2.0): archived April 2026; use `expo-notifications`.
+- `lm-sys/RouteLLM` (Apache-2.0): learns when a cheap model is good enough; quiet since 2024, so an idea for the brain router only.
+- `topoteretes/cognee` (Apache-2.0) and `agiresearch/A-mem` (MIT): more memory engines; Hindsight and Graphiti cover the same ground better for us.
+- `callstack/liquid-glass` (MIT): prefer first-party `expo-glass-effect`. `nandorojo/burnt` (MIT): native toasts, optional.
+- `aptabase/aptabase`: privacy-first app analytics; SDK MIT, server AGPL. A Phase 30 option.
+- `enzomanuelmangano/demos`: fine Reanimated motion examples, but no clear licence, so look only.
