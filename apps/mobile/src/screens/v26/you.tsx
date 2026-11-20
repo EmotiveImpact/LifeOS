@@ -20,7 +20,7 @@ import { useSeed } from '@/state/SeedProvider';
 import { knowledgeLabels, money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import {
-  becoming, childrenLine, details, experiment, factPhoto, gateTo, gateWords, householdLine, knowsArea, knowsFilters, levelPlan, memoryFilters, memoryPhoto,
+  becoming, bornOn, childrenLine, details, experiment, factPhoto, gateTo, gateWords, householdLine, knowsArea, knowsFilters, levelPlan, memoryFilters, memoryPhoto,
   moodGrid, moodPatterns, moodSummary, nextExperiments, season, shared, streak, usedToday, workTitle, youAreas, youRows, type KnowsFilter,
 } from '@/state/you';
 import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, QuietLink, Row, RowsCard, Shelf, Statement } from './kit';
@@ -494,7 +494,7 @@ export function ProfileV26() {
   const nav = useNavigation(), { data, set, flag, engine } = useSeed();
   const editing = !!data.flags['profile-edit'];
   const [name, setName] = useState(data.profile.name), [city, setCity] = useState(data.profile.city);
-  const p = data.profile, others = Math.max(0, p.householdSize - 1);
+  const p = data.profile, others = Math.max(0, p.householdSize - 1), born = bornOn(p);
   const fullName = SHOW_SAMPLES && p.name === 'Ama' ? 'Ama Mensah' : p.name;
   const kids = Number(data.choices.children ?? 0) || 0;
   const living = others === 0 ? '{on your own}' : `with {${others} ${others === 1 ? 'other' : 'others'}}`;
@@ -503,7 +503,7 @@ export function ProfileV26() {
     : `You’re {${p.age}}, living in {@home ${p.city}}, ${living.replace('{on your own}', '{on your own}')}.`;
   const save = () => { if (editing) set({ profile: { ...p, name: name.trim() || p.name, city: city.trim() || p.city } }); flag('profile-edit'); feedback.select(); };
   const rows: { photo: keyof typeof photos; title: string; sub: string; to?: Parameters<typeof nav.go>[0] }[] = [
-    { photo: 'birthday', title: `Birthday · ${details.born}`, sub: 'Age rules, and your birthday recap', to: 'yourbirthday' },
+    { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: 'yourbirthday' },
     { photo: 'terrace', title: `Lives in · ${SHOW_SAMPLES ? `${details.area}, ` : ''}${p.city}`, sub: 'Council tax, schemes' },
     { photo: 'work', title: `Work · ${details.work}`, sub: 'Tax and structure', to: 'income' },
     { photo: 'home', title: `Lives with · ${others === 0 ? 'Just me' : `${others} ${others === 1 ? 'other' : 'others'}`}`, sub: 'Discounts, benefits', to: 'household' },
@@ -513,7 +513,7 @@ export function ProfileV26() {
   ];
   return (
     <Page screen="profile" bar={{ kind: 'push', title: 'Your details', action: { kind: 'node', node: <Chip label={editing ? 'Done' : 'Edit'} onPress={save} /> } }}>
-      <PhotoCard source={photos.desk} height={200} chips={[`Level ${engine.level.currentLevel} · ${engine.level.levelName}`]} title={fullName} sub={`Born ${details.born}`} style={{ marginTop: space.xxs }} />
+      <PhotoCard source={photos.desk} height={200} chips={[`Level ${engine.level.currentLevel} · ${engine.level.levelName}`]} title={fullName} sub={born ? `Born ${born}` : undefined} style={{ marginTop: space.xxs }} />
       <Statement s={sentence} style={{ marginTop: space.lg }} />
       {editing ? <View style={{ gap: space.xs, marginTop: space.lg }}>
         <Field label="Name" value={name} onChangeText={setName} />

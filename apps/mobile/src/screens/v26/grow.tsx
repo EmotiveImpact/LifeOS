@@ -4,7 +4,7 @@
  * birthday. Levels and gates come from the engine; board-only words live in `state/you.ts`.
  */
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
@@ -17,7 +17,7 @@ import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
 import { money, seed } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
-import { details, gateTo, gateWords, levelPlan, levelupFirst, levelupMore, vantageReach, weekStats, weeks, yearReview, type WeekKey } from '@/state/you';
+import { bornOn, gateTo, gateWords, levelPlan, levelupFirst, levelupMore, vantageReach, weekStats, weeks, yearReview, type WeekKey } from '@/state/you';
 import { Between, Body, Btn, Callout, Display, Eyebrow, Page, PeekStack, Statement, Timeline, drawerStyle, useDrawerPhoto } from './kit';
 import { OnPhotoRound, PaperChip } from './learn';
 
@@ -42,7 +42,7 @@ function StatTile({ label, value, unit, up, children }: { label: string; value: 
 }
 
 export function RecapV26() {
-  const t = useTokens(), { data } = useSeed();
+  const t = useTokens(), nav = useNavigation(), { data } = useSeed();
   const params = useLocalSearchParams<{ state?: string }>();
   const [picked, setPicked] = useState<WeekKey>(params.state === 'w45' || params.state === 'w44' ? params.state : 'now');
   const order: WeekKey[] = ['w44', 'w45', 'now'];
@@ -50,7 +50,8 @@ export function RecapV26() {
   const missions = SHOW_SAMPLES ? weekStats.missions : data.completed.length;
   const week = SHOW_SAMPLES ? weeks[picked] : { ...weeks.now, tag: 'This week', line: missions ? `You cleared {@checkCircle ${missions} mission${missions === 1 ? '' : 's'}} this week.` : 'Your first week with life. {Small steps count.}' };
   const behind = SHOW_SAMPLES ? order.filter(k => k !== picked) : [];
-  const share = () => { void Share.share({ message: `${week.line.replace(/\{@?\w* ?|\}/g, '').replace(/\s+/g, ' ')} Made with life.` }); };
+  // The share card sheet (Phase 20) builds the picture and lets you hide the numbers before anything leaves.
+  const share = () => { feedback.select(); nav.go('sharecard'); };
   return (
     <Page screen="recap" bar={{ kind: 'push', title: 'Weekly recap', close: true, action: { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: share } }}>
       <Between><Text variant="titleSerif">Your weeks</Text><Callout>Every Sunday</Callout></Between>
@@ -159,7 +160,7 @@ export function YourbirthdayV26() {
   const figures = yearReview
     ? [{ label: 'Missions cleared', value: n(yearReview.missionsCleared) }, { label: 'Found or saved', value: hide ? '••••' : money(yearReview.foundOrSaved) }, { label: 'Ideas learned', value: n(yearReview.ideasLearned) }, { label: 'Closer to your Aim', value: `+${yearReview.aimProgressChangePct}%` }]
     : [{ label: 'Missions cleared', value: n(data.completed.length) }, { label: 'Ideas learned', value: n(data.learned.length) }];
-  const born = SHOW_SAMPLES ? details.bornShort : 'Your birthday';
+  const born = bornOn(data.profile, true) ?? 'Your birthday';
   return (
     <Page screen="yourbirthday" scroll={false} statusInk contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
       backdrop={<View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: drawer.height ?? 470 }]}><PhotoFill source={photos.birthday} focal={{ y: 0.85 }} settle /><LinearGradient colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} /></View>}

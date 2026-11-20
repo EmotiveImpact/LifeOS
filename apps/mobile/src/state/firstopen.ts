@@ -5,6 +5,7 @@
  * Both records live in `choices` as JSON (no schema change before Phase 21): `age-check` and `health-consent`.
  * The date of birth goes on the profile as `dateOfBirth`, which the phone store already maps to `profile.date_of_birth`.
  */
+import { detectCrisis } from '@life/brain';
 import type { UserProfile } from '@life/core/types';
 import type { PhotoName } from '@/design/photos';
 import type { ScreenKey } from '@/navigation/screens';
@@ -286,9 +287,8 @@ export function readChatQueue(data: SeedData): string[] {
 }
 
 /**
- * Words that need support now, not filing: the same check the brain runs before any model (`runBrain` in
- * packages/brain). Setup's "Or just tell life" files nothing and opens Support when it fires, as Talk does.
- * When the brain rules work exports its own check, use that instead so the two can never drift.
+ * Words that need support now, not filing: the brain's own crisis check (`detectCrisis` in packages/brain),
+ * the same one `runBrain` runs before any model, so setup and Talk can never drift apart. Setup's
+ * "Or just tell life" files nothing and opens Support when it fires, as Talk does.
  */
-const CRISIS = /\b(?:kill myself|end my life|hurt myself|suicid(?:e|al)|want to die|don[’']?t want to (?:be alive|live)|not worth living)\b/i;
-export const needsSupport = (text: string) => CRISIS.test(text);
+export const needsSupport = (text: string) => detectCrisis(text) !== null;

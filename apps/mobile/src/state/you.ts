@@ -136,6 +136,18 @@ export const shared = SHOW_SAMPLES ? {
 
 export const details = { born: '14 March 1999', bornShort: '14 March', work: 'Freelance designer', area: 'Hackney', payDay: '28th' };
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+/**
+ * "14 March 1999" (or "14 March" when short) from the date of birth the age check keeps on the profile. The sample
+ * life keeps Ama's board date; a real account without one gets null, so the screen can ask for it.
+ */
+export function bornOn(profile: object, short = false): string | null {
+  const iso = (profile as { dateOfBirth?: unknown }).dateOfBirth;
+  const m = typeof iso === 'string' ? /^(\d{4})-(\d{2})-(\d{2})/.exec(iso) : null;
+  if (m && MONTHS[Number(m[2]) - 1]) return `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]}${short ? '' : ` ${m[1]}`}`;
+  return SHOW_SAMPLES ? (short ? details.bornShort : details.born) : null;
+}
+
 /* ───────────────────────── Know yourself ───────────────────────── */
 
 export type TestKey = 'personality' | 'clock' | 'values' | 'money';

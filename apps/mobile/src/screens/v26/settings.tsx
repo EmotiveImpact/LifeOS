@@ -20,6 +20,7 @@ import { ai } from '@/services/ai';
 import { voice } from '@/services/voice';
 import { faces } from '@/state/people';
 import { workTitle } from '@/state/you';
+import { longDate, useHealthConsent } from '@/state/firstopen';
 import {
   aiScopes, cloudJobs, connections, helpAnswers, modelParts, notifGroups, nudgeWindow, onPhoneMB, openSource, phoneJobs, plusOpens, plusPrice, quietHours,
 } from '@/state/settings';
@@ -380,7 +381,10 @@ export function ServicesV26() {
 /* ───────────────────────── Your data ───────────────────────── */
 
 export function PrivacyV26() {
-  const nav = useNavigation(), { data } = useSeed(), exportData = useExport();
+  const nav = useNavigation(), { data } = useSeed(), exportData = useExport(), health = useHealthConsent();
+  // The recorded health-data yes (Phase 20's consent step). Withdrawing happens on that same screen.
+  const healthLine = health.consent ? `You said yes on ${longDate(health.consent.at)}`
+    : health.withdrawnAt ? 'You took your yes back · off' : health.declined ? 'Off · you said not now' : 'Not asked yet';
   return (
     <Page screen="privacy" bar={{ kind: 'push', title: 'Your data' }}>
       <Eyebrow icon="shield">The promise</Eyebrow>
@@ -399,6 +403,7 @@ export function PrivacyV26() {
       </Card>
       <SectionHead title="How it is looked after" />
       <RowsCard>
+        <Row icon="pulse" title="Health data" sub={healthLine} onPress={() => nav.go('healthconsent', { next: 'settings' })} />
         <Row icon="shield" title="Backed up" sub="Encrypted, in the UK and EU" />
         <Row icon="people" title="Who helps run life" sub="Hosting, AI, email · 4 companies" onPress={() => nav.go('legal')} />
       </RowsCard>
