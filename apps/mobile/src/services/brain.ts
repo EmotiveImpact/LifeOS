@@ -53,7 +53,7 @@ async function refusal(response: Response): Promise<BrainError> {
   const said = typeof body?.message === 'string' && body.message.length <= 300 ? body.message : null;
   switch (body?.error) {
     case 'CONSENT_REQUIRED': return new BrainError('CONSENT_REQUIRED', said ?? 'This needs your OK before it leaves your phone.');
-    case 'RATE_LIMITED': return new BrainError('RATE_LIMITED', said ?? 'You’ve used today’s AI allowance. Your message is saved.');
+    case 'RATE_LIMITED': return new BrainError('RATE_LIMITED', said ?? 'You’ve used your AI allowance for the last 24 hours. Your message is saved.');
     case 'PRIVATE_MODE': return new BrainError('UNAVAILABLE', 'Private mode is on, so this stays on your phone. Nothing was sent to a model.');
     case 'INVALID_OUTPUT': return new BrainError('INVALID_OUTPUT', 'The answer didn’t pass Life’s checks, so nothing was changed.');
     case 'TIMEOUT': return new BrainError('TIMEOUT', 'The request stopped. Nothing was filed.');

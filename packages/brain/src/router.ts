@@ -54,10 +54,10 @@ export function planRoute(request: Request, options: RouteOptions = {}): RoutePl
   const left = (t: Tier) => options.remaining?.[t];
   if (tier === 'top' && left('top') !== undefined && left('top')! <= 0) {
     tier = 'strong';
-    notice = 'Your allowance for life’s deepest model is used up this month, so this answer uses the strong model.';
+    notice = 'Your allowance for Life’s deepest model is used up for the last 30 days, so this answer uses the strong model.';
     reasons.push('top allowance used, so strong');
   }
-  if (left(tier) !== undefined && left(tier)! <= 0) throw new BrainError('RATE_LIMITED', 'You’ve used today’s AI allowance. Your message is saved, and saved facts and calculations still work.');
+  if (left(tier) !== undefined && left(tier)! <= 0) throw new BrainError('RATE_LIMITED', 'You’ve used your AI allowance for the last 24 hours. Your message is saved, and saved facts and calculations still work.');
   return { tier, asked, models: [...(options.table?.tiers[tier] ?? [])], reasons, ...(notice ? { notice } : {}) };
 }
 

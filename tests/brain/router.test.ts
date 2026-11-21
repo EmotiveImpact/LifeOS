@@ -149,7 +149,7 @@ describe('Phase 24: what the life API needs from the runtime', () => {
     expect(result.output).toEqual({ answer: 'Your take-home is {{fact:net}}.', citations: ['engine:income'], proposals: [] });
   });
   test('the life API may add one line of notice; a model may not', async () => {
-    const relayed = { ...reply, notice: 'Your allowance for life’s deepest model is used up this month, so this answer uses the strong model.' };
+    const relayed = { ...reply, notice: 'Your allowance for Life’s deepest model is used up for the last 30 days, so this answer uses the strong model.' };
     const api = model('life-api', [], { relay: true, generate: async () => relayed });
     expect((await runBrain(consented(request('Tell me something kind')), [api])).notices).toEqual([relayed.notice]);
     const provider = model('model-a', [], { generate: async () => relayed });
