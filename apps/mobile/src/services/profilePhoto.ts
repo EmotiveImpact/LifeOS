@@ -1,7 +1,9 @@
 /**
  * Your photo, for the You tab and Your details (Edem, 21 Nov 2026). It stays on this phone: a small square copy in the
- * app's own documents (a 192px picture on the web preview), remembered on the device only. It is never put in the
- * synced profile and never sent anywhere.
+ * app's own Documents/profile folder (a 192px picture on the web preview), remembered on the device only. It is never
+ * put in the synced profile and never sent anywhere, and on iPhone the folder is kept out of iCloud and computer
+ * backups (LifeIntelligenceModule.swift); Android backups are off for the whole app. Only the file's name is stored,
+ * because iOS can move the app's folder between updates, so the full address is rebuilt each time it loads.
  */
 import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
@@ -15,10 +17,28 @@ let loaded = false;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 
+const FOLDER = 'profile';
+
+/** The stored value is a data address on the web and a file name on a phone (older builds kept a full file address). */
+function resolve(stored: string): string | null {
+  if (Platform.OS === 'web' || stored.startsWith('data:')) return stored;
+  const name = stored.split('/').pop();
+  if (!name) return null;
+  try {
+    const file = new File(Paths.document, FOLDER, name);
+    return file.exists ? file.uri : null;
+  } catch { return null; }
+}
+
 function load() {
   if (loaded) return;
   loaded = true;
-  AsyncStorage.getItem(KEY).then(v => { if (v && v !== current) { current = v; emit(); } }).catch(() => {});
+  AsyncStorage.getItem(KEY).then(v => {
+    if (!v) return;
+    const uri = resolve(v);
+    if (!uri) { AsyncStorage.removeItem(KEY).catch(() => {}); return; }
+    if (uri !== current) { current = uri; emit(); }
+  }).catch(() => {});
 }
 function subscribe(listener: () => void) { load(); listeners.add(listener); return () => { listeners.delete(listener); }; }
 
@@ -27,9 +47,10 @@ export function useProfilePhoto(): string | null {
   return useSyncExternalStore(subscribe, () => current, () => null);
 }
 
-async function save(uri: string | null) {
+/** Shows `uri` now and remembers `stored` (the file name on a phone, the data address on the web). */
+async function save(uri: string | null, stored: string | null = uri) {
   current = uri; emit();
-  try { if (uri) await AsyncStorage.setItem(KEY, uri); else await AsyncStorage.removeItem(KEY); } catch { /* still shown this session */ }
+  try { if (stored) await AsyncStorage.setItem(KEY, stored); else await AsyncStorage.removeItem(KEY); } catch { /* still shown this session */ }
 }
 
 /** A centred square, drawn small, so the web preview can keep it after a reload. */
@@ -47,7 +68,7 @@ async function squareDataUri(src: string, size: number): Promise<string> {
 function clearCopies(keep?: string) {
   if (Platform.OS === 'web') return;
   try {
-    const dir = new Directory(Paths.document, 'profile');
+    const dir = new Directory(Paths.document, FOLDER);
     if (!dir.exists) return;
     for (const item of dir.list()) if (item instanceof File && item.uri !== keep) item.delete();
   } catch { /* nothing to tidy */ }
@@ -59,12 +80,13 @@ export async function chooseProfilePhoto(): Promise<boolean> {
   const asset = result.canceled ? null : result.assets?.[0];
   if (!asset) return false;
   if (Platform.OS === 'web') { await save(await squareDataUri(asset.uri, 192)); return true; }
-  const dir = new Directory(Paths.document, 'profile');
+  const dir = new Directory(Paths.document, FOLDER);
   dir.create({ intermediates: true, idempotent: true });
-  const destination = new File(dir, `photo-${Date.now()}.jpg`);
+  const name = `photo-${Date.now()}.jpg`;
+  const destination = new File(dir, name);
   await new File(asset.uri).copy(destination, { overwrite: true });
   clearCopies(destination.uri);
-  await save(destination.uri);
+  await save(destination.uri, name);
   return true;
 }
 

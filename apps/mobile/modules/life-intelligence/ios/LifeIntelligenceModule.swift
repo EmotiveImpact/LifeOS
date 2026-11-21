@@ -13,9 +13,10 @@ public final class LifeIntelligenceModule: Module {
     Name("LifeIntelligence")
     // The encrypted database's key lives in the Keychain for this phone only, so a backup of the database alone could
     // never be opened, and health readings shouldn't sit in iCloud. Keep the database folder (expo-sqlite's
-    // Documents/SQLite) out of iCloud and computer backups; signing in restores a new phone instead.
+    // Documents/SQLite) out of iCloud and computer backups; signing in restores a new phone instead. Your photo for the
+    // You tab (Documents/profile) stays out of them too, because the app promises it stays on this phone.
     OnCreate {
-      excludeDatabasesFromBackup()
+      excludeFromBackup(["SQLite", "profile"])
     }
     Events("transcript")
     AsyncFunction("available") { () async -> Bool in
@@ -78,14 +79,16 @@ public final class LifeIntelligenceModule: Module {
   }
 }
 
-private func excludeDatabasesFromBackup() {
+private func excludeFromBackup(_ names: [String]) {
   let files = FileManager.default
   guard let documents = files.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-  var folder = documents.appendingPathComponent("SQLite", isDirectory: true)
-  try? files.createDirectory(at: folder, withIntermediateDirectories: true)
-  var values = URLResourceValues()
-  values.isExcludedFromBackup = true
-  try? folder.setResourceValues(values)
+  for name in names {
+    var folder = documents.appendingPathComponent(name, isDirectory: true)
+    try? files.createDirectory(at: folder, withIntermediateDirectories: true)
+    var values = URLResourceValues()
+    values.isExcludedFromBackup = true
+    try? folder.setResourceValues(values)
+  }
 }
 
 private struct LocalError: LocalizedError {
