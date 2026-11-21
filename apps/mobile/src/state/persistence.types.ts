@@ -12,6 +12,11 @@ export interface ProjectionStorage {
   close(): Promise<void>;
   /** Pushes this phone's changes and pulls the account's others (Phase 22). `applied` counts rows that changed here. */
   sync(transport: SyncTransport): Promise<{ applied: number }>;
-  /** First sign-in: restore onto a phone with nothing of its own, or move this phone's things to the account's ids. */
-  adoptAccount(accountId: string, restore: boolean): Promise<void>;
+  /**
+   * First sign-in: restore onto a phone with nothing of its own, or move this phone's things to the account's ids. A
+   * phone holding another account's life is erased first, never merged (`switched`).
+   */
+  adoptAccount(accountId: string, restore: boolean): Promise<{ switched: boolean }>;
+  /** The account this phone's life belongs to, or null before anyone has signed in on it. */
+  accountOnPhone(): Promise<string | null>;
 }

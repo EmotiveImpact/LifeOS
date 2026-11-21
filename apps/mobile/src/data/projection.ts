@@ -127,11 +127,17 @@ async function commit(store: LifeDataStore, raw: unknown, importing: boolean, so
  * First sign-in on this phone. With nothing of its own yet (setup not finished), the phone is cleared so the
  * account's life comes back whole on the next pull. Otherwise its screen entities move to the account's ids, so they
  * merge with the same things on the account's other phones (newer edit wins) instead of sitting beside them.
+ *
+ * A phone that already belongs to another account (its session ran out, then someone signed in with a different
+ * one) never merges into the new account (fix F-43): the other account's copy on this phone is erased first, with
+ * nothing queued for either server account, and the new account's life comes down whole. `switched` says so.
  */
-export async function adoptAccount(store: LifeDataStore, accountId: string, options: { restore: boolean }) {
+export async function adoptAccount(store: LifeDataStore, accountId: string, options: { restore: boolean }): Promise<{ switched: boolean }> {
   if (!accountId) throw new Error('An account id is required');
-  if (await store.readLocal<string>('account-id') === accountId) return;
-  if (options.restore) await store.clearForRestore();
+  const current = await store.readLocal<string>('account-id');
+  if (current === accountId) return { switched: false };
+  if (current) await store.eraseThisPhone();
+  else if (options.restore) await store.clearForRestore();
   await store.atomic(async tx => {
     const ids = await tx.readLocal<Record<string, string>>('projection-ids') ?? {};
     // Parents first, so rows that point at them follow to the new ids.
@@ -146,6 +152,7 @@ export async function adoptAccount(store: LifeDataStore, accountId: string, opti
     await tx.local('projection-ids', ids);
     await tx.local('account-id', accountId);
   });
+  return { switched: !!current };
 }
 export const importLegacyProjection = (store: LifeDataStore, input: unknown, sourceKey = 'life_track_a_v17') => commit(store, input, true, sourceKey);
 export async function commitProjection(store: LifeDataStore, input: unknown) { await commit(store, input, false, ''); }

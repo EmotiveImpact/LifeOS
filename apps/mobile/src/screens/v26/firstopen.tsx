@@ -6,7 +6,7 @@
  * Apple Health → nudges → your Aim → building your plan → save your progress → your first move.
  */
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Keyboard, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { AccessibilityInfo, Alert, Keyboard, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
@@ -27,7 +27,7 @@ import { records } from '@/services/local';
 import { phoneHealth } from '@/services/health/phone';
 import { typesAllowed } from '@/services/health/mapping';
 import { readHealthNow } from '@/services/health/useHealthRunner';
-import { problemWords, sendCode, signInWith, verifyCode } from '@/services/account';
+import { problemWords, sendCode, signInWith, signOut, verifyCode } from '@/services/account';
 import { voice } from '@/services/voice';
 import { askNotifications, notificationsSupported } from '@/services/notifications';
 import { askCalendar, calendarSupported } from '@/services/calendar';
@@ -803,8 +803,26 @@ export function MeasuresetupV26() {
 
 /* ───────────────────────── Save your progress (a sheet) ───────────────────────── */
 
+/**
+ * Signing in with a different account from the one whose life is on this phone (fix F-43). The two never mix: going on
+ * takes the other account's life off this phone first. Not now signs this account out again and changes nothing.
+ * Returns whether to go on.
+ */
+export async function confirmAccountSwitch(accountOnPhone: () => Promise<string | null>, signingIn: string): Promise<boolean> {
+  const current = await accountOnPhone();
+  if (!current || current === signingIn) return true;
+  const go = await new Promise<boolean>(resolve => Alert.alert(
+    'Another account is on this phone',
+    'Signing in takes that account’s life off this phone, so the two never mix. What it backed up stays in its account; anything it hadn’t backed up yet goes.',
+    [{ text: 'Not now', style: 'cancel', onPress: () => resolve(false) }, { text: 'Use this account', style: 'destructive', onPress: () => resolve(true) }],
+    { cancelable: true, onDismiss: () => resolve(false) },
+  ));
+  if (!go) await signOut().catch(() => {});
+  return go;
+}
+
 export function SigninV26() {
-  const nav = useNavigation(), { data, flag, joinAccount } = useSeed();
+  const nav = useNavigation(), { data, flag, joinAccount, accountOnPhone } = useSeed();
   const [step, setStep] = useState<'ways' | 'email' | 'code'>('ways');
   const [email, setEmail] = useState(''), [code, setCode] = useState('');
   const [busy, setBusy] = useState(false), [problem, setProblem] = useState<string | null>(null);
@@ -813,6 +831,7 @@ export function SigninV26() {
   const finish = () => { flag('signin-asked', true); nav.close(); };
   // Saving progress keeps what was set up on this phone and merges it into the account.
   const signedIn = async (result: { mode: 'account' | 'local-preview'; data: { userId: string } }) => {
+    if (result.mode === 'account' && !await confirmAccountSwitch(accountOnPhone, result.data.userId)) { go('ways'); return; }
     if (result.mode === 'account') await joinAccount(result.data.userId, { restore: false });
     flag(result.mode === 'account' ? 'signed-in' : 'signed-in-preview', true); feedback.primary(); finish();
   };

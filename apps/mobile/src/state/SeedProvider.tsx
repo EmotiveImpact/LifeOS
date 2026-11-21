@@ -71,7 +71,9 @@ type SeedContextValue = {
    * After sign-in, then sync and reload. `restore` (Welcome back, on a phone with nothing of its own) clears this
    * phone first so the account's life comes back whole; otherwise this phone's things merge into the account.
    */
-  joinAccount: (accountId: string, options: { restore: boolean }) => Promise<{ setUp: boolean }>;
+  joinAccount: (accountId: string, options: { restore: boolean }) => Promise<{ setUp: boolean; switched: boolean }>;
+  /** The account this phone's life belongs to, or null before anyone has signed in on it (fix F-43). */
+  accountOnPhone: () => Promise<string | null>;
   /** Pushes and pulls now (also runs when the app comes to the front and a few seconds after each change). */
   syncNow: () => Promise<void>;
 };
@@ -207,12 +209,19 @@ export function SeedProvider({ children }: { children: ReactNode }) {
     joinAccount: async (accountId, { restore }) => {
       await writes.current;
       const target = storage.current;
-      if (!target || target.mode !== 'sqlite') return { setUp: latest.current.onboardingDone };
-      await target.adoptAccount(accountId, restore);
+      if (!target || target.mode !== 'sqlite') return { setUp: latest.current.onboardingDone, switched: false };
+      const before = latest.current;
+      const { switched } = await target.adoptAccount(accountId, restore);
+      if (switched) {
+        // The other account's files on this phone go with its rows: chat attachments and the profile photo.
+        for (const thread of before.brain.conversations) for (const attachment of thread.attachments) await removeAttachmentCopy(attachment).catch(() => {});
+        await removeProfilePhoto().catch(() => {});
+      }
       try { const transport = await currentTransport(); if (transport) await target.sync(transport); } catch { /* Pulled next time. */ }
       await (writes.current = writes.current.then(() => reload(target, true)));
-      return { setUp: latest.current.onboardingDone };
+      return { setUp: latest.current.onboardingDone, switched };
     },
+    accountOnPhone: async () => storage.current?.mode === 'sqlite' ? storage.current.accountOnPhone() : null,
     syncNow,
     reset: async options => {
       if (!storage.current || resetting.current) return false;

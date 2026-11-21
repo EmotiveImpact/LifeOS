@@ -309,5 +309,7 @@ export class LifeDataStore {
   loadProjection<T>() { return loadProjection<T>(this); }
   commitProjection(input: unknown) { return commitProjection(this, input); }
   adoptAccount(accountId: string, options: { restore: boolean }) { return adoptAccount(this, accountId, options); }
+  /** The account this phone's life belongs to, once someone has signed in on it. */
+  accountOnPhone() { return this.readLocal<string>('account-id'); }
   close() { return this.driver.close(); }
 }

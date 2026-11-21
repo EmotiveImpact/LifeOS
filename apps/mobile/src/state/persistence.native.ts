@@ -52,6 +52,7 @@ export async function openProjectionStorage(): Promise<ProjectionStorage> {
       close: async () => store.close(),
       sync: transport => store.sync(transport),
       adoptAccount: (accountId, restore) => store.adoptAccount(accountId, { restore }),
+      accountOnPhone: () => store.accountOnPhone(),
     };
   } catch (error) {
     await store.close();

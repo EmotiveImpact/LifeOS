@@ -26,7 +26,7 @@ import { signInWith } from '@/services/account';
 import {
   HELPLINES, STILL_WORKING, lifeDay, longDate, offlineMoney, phoneOnly, quietDevice, readChatQueue, syncConflict, taxYearMonths, useHealthConsent,
 } from '@/state/firstopen';
-import { Corners, PaperLink, PhotoStatus } from './firstopen';
+import { Corners, PaperLink, PhotoStatus, confirmAccountSwitch } from './firstopen';
 import { Composer } from './talk';
 import { TodayV26 } from './today';
 import { SearchModal } from './search';
@@ -474,7 +474,7 @@ export function ForceupdateV26() {
 /* ───────────────────────── Welcome back ───────────────────────── */
 
 export function SignedOutV26() {
-  const nav = useNavigation(), { set, flag, reset, joinAccount } = useSeed();
+  const nav = useNavigation(), { set, flag, reset, joinAccount, accountOnPhone } = useSeed();
   const provider = Platform.OS === 'android' ? 'google' : 'apple';
   const signIn = async () => {
     feedback.primary();
@@ -482,6 +482,7 @@ export function SignedOutV26() {
     // Until the native Apple and Google sheets are installed, a live account signs in by email on the sign-in sheet.
     if (!result.ok) { nav.go('signin'); return; }
     if (result.mode === 'local-preview') { flag('signed-in-preview', true); set({ onboardingDone: true }); nav.home(); return; }
+    if (!await confirmAccountSwitch(accountOnPhone, result.data.userId)) return;
     // Welcome back brings the account's life onto this phone. If there was nothing to bring, setup starts as usual.
     const { setUp } = await joinAccount(result.data.userId, { restore: true });
     flag('signed-in', true);
