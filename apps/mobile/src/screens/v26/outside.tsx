@@ -374,6 +374,8 @@ export function SiriV26() {
 
 const ORB_STATES: [OrbState, string, string, string][] = [
   ['ring', 'Ring', 'The everyday mark: tab bar, headers, small sizes.', 'Default'],
+  ['rest', 'Resting', 'Top bar, nothing new. It stops and breathes slowly.', 'Top bar'],
+  ['news', 'Something new', 'Top bar, a note from Life is waiting. It spins round.', 'Top bar'],
   ['thinking', 'Thinking', 'Only while Life is working something out.', 'Over 1s'],
   ['working', 'Working', 'While Life builds or files something in front of you.', ''],
   ['searching', 'Searching', 'While Life checks or looks something up.', ''],
@@ -383,10 +385,10 @@ const ORB_STATES: [OrbState, string, string, string][] = [
 
 export function OrbV26() {
   const t = useTokens();
-  const rows = [ORB_STATES.slice(0, 2), ORB_STATES.slice(2, 4), ORB_STATES.slice(4, 6)];
+  const rows = [ORB_STATES.slice(0, 2), ORB_STATES.slice(2, 4), ORB_STATES.slice(4, 6), ORB_STATES.slice(6, 8)];
   return (
     <Page screen="orb" bar={{ kind: 'push', title: 'The orb' }}>
-      <Display s="{One ring of 10 dots.} Six states." flush style={{ marginTop: space.xxs }} />
+      <Display s="{One ring of 10 dots.} Eight states." flush style={{ marginTop: space.xxs }} />
       <View style={{ gap: space.tile, marginTop: space.md }}>
         {rows.map((r, i) => (
           <View key={i} style={{ flexDirection: 'row', gap: space.tile }}>
@@ -400,7 +402,7 @@ export function OrbV26() {
           </View>
         ))}
       </View>
-      <Callout style={{ marginTop: space.sm }}>One lap every 12 seconds. With Reduce Motion, each state is shown still.</Callout>
+      <Callout style={{ marginTop: space.sm }}>The everyday ring takes 12 seconds a lap; with something new, 1.6 seconds. With Reduce Motion each state is shown still, and an orange dot says something new.</Callout>
     </Page>
   );
 }

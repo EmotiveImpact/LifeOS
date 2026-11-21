@@ -3,14 +3,14 @@
  * The feeling check rises as a drawer on the first open of the day; today's moves follow it as a deck.
  */
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Modal, Platform, ScrollView, StyleSheet, TextInput, View, type ImageSourcePropType } from 'react-native';
+import { Linking, Modal, Platform, ScrollView, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 import type { BodyToday } from '@life/core';
-import { SafeAreaProvider, SafeAreaView, initialWindowMetrics } from 'react-native-safe-area-context';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Appear, ArrivingCard, DecideRow, FEEL_MOODS, FeelingDrawer, Icon, LifeOrb, MoveDeck, PhotoCard, PhotoFill, Press, ReorderRow, RoundButton, Ruler,
-  SectionHead, StatusPill, Text, TileGrid, TintCard, V26Tile, Waveform, cardShadow, componentSize, feedback, fonts, photo, photoScrims, photos,
+  SectionHead, StatusPill, Text, TileGrid, TintCard, V26Tile, Waveform, cardShadow, componentSize, feedback, photo, photoScrims, photos,
   radius, space, type, useCalmMotion, useTokens, type FeelMoodId, type MoveCard, type TopBarAction,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
@@ -26,6 +26,7 @@ import {
 import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
 import { levelPlan } from '@/state/you';
 import { NudgeV26, TodayLoops } from './loops';
+import { SearchModal } from './search';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { CalendarRealV26, WhyRealV26, moveCard, useComingUp, useRealMoves } from './dayengine';
 import { since, useBodyToday } from '@/state/health';
@@ -280,9 +281,7 @@ export function TodayV26() {
       <Modal visible={params.nudge === '1'} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => nav.replace('today')}>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}><NudgeV26 onClose={() => nav.replace('today')} /></SafeAreaProvider>
       </Modal>
-      <Modal visible={searching} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => setSearching(false)}>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}><SearchV26 onClose={() => setSearching(false)} /></SafeAreaProvider>
-      </Modal>
+      <SearchModal visible={searching} onClose={() => setSearching(false)} />
     </Page>
   );
 }
@@ -606,65 +605,7 @@ export function FocusV26() {
 
 /* ───────────────────────── Search ───────────────────────── */
 
-export function SearchV26({ onClose }: { onClose: () => void }) {
-  const t = useTokens(), nav = useNavigation(), { update } = useSeed();
-  const [query, setQuery] = useState('');
-  const go = (fn: () => void) => { onClose(); fn(); };
-  const areas: { n: string; p: keyof typeof photos; to: ScreenKey }[] = [{ n: 'Home', p: 'home', to: 'areahome' }, { n: 'Work', p: 'work', to: 'areawork' }, { n: 'Body', p: 'run', to: 'body' }, { n: 'People', p: 'people', to: 'people' }, { n: 'Learn', p: 'bench', to: 'library' }];
-  const asked: { icon: 'doc' | 'home' | 'moon' | 'wallet' | 'gift' | 'folder' | 'food'; t: string; to: ScreenKey }[] = [{ icon: 'doc', t: 'tax code', to: 'taxcheck' }, { icon: 'home', t: 'council tax', to: 'bill' }, { icon: 'moon', t: 'sleep', to: 'sleep' }, { icon: 'wallet', t: 'rent', to: 'budget' }, { icon: 'gift', t: 'Kofi’s birthday', to: 'person' }, { icon: 'folder', t: 'passport', to: 'vault' }, { icon: 'food', t: 'lunch', to: 'fuel' }];
-  const found = [
-    { k: 'ct', title: 'Council tax', sub: `Money · ${money(councilTax.amount)} · due in ${councilTax.days} days`, date: { day: '01', month: 'Dec' }, to: 'bill' as ScreenKey },
-    { k: 'letter', title: 'Council tax letter', sub: 'Scan · yesterday', icon: 'camera' as const, to: 'scan' as ScreenKey },
-    { k: 'code', title: `Tax code ${seed.finance ? '1257L' : ''}`, sub: 'Money · from your payslip', icon: 'doc' as const, to: 'taxcheck' as ScreenKey },
-    { k: 'disc', title: 'Council tax discount', sub: 'Single person · 25% off', icon: 'home' as const, to: 'mission' as ScreenKey, mission: 'uk-single-person-council' },
-  ].filter(r => !query || `${r.title} ${r.sub}`.toLowerCase().includes(query.toLowerCase()));
-  return (
-    <View style={{ flex: 1, backgroundColor: t.canvas }}>
-      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <View style={styles.searchBar}>
-          <Icon name="search" size={componentSize.icon} color={t.ink} />
-          <TextInput maxFontSizeMultiplier={1.3} autoFocus value={query} onChangeText={setQuery} placeholder="Search" placeholderTextColor={t.ink2} accessibilityLabel="Search everything" returnKeyType="search"
-            onSubmitEditing={() => go(() => nav.go('chat', { question: query }))} selectionColor={t.ember}
-            style={[styles.searchInput, { color: t.ink, fontFamily: fonts.sansMedium }]} />
-          <RoundButton icon="close" solid label="Close search" onPress={onClose} />
-        </View>
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: space.gutter, paddingTop: space.xxs, paddingBottom: 28 }}>
-          {query ? null : <>
-            <Micro style={{ marginTop: space.xs }}>YOUR AREAS</Micro>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -space.gutter, marginTop: space.sm }} contentContainerStyle={{ paddingHorizontal: space.gutter, gap: space.tile, paddingBottom: space.xxs }}>
-              {areas.map(a => (
-                <Press key={a.n} haptic="open" onPress={() => go(() => nav.go(a.to))} accessibilityLabel={a.n} style={[styles.ptile, { backgroundColor: t.surface2, ...cardShadow(t.scheme) }]}>
-                  <PhotoFill source={photos[a.p]} />
-                  <LinearGradient pointerEvents="none" colors={photoScrims.deck.colors} locations={photoScrims.deck.locations} style={StyleSheet.absoluteFill} />
-                  <Text variant="buttonCompact" tone="paper" style={{ padding: space.tile }}>{a.n}</Text>
-                </Press>
-              ))}
-            </ScrollView>
-            <Micro style={{ marginTop: space.xxl }}>ASKED MOST</Micro>
-            <View style={[styles.wrap, { marginTop: space.sm }]}>
-              {asked.map(a => (
-                <Press key={a.t} haptic="select" onPress={() => go(() => nav.go(a.to))} accessibilityLabel={a.t} style={[styles.askChip, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-                  <Icon name={a.icon} size={componentSize.iconXs} color={t.ink} /><Text variant="buttonCompact">{a.t}</Text>
-                </Press>
-              ))}
-            </View>
-          </>}
-          <Micro style={{ marginTop: query ? space.xs : space.xxl }}>{query ? 'FOUND' : 'FROM YOUR LIFE'}</Micro>
-          <View style={{ marginTop: space.sm, gap: space.xs }}>
-            {found.map(r => (
-              <Press key={r.k} haptic="open" onPress={() => go(() => { if (r.mission) update(c => ({ ...c, selectedMission: r.mission! })); nav.go(r.to); })} accessibilityLabel={`${r.title}, ${r.sub}`} style={[styles.found, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-                {r.date ? <View style={[styles.datebox, { backgroundColor: t.surface2 }]}><Text variant="title" style={{ lineHeight: 18 }}>{r.date.day}</Text><Text variant="micro" tone="ink2">{r.date.month.toUpperCase()}</Text></View>
-                  : <View style={[styles.iconWell, { backgroundColor: t.surface2 }]}><Icon name={r.icon!} size={componentSize.iconSm} color={t.ink} /></View>}
-                <View style={{ flex: 1, minWidth: 0 }}><Text variant="title">{r.title}</Text><Text variant="callout" tone="ink2">{r.sub}</Text></View>
-              </Press>
-            ))}
-          </View>
-          <Btn label={query ? `Ask Life: “${query}”` : 'Ask Life a question'} ghost onPress={() => go(() => nav.go('chat', { question: query }))} style={{ marginTop: space.lg }} />
-        </ScrollView>
-      </SafeAreaView>
-    </View>
-  );
-}
+export { SearchV26, SearchModal } from './search';
 
 const styles = StyleSheet.create({
   card: { borderRadius: radius.lg, padding: space.cardPad },
@@ -689,11 +630,4 @@ const styles = StyleSheet.create({
   play: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   peek: { position: 'absolute', left: space.lg, right: space.lg, top: 0, height: 60, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, paddingVertical: 7, paddingHorizontal: space.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   unread: { width: 6, height: 6, borderRadius: 3 },
-  searchBar: { height: 64, flexDirection: 'row', alignItems: 'center', gap: space.tile, paddingHorizontal: space.gutter },
-  searchInput: { flex: 1, minWidth: 0, ...type.titleSerif, paddingVertical: 0 },
-  ptile: { width: 112, height: 150, borderRadius: radius.tile, overflow: 'hidden', justifyContent: 'flex-end' },
-  askChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingLeft: space.tile, paddingRight: 14, borderRadius: radius.full },
-  found: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.md, borderRadius: radius.lg },
-  datebox: { width: 48, height: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
-  iconWell: { width: componentSize.round, height: componentSize.round, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
 });

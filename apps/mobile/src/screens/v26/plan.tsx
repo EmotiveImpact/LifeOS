@@ -3,8 +3,7 @@
  * Missions read the engine's catalogue; ticked steps, clearing and drafts save on this phone.
  */
 import { useEffect, useState, type ReactNode } from 'react';
-import { Linking, Modal, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
+import { Linking, ScrollView, Share, StyleSheet, TextInput, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams } from 'expo-router';
 import { TASK_CATALOG } from '@life/core/engine';
@@ -24,7 +23,7 @@ import { money, seed, seedTaxClaim } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { invoices, sampleCleared, sampleClearedTotal, TOOLS } from '@/state/plan';
 import { BigPhoto, Between, Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, PhotoBackdrop, PhotoRound, QuietLink, Row, RowsCard, Statement, Timeline } from './kit';
-import { SearchV26 } from './today';
+import { SearchModal } from './search';
 
 type Task = (typeof TASK_CATALOG)[number];
 const taskById = (id: string) => TASK_CATALOG.find(t => t.id === id);
@@ -88,9 +87,7 @@ export function PlanV26() {
           </View>
         </> },
       ]} />
-      <Modal visible={searching} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => setSearching(false)}>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}><SearchV26 onClose={() => setSearching(false)} /></SafeAreaProvider>
-      </Modal>
+      <SearchModal visible={searching} onClose={() => setSearching(false)} />
     </Page>
   );
 }

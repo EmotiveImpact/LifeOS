@@ -7,9 +7,14 @@ import { useCalmMotion, useTokens } from '../theme';
 /** Port of board v17 mountOrb: the same thirty dots travel between every state.
  * Original ring, Fibonacci sphere, clockwork, searching web, voice and spring gather.
  * Geometry and animation run on Reanimated's UI thread; no JS animation timer. */
-export type OrbState = 'ring' | 'thinking' | 'working' | 'searching' | 'listening' | 'done' | 'voice';
+/** `news` and `rest` belong to the orb in the top bar (Edem, 21 Nov 2026): it spins round when Life has
+ * something new for you, and when there's nothing it stops travelling and breathes slowly. */
+export type OrbState = 'ring' | 'thinking' | 'working' | 'searching' | 'listening' | 'done' | 'voice' | 'news' | 'rest';
 type Point = { x: number; y: number; z: number; alpha: number; scale: number };
-const STATES = ['ring', 'thinking', 'working', 'searching', 'listening', 'done'] as const;
+const STATES = ['ring', 'thinking', 'working', 'searching', 'listening', 'done', 'news', 'rest'] as const;
+/** Laps a second: everyday ring one lap in 12 s; something new one lap in 1.6 s; resting, still. */
+const LAPS = [1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 1.6, 0];
+const BREATH_S = 5;
 const sphere = (n: number) => Array.from({ length: n }, (_, i) => {
   const y = 1 - 2 * (i + .5) / n, r = Math.sqrt(1 - y * y), a = i * Math.PI * (3 - Math.sqrt(5));
   return [Math.cos(a) * r, y, Math.sin(a) * r];
@@ -23,6 +28,11 @@ function target(state: number, k: number, r: number, t: number, spin: number, vo
   const i = k % 10, a = i / 10 * Math.PI * 2 + spin, tail = .3 + .7 * i / 10;
   const ring = { x: Math.cos(a) * r, y: Math.sin(a) * r, z: .5, alpha: k < 10 ? tail : 0, scale: 1 };
   if (state === 0 || state === 5) return ring;
+  if (state === 6) return { ...ring, alpha: k < 10 ? .14 + .86 * Math.pow(i / 9, 1.5) : 0 };
+  if (state === 7) {
+    const breath = .5 - .5 * Math.cos(t / BREATH_S * Math.PI * 2), rr = r * (.84 + .16 * breath);
+    return { x: Math.cos(a) * rr, y: Math.sin(a) * rr, z: .5, alpha: k < 10 ? .4 + .32 * breath : 0, scale: .9 + .1 * breath };
+  }
   if (state === 2) {
     if (k < 10) { const b = a + t / 12 * Math.PI * 2 * 1.2; return { ...ring, x: Math.cos(b) * r, y: Math.sin(b) * r }; }
     if (k >= 21) return { ...ring, alpha: 0 };
@@ -53,6 +63,7 @@ export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { s
   const frozen = useSharedValue(initialPoints), elapsed = useSharedValue(2000), time = useSharedValue(0), spin = useSharedValue(0);
   const head = useSharedValue(0), trail = useSharedValue<number[]>([]), edges = useSharedValue<Record<string, number>>({});
   const hopAt = useSharedValue(0), gather = useSharedValue(0), velocity = useSharedValue(0), voice = useSharedValue(0);
+  const laps = useSharedValue(LAPS[initialMode] ?? 1 / 12);
   useEffect(() => {
     frozen.value = points.value;
     mode.value = STATES.indexOf(state === 'voice' ? 'listening' : state);
@@ -63,7 +74,9 @@ export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { s
     const dt = Math.min(50, f.timeSincePreviousFrame ?? 16), factor = dt / 16;
     time.value += dt / 1000; elapsed.value += dt;
     const t = time.value, m = mode.value;
-    spin.value += dt / 12000 * Math.PI * 2 * (m === 4 ? 1 - .85 * Math.min(1, elapsed.value / 700) : 1);
+    // The speed eases toward each state's own pace (about 0.4 s), so the ring never jerks into a spin or stops dead.
+    laps.value += ((LAPS[m] ?? 1 / 12) - laps.value) * Math.min(1, .045 * factor);
+    spin.value += dt / 1000 * laps.value * Math.PI * 2 * (m === 4 ? 1 - .85 * Math.min(1, elapsed.value / 700) : 1);
     voice.value += ((m === 4 ? .25 + .75 * Math.pow(Math.abs(Math.sin(t * 1.7) * Math.sin(t * .61 + .9)), .6) : 0) - voice.value) * .2;
     const goal = m === 5 && elapsed.value < 450 ? 1 : 0;
     velocity.value = (velocity.value + (goal - gather.value) * .16 * factor) * Math.pow(.6, factor);
@@ -88,7 +101,7 @@ export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { s
     });
   }, false);
   useEffect(() => { frame.setActive(!calm); return () => frame.setActive(false); }, [frame, calm]);
-  return <View style={{ width: size, height: size }} accessibilityRole="image" accessibilityLabel={state === 'ring' ? 'Life' : `Life is ${state === 'voice' ? 'listening' : state}`}>
+  return <View style={{ width: size, height: size }} accessibilityRole="image" accessibilityLabel={state === 'ring' || state === 'rest' ? 'Life' : state === 'news' ? 'Life, something new' : `Life is ${state === 'voice' ? 'listening' : state}`}>
     <Svg width={size} height={size} style={{ position: 'absolute' }} pointerEvents="none">
       {PAIRS.map(([a, b]) => <OrbEdge key={`${a}-${b}`} a={a} b={b} points={points} edges={edges} time={time} size={size} color={ink} dot={dot} />)}
     </Svg>

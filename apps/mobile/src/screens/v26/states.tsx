@@ -4,8 +4,7 @@
  * Body until health data is allowed and arrives.
  */
 import { useEffect, useState, type ReactNode } from 'react';
-import { AppState, Linking, Modal, Platform, Share, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
+import { AppState, Linking, Platform, Share, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
@@ -29,7 +28,8 @@ import {
 } from '@/state/firstopen';
 import { Corners, PaperLink, PhotoStatus } from './firstopen';
 import { Composer } from './talk';
-import { SearchV26, TodayV26 } from './today';
+import { TodayV26 } from './today';
+import { SearchModal } from './search';
 import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, PhotoTile, QuietLink, Row, RowsCard, Shelf, Statement, two } from './kit';
 import { TodayLoops } from './loops';
 
@@ -42,9 +42,7 @@ const dayMonth = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', mo
 function useSearchOverlay() {
   const [open, setOpen] = useState(false);
   const modal = (
-    <Modal visible={open} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => setOpen(false)}>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}><SearchV26 onClose={() => setOpen(false)} /></SafeAreaProvider>
-    </Modal>
+    <SearchModal visible={open} onClose={() => setOpen(false)} />
   );
   return { open: () => setOpen(true), modal };
 }

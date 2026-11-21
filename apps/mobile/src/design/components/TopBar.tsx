@@ -3,8 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import { Icon as Ionicons, type GlyphName } from '../Icon';
 import { Press } from '../Press';
 import { Text } from '../Text';
-import { useTokens } from '../theme';
-import { componentSize, palette, radius, space, touch } from '../tokens';
+import { useCalmMotion, useTokens } from '../theme';
+import { componentSize, palette, photo, radius, space, touch } from '../tokens';
 import { LifeOrb } from './Orb';
 import { RoundButton } from './V26Chrome';
 import { ActionMenu, type MenuItem } from './V26Menu';
@@ -128,14 +128,17 @@ function TopBarV26(props: TopBarProps) {
   return bar;
 }
 
-/** The orb at the right end of Today, Plan and You (Edem, 20 Nov 2026): Life's own place in the bar.
- * Tapping it opens "From Life"; an ember dot says something new is waiting. Never on deeper pages. */
+/** The orb at the right end of Today, Plan and You (Edem, 20 and 21 Nov 2026): Life's own place in the bar.
+ * Tapping it opens "From Life". When something new is waiting the ring spins round; when there's nothing
+ * it rests and breathes. With Reduce Motion the ring stays still, so an ember dot carries the news instead. */
 function OrbButton({ onPress, unread, onImage }: { onPress: () => void; unread?: boolean; onImage?: boolean }) {
-  const t = useTokens();
+  const t = useTokens(), calm = useCalmMotion(), d = componentSize.round;
+  // The same 40pt disc as search and add beside it (Edem, 21 Nov), so the right side reads as one row.
   return (
-    <Press haptic="select" onPress={onPress} accessibilityLabel={unread ? 'From Life, something new' : 'From Life'} hitSlop={6} style={styles.v26Orb}>
-      <LifeOrb size={30} color={onImage ? t.paper : t.ink} />
-      {unread ? <View style={[styles.v26OrbDot, { backgroundColor: t.ember, borderColor: onImage ? 'transparent' : t.canvas }]} /> : null}
+    <Press haptic="select" onPress={onPress} accessibilityLabel={unread ? 'From Life, something new' : 'From Life'} hitSlop={2}
+      style={[styles.v26Orb, { backgroundColor: onImage ? photo.onPhoto : t.surface2 }]}>
+      <LifeOrb size={24} state={unread ? 'news' : 'rest'} color={onImage ? photo.ink : t.ink} />
+      {unread && calm ? <View style={[styles.v26OrbDot, { backgroundColor: t.ember, top: d * 0.22, right: d * 0.25 }]} /> : null}
     </Press>
   );
 }
@@ -173,7 +176,7 @@ const styles = StyleSheet.create({
   v26: { height: componentSize.topBarV26, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.gutter, gap: space.xs },
   v26Id: { flexDirection: 'row', alignItems: 'center', gap: space.xs, flex: 1, minWidth: 0 },
   v26Txt: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: componentSize.round },
-  v26Orb: { width: componentSize.round, height: componentSize.round, alignItems: 'center', justifyContent: 'center' },
-  v26OrbDot: { position: 'absolute', top: 4, right: 3, width: 9, height: 9, borderRadius: radius.full, borderWidth: 1.5 },
+  v26Orb: { width: componentSize.round, height: componentSize.round, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
+  v26OrbDot: { position: 'absolute', width: 7, height: 7, borderRadius: radius.full },
   v26Handle: { width: 36, height: 5, borderRadius: 3, alignSelf: 'center', marginTop: space.xs },
 });
