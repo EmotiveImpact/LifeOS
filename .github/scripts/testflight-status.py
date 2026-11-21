@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""Read-only report of where recent TestFlight builds stand, for when a build doesn't show on the phone.
+"""Where TestFlight builds stand, and getting a new one to the internal testers.
+
+With no argument: a read-only report of recent builds, Apple's upload records (with the reasons for any upload it
+turned down), the tester groups and what the App Store profile secret allows.
+With "distribute": waits for Apple to finish checking build BUILD_NUMBER, fails with Apple's reasons if it was turned
+down, and otherwise adds it to each internal tester group that doesn't take new builds by itself. Nothing else.
 
 Runs on GitHub with the App Store Connect key from the secrets. The repository is public, so it prints build
-numbers and states only: no tester names or emails, no group names, nothing from the key. Changes nothing.
+numbers and states only: no tester names or emails, no group names, nothing from the key.
 Standard library and the openssl command only.
 """
 import base64, json, os, plistlib, re, subprocess, sys, tempfile, time, urllib.error, urllib.parse, urllib.request
@@ -62,6 +67,68 @@ def get(path: str, params: dict, jwt: str, soft: bool = False):
         raise SystemExit(f'App Store Connect answered {error.code} for {path}{detail}')
 
 
+def post(path: str, payload: dict, jwt: str) -> None:
+    request = urllib.request.Request(f'{API}{path}', data=json.dumps(payload).encode(), method='POST',
+                                     headers={'Authorization': f'Bearer {jwt}', 'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(request, timeout=30):
+            return
+    except urllib.error.HTTPError as error:
+        detail = ''
+        try:
+            first = json.load(error).get('errors', [{}])[0]
+            detail = f": {first.get('title', '')} {first.get('detail', '')}".rstrip()
+        except Exception:
+            pass
+        raise SystemExit(f'::error::App Store Connect answered {error.code} for {path}{detail}')
+
+
+def upload_failure(app_id: str, number: str, jwt: str):
+    """Apple's reasons, if it turned this build number down after the upload."""
+    uploads = get(f'/v1/apps/{app_id}/buildUploads', {'limit': '20'}, jwt, soft=True) or {}
+    for record in uploads.get('data', []):
+        a = record.get('attributes', {})
+        state = a.get('state') if isinstance(a.get('state'), dict) else {'state': a.get('state')}
+        if str(a.get('cfBundleVersion')) == number and state.get('state') == 'FAILED':
+            return [f"{item.get('code')}: {item.get('description') or item.get('message')}" for item in state.get('errors') or []]
+    return None
+
+
+def distribute(app_id: str) -> None:
+    number = os.environ.get('BUILD_NUMBER', '')
+    if not re.fullmatch(r'[0-9]+(\.[0-9]+){0,2}', number):
+        raise SystemExit('BUILD_NUMBER must be the build number that was uploaded.')
+    deadline, build = time.time() + 45 * 60, None
+    while True:
+        jwt = token()
+        found = get('/v1/builds', {'filter[app]': app_id, 'filter[version]': number, 'limit': '1',
+                                   'fields[builds]': 'version,processingState'}, jwt).get('data', [])
+        state = found[0]['attributes'].get('processingState') if found else None
+        if state == 'VALID':
+            build = found[0]
+            break
+        reasons = upload_failure(app_id, number, jwt) if not found else None
+        if state in ('FAILED', 'INVALID') or reasons is not None:
+            for reason in reasons or []:
+                print(f'::error title=Apple turned build {number} down::{reason}')
+            raise SystemExit(f'Apple turned build {number} down after the upload ({state or "upload checks"}).')
+        if time.time() > deadline:
+            raise SystemExit(f'Apple had not finished checking build {number} after 45 minutes (state {state}).')
+        print(f"Build {number}: {state or 'not visible yet'}, checking again in 30 seconds")
+        time.sleep(30)
+    print(f'Build {number} passed Apple\'s checks.')
+    groups = get(f'/v1/apps/{app_id}/betaGroups', {'limit': '50', 'fields[betaGroups]': 'isInternalGroup,hasAccessToAllBuilds'}, jwt).get('data', [])
+    internal = [group for group in groups if group['attributes'].get('isInternalGroup')]
+    if not internal:
+        print('::warning::There is no internal tester group in App Store Connect, so nobody gets this build yet.')
+    for number_in_list, group in enumerate(internal, 1):
+        if group['attributes'].get('hasAccessToAllBuilds'):
+            print(f'Internal group {number_in_list} gets every build by itself.')
+            continue
+        post(f"/v1/betaGroups/{group['id']}/relationships/builds", {'data': [{'type': 'builds', 'id': build['id']}]}, jwt)
+        print(f'Added build {number} to internal group {number_in_list}.')
+
+
 def profile_report() -> None:
     raw = os.environ.get('IOS_PROVISION_PROFILE_BASE64', '')
     if not raw:
@@ -83,6 +150,9 @@ def main() -> None:
     app_id = os.environ.get('ASC_APP_ID', '')
     if not re.fullmatch(r'[0-9]+', app_id):
         raise SystemExit('ASC_APP_ID must be the numeric Apple app ID.')
+    if sys.argv[1:] == ['distribute']:
+        distribute(app_id)
+        return
     profile_report()
     jwt = token()
 

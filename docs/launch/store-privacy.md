@@ -48,7 +48,7 @@ Two owner items change these answers:
 
 ### HealthKit
 
-- Entitlement: HealthKit, read only. `NSHealthUpdateUsageDescription` is off, so Life never writes.
+- Entitlement: HealthKit, read only. Life asks only to read, so it never writes. Apple still requires `NSHealthUpdateUsageDescription` whenever the HealthKit code is in the app (build 42 was turned down without it, ITMS-90683, 21 Nov 2026), so it says: "Life doesn’t write anything to Apple Health. It only reads the sleep, heart and activity you switch on."
 - Usage text: "Life reads only the sleep, heart and activity you switch on, to show your readiness and plan your day. It stays on your phone."
 - Types read: sleep analysis, heart rate, heart rate variability, resting heart rate, respiratory rate, oxygen saturation, wrist temperature, step count, active energy.
 - No HealthKit data is stored in iCloud, used for advertising, sold, or sent to our servers.

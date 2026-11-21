@@ -85,7 +85,7 @@
         "@kingstinct/react-native-healthkit",
         {
           "NSHealthShareUsageDescription": "Life reads only the sleep, heart and activity you switch on, to show your readiness and plan your day. It stays on your phone.",
-          "NSHealthUpdateUsageDescription": false,
+          "NSHealthUpdateUsageDescription": "Life doesn’t write anything to Apple Health. It only reads the sleep, heart and activity you switch on.",
           "background": false
         }
       ],
