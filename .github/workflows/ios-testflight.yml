@@ -34,12 +34,6 @@ on:
 permissions:
   contents: read
 
-# One queue per branch: the review branch and v26-integration build side by side, and a burst of pushes to one branch
-# makes one build.
-concurrency:
-  group: ios-testflight-${{ github.ref_name }}
-  cancel-in-progress: false
-
 jobs:
   preflight:
     runs-on: ubuntu-latest
@@ -68,6 +62,11 @@ jobs:
   build:
     needs: preflight
     runs-on: macos-26
+    # One build queue per branch: the review branch and v26-integration build side by side, and a burst of pushes to
+    # one branch makes one build. Only the build waits its turn, not the wait for Apple's verdict after it.
+    concurrency:
+      group: ios-build-${{ github.ref_name }}
+      cancel-in-progress: false
     outputs:
       build_number: ${{ steps.number.outputs.build_number }}
     timeout-minutes: 60
