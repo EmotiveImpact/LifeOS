@@ -34,6 +34,7 @@
 | Wearable aggregator (self-hosted) | [the-momentum/open-wearables](https://github.com/the-momentum/open-wearables) | MIT | One API for many wearables (Garmin, Polar, Suunto…) without paying Terra; evaluate for Phase 4b v2 |
 | AI memory | [mem0ai/mem0](https://github.com/mem0ai/mem0) | Apache-2.0 | **Pattern only, not installed** (owner, 20 Nov 2026): life owns its memory layer, `packages/brain/src/memory.ts`, borrowing mem0's add, merge, update loop and Graphiti's dated facts (Phase 25) |
 | App framework | [expo/expo](https://github.com/expo/expo) | MIT | Examples for config plugins, EAS builds, background tasks |
+| Subscriptions | [RevenueCat/react-native-purchases](https://github.com/RevenueCat/react-native-purchases) | MIT | App Store and Google Play subscriptions behind Life's own server record (owner, 20 Nov 2026: RevenueCat, paid only with a trial; plan gaps 6, fix F-20). Pinned at 11.0.1 |
 
 ## 2. Health and WHOOP-style scoring
 

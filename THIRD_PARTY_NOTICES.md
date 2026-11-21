@@ -56,3 +56,6 @@ Add each installed MIT / Apache-2.0 library here with its copyright line when it
 
 ## Quality (Phase 30)
 - **Sentry React Native SDK 8.28.0 (MIT).** Copyright (c) Functional Software, Inc. dba Sentry. https://github.com/getsentry/sentry-react-native . Crash reports, started only when the build carries the owner's DSN and the person hasn't switched them off. Installed as a dependency with its own Sentry JavaScript and native SDK dependencies (MIT), not copied source.
+
+## Billing (fix F-20)
+- **react-native-purchases 11.0.1 (MIT).** Copyright (c) RevenueCat, Inc. https://github.com/RevenueCat/react-native-purchases . Subscriptions through the App Store and Google Play, started only when the build carries RevenueCat's public SDK key. Installed as a dependency with its RevenueCat dependencies (`@revenuecat/purchases-typescript-internal`, `@revenuecat/purchases-js-hybrid-mappings`, `@revenuecat/purchases-js`, MIT), not copied source.

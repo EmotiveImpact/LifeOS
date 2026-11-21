@@ -32,7 +32,7 @@ describe('Health Connect’s question opens the privacy policy', () => {
     expect(service).toContain("export const HEALTH_RATIONALE_TARGET = { screen: 'legal', params: { open: 'privacy' } } as const;");
     expect(service).toContain("Platform.OS === 'android'");
     expect(read('apps/mobile/src/app/_layout.tsx')).toContain('onHealthRationale(() => nav.go(HEALTH_RATIONALE_TARGET.screen, { ...HEALTH_RATIONALE_TARGET.params }))');
-    expect(read('apps/mobile/src/screens/v26/settings.tsx')).toContain("useState<'terms' | 'privacy' | 'notices' | null>(start === 'privacy' ? 'privacy' : null)");
+    expect(read('apps/mobile/src/screens/v26/settings.tsx')).toContain("useState<'terms' | 'privacy' | 'notices' | null>(start === 'privacy' || start === 'terms' ? start : null)");
   });
 
   test('the privacy policy says why Life reads health data', () => {

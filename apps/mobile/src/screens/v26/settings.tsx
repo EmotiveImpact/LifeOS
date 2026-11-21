@@ -19,6 +19,8 @@ import { CHECK_IN_STYLES } from '@life/core';
 import { money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { openSupport, supportAddress, type SupportKind, type SupportResult } from '@/services/support';
+import { billingLive, loadPlans, loadStanding, manageSubscription, restore, subscribe, type PlansResult } from '@/services/billing';
+import { trialWords, type Plan, type Standing } from '@/services/billingModel';
 import { ai } from '@/services/ai';
 import { closeAccount, exportAccount, isSignedIn, type AccountDataProblem } from '@/services/account';
 import { sharesMoves, withMovesSharing } from '@/services/moves';
@@ -42,10 +44,38 @@ import { Composer } from './talk';
 const n = (v: number) => Math.round(v).toLocaleString('en-GB');
 const hh = (h: number) => `${String(h % 24).padStart(2, '0')}:00`;
 
-/** Whether life Plus is on: the sample account is a member; a real account is once it subscribes. */
-function usePlus() {
+/**
+ * Whether Life Plus is on (fix F-20). With billing live, RevenueCat says, loaded as the screen opens. Without it, only
+ * the sample account is a member, so a release build never shows a subscription that wasn't bought.
+ */
+function usePlus(): { on: boolean; standing: Standing | null } {
   const { data } = useSeed();
-  return (SHOW_SAMPLES || !!data.flags['plus-preview']) && !data.flags['plus-cancelled'];
+  const [standing, setStanding] = useState<Standing | null>(null);
+  useEffect(() => {
+    if (!billingLive) return;
+    let live = true;
+    void loadStanding().then(s => { if (live) setStanding(s); });
+    return () => { live = false; };
+  }, []);
+  if (billingLive) return { on: !!standing && ['trial', 'active', 'grace'].includes(standing.status), standing };
+  return { on: SHOW_SAMPLES && !data.flags['plus-cancelled'], standing: null };
+}
+
+const day = (d: Date | null) => d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+const planWord = (plan: Standing['plan']) => plan === 'annual' ? 'Yearly' : plan === 'monthly' ? 'Monthly' : 'Life Plus';
+const storeName = Platform.OS === 'android' ? 'Google Play' : 'the App Store';
+
+/** The Life Plus row's second line. A paid-only app has no free plan, so nobody reads "Free". */
+function plusLine({ on, standing }: { on: boolean; standing: Standing | null }): string {
+  if (!billingLive) return on ? `Yearly · renews ${plusPrice.renews}` : 'Not subscribed · see Life Plus';
+  if (!standing) return 'See Life Plus';
+  switch (standing.status) {
+    case 'trial': return `Free trial · ends ${day(standing.ends)}`;
+    case 'active': return `${planWord(standing.plan)} · ${standing.renews ? 'renews' : 'ends'} ${day(standing.ends)}`;
+    case 'grace': return `Payment didn’t go through · update it in ${storeName}`;
+    case 'ended': return 'Ended · subscribe again';
+    default: return 'Not subscribed · see Life Plus';
+  }
 }
 
 /**
@@ -132,7 +162,7 @@ export function SettingsV26() {
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text variant="headline" numberOfLines={1}>{data.profile.name || 'You'}</Text>
           {lineOf ? <Text variant="callout" tone="ink2" numberOfLines={1}>{lineOf}</Text> : null}
-          <Chip label={plus ? 'Life Plus · Active' : 'Free plan'} style={{ marginTop: space.xs }} />
+          <Chip label={plus.on ? (plus.standing?.status === 'trial' ? 'Life Plus · Free trial' : 'Life Plus · Active') : 'Not subscribed'} style={{ marginTop: space.xs }} />
         </View>
         <Icon name="chev" size={componentSize.iconXs} color={t.inkQuiet} />
       </Press>
@@ -152,7 +182,7 @@ export function SettingsV26() {
         { key: 'data', title: 'Your data and account', count: '4', content: <View>
           <Row icon="folder" title="What Life knows" sub={`${n(data.knowledge.recordCount)} records · see and edit everything`} onPress={() => nav.go('knows')} />
           <Row icon="arrowDown" title="Export your data" sub="A copy of everything, as a file" onPress={() => { void exportData(); }} />
-          <Row icon="wallet" title="Life Plus" sub={plus ? `Yearly · renews ${plusPrice.renews}` : 'Free · see what Life Plus adds'} onPress={() => nav.go(plus ? 'subscription' : 'plus')} />
+          <Row icon="wallet" title="Life Plus" sub={plusLine(plus)} onPress={() => nav.go(plus.on ? 'subscription' : 'plus')} />
           <Row icon="trash" title="Delete everything" sub="This can’t be undone" onPress={() => nav.go('deleteacct')} />
         </View> },
         { key: 'help', title: 'Help and about', count: '2', content: <View>
@@ -536,15 +566,30 @@ function planMonth() {
   return Math.max(1, Math.min(12, months + 1));
 }
 
+/** The store's plans, loaded once the screen opens (fix F-20). Builds without billing never ask. */
+function usePlans(): PlansResult | null {
+  const [plans, setPlans] = useState<PlansResult | null>(billingLive ? null : { ok: false, problem: 'not-set' });
+  useEffect(() => {
+    if (!billingLive) return;
+    let live = true;
+    void loadPlans().then(p => { if (live) setPlans(p); });
+    return () => { live = false; };
+  }, []);
+  return plans;
+}
+
+const INCLUDES = '{@grid every tool} at every level, {@repeat your routines}, {@book unlimited Teach me} and {@shield Private mode}';
+
 export function SubscriptionV26() {
-  const nav = useNavigation(), { flag } = useSeed(), plus = usePlus();
-  const month = planMonth();
-  if (!plus) return (
+  const nav = useNavigation(), { flag } = useSeed(), { on, standing } = usePlus(), plans = usePlans();
+  if (!on) return (
     <Page screen="subscription" bar={{ kind: 'push', title: 'Life Plus' }} footer={<Btn label="See Life Plus" onPress={() => nav.go('plus')} />}>
-      <Display flush style={{ marginTop: space.xxs }} s="You’re on the {free plan}. Everything free {stays free}." />
-      <Statement s={`Life Plus adds {@grid every tool} at every level, {@repeat your routines}, {@book unlimited Teach me} and {@shield Private mode}, for ${money(plusPrice.annual, 2)} a year.`} style={{ marginTop: space.lg }} />
+      <Display flush style={{ marginTop: space.xxs }} s={standing?.status === 'ended' ? 'Your Life Plus {has ended}.' : 'Life Plus {isn’t on} for this account.'} />
+      <Statement s={`Life Plus is ${INCLUDES}${billingLive ? '' : `, for ${money(plusPrice.annual, 2)} a year`}.`} style={{ marginTop: space.lg }} />
     </Page>
   );
+  if (billingLive && standing) return <LiveSubscription standing={standing} plans={plans} />;
+  const month = planMonth();
   return (
     <Page screen="subscription" bar={{ kind: 'push', title: 'Life Plus' }}
       footer={<View style={{ gap: space.xs }}>
@@ -562,23 +607,109 @@ export function SubscriptionV26() {
         <DotGrid cells={Array.from({ length: 12 }, (_, i): DotCell => (i < month ? 'on' : ''))} columns={12} label={`Month ${month} of 12`} style={{ marginTop: space.md }} />
         <Callout style={{ marginTop: space.md }}>{`Month ${month} of 12. Paid once a year.`}</Callout>
       </Card>
-      <Statement s="Includes {@grid every tool} at every level, {@repeat your routines}, {@book unlimited Teach me} and {@shield Private mode}." style={{ marginTop: space.lg }} />
+      <Statement s={`Includes ${INCLUDES}.`} style={{ marginTop: space.lg }} />
+    </Page>
+  );
+}
+
+/** A real subscription, as the store reports it. Changing or cancelling happens in the store, never in Life. */
+function LiveSubscription({ standing, plans }: { standing: Standing; plans: PlansResult | null }) {
+  const plan = plans?.ok ? plans.plans.find(p => p.key === standing.plan) ?? null : null;
+  const per = standing.plan === 'monthly' ? 'a month' : 'a year';
+  const chip = standing.status === 'trial' ? 'Free trial' : standing.status === 'grace' ? 'Payment due' : 'Active';
+  // Months into a yearly plan, counted back from when it renews.
+  const month = standing.plan === 'annual' && standing.status === 'active' && standing.ends
+    ? Math.max(1, Math.min(12, 12 - Math.floor((standing.ends.getTime() - Date.now()) / (30.44 * 24 * 3600 * 1000)))) : null;
+  const note = standing.status === 'trial'
+    ? `Your free trial ends on ${day(standing.ends)}. ${standing.renews ? `Then ${plan ? `${plan.price} ${per}` : `Life Plus ${per}`}, unless you cancel before.` : 'It won’t renew.'}`
+    : standing.status === 'grace' ? `${storeName === 'Google Play' ? 'Google Play' : 'The App Store'} couldn’t take the last payment. Update your payment details there to keep Life Plus.`
+    : month ? `Month ${month} of 12. Paid once a year.` : standing.plan === 'monthly' ? 'Paid each month.' : `${standing.renews ? 'Renews' : 'Ends'} on ${day(standing.ends)}.`;
+  return (
+    <Page screen="subscription" bar={{ kind: 'push', title: 'Life Plus' }}
+      footer={<View style={{ gap: space.xs }}>
+        <Btn ghost label="Switch plan" onPress={() => { void manageSubscription(standing); }} />
+        <QuietLink label="Cancel Life Plus" onPress={() => { void manageSubscription(standing); }} />
+        <Micro center>{`One tap, then managed by ${storeName}`}</Micro>
+      </View>}>
+      <PhotoCard source={photos.gotit} focal={{ y: 0.37 }} height={200} chips={[chip]} title="Your Life Plus" sub={standing.plan ? `${planWord(standing.plan)} plan` : 'Life Plus'} />
+      {plan ? <Between style={{ alignItems: 'flex-end', flexWrap: 'wrap', columnGap: space.sm, rowGap: space.xs, marginTop: space.lg }}>
+        <Figure value={plan.price} unit={per} />
+        {plan.perMonth ? <Chip label={`${plan.perMonth} a month`} style={{ marginBottom: 10 }} /> : null}
+      </Between> : null}
+      <Card style={{ marginTop: space.md }}>
+        <Between><Micro>{standing.status === 'trial' ? 'TRIAL ENDS' : standing.renews ? 'RENEWS' : 'ENDS'}</Micro><Text variant="title">{day(standing.ends)}</Text></Between>
+        {month ? <DotGrid cells={Array.from({ length: 12 }, (_, i): DotCell => (i < month ? 'on' : ''))} columns={12} label={`Month ${month} of 12`} style={{ marginTop: space.md }} /> : null}
+        <Callout style={{ marginTop: space.md }}>{note}</Callout>
+      </Card>
+      <Statement s={`Includes ${INCLUDES}.`} style={{ marginTop: space.lg }} />
     </Page>
   );
 }
 
 /* ───────────────────────── life Plus (the offer) ───────────────────────── */
 
+/** The paywall's words for a plan: the store's prices, and any free trial this person can have. */
+function offerLine(plan: Plan): string {
+  return plan.key === 'annual' ? `${plan.price} a year${plan.perMonth ? ` · ${plan.perMonth} a month` : ''}` : `${plan.price} a month`;
+}
+
 export function PlusV26() {
-  const t = useTokens(), nav = useNavigation(), { flag } = useSeed();
+  const t = useTokens(), nav = useNavigation(), { flag } = useSeed(), plans = usePlans();
   const [plan, setPlan] = useState<'annual' | 'monthly'>('annual');
-  const line = plan === 'annual' ? `${money(plusPrice.annual, 2)} a year · ${money(plusPrice.perMonth, 2)} a month` : `${money(plusPrice.monthly, 2)} a month · ${money(plusPrice.monthly * 12, 2)} a year`;
+  const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const offered = plans?.ok ? plans.plans : [];
+  const chosen = offered.find(p => p.key === plan) ?? offered[0] ?? null;
+  const annual = offered.find(p => p.key === 'annual'), monthly = offered.find(p => p.key === 'monthly');
+  const save = billingLive
+    ? annual && monthly && monthly.pkg.product.price > 0 ? Math.round((1 - annual.pkg.product.price / (monthly.pkg.product.price * 12)) * 100) : null
+    : plusPrice.save;
+  const line = !billingLive
+    ? plan === 'annual' ? `${money(plusPrice.annual, 2)} a year · ${money(plusPrice.perMonth, 2)} a month` : `${money(plusPrice.monthly, 2)} a month · ${money(plusPrice.monthly * 12, 2)} a year`
+    : chosen ? offerLine(chosen) : plans === null ? 'Loading prices…' : 'Prices can’t be loaded right now';
+  const trial = billingLive && chosen?.trial ? chosen.trial : null;
+  const notConnected = 'Subscriptions aren’t connected in this build yet, so nothing was charged.';
+
+  const buy = async () => {
+    setNote(null);
+    if (!billingLive) {
+      // Sample builds keep the board's preview; a real build without billing never pretends to sell anything.
+      if (!SHOW_SAMPLES) { setNote(notConnected); feedback.warn(); return; }
+      flag('plus-cancelled', false); feedback.select(); nav.replace('plussuccess');
+      return;
+    }
+    if (!chosen || busy) return;
+    setBusy(true);
+    const outcome = await subscribe(chosen);
+    setBusy(false);
+    if (outcome === 'subscribed') { feedback.select(); nav.replace('plussuccess'); }
+    else if (outcome === 'pending') setNote('Your payment is waiting for approval. Life Plus opens as soon as it goes through.');
+    else if (outcome === 'failed') { setNote('The purchase didn’t go through. Try again in a moment.'); feedback.warn(); }
+    else if (outcome === 'not-set') setNote(notConnected);
+  };
+  const restoreIt = async () => {
+    setNote(null);
+    if (!billingLive) {
+      if (SHOW_SAMPLES) Alert.alert('Nothing to restore', 'No earlier Life Plus purchase was found on this account.');
+      else setNote('Subscriptions aren’t connected in this build yet, so there’s nothing to restore.');
+      return;
+    }
+    const outcome = await restore();
+    if (outcome === 'restored') nav.replace('plussuccess');
+    else if (outcome === 'nothing') Alert.alert('Nothing to restore', `No earlier Life Plus purchase was found on this ${Platform.OS === 'android' ? 'Google' : 'Apple'} account.`);
+    else Alert.alert('The store can’t be reached', 'Check your connection, then try again.');
+  };
   return (
     <Page screen="plus" bar={{ kind: 'flow', left: 'Back', leftIcon: 'back', action: { kind: 'text', label: 'Skip', onPress: nav.close } }}
       footer={<View style={{ gap: space.xs }}>
-        <Btn label="Subscribe" onPress={() => { flag('plus-preview', true); flag('plus-cancelled', false); feedback.select(); nav.replace('plussuccess'); }} style={{ minHeight: 56 }} />
-        <QuietLink label="Restore purchases" onPress={() => Alert.alert('Nothing to restore', 'No earlier Life Plus purchase was found on this account.')} />
-        <Micro center>Recurring billing · cancel any time</Micro>
+        {note ? <Callout>{note}</Callout> : null}
+        <Btn label={trial ? 'Start free trial' : 'Subscribe'} disabled={billingLive && (!chosen || busy)} onPress={() => { void buy(); }} style={{ minHeight: 56 }} />
+        <QuietLink label="Restore purchases" onPress={() => { void restoreIt(); }} />
+        <Micro center>{trial && chosen ? `Free for ${trialWords(trial)}, then ${chosen.price} ${chosen.key === 'annual' ? 'a year' : 'a month'} · cancel any time` : 'Recurring billing · cancel any time'}</Micro>
+        <View style={styles.legalLinks}>
+          <QuietLink label="Terms" onPress={() => nav.go('legal', { open: 'terms' })} />
+          <QuietLink label="Privacy" onPress={() => nav.go('legal', { open: 'privacy' })} />
+        </View>
       </View>}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.xs, marginTop: space.xl }}><Wordmark variant="title" /><Text variant="title" tone="ink2">Plus</Text></View>
       <Display s="Unlock {@mic unlimited Talk}, {@book every lesson}, {@repeat your routines} and more." style={{ marginTop: 6 }} />
@@ -588,8 +719,9 @@ export function PlusV26() {
           <Text variant="title">{plan === 'annual' ? 'Annual' : 'Monthly'}</Text>
           <Text variant="callout" tone="ink2">{line}</Text>
         </View>
-        {plan === 'annual' ? <Chip label={`Save ${plusPrice.save}%`} tone="live" /> : <Chip label="Switch to annual" tone="q" />}
+        {plan === 'annual' ? (save ? <Chip label={`Save ${save}%`} tone="live" /> : null) : <Chip label="Switch to annual" tone="q" />}
       </Press>
+      {trial && chosen ? <Callout style={{ marginTop: space.md }}>{`Free for ${trialWords(trial)}. Then ${offerLine(chosen)}, renewing until you cancel. Cancel before the trial ends and you won’t be charged.`}</Callout> : null}
     </Page>
   );
 }
@@ -701,7 +833,7 @@ export function LegalV26() {
   // Health Connect's "why does Life read this?" arrives with the privacy policy open (fix F-25).
   const { open: start } = useLocalSearchParams<{ open?: string }>();
   // Which text is open under the rows. One at a time, so the page stays readable.
-  const [open, setOpen] = useState<'terms' | 'privacy' | 'notices' | null>(start === 'privacy' ? 'privacy' : null);
+  const [open, setOpen] = useState<'terms' | 'privacy' | 'notices' | null>(start === 'privacy' || start === 'terms' ? start : null);
   const toggle = (k: 'terms' | 'privacy' | 'notices') => setOpen(o => (o === k ? null : k));
   return (
     <Page screen="legal" bar={{ kind: 'push', title: 'About' }}>
@@ -778,6 +910,7 @@ const styles = StyleSheet.create({
   toggleTile: { borderRadius: radius.lg, padding: space.md },
   round: { width: componentSize.round, height: componentSize.round, borderRadius: componentSize.round / 2, alignItems: 'center', justifyContent: 'center' },
   pick: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 72, paddingHorizontal: 18, borderRadius: radius.lg, marginTop: space.lg },
+  legalLinks: { flexDirection: 'row', justifyContent: 'center', gap: space.lg },
   opens: { flexDirection: 'row', flexWrap: 'wrap', gap: space.tile },
   open: { flexBasis: '45%', flexGrow: 1, gap: space.sm, paddingTop: 14, paddingHorizontal: space.md, paddingBottom: space.md, borderRadius: radius.lg },
   link: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: space.sm, alignSelf: 'flex-start' },

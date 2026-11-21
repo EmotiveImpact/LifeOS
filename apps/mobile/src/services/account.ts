@@ -138,6 +138,16 @@ export async function isSignedIn(): Promise<boolean> {
 
 export type AccountDataProblem = 'signed-out' | 'offline' | 'failed';
 
+/** This account's id on Life's server (`GET /me`), or null when signed out or offline. Billing signs RevenueCat in with it. */
+export async function myUserId(): Promise<string | null> {
+  const token = await sessionToken();
+  if (!accountsLive() || !token) return null;
+  const response = await call('/me', null, token, 'GET');
+  if (!response?.ok) return null;
+  const body = await response.json().catch(() => null) as { userId?: unknown } | null;
+  return typeof body?.userId === 'string' && body.userId ? body.userId : null;
+}
+
 /** Everything life's server holds for this account (Phase 23 `GET /account/export`). */
 export async function exportAccount(): Promise<{ ok: true; data: unknown } | { ok: false; problem: AccountDataProblem }> {
   const token = await sessionToken();
