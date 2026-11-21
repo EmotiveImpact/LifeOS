@@ -95,7 +95,38 @@ apps.first.build_configurations.each do |config|
   config.build_settings['CURRENT_PROJECT_VERSION'] = ENV.fetch('BUILD_NUMBER')
 end
 p.save
+release = apps.first.build_configurations.find { |config| config.name == 'Release' }
+File.write(File.join(ENV.fetch('SIGNING_DIR'), 'entitlements'), release&.build_settings&.[]('CODE_SIGN_ENTITLEMENTS').to_s)
 RUBY
+# The app asks for capabilities (HealthKit, push) that the App Store profile has to grant too, or the archive stops
+# (run 10, 21 Nov). A sample-life review build is signed without what the profile lacks, with a warning on the run,
+# so builds keep reaching TestFlight; those features then do nothing in that build. A real build stops instead.
+python3 - <<'PY'
+import os, plistlib
+from pathlib import Path
+root = Path(os.environ['SIGNING_DIR'])
+relative = (root / 'entitlements').read_text().strip()
+if relative:
+    if '$' in relative or relative.startswith('/') or '..' in relative.split('/'):
+        raise SystemExit('Unexpected entitlements path in the Xcode project.')
+    path = Path('ios') / relative
+    granted = plistlib.loads((root / 'profile.plist').read_bytes())['Entitlements']
+    wanted = plistlib.loads(path.read_bytes())
+    missing = sorted(key for key in wanted if key not in granted)
+    if missing:
+        names = ', '.join(sorted({'Push Notifications' if key == 'aps-environment'
+                                  else 'HealthKit' if key.startswith('com.apple.developer.healthkit')
+                                  else key for key in missing}))
+        fix = ('turn them on for the app identifier at developer.apple.com, save the App Store profile again and put '
+               'the new profile in the IOS_PROVISION_PROFILE_BASE64 secret')
+        if os.environ.get('EXPO_PUBLIC_SAMPLE_DATA') != '1':
+            raise SystemExit(f"The App Store profile doesn't include {names}: {fix}.")
+        for key in missing:
+            del wanted[key]
+        path.write_bytes(plistlib.dumps(wanted))
+        print(f"::warning title=Signed without {names}::The App Store profile doesn't include {names}, so this "
+              f"sample-life build leaves them out. To include them, {fix}.")
+PY
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "ios/$PROJECT_NAME/Info.plist"
 # No account login, secrets in app code, or provisioning changes are performed here.
 xcodebuild -workspace "ios/$PROJECT_NAME.xcworkspace" -scheme "$PROJECT_NAME" -configuration Release \
