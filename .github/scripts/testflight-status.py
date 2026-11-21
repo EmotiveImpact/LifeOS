@@ -43,7 +43,7 @@ def token() -> str:
     return f'{head}.{body}.{b64url(der_to_raw(sig))}'
 
 
-def get(path: str, params: dict, jwt: str) -> dict:
+def get(path: str, params: dict, jwt: str, soft: bool = False):
     url = f'{API}{path}?{urllib.parse.urlencode(params)}'
     request = urllib.request.Request(url, headers={'Authorization': f'Bearer {jwt}'})
     try:
@@ -56,6 +56,9 @@ def get(path: str, params: dict, jwt: str) -> dict:
             detail = f": {first.get('title', '')} {first.get('detail', '')}".rstrip()
         except Exception:
             pass
+        if soft:
+            print(f'  (App Store Connect answered {error.code} for {path}{detail})')
+            return None
         raise SystemExit(f'App Store Connect answered {error.code} for {path}{detail}')
 
 
@@ -99,6 +102,20 @@ def main() -> None:
         print(f"  build {a.get('version')} (app version {version.get('version')}), uploaded {a.get('uploadedDate')}: "
               f"processing {a.get('processingState')}, internal testing {beta.get('internalBuildState')}, "
               f"encryption answer {a.get('usesNonExemptEncryption')}, expired {a.get('expired')}")
+
+    # An upload Apple accepted can still fail its checks afterwards, and then never shows as a build. Upload records
+    # say why (Apple also emails the account holder).
+    print('\nUpload records (newest first):')
+    uploads = get(f'/v1/apps/{app_id}/buildUploads', {'limit': '20'}, jwt, soft=True)
+    records = sorted((uploads or {}).get('data', []), key=lambda r: r.get('attributes', {}).get('createdDate') or '', reverse=True)
+    for record in records[:6]:
+        a = record.get('attributes', {})
+        state = a.get('state') if isinstance(a.get('state'), dict) else {'state': a.get('state')}
+        print(f"  build {a.get('cfBundleVersion')} (app version {a.get('cfBundleShortVersionString')}), created {a.get('createdDate')}: "
+              f"{state.get('state')}")
+        for kind in ('errors', 'warnings'):
+            for item in state.get(kind) or []:
+                print(f"    {kind[:-1]} {item.get('code')}: {item.get('description') or item.get('message')}")
 
     groups = get(f'/v1/apps/{app_id}/betaGroups', {
         'limit': '50', 'fields[betaGroups]': 'isInternalGroup,hasAccessToAllBuilds'}, jwt).get('data', [])
