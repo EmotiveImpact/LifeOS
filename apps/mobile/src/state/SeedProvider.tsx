@@ -6,6 +6,7 @@ import { setSentenceIcons } from '@/design/sentenceIcons';
 import { engineSnapshot, seed, seedAim, seedMeal, seedPeople, seedProfile, seedPulseLog, seedRecords, seedKnownRecords, seedKnowledge, type ChiefAim, type FiledRecord, type MealItem, type MemoryEntry, seedMemoryCategories } from './seed';
 import { openProjectionStorage } from './persistence';
 import { removeAttachmentCopy } from '@/services/attachments';
+import { removeProfilePhoto } from '@/services/profilePhoto';
 import type { ProjectionStorage } from './persistence.types';
 import type { QueuedAi } from '@/services/aiQueue';
 import { emptyHealth, type HealthState } from '@/services/health/ingest';
@@ -219,6 +220,8 @@ export function SeedProvider({ children }: { children: ReactNode }) {
       try {
         await writes.current;
         for (const thread of latest.current.brain.conversations) for (const attachment of thread.attachments) await removeAttachmentCopy(attachment);
+        // Your photo lives beside the database, on this phone only, so erasing takes it too.
+        await removeProfilePhoto().catch(() => {});
         await storage.current.clear(options?.thisPhoneOnly ? 'this-phone' : 'everywhere');
         const next = { ...initial, onboardingDone: false };
         lastQueued.current = JSON.stringify(next); revision.current = 0; committed.current = 0;

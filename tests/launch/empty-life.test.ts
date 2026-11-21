@@ -35,6 +35,8 @@ describe('the starting life', () => {
     const provider = read('apps/mobile/src/state/SeedProvider.tsx');
     expect(provider).toContain('...(SHOW_SAMPLES ? sampleLife : emptyLife()),');
     expect(provider).toContain('const next = { ...initial, onboardingDone: false };');
+    // The You tab's photo lives on the phone, outside the database, so erasing removes it too.
+    expect(provider).toContain('await removeProfilePhoto().catch(() => {});');
     expect(read('apps/mobile/src/state/sample.ts')).toContain("export const SHOW_SAMPLES = flag === '1' || (flag !== '0' && typeof __DEV__ !== 'undefined' && __DEV__);");
   });
 
