@@ -46,6 +46,7 @@ No merge conflicts. Phase 20 added routes, so the typed route file needs regener
 | 20 Nov, ~22:28 UTC | `claude/project-thread-8i27bq` (fast-forward, the orb back at the right of Today, Plan and You, opening From Life) | 272e485 | 674 tests with Postgres, app typecheck, iOS and Android bundles |
 | 20 Nov, ~22:50 UTC | `phase-27-food` (merge of integration, then fast-forward: food from photos, barcodes and labels, real targets) | see `git log` | 719 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
 | 20 Nov, ~23:25 UTC | `phase-29-day-engine` (fast-forward: the day engine on Today, local nudges, read-only calendar, background work) | see `git log` | 743 tests with Postgres, app typecheck, iOS and Android bundles |
+| 21 Nov, ~00:40 UTC | `phase-30-quality` (fast-forward: screen readers, calm motion, Android back, paged long lists, phone-only choices, the weekly count of finished moves, crash reports off until a DSN, Maestro flows; run `npm install` in `apps/mobile` for Sentry, and migrate the API database for `0005_weekly_moves`) | ac95388 | 768 tests with Postgres, app and API typecheck, iOS, Android and web bundles |
 
 ## Screenshots
 
