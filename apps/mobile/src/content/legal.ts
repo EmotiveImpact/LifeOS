@@ -415,7 +415,7 @@ export const privacyPolicy: LegalDoc = {
       "items": [
         "{Share how much gets done.} Off unless you switch it on in Your data. Once a week, Life sends one number: how many moves you finished that week, the week itself and whether you use an iPhone or an Android phone. No name, account, device or time travels with it. Our server adds it to a running tally and keeps nothing that says whose it was. Switching it off stops it and forgets the count kept on your phone.",
         "{Crash reports.} When Life crashes, it can send a report to Sentry, a service that collects crash reports, so we can fix the problem. A report says what broke and where in Life's code. It does not include your name, your account, what you typed, what is on your screen, your requests or your data. Crash reports from inside the phone's native code carry Sentry's random install number. You can switch crash reports off in Your data. [Owner decision: on unless switched off, or off until you say yes.]",
-        "{Notifications.} If you allow them, Life sends at most one nudge a day, plus deadlines you ask for. To reach your phone, our server sends the nudge through Expo's notification service to Apple or Google."
+        "{Notifications.} If you allow them, Life sends at most one nudge a day, plus deadlines you ask for. To reach your phone, our server sends the nudge through Expo's notification service to Apple or Google. A nudge never names a money or health matter, so what shows on a locked screen stays general."
       ]
     },
     {

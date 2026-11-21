@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { StyleSheet, TextInput, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, StyleSheet, TextInput, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import { Icon, type GlyphName } from '../Icon';
 import type { FeedbackKind } from '../feedback';
 import { Press } from '../Press';
@@ -7,7 +7,7 @@ import { Text } from '../Text';
 import { RichText } from '../RichText';
 import { containsControl, nestedActionProps, nestedControl, Unread } from '../a11y';
 import { useTokens } from '../theme';
-import { cardShadow, componentSize, radius, space, type } from '../tokens';
+import { cardShadow, componentSize, fonts, radius, space, type } from '../tokens';
 import { RoundButton } from './V26Chrome';
 import { PhotoFill, type Focal } from './V26PhotoFill';
 
@@ -313,6 +313,22 @@ export function InitialsAvatar({ initials, lg, style }: { initials: string; lg?:
   return (
     <View accessible accessibilityLabel={initials} style={[{ width: d, height: d, borderRadius: radius.full, backgroundColor: t.surface2, alignItems: 'center', justifyContent: 'center' }, style]}>
       <Text variant={lg ? 'heading' : 'buttonCompact'}>{initials}</Text>
+    </View>
+  );
+}
+
+/** Your face: your photo when you've added one, otherwise your initial on surface2. `ring` draws the thin selected ring
+ * (1.5pt ink, 1.5pt gap) the You tab uses in place of a colour change; the space for it is always kept so nothing moves. */
+export function FaceAvatar({ uri, initials, size = 40, ring, style }: { uri?: string | null; initials: string; size?: number; ring?: boolean; style?: StyleProp<ViewStyle> }) {
+  const t = useTokens();
+  const gap = ring === undefined ? 0 : 1.5, line = ring === undefined ? 0 : 1.5, outer = size + 2 * (gap + line);
+  return (
+    <View style={[{ width: outer, height: outer, borderRadius: radius.full, borderWidth: line, borderColor: ring ? t.ink : 'transparent', alignItems: 'center', justifyContent: 'center' }, style]}>
+      {uri
+        ? <Image source={{ uri }} accessibilityIgnoresInvertColors style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: t.surface2 }} />
+        : <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: t.surface2, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: t.ink, fontFamily: fonts.sansSemibold, fontSize: Math.round(size * 0.46), lineHeight: Math.round(size * 0.6) }}>{initials}</Text>
+          </View>}
     </View>
   );
 }

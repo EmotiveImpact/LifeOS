@@ -68,7 +68,7 @@ function OrbDot({ i, r, size, dot, color, phase, thinking }: { i: number; r: num
 
 /* ───────────────────────── 12. Dock ───────────────────────── */
 
-export type DockItem = { key: string; label: string; icon: (color: string) => ReactNode; onLongPress?: () => void };
+export type DockItem = { key: string; label: string; /** `selected` lets a tab draw its own selected look (the You tab's ring). */ icon: (color: string, selected: boolean) => ReactNode; onLongPress?: () => void };
 
 /** Owner-approved full-width navigation: steady, solid, all labels visible.
  * This sits in layout flow so screens end above it instead of underneath it. */
@@ -82,7 +82,7 @@ export function Dock({ items, active, onChange, variant = 'bar' }: { items: Dock
           const selected = it.key === active;
           const color = selected ? t.canvas : t.inkQuiet;
           return <Press key={it.key} haptic="select" onPress={() => onChange(it.key)} onLongPress={it.onLongPress} delayLongPress={350} accessibilityRole="tab" accessibilityLabel={it.label} accessibilityState={{ selected }} style={[styles.pillItem, selected ? { backgroundColor: t.ink } : null]}>
-            {it.icon(color)}
+            {it.icon(color, selected)}
             {selected ? <Text variant="buttonCompact" numberOfLines={1} style={{ color }}>{it.label}</Text> : null}
           </Press>;
         })}
@@ -96,7 +96,7 @@ export function Dock({ items, active, onChange, variant = 'bar' }: { items: Dock
           const selected = it.key === active;
           const color = selected ? t.ink : t.ink2;
           return <Press key={it.key} haptic="select" onPress={() => onChange(it.key)} onLongPress={it.onLongPress} delayLongPress={350} accessibilityRole="tab" accessibilityLabel={it.label} accessibilityState={{ selected }} style={styles.dockItem}>
-            {it.icon(color)}
+            {it.icon(color, selected)}
             <Text variant="micro" numberOfLines={1} style={{ color }}>{it.label}</Text>
           </Press>;
         })}

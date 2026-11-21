@@ -163,6 +163,9 @@ export function kindsOff(data: Pick<SeedData, 'flags'>): Set<string> {
 }
 
 /** Everything life could send today and tomorrow, before the cap. `busy` is today's calendar, when shared. */
+/** A move from money or health keeps its name off the lock screen (fix F-28). */
+const privateMove = (source: { area?: string; candidate: { kind: string } } | undefined) => !!source && (source.area === 'money' || source.area === 'body' || source.candidate.kind === 'health');
+
 export function nudgesFor(data: SeedData, now: number, busy: Busy[] | null, timeZone = deviceTimeZone()): Nudge[] {
   if (!data.prefs.notifications) return [];
   const built = buildDay(data, now, timeZone);
@@ -173,7 +176,7 @@ export function nudgesFor(data: SeedData, now: number, busy: Busy[] | null, time
   const tomorrow = addDays(built.day, 1);
   return dayNudges({
     now, timeZone, gaps, off: kindsOff(data),
-    next: next ? { id: next.id, title: next.title, minutes: built.sources[next.id]?.candidate.minutes } : null,
+    next: next ? { id: next.id, title: next.title, minutes: built.sources[next.id]?.candidate.minutes, private: privateMove(built.sources[next.id]) } : null,
     deadlines: [],
     habitsAtRisk: habitsAtRisk(data),
     recallDue: 0,

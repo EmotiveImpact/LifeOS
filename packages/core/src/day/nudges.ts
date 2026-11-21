@@ -9,7 +9,8 @@
  * - **recap**: the week's recap, Sunday at 18:00.
  * - **bedtime**: the reminder you asked for, 45 minutes before bedtime. Yours, so it skips the cap.
  * - **plan-tomorrow** and **pick-up**: the evening question, as your check-in style sets.
- * A nudge never carries a health or money figure: what shows on a locked screen stays general.
+ * A nudge never carries a health or money figure: what shows on a locked screen stays general. A move, deadline or
+ * habit is named only when it isn't from money or health and its words pass `lockScreenSafe` (fix F-28).
  */
 import { addDays, instantAt, localDate, localMinutes, weekdayOf, type DateKey, type QuietHours } from '../time/zone';
 import { BEDTIME_REMINDER_LEAD } from '../health/sleep';
@@ -32,12 +33,12 @@ export interface Nudge extends NotificationCandidate {
 export interface NudgeInput {
   now: number;
   timeZone: string;
-  /** Today's move from the planner. */
-  next?: { id: string; title: string; minutes?: number } | null;
+  /** Today's move from the planner. `private` when it comes from money or health, so its name stays off a lock screen. */
+  next?: { id: string; title: string; minutes?: number; private?: boolean } | null;
   /** Today's free stretches, when a calendar is shared. */
   gaps?: readonly Gap[] | null;
-  deadlines?: readonly { id: string; title: string; dueAt: number }[];
-  habitsAtRisk?: readonly { id: string; name: string }[];
+  deadlines?: readonly { id: string; title: string; dueAt: number; private?: boolean }[];
+  habitsAtRisk?: readonly { id: string; name: string; private?: boolean }[];
   recallDue?: number;
   /** Bedtime as a local clock time, when the reminder is on. */
   bedtime?: number | null;
@@ -57,6 +58,18 @@ const EVENING_LAST = 20 * 60 + 55;
 const DEADLINE_LOOKAHEAD = 7 * 86_400_000;
 const HOUR = 3_600_000;
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+/**
+ * Words that shouldn't show on a locked screen, where anyone nearby can read them (DPIA risk 10, fix F-28): money
+ * figures, tax forms and money trouble, and health conditions, treatment and care. A name that has any of them is
+ * left out of a nudge, which then says the same thing without it.
+ */
+const MONEY_WORDS = /[£$€]\s?\d|\d\s?%|\b(?:HMRC|P\d{2,3}|SA\d{3}|tax|refund|rebate|debts?|loans?|overdraft|arrears|bailiffs?|salary|payslip|benefits?|universal credit|pension|mortgage|savings|invoices?|credit card|bank|pay ?day|wages?)\b/i;
+const HEALTH_WORDS = /\b(?:GP|NHS|doctors?|dentist|hospital|clinic|referral|prescriptions?|medication|medicines?|meds|pills?|tablets?|doses?|inhaler|blood|test results?|scans?|x-?rays?|therapy|therapist|counselling|counsellor|psychiatr\w*|mental health|anxiety|depression|pregnan\w*|contracepti\w*|fertility|cardiolog\w*|diabet\w*|insulin|cancer|chemo\w*|surgery|injections?|vaccin\w*|smear|STIs?|HIV|sexual health|weigh-?ins?|weight|calories|diet|vitamins?|supplements?)\b/i;
+
+/** True when `text` can show on a locked screen: no money figure, tax form, money trouble or health word. */
+export const lockScreenSafe = (text: string) => !MONEY_WORDS.test(text) && !HEALTH_WORDS.test(text);
+const named = (text: string, isPrivate?: boolean) => !isPrivate && lockScreenSafe(text);
 
 const clock = (minutes: number) => `${String(Math.floor(minutes / 60) % 24).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 function dayWord(due: DateKey, from: DateKey): string {
@@ -78,10 +91,11 @@ export function dayNudges(input: NudgeInput): Nudge[] {
     if (latest <= now || d.dueAt - now > DEADLINE_LOOKAHEAD) continue;
     const earliest = Math.max(now, d.dueAt - 24 * HOUR);
     const when = `${dayWord(localDate(d.dueAt, timeZone), localDate(earliest, timeZone))} at ${clock(localMinutes(d.dueAt, timeZone))}`;
-    add({ id: `deadline-${d.id}`, kind: 'deadlines', earliest, latest, body: `${d.title} is due ${when}.`, to: 'today' });
+    add({ id: `deadline-${d.id}`, kind: 'deadlines', earliest, latest, body: named(d.title, d.private) ? `${d.title} is due ${when}.` : `Something is due ${when}.`, to: 'today' });
   }
 
   if (input.next) {
+    const show = named(input.next.title, input.next.private);
     const minutes = input.next.minutes && input.next.minutes > 0 ? input.next.minutes : DEFAULT_MOVE_MINUTES;
     const from = Math.max(now, at(window.start));
     const latest = at(window.end);
@@ -91,14 +105,14 @@ export function dayNudges(input: NudgeInput): Nudge[] {
         .filter(g => g.end > g.start)
         .map(g => ({ ...g, minutes: Math.floor((g.end - g.start) / 60_000) }));
       const gap = gapFor(inWindow, minutes, from);
-      if (gap) add({ id: `move-${today}`, kind: 'move', ref: input.next.id, earliest: gap.start, latest, body: `You’ve got ${gap.minutes} free minutes. ${input.next.title} fits.`, to: 'today' });
+      if (gap) add({ id: `move-${today}`, kind: 'move', ref: input.next.id, earliest: gap.start, latest, body: `You’ve got ${gap.minutes} free minutes. ${show ? input.next.title : 'Your next move'} fits.`, to: 'today' });
     } else {
-      add({ id: `move-${today}`, kind: 'move', ref: input.next.id, earliest: Math.max(from, at(NO_CALENDAR_MOVE_AT)), latest, body: `Today’s move: ${input.next.title}.`, to: 'today' });
+      add({ id: `move-${today}`, kind: 'move', ref: input.next.id, earliest: Math.max(from, at(NO_CALENDAR_MOVE_AT)), latest, body: show ? `Today’s move: ${input.next.title}.` : 'Today’s move is ready when you are.', to: 'today' });
     }
   }
 
   for (const h of input.habitsAtRisk ?? []) {
-    add({ id: `habit-${h.id}-${today}`, kind: 'habit', earliest: at(18 * 60), latest: at(EVENING_LAST), body: `One miss is normal. ${h.name} today keeps it going.`, to: 'habits' });
+    add({ id: `habit-${h.id}-${today}`, kind: 'habit', earliest: at(18 * 60), latest: at(EVENING_LAST), body: named(h.name, h.private) ? `One miss is normal. ${h.name} today keeps it going.` : 'One miss is normal. Today keeps your habit going.', to: 'habits' });
   }
 
   const recall = Math.max(0, Math.floor(input.recallDue ?? 0));
