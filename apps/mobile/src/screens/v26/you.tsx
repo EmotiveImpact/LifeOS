@@ -285,12 +285,12 @@ function LevelPath({ current }: { current: number }) {
 }
 
 export function LevelsV26() {
-  const t = useTokens(), nav = useNavigation(), { engine } = useSeed();
+  const t = useTokens(), nav = useNavigation(), { data, engine } = useSeed();
   const lv = engine.level, cur = Math.max(1, Math.min(4, lv.currentLevel)), left = lv.toAdvance.filter(g => !g.done).length;
   const here = levelPlan[cur - 1];
   return (
     <Page screen="levels" bar={{ kind: 'push', title: 'Your levels' }}>
-      <PhotoCard source={photos.keyshome} focal={{ x: 0.55, y: 0.62 }} height={170} chips={[season.label]} lead="Climbing toward" title={season.toward} style={{ marginTop: space.xxs }} onPress={() => nav.go('aim')} />
+      <PhotoCard source={photos.keyshome} focal={{ x: 0.55, y: 0.62 }} height={170} chips={[season.label]} lead="Climbing toward" title={SHOW_SAMPLES ? season.toward : data.aim?.what ? data.aim.what.charAt(0).toUpperCase() + data.aim.what.slice(1) : 'Your Chief Aim'} style={{ marginTop: space.xxs }} onPress={() => nav.go('aim')} />
       <Box style={{ marginTop: space.sm }}>
         <Between><Text variant="title">Four levels this season</Text>{cur < 4 ? <Callout>{left ? `${left} ${left === 1 ? 'move' : 'moves'} to Level ${cur + 1}` : `Ready for Level ${cur + 1}`}</Callout> : null}</Between>
         <LevelPath current={cur} />
@@ -522,10 +522,10 @@ export function ProfileV26() {
   const living = others === 0 ? '{on your own}' : `with {${others} ${others === 1 ? 'other' : 'others'}}`;
   const sentence = SHOW_SAMPLES
     ? `You’re {${p.age}}, a {@briefcase ${details.work.toLowerCase()}} in {@home ${details.area}}, living ${living} and paid on the {@calendar ${details.payDay}}.`
-    : `You’re {${p.age}}, living in {@home ${p.city}}, ${living.replace('{on your own}', '{on your own}')}.`;
+    : `You’re {${p.age}}, ${p.city ? `living in {@home ${p.city}}, ` : 'living '}${living}.`;
   const save = () => { if (editing) set({ profile: { ...p, name: name.trim() || p.name, city: city.trim() || p.city } }); flag('profile-edit'); feedback.select(); };
   const rows: { photo: keyof typeof photos; title: string; sub: string; to?: Parameters<typeof nav.go>[0] }[] = [
-    { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: 'yourbirthday' },
+    { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: born ? 'yourbirthday' : undefined },
     { photo: 'terrace', title: `Lives in · ${SHOW_SAMPLES ? `${details.area}, ` : ''}${p.city}`, sub: 'Council tax, schemes' },
     { photo: 'work', title: `Work · ${work}`, sub: 'Tax and structure', to: 'income' },
     { photo: 'home', title: `Lives with · ${others === 0 ? 'Just me' : `${others} ${others === 1 ? 'other' : 'others'}`}`, sub: 'Discounts, benefits', to: 'household' },

@@ -43,6 +43,31 @@ export const mealTotals = (items: MealItem[]): Totals => items.reduce((a, b) => 
 /** The local date, "2026-11-20", so a diary starts fresh each morning. */
 export const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 export const clock = (d = new Date()) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+/** What was logged on a day, in kcal. A meal saved without a day counts as today's, as the diary shows it. */
+export function eatenOn(data: SeedData, key: string): number {
+  const today = dayKey();
+  return Math.round((data.meals as DiaryMeal[]).filter(m => (m.day ?? today) === key).reduce((a, m) => a + mealTotals(m.items).kcal, 0));
+}
+
+/** The weigh-ins logged on Weight, one a day, oldest first. */
+export function weighIns(data: SeedData): { day: string; kg: number }[] {
+  return Object.entries(data.choices)
+    .filter(([k]) => /^weight-\d{4}-\d{2}-\d{2}$/.test(k))
+    .map(([k, v]) => ({ day: k.slice(7), kg: Number(v) }))
+    .filter(w => w.kg > 0)
+    .sort((a, b) => a.day.localeCompare(b.day));
+}
+
+/** Each of the last seven days' eating window from the times you logged: first meal to last, in hours. */
+export function eatingWindows(data: SeedData, now = new Date()): [string, number, number][] {
+  const today = dayKey(now);
+  return Array.from({ length: 7 }, (_, k) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6 + k)).flatMap(d => {
+    const key = dayKey(d);
+    const hours = (data.meals as DiaryMeal[]).filter(m => (m.day ?? today) === key).map(m => { const [h, min] = m.at.split(':').map(Number); return h + (min || 0) / 60; }).filter(h => Number.isFinite(h));
+    return hours.length ? [[d.toLocaleDateString('en-GB', { weekday: 'short' }), Math.min(...hours), Math.max(...hours)] as [string, number, number]] : [];
+  });
+}
 /** Breakfast, Lunch, Snack or Dinner, from the time a meal was eaten. */
 export function mealSlot(at: string) {
   const [hh, mm] = at.split(':').map(Number);

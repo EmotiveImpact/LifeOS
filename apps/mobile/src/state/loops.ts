@@ -21,9 +21,12 @@ export function deviceTimeZone(): string {
   try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/London'; } catch { return 'Europe/London'; }
 }
 
-/** The tax rebate's three steps with the board's sizes; other missions use the engine's steps, unsized until you size them. */
+/**
+ * The sample life's tax rebate has the board's three sized steps (with her £1,240 of kit); every other mission, and the
+ * rebate in a real account, uses the engine's steps, unsized until you size them.
+ */
 export function missionStepList(taskId: string): { title: string; minutes?: number }[] {
-  if (taskId === 'uk-hmrc-tax-code') return [{ title: 'Sign in to Government Gateway', minutes: 1 }, { title: `Add ${money(seedTaxClaim.workExpenses)} of software and kit`, minutes: 3 }, { title: 'Submit and save the reference', minutes: 2 }];
+  if (SHOW_SAMPLES && taskId === 'uk-hmrc-tax-code') return [{ title: 'Sign in to Government Gateway', minutes: 1 }, { title: `Add ${money(seedTaxClaim.workExpenses)} of software and kit`, minutes: 3 }, { title: 'Submit and save the reference', minutes: 2 }];
   return (TASK_CATALOG.find(t => t.id === taskId)?.steps ?? []).map(title => ({ title }));
 }
 
@@ -31,7 +34,7 @@ export function missionStepList(taskId: string): { title: string; minutes?: numb
 export function missionPriority(taskId: string): Priority | null {
   const task = TASK_CATALOG.find(t => t.id === taskId);
   if (!task) return null;
-  const text = taskId === 'uk-hmrc-tax-code' ? 'Claim my tax rebate' : task.shortTitle;
+  const text = SHOW_SAMPLES && taskId === 'uk-hmrc-tax-code' ? 'Claim my tax rebate' : task.shortTitle;
   const area = task.category === 'health' ? 'body' : task.category === 'tax' || task.lifeArea === 'money' ? 'money' : 'admin';
   return { id: `mission:${taskId}`, text, own: false, area, mission: taskId, steps: missionStepList(taskId).map((s, i) => ({ key: `${taskId}-${i}`, title: s.title, ...(s.minutes ? { minutes: s.minutes } : {}), to: 'mission', mission: taskId })) };
 }

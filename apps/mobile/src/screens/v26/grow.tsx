@@ -123,7 +123,8 @@ export function LevelupV26() {
   const first = levelupFirst[reached];
   const pages = [
     { chip: `Level ${reached} unlocked`, title: first.title, line: first.line, photo: 'sky' as const, focal: { x: 0.35, y: 0, zoom: 3.1 }, to: 'plan' as const },
-    ...levelupMore.map(m => ({ ...m, line: m.line.replace('DEPOSIT', String(pct)) })),
+    // The deposit is the sample life's; a real account's Aim has no measure yet, so its page says so plainly.
+    ...levelupMore.map(m => ({ ...m, line: SHOW_SAMPLES ? m.line.replace('DEPOSIT', String(pct)) : m.to === 'aim' ? 'Every level is a step toward {your Aim}.' : m.line })),
   ];
   const p = pages[page], last = page === pages.length - 1;
   const scale = useSharedValue(calm ? 1 : 0.92), fade = useSharedValue(0);

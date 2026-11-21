@@ -233,8 +233,9 @@ function HugeTwo({ s }: { s: string }) {
 export function AddpersonV26() {
   const nav = useNavigation(), { data, set, flag } = useSeed();
   const params = useLocalSearchParams<{ state?: string }>();
-  const [typed, setTyped] = useState(params.state === 'type');
-  const [picked, setPicked] = useState(['kofi', 'priya', 'efua']);
+  // The contacts list is a sample (no phone contacts are read yet), so a real account types people in.
+  const [typed, setTyped] = useState(params.state === 'type' || !SHOW_SAMPLES);
+  const [picked, setPicked] = useState(SHOW_SAMPLES ? ['kofi', 'priya', 'efua'] : []);
   const [missing, setMissing] = useState('');
   const [name, setName] = useState(''), [relation, setRelation] = useState(''), [date, setDate] = useState('');
   const noDate = contacts.find(c => picked.includes(c.id) && !c.date);
@@ -262,7 +263,7 @@ export function AddpersonV26() {
         ? <><Btn label="Add this person" disabled={!name.trim()} onPress={addTyped} /><Callout center>Gift ideas and notes can come later. Just tell Life.</Callout></>
         : <><Btn label={picked.length ? `Add ${picked.length} ${picked.length === 1 ? 'person' : 'people'}` : 'Tick someone to add'} disabled={!picked.length} onPress={addContacts} /><Callout center>Birthdays already in your contacts come straight across.</Callout></>}>
       <Statement s="Who do you want to {show up for?}" style={{ marginTop: space.xs }} />
-      <SegmentedV26 options={[{ value: 'contacts', label: 'From contacts' }, { value: 'type', label: 'Type it in' }]} value={typed ? 'type' : 'contacts'} onChange={v => setTyped(v === 'type')} style={{ marginTop: space.md }} />
+      {SHOW_SAMPLES ? <SegmentedV26 options={[{ value: 'contacts', label: 'From contacts' }, { value: 'type', label: 'Type it in' }]} value={typed ? 'type' : 'contacts'} onChange={v => setTyped(v === 'type')} style={{ marginTop: space.md }} /> : null}
       {typed ? <>
         <View style={{ gap: space.sm, marginTop: space.md }}>
           <Field label="Name" testID="person-name" value={name} onChangeText={setName} placeholder="Their name" />

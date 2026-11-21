@@ -183,14 +183,17 @@ export function planFound(profile: UserProfile, completed: string[] = []) {
   const lisa = tasks.find(t => t.id === 'uk-lifetime-isa');
   const startup = tasks.find(t => t.id === 'uk-startup-loan');
   const urgent = tasks.filter(t => t.urgency === 'urgent');
-  const owed = seedTaxClaim.refund + (council?.estimatedValueAmount ?? 0) + (lisa?.estimatedValueAmount ?? 0);
+  // The tax refund is the sample life's own P800. A real account's tax line appears only when the engine suggests a code check.
+  const tax = SHOW_SAMPLES ? undefined : tasks.find(t => t.id === 'uk-hmrc-tax-code');
+  const owed = (SHOW_SAMPLES ? seedTaxClaim.refund : tax?.estimatedValueAmount ?? 0) + (council?.estimatedValueAmount ?? 0) + (lisa?.estimatedValueAmount ?? 0);
   const setUp = tasks.filter(t => (t.chapter === 1 || t.chapter === 2) && t.urgency !== 'urgent').length;
   const schemes = [startup ? 'Start Up Loans' : null, lisa ? 'LISA' : null].filter(Boolean) as string[];
   const referral = urgent.find(t => t.id === 'nhs-outpatient-referral');
   const findings: { photo: PhotoName; focal: Focal; tag: string; urgent?: boolean; title: string; sub: string; to: ScreenKey }[] = [
-    { photo: 'payslip', focal: { y: 1 }, tag: `${money(seedTaxClaim.refund)} back`, title: 'Your tax record', sub: 'HMRC · 2024/25', to: 'taxcheck' },
-    ...(council ? [{ photo: 'terrace' as const, focal: { x: 0.72 }, tag: '25% off', title: 'Council tax discounts', sub: `${profile.city} · single occupancy`, to: 'bill' as const }] : []),
-    ...(referral ? [{ photo: 'walk' as const, focal: { y: 0.3 }, tag: 'Urgent', urgent: true, title: 'NHS waiting times', sub: 'Cardiology · Guy’s', to: 'areahealth' as const }] : []),
+    ...(SHOW_SAMPLES ? [{ photo: 'payslip' as const, focal: { y: 1 }, tag: `${money(seedTaxClaim.refund)} back`, title: 'Your tax record', sub: 'HMRC · 2024/25', to: 'taxcheck' as const }]
+      : tax ? [{ photo: 'payslip' as const, focal: { y: 1 }, tag: tax.estimatedValueAmount ? `About ${money(tax.estimatedValueAmount)}` : 'Worth a check', title: 'Your tax code', sub: 'HMRC · this tax year', to: 'taxcheck' as const }] : []),
+    ...(council ? [{ photo: 'terrace' as const, focal: { x: 0.72 }, tag: '25% off', title: 'Council tax discounts', sub: profile.city ? `${profile.city} · single occupancy` : 'Single occupancy', to: 'bill' as const }] : []),
+    ...(referral ? [{ photo: 'walk' as const, focal: { y: 0.3 }, tag: 'Urgent', urgent: true, title: 'NHS waiting times', sub: SHOW_SAMPLES ? 'Cardiology · Guy’s' : profile.referralSpecialty || 'Your referral', to: 'areahealth' as const }] : []),
     ...(schemes.length ? [{ photo: 'keyshome' as const, focal: { y: 0.88 }, tag: `${schemes.length} found`, title: 'Schemes you qualify for', sub: schemes.join(' · '), to: 'missions' as const }] : []),
   ];
   return { owed, urgent: urgent.length, setUp, findings };
@@ -257,6 +260,13 @@ export const syncConflict = { label: 'pay day', here: 28, there: 25, where: 'you
 
 /** The week on the share card: nothing personal, no £ unless chosen. Sample week until the recap engine lands (Phase 27). */
 export const shareWeek = { missions: 3, nights: '1101110', habits: 3 };
+/** The week on the share card: the board's week for the sample life, a real account's own (missions, nights of 7h+). */
+export function shareWeekOf(data: Pick<SeedData, 'completed' | 'health'>): typeof shareWeek {
+  if (SHOW_SAMPLES) return shareWeek;
+  const days = data.health.days.slice(-7);
+  const nights = Array.from({ length: 7 }, (_, i) => { const sleep = days[days.length - 7 + i]?.sleep; return sleep && sleep.asleepMinutes >= 420 ? '1' : '0'; }).join('');
+  return { missions: data.completed.length, nights, habits: 0 };
+}
 
 /** ISO week number, for "Week 46" on the share card. */
 export function isoWeek(d = new Date()): number {

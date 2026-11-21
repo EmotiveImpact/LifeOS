@@ -418,6 +418,31 @@ function YearStrip({ on, next }: { on: number[]; next: number }) {
 }
 
 export function RoutinesV26() {
+  return SHOW_SAMPLES ? <RoutinesSampleV26 /> : <RoutinesRealV26 />;
+}
+
+/** A real account: nothing repeats until Life knows the payday and the bills, so nothing claims to be running. */
+function RoutinesRealV26() {
+  const nav = useNavigation();
+  return (
+    <Page screen="routines" bar={{ kind: 'push', title: 'Routines' }}>
+      <Eyebrow>Jobs that repeat, kept in order</Eyebrow>
+      <Display s="{Nothing running yet.} Routines start once Life knows your payday and your bills." />
+      <SectionHead title="Ready when you are" />
+      <RowsCard>
+        <Row icon="wallet" title="Payday sweep" sub="Every month · move what’s left after bills into your buffer" right={<Chip label="Tell Life" tone="q" />} onPress={() => nav.go('talk')} />
+        <Row icon="doc" title="Annual NI and tax check" sub="Every year · check last year against your HMRC record" right={<Chip label="Tell Life" tone="q" />} onPress={() => nav.go('talk')} />
+      </RowsCard>
+      <SectionHead title="Available at level 3" />
+      <RowsCard>
+        <Row icon="heart" title="Care review" sub="Every year, you pick the month · bloodwork and a GP check-in" right={<Chip label="Level 3" tone="q" />} />
+        <Row icon="repeat" title="Subscription check" sub="Every 3 months · cancel what you don’t use" right={<Chip label="Level 3" tone="q" />} />
+      </RowsCard>
+    </Page>
+  );
+}
+
+function RoutinesSampleV26() {
   const nav = useNavigation(), { engine } = useSeed();
   const running = Math.max(2, engine.level.unlockedNormals.length);
   const all = MONTHS.map((_, k) => k);
@@ -548,6 +573,23 @@ export function MorningBriefV26() {
 /* ───────────────────────── From life ───────────────────────── */
 
 export function InboxV26() {
+  return SHOW_SAMPLES ? <InboxSampleV26 /> : <InboxRealV26 />;
+}
+
+/** A real account: the sample's rebate, sleep and shopping notes never show. What's real is the weekly recap. */
+function InboxRealV26() {
+  const nav = useNavigation();
+  return (
+    <Page screen="inbox" bar={{ kind: 'push', title: 'From Life' }}>
+      <Display s="{Nothing new.} When Life finds something worth knowing, it lands here." style={{ marginTop: space.xxs }} />
+      <SectionHead title="Every week" />
+      <RowsCard><Row thumb={photos.journal} title="Weekly recap" sub="Grow · every Sunday" onPress={() => nav.go('recap')} /></RowsCard>
+      <Callout style={{ marginTop: space.md }}>Nothing important lives only here.</Callout>
+    </Page>
+  );
+}
+
+function InboxSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag, update } = useSeed();
   const read = !!data.flags['inbox-read'];
   return (

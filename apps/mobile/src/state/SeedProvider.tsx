@@ -15,6 +15,8 @@ import { emptyLoops, type LoopsState } from '@life/core';
 import { confirmBrainRecords } from '@/services/brainState';
 import { currentTransport } from '@/services/syncTransport';
 import { lastBackgroundWrite } from '@/services/backgroundMark';
+import { SHOW_SAMPLES } from './sample';
+import { emptyLife, type LifeContent } from './empty';
 
 export type SeedData = {
   brain: BrainState;
@@ -33,13 +35,19 @@ export type SeedData = {
   /** The three core loops: plans by day, step ticks, check-in style and what counts as a win (`state/loops.ts`). */
   loops: LoopsState;
 };
+/** Ama's life, for development and preview builds only, so every screen can be seen filled in. */
+const sampleLife: LifeContent = {
+  profile: seedProfile, aim: seedAim, records: seedKnownRecords, proposals: seedRecords, knowledge: seedKnowledge, selectedMission: 'uk-hmrc-tax-code', pulseLog: seedPulseLog, people: seedPeople,
+  meal: seedMeal, habits: seed.habits, weightKg: seed.body.weightKg, heightCm: seed.body.heightCm, waistCm: seed.body.waistCm,
+  memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov', category: 'Money' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov', category: 'People' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov', category: 'Money' }],
+};
 const initial: SeedData = {
   brain: emptyBrainState(),
-  profile: seedProfile, onboardingDone: false, aim: seedAim, records: seedKnownRecords, proposals: seedRecords, knowledge: seedKnowledge, completed: [], missionSteps: {}, selectedMission: 'uk-hmrc-tax-code', pulseLog: seedPulseLog, people: seedPeople,
-  meal: seedMeal, mealLogged: false, meals: [], habits: seed.habits, journal: [], weightKg: seed.body.weightKg, heightCm: seed.body.heightCm, waistCm: seed.body.waistCm, learned: [],
+  // Release builds start empty (state/empty.ts); development and preview builds start with Ama's life.
+  ...(SHOW_SAMPLES ? sampleLife : emptyLife()),
+  onboardingDone: false, completed: [], missionSteps: {}, mealLogged: false, meals: [], journal: [], learned: [],
   aiQueue: [],
   health: emptyHealth(),
-  memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov', category: 'Money' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov', category: 'People' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov', category: 'Money' }],
   prefs: { dark: true, sounds: true, haptics: true, handDrawn: false, hideNumbers: false, hideBalances: false, glimpses: true, followMood: true, look: 'mix', notifications: true, privateMode: false, addback: 'Half', sentenceIcons: true },
   flags: {}, choices: {}, drafts: {}, loops: emptyLoops(),
 };

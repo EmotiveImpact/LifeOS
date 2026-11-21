@@ -9,11 +9,12 @@ import {
   SectionHead, SliderV26, SwitchV26, Text, TileGrid, TintCard, V26Tile, cardShadow, feedback, photo, photos, radius, space, useAreaTint, useTokens, type DotCell,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
+import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { money, seed, seedDocuments, seedSubscriptionDetails, SEED_DATE } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { bankChoices, bufferMonths, cancelPages, daysUnused, docDates, monthWeeks, netWorthYear, paydaySweep } from '@/state/plan';
-import { BigPhoto, Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Legend, Micro, Page, PeekStack, QuietLink, Row, RowsCard, Statement, Timeline } from './kit';
+import { BigPhoto, Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Legend, Micro, NotYetV26, Page, PeekStack, QuietLink, Row, RowsCard, Statement, Timeline } from './kit';
 
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
 const word = (n: number) => WORDS[n] ?? String(n);
@@ -58,9 +59,32 @@ function PhotoMeter({ pct }: { pct: number }) {
 
 const TXN_PHOTO = ['payslip', 'terrace', null, null] as const;
 
+/* ───────────────────────── Money, before Life knows it ───────────────────────── */
+
+/**
+ * A real account's Money (hub and area). Every balance, payment and plan on these pages is the sample life's, and no
+ * bank is connected yet, so a real account sees Plan's day-one shape with one way in instead.
+ */
+export function MoneyNotYetV26({ screen, title }: { screen: ScreenKey; title?: string }) {
+  const nav = useNavigation(), { data } = useSeed();
+  return (
+    <NotYetV26 screen={screen} title={title} eyebrow="Money · day one" line="Life builds this from what you tell it about your pay, rent and bills."
+      source="payslip" focal={{ y: 0.85 }} ask="Tell Life about your money" examples="Your pay day, your rent, a bill on your mind.">
+      <SectionHead title="More in Money" />
+      <RowsCard>
+        <Row icon="shield" title="Connect your bank" sub={data.choices.bank ? `${data.choices.bank} chosen · read-only` : 'Read-only'} right={<Chip label="Preview" tone="q" />} onPress={() => nav.go('connectbank')} />
+      </RowsCard>
+    </NotYetV26>
+  );
+}
+
 /* ───────────────────────── Money: the hub ───────────────────────── */
 
 export function MoneyV26() {
+  return SHOW_SAMPLES ? <MoneySampleV26 /> : <MoneyNotYetV26 screen="money" title="Money" />;
+}
+
+function MoneySampleV26() {
   const nav = useNavigation(), { data, choose } = useSeed(), { show, hidden, eye } = useMoney(), subs = useSubscriptions();
   const f = seed.finance;
   const [whole, pence] = split(f.balance);
@@ -123,7 +147,7 @@ export function SubsV26() {
       <Eyebrow>Checked every quarter</Eyebrow>
       {s.unused.length
         ? <Display s={`{${show(s.unusedMonthly * 12, 2)} a year} goes on ${word(s.unused.length).toLowerCase()} ${s.unused.length === 1 ? 'thing' : 'things'} you {haven’t used} in 60 days.`} />
-        : <Display s="{Everything you pay for,} you use." />}
+        : s.all.length ? <Display s="{Everything you pay for,} you use." /> : <Display s="{Nothing here yet.} Subscriptions you tell Life about show here, with what each costs." />}
       <TintCard area="money" style={{ marginTop: space.xl }}>
         <Between><Text variant="title">Every month</Text><Text variant="title">{show(s.monthly, 2)}</Text></Between>
         <SplitBar style={{ marginTop: space.sm }} parts={[{ flex: Math.max(1, s.inUseMonthly), color: t.ink }, ...(s.unusedMonthly ? [{ flex: s.unusedMonthly, color: t.ember }] : [])]} />
@@ -165,6 +189,10 @@ export function SubsV26() {
 /* ───────────────────────── Area: Money ───────────────────────── */
 
 export function AreaMoneyV26() {
+  return SHOW_SAMPLES ? <AreaMoneySampleV26 /> : <MoneyNotYetV26 screen="area" />;
+}
+
+function AreaMoneySampleV26() {
   const nav = useNavigation(), t = useTokens(), { data, set } = useSeed(), { show } = useMoney(), subs = useSubscriptions(), accent = useAreaTint('money').accent;
   const f = seed.finance, cp = f.cashplan;
   const safe = cp.comingIn - cp.essentialBills - cp.taxSetAside;
@@ -196,7 +224,13 @@ export function AreaMoneyV26() {
 
 const CATEGORIES = ['Groceries', 'Eating out', 'Transport', 'Bills', 'Income', 'Subscriptions'] as const;
 
-export function TxnV26() {
+/* The pages behind Money are the sample life's too; a real account reaching one (a deep link) sees Money's day one. */
+export function TxnV26() { return SHOW_SAMPLES ? <TxnSampleV26 /> : <MoneyNotYetV26 screen="txn" title="Payment" />; }
+export function BillV26() { return SHOW_SAMPLES ? <BillSampleV26 /> : <MoneyNotYetV26 screen="bill" title="Bills" />; }
+export function BudgetV26() { return SHOW_SAMPLES ? <BudgetSampleV26 /> : <MoneyNotYetV26 screen="budget" title="Budget" />; }
+export function NetWorthV26() { return SHOW_SAMPLES ? <NetWorthSampleV26 /> : <MoneyNotYetV26 screen="networth" title="Net worth" />; }
+
+function TxnSampleV26() {
   const { data, choose, flag } = useSeed(), { show } = useMoney();
   const f = seed.finance;
   const i = data.choices.transaction !== undefined ? Number(data.choices.transaction) : -1;
@@ -237,7 +271,7 @@ export function TxnV26() {
 
 /* ───────────────────────── A bill ───────────────────────── */
 
-export function BillV26() {
+function BillSampleV26() {
   const nav = useNavigation(), { data, set } = useSeed(), { show, hidden } = useMoney();
   const f = seed.finance;
   const alone = data.profile.householdSize === 1;
@@ -268,7 +302,7 @@ export function BillV26() {
 
 /* ───────────────────────── Budget ───────────────────────── */
 
-export function BudgetV26() {
+function BudgetSampleV26() {
   const { data, flag, choose } = useSeed(), { show } = useMoney(), t = useTokens();
   const f = seed.finance;
   const editing = !!data.flags['budget-edit'];
@@ -309,7 +343,7 @@ export function BudgetV26() {
 
 /* ───────────────────────── Net worth ───────────────────────── */
 
-export function NetWorthV26() {
+function NetWorthSampleV26() {
   const t = useTokens(), { show, eye } = useMoney(), accent = useAreaTint('money').accent;
   const f = seed.finance;
   const total = sum(f.netWorth.map(n => n.amount));
@@ -400,7 +434,7 @@ export function VaultV26() {
   return (
     <Page screen="vault" bar={{ kind: 'push', action: { kind: 'node', node: <View style={styles.acts}><RoundButton icon="search" label="Search documents" onPress={() => nav.go('search')} /><RoundButton icon="add" label="Add a document" onPress={() => nav.go('scan')} /></View> } }}>
       <Eyebrow>Documents and renewals</Eyebrow>
-      <Display s={`{${word(act.length)}} to act on. {${word(sorted.length)}} sorted.`} />
+      <Display s={docs.length ? `{${act.length ? word(act.length) : 'Nothing'}} to act on. {${sorted.length ? word(sorted.length) : 'Nothing'}} sorted.` : '{Nothing here yet.} Your documents and renewals, with their dates.'} />
       {front ? (
         <PeekStack style={{ marginTop: space.xl }} peeks={soon.slice(0, 2).map((d, k) => ({ left: `${d.name} · ${d.summary.charAt(0).toLowerCase()}${d.summary.slice(1)}`, right: String(3 - k), onPress: () => open(d.id) }))}>
           <Box pad={0} style={{ overflow: 'hidden' }}>
