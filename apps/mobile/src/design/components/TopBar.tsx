@@ -3,9 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import { Icon as Ionicons, type GlyphName } from '../Icon';
 import { Press } from '../Press';
 import { Text } from '../Text';
-import { useCalmMotion, useTokens } from '../theme';
+import { useTokens } from '../theme';
 import { componentSize, palette, photo, radius, space, touch } from '../tokens';
-import { LifeOrb } from './Orb';
+import { LifeOrb, ORB_AREAS, type OrbArea } from './Orb';
 import { RoundButton } from './V26Chrome';
 import { ActionMenu, type MenuItem } from './V26Menu';
 
@@ -21,7 +21,7 @@ export type TopBarAction =
 /** `look: 'v26'` draws the board's bars (52pt, round 40pt buttons, the orb at the right of root bars). Leave it unset for the V23 bars. */
 type BarLook = { look?: 'v26' };
 export type TopBarProps = BarLook & (
-  | { kind: 'root'; eyebrow?: string; title: string; /** V26: the quiet words after the title ("Mon 16 Nov"). */ sub?: string; actions?: TopBarAction[]; avatar?: ReactNode; /** V26: the orb at the right end, opening what Life has to tell you. */ orb?: { onPress: () => void; unread?: boolean }; onImage?: boolean }
+  | { kind: 'root'; eyebrow?: string; title: string; /** V26: the quiet words after the title ("Mon 16 Nov"). */ sub?: string; actions?: TopBarAction[]; avatar?: ReactNode; /** V26: the orb at the right end, opening what Life has to tell you. */ orb?: { onPress: () => void; unread?: boolean; /** The area the newest note is about: its dot turns red. */ area?: OrbArea }; onImage?: boolean }
   | { kind: 'push'; title?: string; /** V26: something other than words in the middle (the orb and "life" on Chat). */ titleNode?: ReactNode; action?: TopBarAction; onBack: () => void; /** V26: a close cross in place of the back arrow. */ closeIcon?: boolean; onImage?: boolean }
   | { kind: 'sheet'; title: string; action?: TopBarAction; onClose: () => void; onImage?: boolean }
   | { kind: 'flow'; center?: ReactNode; step?: string; action?: TopBarAction; onClose: () => void; /** V26 text bar: the words on the left ("Back"). */ closeLabel?: string; closeIcon?: GlyphName; onImage?: boolean });
@@ -128,17 +128,17 @@ function TopBarV26(props: TopBarProps) {
   return bar;
 }
 
-/** The orb at the right end of Today, Plan and You (Edem, 20 and 21 Nov 2026): Life's own place in the bar.
- * Tapping it opens "From Life". When something new is waiting the ring spins round; when there's nothing
- * it rests and breathes. With Reduce Motion the ring stays still, so an ember dot carries the news instead. */
-function OrbButton({ onPress, unread, onImage }: { onPress: () => void; unread?: boolean; onImage?: boolean }) {
-  const t = useTokens(), calm = useCalmMotion(), d = componentSize.round;
-  // The same 40pt disc as search and add beside it (Edem, 21 Nov), so the right side reads as one row.
+/** The orb at the right end of Today, Plan and You (Edem, 20 and 21 Nov 2026): Life's own place in the bar, in the
+ * same disc as the buttons beside it. Tapping it opens "From Life". When something new is waiting the ring spins and
+ * the dot for that note's area turns red, leading the ring; when there's nothing it rests and breathes. With Reduce
+ * Motion the ring stays still and the red dot alone carries the news. */
+function OrbButton({ onPress, unread, area, onImage }: { onPress: () => void; unread?: boolean; area?: OrbArea; onImage?: boolean }) {
+  const t = useTokens();
+  const mark = unread ? Math.max(0, area ? ORB_AREAS.indexOf(area) : ORB_AREAS.length - 1) : undefined;
   return (
     <Press haptic="select" onPress={onPress} accessibilityLabel={unread ? 'From Life, something new' : 'From Life'} hitSlop={2}
       style={[styles.v26Orb, { backgroundColor: onImage ? photo.onPhoto : t.surface2 }]}>
-      <LifeOrb size={24} state={unread ? 'news' : 'rest'} color={onImage ? photo.ink : t.ink} />
-      {unread && calm ? <View style={[styles.v26OrbDot, { backgroundColor: t.ember, top: d * 0.22, right: d * 0.25 }]} /> : null}
+      <LifeOrb size={24} state={unread ? 'news' : 'rest'} color={onImage ? photo.ink : t.ink} mark={mark} markColor={t.ember} />
     </Press>
   );
 }
@@ -177,6 +177,5 @@ const styles = StyleSheet.create({
   v26Id: { flexDirection: 'row', alignItems: 'center', gap: space.xs, flex: 1, minWidth: 0 },
   v26Txt: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: componentSize.round },
   v26Orb: { width: componentSize.round, height: componentSize.round, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
-  v26OrbDot: { position: 'absolute', width: 7, height: 7, borderRadius: radius.full },
   v26Handle: { width: 36, height: 5, borderRadius: 3, alignSelf: 'center', marginTop: space.xs },
 });

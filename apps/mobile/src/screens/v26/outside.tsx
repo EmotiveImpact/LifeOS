@@ -9,7 +9,7 @@ import { Share, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Icon, LifeOrb, PhotoFill, Press, RoundButton, SegmentedV26, StatusPill, Text, TopBar, TwoTone, areaColors, cardShadow, componentSize, feedback,
+  Icon, LifeOrb, ORB_AREAS, ORB_AREA_NAMES, PhotoFill, Press, RoundButton, SegmentedV26, StatusPill, Text, TopBar, TwoTone, areaColors, cardShadow, componentSize, feedback,
   floatLift, photo, photoScrims, photos, radius, space, useAreaTint, useCalmMotion, useTokens, type Area, type GlyphName, type OrbState,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
@@ -375,7 +375,7 @@ export function SiriV26() {
 const ORB_STATES: [OrbState, string, string, string][] = [
   ['ring', 'Ring', 'The everyday mark: tab bar, headers, small sizes.', 'Default'],
   ['rest', 'Resting', 'Top bar, nothing new. It stops and breathes slowly.', 'Top bar'],
-  ['news', 'Something new', 'Top bar, a note from Life is waiting. It spins round.', 'Top bar'],
+  ['news', 'Something new', 'Top bar, a note is waiting. It spins; the red dot is its area.', 'Top bar'],
   ['thinking', 'Thinking', 'Only while Life is working something out.', 'Over 1s'],
   ['working', 'Working', 'While Life builds or files something in front of you.', ''],
   ['searching', 'Searching', 'While Life checks or looks something up.', ''],
@@ -394,7 +394,7 @@ export function OrbV26() {
           <View key={i} style={{ flexDirection: 'row', gap: space.tile }}>
             {r.map(([st, name, when, tag]) => (
               <View key={st} accessible accessibilityLabel={`${name}. ${when}`} style={[styles.orbTile, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-                <Between style={{ alignItems: 'flex-start' }}><LifeOrb size={60} state={st} />{tag ? <Chip label={tag} tone="q" /> : null}</Between>
+                <Between style={{ alignItems: 'flex-start' }}><LifeOrb size={60} state={st} {...(st === 'news' ? { mark: 0, markColor: t.ember } : {})} />{tag ? <Chip label={tag} tone="q" /> : null}</Between>
                 <Text variant="title" style={{ marginTop: space.sm }}>{name}</Text>
                 <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>{when}</Text>
               </View>
@@ -402,8 +402,33 @@ export function OrbV26() {
           </View>
         ))}
       </View>
-      <Callout style={{ marginTop: space.sm }}>The everyday ring takes 12 seconds a lap; with something new, 1.6 seconds. With Reduce Motion each state is shown still, and an orange dot says something new.</Callout>
+      <OrbAreas />
+      <Callout style={{ marginTop: space.sm }}>The everyday ring takes 12 seconds a lap; with something new, 1.6 seconds. With Reduce Motion each state is shown still; the red dot still says something new.</Callout>
     </Page>
+  );
+}
+
+/** Ten dots, ten areas (Edem, 21 Nov 2026): which ring dot belongs to which part of a life. Here a Money note has arrived. */
+function OrbAreas() {
+  const t = useTokens();
+  const box = 300, c = box / 2, ring = 78, label = 124;
+  return (
+    <View style={[styles.orbAreas, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+      <Text variant="title">Ten dots, ten areas</Text>
+      <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>Each dot belongs to one part of your life. When a note arrives, its dot turns red and leads the ring round. Here, a Money note.</Text>
+      <View accessible accessibilityLabel={`The ten areas: ${ORB_AREAS.map(a => ORB_AREA_NAMES[a]).join(', ')}.`} style={{ width: box, height: box, alignSelf: 'center', marginTop: space.sm }}>
+        {ORB_AREAS.map((a, i) => {
+          const angle = -Math.PI / 2 + (i / ORB_AREAS.length) * Math.PI * 2, red = a === 'money';
+          const x = c + Math.cos(angle) * ring, y = c + Math.sin(angle) * ring, lx = c + Math.cos(angle) * label, ly = c + Math.sin(angle) * label;
+          return (
+            <View key={a} pointerEvents="none" style={StyleSheet.absoluteFill}>
+              <View style={[styles.orbAreaDot, { left: x - (red ? 7 : 5), top: y - (red ? 7 : 5), width: red ? 14 : 10, height: red ? 14 : 10, backgroundColor: red ? t.ember : t.ink }]} />
+              <Text variant="callout" tone={red ? 'ink' : 'ink2'} style={[styles.orbAreaName, { left: lx - 44, top: ly - 10 }]}>{ORB_AREA_NAMES[a]}</Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -524,6 +549,9 @@ const styles = StyleSheet.create({
   search: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 52, marginTop: 18, paddingHorizontal: 18, borderRadius: 26 },
   gesture: { width: 108, height: 4, borderRadius: 2, backgroundColor: photo.onPhoto, alignSelf: 'center', marginTop: 14, marginBottom: 10 },
   say: { height: 32, paddingHorizontal: 12, borderRadius: radius.full, justifyContent: 'center' },
+  orbAreas: { borderRadius: radius.lg, padding: space.cardPad, marginTop: space.tile },
+  orbAreaDot: { position: 'absolute', borderRadius: radius.full },
+  orbAreaName: { position: 'absolute', width: 88, textAlign: 'center' },
   orbTile: { flex: 1, minWidth: 0, borderRadius: radius.lg, padding: space.cardPad },
   spec: { marginTop: space.xs, paddingVertical: 4, borderRadius: radius.lg, overflow: 'hidden' },
   overPhoto: { height: 84, marginTop: space.xs, paddingTop: 6, borderRadius: 20, overflow: 'hidden' },

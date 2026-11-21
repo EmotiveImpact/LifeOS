@@ -15,6 +15,11 @@ const STATES = ['ring', 'thinking', 'working', 'searching', 'listening', 'done',
 /** Laps a second: everyday ring one lap in 12 s; something new one lap in 1.6 s; resting, still. */
 const LAPS = [1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 1.6, 0];
 const BREATH_S = 5;
+/** Ten dots, ten areas of a life (Edem, 21 Nov 2026). Each ring dot belongs to one area, in this order; when Life has
+ * something new, that area's dot turns red and leads the spinning ring. */
+export const ORB_AREAS = ['money', 'home', 'work', 'body', 'food', 'people', 'admin', 'learning', 'goals', 'you'] as const;
+export type OrbArea = (typeof ORB_AREAS)[number];
+export const ORB_AREA_NAMES: Record<OrbArea, string> = { money: 'Money', home: 'Home', work: 'Work', body: 'Body', food: 'Food', people: 'People', admin: 'Admin', learning: 'Learning', goals: 'Goals', you: 'You' };
 const sphere = (n: number) => Array.from({ length: n }, (_, i) => {
   const y = 1 - 2 * (i + .5) / n, r = Math.sqrt(1 - y * y), a = i * Math.PI * (3 - Math.sqrt(5));
   return [Math.cos(a) * r, y, Math.sin(a) * r];
@@ -23,12 +28,16 @@ const SPHERE = sphere(30), SEARCH = sphere(10);
 const NEIGHBOURS = SEARCH.map((a, i) => SEARCH.map((b, j) => ({ j, d: a.reduce((s, v, k) => s + v * b[k], 0) })).filter(v => v.j !== i).sort((a, b) => b.d - a.d).slice(0, 3).map(v => v.j));
 const PAIRS = Array.from({ length: 10 }, (_, a) => Array.from({ length: 9 - a }, (_, i) => [a, a + i + 1])).flat();
 const ALine = Animated.createAnimatedComponent(Line);
-function target(state: number, k: number, r: number, t: number, spin: number, voice: number, head: number, trail: number[]): Point {
+function target(state: number, k: number, r: number, t: number, spin: number, voice: number, head: number, trail: number[], mark = -1): Point {
   'worklet';
   const i = k % 10, a = i / 10 * Math.PI * 2 + spin, tail = .3 + .7 * i / 10;
   const ring = { x: Math.cos(a) * r, y: Math.sin(a) * r, z: .5, alpha: k < 10 ? tail : 0, scale: 1 };
   if (state === 0 || state === 5) return ring;
-  if (state === 6) return { ...ring, alpha: k < 10 ? .14 + .86 * Math.pow(i / 9, 1.5) : 0 };
+  if (state === 6) {
+    // Something new: a comet. The marked (red) dot is the head at full strength; the rest trail behind it.
+    const lead = mark >= 0 ? mark : 9, rel = (i - lead + 19) % 10;
+    return { ...ring, alpha: k < 10 ? (i === lead ? 1 : .12 + .7 * Math.pow(rel / 9, 1.6)) : 0, scale: k < 10 && i === lead && mark >= 0 ? 1.3 : 1 };
+  }
   if (state === 7) {
     const breath = .5 - .5 * Math.cos(t / BREATH_S * Math.PI * 2), rr = r * (.84 + .16 * breath);
     return { x: Math.cos(a) * rr, y: Math.sin(a) * rr, z: .5, alpha: k < 10 ? .4 + .32 * breath : 0, scale: .9 + .1 * breath };
@@ -53,23 +62,29 @@ function target(state: number, k: number, r: number, t: number, spin: number, vo
     alpha: state === 1 ? (.1 + .9 * Math.pow(depth, 1.5)) * (.82 + .18 * (.5 + .5 * Math.sin(t * 2.2 + k * 1.37))) : hop * (.45 + .55 * depth),
     scale: state === 1 ? .5 + .62 * depth : (.78 + .34 * depth) * (k === head ? 1.15 : 1) };
 }
-export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { size?: number; state?: OrbState; color?: string; rings?: 1 | 2 }) {
+export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings, mark, markColor }: {
+  size?: number; state?: OrbState; color?: string; rings?: 1 | 2;
+  /** One ring dot (0 to 9, see ORB_AREAS) drawn in `markColor`: the area something new is about. */
+  mark?: number; markColor?: string;
+}) {
   const tokens = useTokens(), calm = useCalmMotion(), ink = color ?? tokens.ink;
   const dot = Math.max(2.6, size / 12), r = size / 2 - Math.max(2, size / 14) - dot / 2;
   const initialMode = STATES.indexOf(state === 'voice' ? 'listening' : state);
-  const initialPoints = Array.from({ length: 30 }, (_, k) => target(initialMode, k, r, 0, 0, .5, 0, []));
+  const lead = mark ?? -1;
+  const initialPoints = Array.from({ length: 30 }, (_, k) => target(initialMode, k, r, 0, 0, .5, 0, [], lead));
   const mode = useSharedValue(initialMode);
   const points = useSharedValue<Point[]>(initialPoints);
   const frozen = useSharedValue(initialPoints), elapsed = useSharedValue(2000), time = useSharedValue(0), spin = useSharedValue(0);
   const head = useSharedValue(0), trail = useSharedValue<number[]>([]), edges = useSharedValue<Record<string, number>>({});
   const hopAt = useSharedValue(0), gather = useSharedValue(0), velocity = useSharedValue(0), voice = useSharedValue(0);
-  const laps = useSharedValue(LAPS[initialMode] ?? 1 / 12);
+  const laps = useSharedValue(LAPS[initialMode] ?? 1 / 12), markAt = useSharedValue(lead);
   useEffect(() => {
     frozen.value = points.value;
     mode.value = STATES.indexOf(state === 'voice' ? 'listening' : state);
     elapsed.value = calm ? 2000 : 0;
-    if (calm) points.value = Array.from({ length: 30 }, (_, k) => target(mode.value, k, r, 0, 0, .5, 0, []));
-  }, [state, calm, r, mode, elapsed, frozen, points]);
+    markAt.value = lead;
+    if (calm) points.value = Array.from({ length: 30 }, (_, k) => target(mode.value, k, r, 0, 0, .5, 0, [], lead));
+  }, [state, calm, r, mode, elapsed, frozen, points, lead, markAt]);
   const frame = useFrameCallback(f => {
     const dt = Math.min(50, f.timeSincePreviousFrame ?? 16), factor = dt / 16;
     time.value += dt / 1000; elapsed.value += dt;
@@ -92,7 +107,7 @@ export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { s
     if (m !== 3 && elapsed.value > 700) { edges.value = {}; trail.value = []; }
     const gr = 1 - .62 * Math.max(-.2, gather.value), gg = Math.min(1, Math.max(0, gather.value));
     points.value = Array.from({ length: 30 }, (_, k) => {
-      const to = target(m, k, r, t, spin.value, voice.value, head.value, trail.value);
+      const to = target(m, k, r, t, spin.value, voice.value, head.value, trail.value, markAt.value);
       const u = Math.max(0, Math.min(1, (elapsed.value - k % 10 * 38 - (k >= 10 ? 120 : 0)) / 720));
       const e = u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2, from = frozen.value[k] ?? to;
       const p = { x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e, z: from.z + (to.z - from.z) * e,
@@ -105,7 +120,7 @@ export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings }: { s
     <Svg width={size} height={size} style={{ position: 'absolute' }} pointerEvents="none">
       {PAIRS.map(([a, b]) => <OrbEdge key={`${a}-${b}`} a={a} b={b} points={points} edges={edges} time={time} size={size} color={ink} dot={dot} />)}
     </Svg>
-    {Array.from({ length: 30 }, (_, k) => <OrbDot key={k} k={k} points={points} size={size} dot={dot} color={ink} />)}
+    {Array.from({ length: 30 }, (_, k) => <OrbDot key={k} k={k} points={points} size={size} dot={dot} color={k === lead && markColor ? markColor : ink} />)}
   </View>;
 }
 function OrbDot({ k, points, size, dot, color }: { k: number; points: SharedValue<Point[]>; size: number; dot: number; color: string }) {
