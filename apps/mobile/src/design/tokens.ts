@@ -217,8 +217,9 @@ export const sheetShadow = {
 } as const;
 
 /** DESIGN.md §7 motion. */
+/** Edem (20 Nov 2026): nothing wobbles. Every spring here settles without a visible bounce (damping ratio ≥ 0.95). */
 export const springs = {
-  snappy: { damping: 20, stiffness: 260, mass: 1 },
+  snappy: { damping: 32, stiffness: 280, mass: 1 },
   smooth: { damping: 26, stiffness: 170, mass: 1 },
   sheet: { damping: 30, stiffness: 200, mass: 1 },
 } as const;
@@ -231,9 +232,13 @@ export const durations = { quick: 160, item: 240, stagger: 40, roll: 600, wordSt
  * Adapted from the Feynman app's ui/motion.ts.
  */
 export const motion = {
-  smooth: { duration: 550, dampingRatio: 0.85 },
-  snappy: { duration: 350, dampingRatio: 0.9 },
-  bouncy: { duration: 600, dampingRatio: 0.7 },
+  /** Apple's default spring: no bounce. Screens, sheets, drawers, anything large. */
+  smooth: { duration: 500, dampingRatio: 1 },
+  /** Presses, toggles, chips, menus. */
+  snappy: { duration: 320, dampingRatio: 1 },
+  /** Earned moments (a tick landing, level up). Kept as a name, but Edem (20 Nov 2026) asked for no wobble: it settles
+   * with an overshoot under 0.2%, which reads as a soft landing, never a bounce. */
+  bouncy: { duration: 520, dampingRatio: 0.9 },
   imageEnter: { duration: 900, dampingRatio: 1 },
   imageDrift: { duration: 24000, dampingRatio: 1 },
   imageFade: { duration: 400, dampingRatio: 1 },

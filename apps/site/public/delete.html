@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Delete your Life account</title>
+  <meta name="description" content="Delete your Life account and everything it holds, without the app.">
+  <!-- Life's API, for example https://api.example.com. While this is a placeholder, the page offers email only. -->
+  <meta name="life-api" content="[https://api.domain]">
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="top">
+    <a class="wordmark" href="index.html" aria-label="Life">L I F E</a>
+    <nav aria-label="Pages">
+        <a href="privacy.html">Privacy policy</a>
+        <a href="terms.html">Terms</a>
+        <a href="support.html">Support</a>
+    </nav>
+  </header>
+  <main class="doc">
+    <h1>Delete your Life account</h1>
+    <p>You can delete your account in the app: <strong>You, Settings, Your data, Delete my account</strong>. If you don't have the app any more, you can do it here.</p>
+
+    <h2>What happens</h2>
+    <ul>
+      <li>Your account closes straight away and you're signed out on every phone.</li>
+      <li>If you sign in again within <strong>30 days</strong>, your account reopens as it was.</li>
+      <li>After 30 days, everything Life's servers hold for you is deleted: your profile, body numbers, meals, records, plans, people, memories, settings, kept letters and photos, connected wearables and sign-in details. Database backups roll off within [7] days after that.</li>
+      <li>Nothing is kept, except the anonymous weekly tally, which never held anything about you.</li>
+    </ul>
+    <p class="note">This doesn't cancel a subscription: cancel it in your App Store or Google Play settings. It also doesn't touch what's on your phone: delete the app to remove that.</p>
+
+    <h2>Delete it now</h2>
+    <div class="card" id="by-code" hidden>
+      <form id="step-email">
+        <label for="email">The email address you sign in with</label>
+        <input id="email" type="email" autocomplete="email" required>
+        <button type="submit">Send me a code</button>
+      </form>
+      <form id="step-code" hidden>
+        <p class="note" id="sent-to"></p>
+        <label for="code">Six-digit code</label>
+        <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        <button type="submit" class="danger">Delete my account</button>
+      </form>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+    </div>
+    <p>Or email <a href="mailto:[privacy@domain]?subject=Delete%20my%20Life%20account">[privacy@domain]</a> from the address you sign in with, and we'll delete it within [one working day] and confirm by email. If you signed in with Apple and hid your email, write from the address your Apple ID forwards to and tell us so.</p>
+  </main>
+  <footer class="foot">
+    <p>Life · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="support.html">Support</a> · <a href="delete.html" aria-current="page">Delete your account</a></p>
+  </footer>
+  <script src="delete.js" defer></script>
+</body>
+</html>

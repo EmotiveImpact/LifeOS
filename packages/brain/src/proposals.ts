@@ -91,7 +91,7 @@ const readTime = (text: string): string | undefined => {
 // ---------------------------------------------------------------- the kinds
 
 export const FIELD_AREAS: Record<Field, Area[]> = {
-  age: ['you'], location: ['you'], household: ['home'], work: ['work'], income: ['money'], rent: ['money'], goal: ['goal'],
+  age: ['you'], location: ['you'], household: ['home'], work: ['work'], income: ['money'], rent: ['money'], payday: ['money'], goal: ['goal'],
   note: ['you', 'home', 'work', 'money', 'health', 'goal'],
   bill: ['money', 'home'], subscription: ['money'], date: ['you'], person: ['you'], document: ['you', 'home', 'money'], appointment: ['health', 'you', 'work', 'home'],
 };
@@ -177,6 +177,7 @@ export function validateProposal(raw: unknown, evidence: string): Proposal {
     case 'work': check((value === 'sole-trader' && /self-employed|freelanc|sole trader|own business|contractor/.test(q)) || (value === 'employed' && /\bemploy|\bjob\b|\bwork (?:for|at)\b/.test(q))); break;
     case 'income': check(typeof value === 'number' && value > 0 && value <= 1e9 && (stated(numbers, value) || (stated(numbers, value / 12) && /\bmonth/.test(q)))); break;
     case 'rent': check(typeof value === 'number' && value > 0 && value <= 1e6 && stated(numbers, value) && /\brent\b/.test(q)); break;
+    case 'payday': check(isInt(value, 1, 31) && stated(numbers, value as number) && /\b(?:paid|pay ?day|wages?|salary)\b/.test(q)); break;
     case 'goal': check((value === 'buy-home' && /\b(?:buy|own)\b/.test(q)) || (isText(value, 200) && mentions(quote, value as string))); break;
     case 'note': check(isText(value, 500) && mentions(quote, value as string)); break;
     default: {

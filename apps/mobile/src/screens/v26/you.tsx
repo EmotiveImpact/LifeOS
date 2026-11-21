@@ -10,20 +10,22 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import {
-  AccordionGroup, BecomingScale, CheckRows, CompactStepper, DotGrid, DotStrip, FEEL_MOODS, FilterChips, Field, Icon, InitialsAvatar, LifeSays, PhotoCard,
+  AccordionGroup, BecomingScale, CheckRows, CompactStepper, DotGrid, DotStrip, FEEL_MOODS, FilterChips, FaceAvatar, Field, Icon, InitialsAvatar, LifeSays, PhotoCard,
   PhotoFill, Press, Ruler, SectionHead, SegmentedV26, Text, TileGrid, TintCard, V26Tile, areaColors, cardShadow, componentSize, feedback, fonts, motion,
-  photo, photoScrims, photos, radius, space, useAreaTint, useCalmMotion, useTokens, type DotCell, type FeelMoodId,
+  photo, photoScrims, photos, radius, space, useAreaTint, useCalmMotion, useTokens, type DotCell, type FeelMoodId, durations
 } from '@/design';
 import type { Area } from '@/design/tokens';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
+import { chooseProfilePhoto, removeProfilePhoto, useProfilePhoto } from '@/services/profilePhoto';
+import { editMemory, liveMemory, purgeForgotten } from '@/services/memory';
 import { knowledgeLabels, money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import {
   becoming, bornOn, childrenLine, details, ordinalDay, workWords, experiment, factPhoto, gateTo, gateWords, householdLine, knowsArea, knowsFilters, levelPlan, memoryFilters, memoryPhoto,
   moodGrid, moodPatterns, moodSummary, nextExperiments, season, shared, streak, usedToday, workTitle, youAreas, youRows, type KnowsFilter,
 } from '@/state/you';
-import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, QuietLink, Row, RowsCard, Shelf, Statement } from './kit';
+import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, QuietLink, Row, RowsCard, Shelf, Statement, MoreRows, useLongList } from './kit';
 import { useWidth } from './bodykit';
 import { SoftChip } from './fuel';
 
@@ -63,11 +65,11 @@ export function RoundPhoto({ source, focal, size }: { source: number; focal?: { 
 /** One person in the crowd: steps in from the right when added (board `.tp-in`), a fade with Reduce Motion. */
 function Person({ size, enter, quiet }: { size: number; enter: boolean; quiet?: boolean }) {
   const t = useTokens(), calm = useCalmMotion();
-  const x = useSharedValue(enter && !calm ? 28 : 0), s = useSharedValue(enter && !calm ? 0.7 : 1), o = useSharedValue(enter ? 0 : 1);
+  const x = useSharedValue(enter && !calm ? 12 : 0), s = useSharedValue(enter && !calm ? 0.92 : 1), o = useSharedValue(enter ? 0 : 1);
   useEffect(() => {
     if (!enter) return;
-    o.value = withTiming(1, { duration: calm ? 200 : 260 });
-    if (!calm) { x.value = withSpring(0, motion.bouncy); s.value = withSpring(1, motion.bouncy); }
+    o.value = withTiming(1, { duration: calm ? durations.quick : durations.item });
+    if (!calm) { x.value = withSpring(0, motion.smooth); s.value = withSpring(1, motion.smooth); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const anim = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateX: x.value }, { scale: s.value }] }));
   return <Animated.View style={anim}><Icon name="person" size={size} strokeWidth={1.4} color={quiet ? t.surface3 : t.ink} /></Animated.View>;
@@ -91,14 +93,14 @@ export function YouV26() {
   const t = useTokens(), nav = useNavigation(), { data, engine } = useSeed();
   const lv = engine.level, left = lv.toAdvance.filter(g => !g.done).length;
   const eyebrow = [data.profile.name, workTitle, data.profile.city].filter(Boolean).join(' · ');
-  const initial = data.profile.name.trim().slice(0, 1).toUpperCase() || 'Y';
+  const initial = data.profile.name.trim().slice(0, 1).toUpperCase() || 'Y', face = useProfilePhoto();
   const streakDays = data.profile.habitStreakDays ?? 0;
   const days = streak.days || '0'.repeat(14);
   const lean = becoming.marks.length ? (becoming.marks.reduce((a, b) => a + b, 0) / becoming.marks.length >= 50 ? 'lean yes' : 'lean no') : '';
   return (
     <Page screen="you" bar={{
       kind: 'root', title: 'You', actions: [
-        { kind: 'node', node: <Press haptic="select" onPress={() => nav.go('profile')} accessibilityLabel="Your details" style={[styles.round, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><Text variant="buttonCompact">{initial}</Text></Press> },
+        { kind: 'node', node: <Press haptic="select" onPress={() => nav.go('profile')} accessibilityLabel="Your details" style={{ borderRadius: 20 }}><FaceAvatar uri={face} initials={initial} size={40} /></Press> },
         { kind: 'icon', icon: 'gear', label: 'Settings', onPress: () => nav.go('settings') },
       ],
     }}>
@@ -124,11 +126,11 @@ export function YouV26() {
         {becoming.marks.length ? <>
           <BecomingScale marks={becoming.marks} style={{ marginTop: space.md }} />
           <Callout style={{ marginTop: space.sm }}>{`Your last ${becoming.marks.length} reflections ${lean}.`}</Callout>
-        </> : <Callout style={{ marginTop: space.sm }}>life asks this now and then after a check-in. Your answers gather here.</Callout>}
+        </> : <Callout style={{ marginTop: space.sm }}>Life asks this now and then after a check-in. Your answers gather here.</Callout>}
       </Box>
 
       <TileGrid style={{ marginTop: space.sm }}>
-        <V26Tile label="life knows you" scale={`${data.knowledge.overall}%`} value={n(data.knowledge.recordCount)} sub="things filed" onPress={() => nav.go('knows')} />
+        <V26Tile label="Life knows you" scale={`${data.knowledge.overall}%`} value={n(data.knowledge.recordCount)} sub="things filed" onPress={() => nav.go('knows')} />
         <V26Tile label="Streak" scale={streak.best ? `best ${streak.best}` : undefined} value={String(streakDays)} unit={streakDays === 1 ? 'day' : 'days'} onPress={() => nav.go('habits')}>
           <DotStrip days={days} style={{ marginTop: space.sm }} />
         </V26Tile>
@@ -148,7 +150,7 @@ export function HouseholdV26() {
   const [count, setCount] = useState(Math.max(1, Math.min(16, data.profile.householdSize || 1)));
   return (
     <Page screen="household" footer={<Btn label="Save household" onPress={() => { set({ profile: { ...data.profile, householdSize: count } }); feedback.file(); nav.close(); }} />}>
-      <Statement s="How many people live {in your home}, counting you?" />
+      <Statement header s="How many people live {in your home}, counting you?" />
       <View style={{ marginTop: space.lg }}><Crowd count={count} size={46} /></View>
       <View style={{ marginTop: space.xs }}><CompactStepper value={count} onChange={setCount} min={1} max={16} unit={count === 1 ? 'person' : 'people'} label="People in your home, counting you" /></View>
       <LifeSays style={{ marginTop: space.lg }}><Body s={householdLine(count)} tone="ink" /></LifeSays>
@@ -209,11 +211,11 @@ export function MoodV26() {
         ))}
       </View>
       {moodPatterns.length ? <>
-        <SectionHead title="What life noticed" />
+        <SectionHead title="What Life noticed" />
         <RowsCard>
           {moodPatterns.map(p => <Row key={p.title} thumb={photos[FEEL_MOODS[p.mood].photo]} title={p.title} sub={p.sub} right={<Chip label={p.tag} tone={p.applied ? 'done' : 'q'} />} onPress={p.applied ? () => nav.go('why') : undefined} />)}
         </RowsCard>
-      </> : <Callout style={{ marginTop: space.xl }}>After two weeks of check-ins, life shows the patterns it notices here.</Callout>}
+      </> : <Callout style={{ marginTop: space.xl }}>After two weeks of check-ins, Life shows the patterns it notices here.</Callout>}
     </Page>
   );
 }
@@ -225,13 +227,14 @@ export function KnowsV26() {
   const [filter, setFilter] = useState<KnowsFilter>('All');
   const area = knowsArea(filter);
   const facts = data.records.filter(r => r.status !== 'proposed' && (!area || r.area === area));
+  const long = useLongList(facts);
   const exportData = async () => { try { await Share.share({ title: 'Your life data', message: JSON.stringify(await exportEverything(), null, 2) }); } catch { Alert.alert('Couldn’t export your data', 'Your data has not changed. Please try again.'); } };
   return (
-    <Page screen="knows" bar={{ kind: 'push', title: 'What life knows', action: { kind: 'icon', icon: 'info', label: 'How life uses this', onPress: () => nav.go('privacy') } }}
+    <Page screen="knows" onEnd={long.showMore} bar={{ kind: 'push', title: 'What Life knows', action: { kind: 'icon', icon: 'info', label: 'How Life uses this', onPress: () => nav.go('privacy') } }}
       footer={<><Btn label="Export everything" icon="arrowUp" onPress={exportData} /><QuietLink label="Delete everything" onPress={() => nav.go('deleteacct')} /></>}>
       <Display s={`{${n(data.knowledge.recordCount)} things}, all from you or sources you connected.`} flush style={{ marginTop: space.xxs }} />
       <Box style={{ marginTop: space.xl }}>
-        <Between><Text variant="title">What life understands</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
+        <Between><Text variant="title">What Life understands</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
         {(Object.entries(data.knowledge.areas) as [Area, number][]).map(([a, pct]) => (
           <View key={a} style={[styles.areaLine, { marginTop: space.tile }]}>
             <View style={styles.areaName}><View style={[styles.dot, { backgroundColor: areaColors[t.scheme][a] }]} /><Text variant="callout" tone="ink">{knowledgeLabels[a]}</Text></View>
@@ -242,13 +245,14 @@ export function KnowsV26() {
       </Box>
       <FilterChips options={knowsFilters.map(v => ({ value: v, label: v }))} value={filter} onChange={setFilter} style={{ marginTop: space.lg }} />
       <RowsCard style={{ marginTop: space.sm }}>
-        {facts.length ? facts.map(r => {
+        {facts.length ? long.visible.map(r => {
           const removed = r.status === 'removed';
-          return <Row key={r.id} thumb={photos[factPhoto(r)]} title={r.label} sub={removed ? 'Removed · life won’t use this' : r.source.excerpt ?? `From your ${r.source.type}`}
+          return <Row key={r.id} thumb={photos[factPhoto(r)]} title={r.label} sub={removed ? 'Removed · Life won’t use this' : r.source.excerpt ?? `From your ${r.source.type}`}
             right={<Chip label={removed ? 'Undo' : 'Remove'} tone="q" onPress={() => { set({ records: data.records.map(v => v.id === r.id ? { ...v, status: removed ? 'confirmed' : 'removed' } : v) }); feedback.select(); }} />} />;
-        }) : <Text variant="body" tone="ink2" style={{ paddingVertical: space.md }}>{filter === 'All' ? 'Nothing filed yet. Tell life something in Talk and it lands here.' : `Nothing filed under ${filter} yet.`}</Text>}
+        }) : <Text variant="body" tone="ink2" style={{ paddingVertical: space.md }}>{filter === 'All' ? 'Nothing filed yet. Tell Life something in Talk and it lands here.' : `Nothing filed under ${filter} yet.`}</Text>}
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Delete everything removes your data from this phone and life’s servers. It can’t be undone.</Callout>
+      <MoreRows more={long.more} onPress={long.showMore} />
+      <Callout style={{ marginTop: space.md }}>Delete everything removes your data from this phone and Life’s servers. It can’t be undone.</Callout>
     </Page>
   );
 }
@@ -282,12 +286,12 @@ function LevelPath({ current }: { current: number }) {
 }
 
 export function LevelsV26() {
-  const t = useTokens(), nav = useNavigation(), { engine } = useSeed();
+  const t = useTokens(), nav = useNavigation(), { data, engine } = useSeed();
   const lv = engine.level, cur = Math.max(1, Math.min(4, lv.currentLevel)), left = lv.toAdvance.filter(g => !g.done).length;
   const here = levelPlan[cur - 1];
   return (
     <Page screen="levels" bar={{ kind: 'push', title: 'Your levels' }}>
-      <PhotoCard source={photos.keyshome} focal={{ x: 0.55, y: 0.62 }} height={170} chips={[season.label]} lead="Climbing toward" title={season.toward} style={{ marginTop: space.xxs }} onPress={() => nav.go('aim')} />
+      <PhotoCard source={photos.keyshome} focal={{ x: 0.55, y: 0.62 }} height={170} chips={[season.label]} lead="Climbing toward" title={SHOW_SAMPLES ? season.toward : data.aim?.what ? data.aim.what.charAt(0).toUpperCase() + data.aim.what.slice(1) : 'Your Chief Aim'} style={{ marginTop: space.xxs }} onPress={() => nav.go('aim')} />
       <Box style={{ marginTop: space.sm }}>
         <Between><Text variant="title">Four levels this season</Text>{cur < 4 ? <Callout>{left ? `${left} ${left === 1 ? 'move' : 'moves'} to Level ${cur + 1}` : `Ready for Level ${cur + 1}`}</Callout> : null}</Between>
         <LevelPath current={cur} />
@@ -334,7 +338,7 @@ export function ExperimentV26() {
   const e = experiment;
   if (!e) return (
     <Page screen="experiment" bar={{ kind: 'push', title: 'Experiment' }}>
-      {mine ? <PhotoCard source={photos.calmdesk} focal={{ y: 0.84 }} height={200} chips={['Day 1 of 14']} title={mine} sub="life is noting your baseline first" style={{ marginTop: space.xxs }} />
+      {mine ? <PhotoCard source={photos.calmdesk} focal={{ y: 0.84 }} height={200} chips={['Day 1 of 14']} title={mine} sub="Life is noting your baseline first" style={{ marginTop: space.xxs }} />
         : <Display s="{One small change}, two weeks, and your own numbers to judge it." flush style={{ marginTop: space.xxs }} />}
       <Micro style={{ marginTop: space.xl }}>{mine ? 'NEXT IDEAS TO TEST' : 'PICK ONE TO TRY'}</Micro>
       <View style={[styles.wrap, { marginTop: space.xs }]}>{nextExperiments.filter(x => x !== mine).map(x => <SoftChip key={x} label={x} onPress={() => { choose('experiment', x); feedback.select(); }} />)}</View>
@@ -362,7 +366,7 @@ export function ExperimentV26() {
 /* ───────────────────────── What life remembers ───────────────────────── */
 
 /** A memory you can swipe left to forget (board `.tp-swipe`): the row slides and Forget waits underneath. */
-function SwipeMemory({ id, title, sub, source, peek, forgotten, onForget }: { id: string; title: string; sub: string; source: number; peek?: boolean; forgotten: boolean; onForget: () => void }) {
+function SwipeMemory({ id, title, sub, source, peek, forgotten, onForget, onEdit }: { id: string; title: string; sub: string; source: number; peek?: boolean; forgotten: boolean; onForget: () => void; onEdit: () => void }) {
   const t = useTokens(), [w, onLayout] = useWidth();
   const ref = useRef<{ scrollTo: (o: { x: number; animated?: boolean }) => void } | null>(null);
   const FORGET = 84;
@@ -373,7 +377,7 @@ function SwipeMemory({ id, title, sub, source, peek, forgotten, onForget }: { id
         <ScrollView ref={ref as never} horizontal showsHorizontalScrollIndicator={false} snapToOffsets={[0, FORGET]} decelerationRate="fast" bounces={false}
           contentOffset={peek ? { x: FORGET, y: 0 } : undefined} scrollEnabled={!forgotten}>
           <View style={[styles.swipeRow, { width: w, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-            <Row thumb={source} title={title} sub={forgotten ? 'Forgotten · life won’t use this' : sub} right={forgotten ? <Chip label="Undo" tone="q" onPress={onForget} /> : undefined} />
+            <Row thumb={source} title={title} sub={forgotten ? 'Forgotten · deleted when you leave' : sub} right={forgotten ? <Chip label="Undo" tone="q" onPress={onForget} /> : undefined} onPress={forgotten ? undefined : onEdit} />
           </View>
           <Press haptic="select" onPress={onForget} accessibilityLabel={`Forget ${title}`} style={styles.forget} key={id}>
             <Text variant="buttonCompact" tone="ember">Forget</Text>
@@ -385,38 +389,54 @@ function SwipeMemory({ id, title, sub, source, peek, forgotten, onForget }: { id
 }
 
 export function MemoryV26() {
-  const nav = useNavigation(), t = useTokens(), { data, flag } = useSeed();
+  const nav = useNavigation(), t = useTokens(), { data, flag, update } = useSeed();
   const [filter, setFilter] = useState<typeof memoryFilters[number]>('All');
   const [search, setSearch] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
   const hint = useRef(!data.flags['memory-hint-seen']).current;
   useEffect(() => { if (hint) flag('memory-hint-seen', true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const kept = data.memories.filter(m => !data.flags[`forgot-${m.id}`]);
+  // Forgetting deletes. Undo works while you're here; leaving the screen deletes what you forgot, on this phone and
+  // (by sync) on the server. Anything left forgotten by an earlier visit goes as the screen opens.
+  useEffect(() => { update(purgeForgotten); return () => update(purgeForgotten); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const kept = data.memories.filter(m => !data.flags[`forgot-${m.id}`] && liveMemory(m));
   const list = data.memories.filter(m => (filter === 'All' || m.category === filter) && (!search || `${m.text} ${m.source}`.toLowerCase().includes(search.toLowerCase())));
+  const long = useLongList(list);
+  const save = () => { if (editing) update(c => ({ ...c, memories: editMemory(c.memories, editing.id, editing.text) })); setEditing(null); feedback.select(); };
   const total = kept.length + usedToday.length;
   return (
-    <Page screen="memory" bar={{ kind: 'push', action: { kind: 'icon', icon: search === null ? 'search' : 'close', label: search === null ? 'Search memories' : 'Close search', onPress: () => setSearch(s => (s === null ? '' : null)) } }}>
+    <Page screen="memory" onEnd={long.showMore} bar={{ kind: 'push', action: { kind: 'icon', icon: search === null ? 'search' : 'close', label: search === null ? 'Search memories' : 'Close search', onPress: () => setSearch(s => (s === null ? '' : null)) } }}>
       {search !== null ? (
         <View style={[styles.search, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Icon name="search" size={18} color={t.ink2} />
-          <TextInput maxFontSizeMultiplier={1.3} autoFocus value={search} onChangeText={setSearch} placeholder="Search what life remembers" placeholderTextColor={t.inkQuiet} accessibilityLabel="Search what life remembers" selectionColor={t.ember} style={[styles.searchInput, { color: t.ink }]} />
+          <TextInput maxFontSizeMultiplier={1.3} autoFocus value={search} onChangeText={setSearch} placeholder="Search what Life remembers" placeholderTextColor={t.inkQuiet} accessibilityLabel="Search what Life remembers" selectionColor={t.ember} style={[styles.searchInput, { color: t.ink }]} />
         </View>
       ) : null}
-      <Eyebrow style={{ marginTop: search !== null ? space.md : 0 }}>What life remembers</Eyebrow>
-      <Display s={usedToday.length ? `{${total} things.} life used {${usedToday.length}} of them today.` : total ? `{${total} ${total === 1 ? 'thing' : 'things'}.} Each one says where it came from.` : '{Nothing yet.} What you tell life shows up here.'} />
+      <Eyebrow style={{ marginTop: search !== null ? space.md : 0 }}>What Life remembers</Eyebrow>
+      <Display s={usedToday.length ? `{${total} things.} Life used {${usedToday.length}} of them today.` : total ? `{${total} ${total === 1 ? 'thing' : 'things'}.} Each one says where it came from.` : '{Nothing yet.} What you tell Life shows up here.'} />
       {usedToday.length ? (
         <Shelf style={{ marginTop: space.lg }}>
           {usedToday.map(u => <PhotoCard key={u.title} source={photos[u.photo]} focal={u.focal} height={190} size="sm" chips={['Used today']} title={u.title} sub={u.sub} style={{ width: 200 }} />)}
         </Shelf>
       ) : null}
       <SegmentedV26 options={memoryFilters.map(v => ({ value: v, label: v }))} value={filter} onChange={setFilter} style={{ marginTop: space.lg }} />
-      <Between style={{ marginTop: space.lg }}><Micro>OTHER MEMORIES</Micro><Callout>Swipe to forget</Callout></Between>
+      <Between style={{ marginTop: space.lg }}><Micro>OTHER MEMORIES</Micro><Callout>Tap to correct · swipe to forget</Callout></Between>
       <View style={{ gap: space.xs, marginTop: space.xs }}>
-        {list.length ? list.map((m, i) => (
-          <SwipeMemory key={m.id} id={m.id} title={m.text} sub={m.source} source={photos[memoryPhoto(m.id, m.category)]} peek={hint && i === 0} forgotten={!!data.flags[`forgot-${m.id}`]} onForget={() => flag(`forgot-${m.id}`)} />
+        {list.length ? long.visible.map((m, i) => editing?.id === m.id ? (
+          <View key={m.id} style={[styles.editMemory, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+            <TextInput maxFontSizeMultiplier={1.3} autoFocus multiline value={editing.text} onChangeText={text => setEditing({ id: m.id, text })} maxLength={300}
+              accessibilityLabel="Correct this memory" selectionColor={t.ember} style={[styles.editInput, { color: t.ink }]} />
+            <View style={styles.editActions}>
+              <Chip label="Cancel" tone="q" onPress={() => setEditing(null)} />
+              <Chip label="Save" onPress={save} />
+            </View>
+          </View>
+        ) : (
+          <SwipeMemory key={m.id} id={m.id} title={m.text} sub={m.validTo ? `No longer true · ${m.source}` : m.source} source={photos[memoryPhoto(m.id, m.category)]} peek={hint && i === 0} forgotten={!!data.flags[`forgot-${m.id}`]} onForget={() => flag(`forgot-${m.id}`)} onEdit={() => setEditing({ id: m.id, text: m.text })} />
         )) : <Text variant="body" tone="ink2">{search ? 'Nothing matches that.' : 'Nothing remembered here yet.'}</Text>}
       </View>
-      <Callout style={{ marginTop: space.md }}>life never remembers health details or money in ways you can’t see here.</Callout>
-      {SHOW_SAMPLES ? null : <QuietLink label="What life knows" ink center={false} onPress={() => nav.go('knows')} style={{ marginTop: space.sm }} />}
+      <MoreRows more={long.more} onPress={long.showMore} />
+      <Callout style={{ marginTop: space.md }}>Life never remembers health details or money in ways you can’t see here.</Callout>
+      {SHOW_SAMPLES ? null : <QuietLink label="What Life knows" ink center={false} onPress={() => nav.go('knows')} style={{ marginTop: space.sm }} />}
     </Page>
   );
 }
@@ -490,23 +510,41 @@ function PhotoCardFlat() {
 
 /* ───────────────────────── Your details ───────────────────────── */
 
+/** Your photo for the You tab (Edem, 21 Nov 2026). It stays on this phone. */
+function YourPhoto({ initial }: { initial: string }) {
+  const t = useTokens(), face = useProfilePhoto();
+  const choose = () => { chooseProfilePhoto().then(done => { if (done) feedback.complete(); }).catch(() => Alert.alert('That photo didn’t load', 'Try another one.')); };
+  return (
+    <View style={[styles.photoRow, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+      <Press haptic="select" onPress={choose} accessibilityLabel={face ? 'Change your photo' : 'Add a photo'} style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, flex: 1, minWidth: 0 }}>
+        <FaceAvatar uri={face} initials={initial} size={56} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text variant="title">{face ? 'Change your photo' : 'Add a photo'}</Text>
+          <Text variant="callout" tone="ink2">Shows on the You tab. It stays on this phone.</Text>
+        </View>
+      </Press>
+      {face ? <QuietLink label="Remove" onPress={() => { removeProfilePhoto(); feedback.select(); }} /> : null}
+    </View>
+  );
+}
+
 export function ProfileV26() {
   const nav = useNavigation(), { data, set, flag, engine } = useSeed();
   const editing = !!data.flags['profile-edit'];
   const [name, setName] = useState(data.profile.name), [city, setCity] = useState(data.profile.city);
   const p = data.profile, others = Math.max(0, p.householdSize - 1), born = bornOn(p);
   // A real account reads its own work and pay day; the sample life keeps the board's words.
-  const payN = Number(data.choices['payday-day']) || 0;
+  const payN = Number(p.payDay ?? data.choices['payday-day']) || 0;
   const work = SHOW_SAMPLES ? details.work : workWords[p.workStatus] ?? 'Not set', payDay = SHOW_SAMPLES ? details.payDay : payN ? ordinalDay(payN) : 'Not set';
   const fullName = SHOW_SAMPLES && p.name === 'Ama' ? 'Ama Mensah' : p.name;
   const kids = Number(data.choices.children ?? 0) || 0;
   const living = others === 0 ? '{on your own}' : `with {${others} ${others === 1 ? 'other' : 'others'}}`;
   const sentence = SHOW_SAMPLES
     ? `You’re {${p.age}}, a {@briefcase ${details.work.toLowerCase()}} in {@home ${details.area}}, living ${living} and paid on the {@calendar ${details.payDay}}.`
-    : `You’re {${p.age}}, living in {@home ${p.city}}, ${living.replace('{on your own}', '{on your own}')}.`;
+    : `You’re {${p.age}}, ${p.city ? `living in {@home ${p.city}}, ` : 'living '}${living}.`;
   const save = () => { if (editing) set({ profile: { ...p, name: name.trim() || p.name, city: city.trim() || p.city } }); flag('profile-edit'); feedback.select(); };
   const rows: { photo: keyof typeof photos; title: string; sub: string; to?: Parameters<typeof nav.go>[0] }[] = [
-    { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: 'yourbirthday' },
+    { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: born ? 'yourbirthday' : undefined },
     { photo: 'terrace', title: `Lives in · ${SHOW_SAMPLES ? `${details.area}, ` : ''}${p.city}`, sub: 'Council tax, schemes' },
     { photo: 'work', title: `Work · ${work}`, sub: 'Tax and structure', to: 'income' },
     { photo: 'home', title: `Lives with · ${others === 0 ? 'Just me' : `${others} ${others === 1 ? 'other' : 'others'}`}`, sub: 'Discounts, benefits', to: 'household' },
@@ -517,6 +555,7 @@ export function ProfileV26() {
   return (
     <Page screen="profile" bar={{ kind: 'push', title: 'Your details', action: { kind: 'node', node: <Chip label={editing ? 'Done' : 'Edit'} onPress={save} /> } }}>
       <PhotoCard source={SHOW_SAMPLES ? photos.desk : photos.aimdesk} height={200} chips={[`Level ${engine.level.currentLevel} · ${engine.level.levelName}`]} title={fullName} sub={born ? `Born ${born}` : undefined} style={{ marginTop: space.xxs }} />
+      <YourPhoto initial={(p.name.trim().slice(0, 1) || 'Y').toUpperCase()} />
       <Statement s={sentence} style={{ marginTop: space.lg }} />
       {editing ? <View style={{ gap: space.xs, marginTop: space.lg }}>
         <Field label="Name" value={name} onChangeText={setName} />
@@ -531,8 +570,8 @@ export function ProfileV26() {
 }
 
 const styles = StyleSheet.create({
+  photoRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.md, borderRadius: radius.lg, marginTop: space.tile },
   link: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', minHeight: 28 },
-  round: { width: componentSize.round, height: componentSize.round, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   ptiles: { flexDirection: 'row', gap: space.xs },
   ptile: { flex: 1, height: 140, borderRadius: radius.tile, overflow: 'hidden', justifyContent: 'flex-end' },
   crowd: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 2 },
@@ -548,6 +587,9 @@ const styles = StyleSheet.create({
   swipe: { borderRadius: radius.tile, overflow: 'hidden' },
   swipeRow: { borderRadius: radius.tile, paddingHorizontal: space.sm },
   forget: { width: 84, alignItems: 'center', justifyContent: 'center' },
+  editMemory: { borderRadius: radius.tile, padding: space.md, gap: space.sm },
+  editInput: { fontFamily: fonts.sans, fontSize: 15, lineHeight: 21, minHeight: 44, padding: 0, textAlignVertical: 'top' },
+  editActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: space.xs },
   search: { flexDirection: 'row', alignItems: 'center', gap: space.xs, height: 48, borderRadius: radius.full, paddingHorizontal: space.md },
   searchInput: { flex: 1, fontFamily: fonts.sans, fontSize: 15, paddingVertical: 0 },
   duo: { flexDirection: 'row', alignItems: 'center' },

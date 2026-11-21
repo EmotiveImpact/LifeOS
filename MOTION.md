@@ -6,6 +6,10 @@
 
 ## 1. Principles
 
+> **Owner rule (Edem, 20 Nov 2026):** Apple and Google level smoothness between states, not over the top. No wobbly buttons, no bounce on arrival. Things arrive from 90% or more, never from nothing.
+>
+> **Web preview:** phones use the native stack transitions. The web preview has none, so `Page` (`screens/v26/kit.tsx`) slides pushed pages in from the right and raises full-screen flows from below, web only. Closing runs through `navigation/webExit.ts`: the top page slides out (180 ms) before the route changes, and the page it reveals slides back in from the left. Sheets are presented as transparent layers on web, so the page underneath stays in view behind the dim. `app.json` sets expo-router `asyncRoutes.web: false` so every page is in the first bundle; with lazy routes each page open showed a blank screen for about 300 ms before popping in.
+
 1. **Motion explains, it doesn't decorate.** Something moves only to show where it came from, where it went, or that it changed.
 2. **Springs, not curves.** Everything uses springs so it can be interrupted mid-flight and still feels physical. No linear easing, ever.
 3. **Things come from where you touched.** A tapped card expands into its screen; a sheet rises from the button that opened it; a ticked item collapses where it was.
@@ -19,9 +23,10 @@
 
 | Token | Value | Use |
 |---|---|---|
-| `motion.smooth` | spring 550 ms, damping ratio 0.85 | Screens, sheets, cards expanding, anything large |
-| `motion.snappy` | spring 350 ms, damping ratio 0.9 | Presses, toggles, segmented controls, chips, list items |
-| `motion.bouncy` | spring 600 ms, damping ratio 0.7 | Only for earned moments: tick landing, "You've got it", level up |
+| `motion.smooth` | spring 500 ms, damping ratio 1 (no bounce) | Screens, sheets, drawers, cards expanding, anything large |
+| `motion.snappy` | spring 320 ms, damping ratio 1 | Presses, toggles, segmented controls, chips, menus, list items |
+| `motion.bouncy` | spring 520 ms, damping ratio 0.9 (overshoot under 0.2%) | Only for earned moments: tick landing, "You've got it", level up. Edem (20 Nov 2026): no wobble, ever; it lands softly |
+| `Appear` | fade + rise (10 pt text, ~56 pt drawers) + scale 0.98→1 on `smooth` | Anything that arrives: drawers, a changed question, menus. Key it to replay when content changes |
 | `motion.rise` | 420 ms: opacity 0→1, y 14→0, scale 0.98→1 | Content entering a screen |
 | `motion.stagger` | 60 ms | Items entering one after another (max 6 staggered, the rest arrive together) |
 | `durations.quick` | 160 ms | Cross-fades, Reduce Motion fallback |
@@ -56,7 +61,7 @@ Reanimated usage: `withSpring(v, motion.smooth)`; entering animations: `FadeIn.s
 | Checklist / HabitRow | todo → done | Box fills (bouncy), text greys and strikes through left to right (240 ms), row stays put. `complete`. |
 | NudgeCard | idle → dragging → done / dismissed | Follows the finger; past 40% it commits with velocity; done collapses the height with smooth. `complete` or `snap`. |
 | RollingNumeral / MoneyFigure | old → new value | Digits roll for 600 ms, decimals quieter. Reduce Motion: swap instantly. |
-| LifeOrb (`Orb.tsx`, v6) | ring · thinking · working · searching · listening · done | One family made of the ring's dots (DESIGN §48). The ring always spins underneath (one clockwise lap per 12 s). Changing state: each dot travels from where it is to its new place, ease-in-out over 720 ms, 38 ms apart in ring order (extra dots 120 ms later), so 3D states collapse straight back into the spinning circle. Done: dots gather to 38% radius with a springy overshoot over ~450 ms, brighten, then open back out (~1 s total). Reduce Motion: states shown still, no travel. |
+| LifeOrb (`Orb.tsx`, v6) | ring · thinking · working · searching · listening · done | One family made of the ring's dots (DESIGN §48). The ring always spins underneath (one clockwise lap per 12 s). Changing state: each dot travels from where it is to its new place, ease-in-out over 720 ms, 38 ms apart in ring order (extra dots 120 ms later), so 3D states collapse straight back into the spinning circle. Done: dots gather to 38% radius and settle softly (about 4% give, no visible bounce) over ~450 ms, brighten, then open back out (~1 s total). Reduce Motion: states shown still, no travel. |
 | FilingTray | item arrives | Phrase lifts out of the transcript and flies to its row (smooth), row count rolls. `file`. |
 | Card (complete) | open → cleared | Gain-green tint washes in from the left, then the card collapses. `cleared` sound. |
 | Toast / banner | in → out | Drops 8 px from the top with smooth, leaves after 3 s by fading up. |

@@ -5,7 +5,7 @@ import { Icon as Ionicons, type GlyphName } from '../Icon';
 import { Press } from '../Press';
 import { Callout, Mono, Text, Title } from '../Text';
 import { useTokens } from '../theme';
-import { areaColors, cardShadow, componentSize, fonts, radius, space, touch, type Area } from '../tokens';
+import { areaColors, cardShadow, componentSize, durations, fonts, radius, space, touch, type Area } from '../tokens';
 import { Slider } from './Controls';
 import { CapsuleBars } from './V26Data';
 import { CheckRows, V26Row, type V26RowProps } from './V26Lists';
@@ -195,7 +195,7 @@ export function InsightCard({ area, source, value, text, width }: { area: Area; 
 export function RecordRow({ area, badge, label, destination, removed, onToggleRemove }: { area: Area; badge: string; label: string; destination: string; removed?: boolean; onToggleRemove: () => void }) {
   const t = useTokens();
   return (
-    <Animated.View layout={LinearTransition.springify()} style={styles.row}>
+    <Animated.View layout={LinearTransition.springify().dampingRatio(1).duration(400)} style={styles.row}>
       <View style={[styles.badge, { backgroundColor: areaColors[t.scheme][area] }]}>
         <Text variant="micro" style={{ color: '#0D0E10', fontSize: 12 }}>
           {badge}
@@ -393,7 +393,7 @@ function MetricTileV23({ label, value, unit, meaning, children, onPress }: Extra
       </Text>
       {children}
       {meaning ? (
-        <Animated.View entering={FadeIn}>
+        <Animated.View entering={FadeIn.duration(durations.quick)}>
           <Callout tone="ink2">{meaning}</Callout>
         </Animated.View>
       ) : null}

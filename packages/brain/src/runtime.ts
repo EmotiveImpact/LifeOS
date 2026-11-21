@@ -2,7 +2,7 @@ import { BrainError, tierFor, type ModelAdapter, type Request, type Result, type
 import { assertRequest, evidenceText, renderFacts, validateOutput } from './policy.ts';
 import { extractStatements } from './extract.ts';
 import { isMemoryOverview, retrieveMemories } from './memory.ts';
-import { detectCrisis, supportResponse, type CrisisSignal } from './safety.ts';
+import { detectCrisis, supportResponse, type CrisisKind, type CrisisSignal } from './safety.ts';
 import { renderData } from './jobs.ts';
 import { consentFor, type ConsentCheck } from './consent.ts';
 import { fitContext, planRoute, type RouteOptions } from './router.ts';
@@ -38,7 +38,23 @@ function supportResult(request: Request, crisis: CrisisSignal): Result {
   return { answer: safety.answer, detail: safety.detail, sources: [], proposals: [], route: { location: 'rules', model: 'life-safety', tier: tierFor(request.job) }, notices: [], safety };
 }
 
-export type RunOptions = { route?: RouteOptions; now?: () => number; timeoutMs?: number };
+const KINDS: readonly CrisisKind[] = ['suicide', 'self-harm', 'overdose', 'someone-else', 'unsafe'];
+/** The life API's support signal: only the level and kinds travel, so the words and numbers are always the phone's own. */
+function relayedSupport(raw: unknown): CrisisSignal | null {
+  const support = raw && typeof raw === 'object' ? (raw as { support?: unknown }).support : undefined;
+  if (!support || typeof support !== 'object') return null;
+  const { level, kinds } = support as { level?: unknown; kinds?: unknown };
+  if ((level !== 'concern' && level !== 'urgent') || !Array.isArray(kinds) || !kinds.length || !kinds.every(k => KINDS.includes(k as CrisisKind))) return null;
+  return { level, kinds: [...new Set(kinds as CrisisKind[])], matched: '' };
+}
+const relayedNotice = (raw: unknown): string[] => {
+  const notice = (raw as { notice?: unknown }).notice;
+  return typeof notice === 'string' && notice.trim() && notice.length <= 300 ? [notice.trim()] : [];
+};
+
+/** `rules: false` skips life's own answers (the life API: the phone has already tried them, and filing should reach
+ * the model). The crisis check always runs. */
+export type RunOptions = { route?: RouteOptions; now?: () => number; timeoutMs?: number; rules?: boolean };
 
 export async function runBrain(request: Request, adapters: ModelAdapter[] = [], signal?: AbortSignal, options: RunOptions = {}): Promise<Result> {
   // Immediate signposting comes before validation, models and the network,
@@ -47,7 +63,7 @@ export async function runBrain(request: Request, adapters: ModelAdapter[] = [], 
   if (crisis) return supportResult(request, crisis);
   assertRequest(request);
   if (signal?.aborted) throw new BrainError('CANCELLED', 'Stopped. Nothing was filed.');
-  const local = localAnswer(request);
+  const local = options.rules === false ? null : localAnswer(request);
   if (local) return local;
   // Cheapest place first (phone, then server, then cloud); within a place, the
   // tier table's order. Allowances are checked before any model is called.
@@ -57,6 +73,7 @@ export async function runBrain(request: Request, adapters: ModelAdapter[] = [], 
   const preference = (id: string) => { const at = plan.models.indexOf(id); return at < 0 ? plan.models.length : at; };
   const candidates = adapters.filter(a => a.jobs.includes(request.job) && (!request.privateMode || a.location === 'device') && (!a.tiers || a.tiers.includes(plan.tier))).sort((a, b) => where[a.location] - where[b.location] || preference(a.id) - preference(b.id));
   let refused: ConsentCheck | null = null;
+  let unavailable: BrainError | null = null, offline: BrainError | null = null;
   for (const adapter of candidates) {
     if (!await adapter.available()) continue;
     if (signal?.aborted) throw new BrainError('CANCELLED', 'Stopped. Nothing was filed.');
@@ -76,13 +93,25 @@ export async function runBrain(request: Request, adapters: ModelAdapter[] = [], 
         else controller.signal.addEventListener('abort', () => reject(new BrainError(signal?.aborted ? 'CANCELLED' : 'TIMEOUT', 'The request stopped. Nothing was filed.')), { once: true });
       })]);
       if (controller.signal.aborted) throw new BrainError('CANCELLED', 'Stopped. Nothing was filed.');
+      const support = adapter.relay ? relayedSupport(raw) : null;
+      if (support) return supportResult(request, support);
       const output = validateOutput(raw, sent);
       const availableSources = [...sent.context.facts.map(f => f.source), ...sent.context.memories.map(m => m.source)];
       const sources = [...new Map(output.citations.map(id => availableSources.find(source => source.id === id)!).map(source => [source.id, source])).values()];
-      const notices = [...(plan.notice ? [plan.notice] : []), ...(sent.context.sample ? ['The context includes clearly labelled sample data.'] : [])];
-      return { answer: renderFacts(output.answer, sent), detail: output.detail ? renderFacts(output.detail, sent) : undefined, sources, proposals: output.proposals, data: output.data === undefined ? undefined : renderData(output.data, text => renderFacts(text, sent)), route: { location: adapter.location, model: adapter.id, tier: plan.tier }, notices };
+      const notices = [...new Set([...(plan.notice ? [plan.notice] : []), ...(adapter.relay ? relayedNotice(raw) : []), ...(sent.context.sample ? ['The context includes clearly labelled sample data.'] : [])])];
+      const checked = { answer: output.answer, ...(output.detail !== undefined ? { detail: output.detail } : {}), citations: output.citations, proposals: output.proposals, ...(output.data !== undefined ? { data: output.data } : {}) };
+      return { answer: renderFacts(output.answer, sent), detail: output.detail ? renderFacts(output.detail, sent) : undefined, sources, proposals: output.proposals, data: output.data === undefined ? undefined : renderData(output.data, text => renderFacts(text, sent)), route: { location: adapter.location, model: adapter.id, tier: plan.tier }, notices, output: checked };
+    } catch (error) {
+      // A provider that is down or busy hands over to the next model in the tier. A timeout, a stop or a bad
+      // answer ends the request: nothing is retried behind the person's back.
+      // No connection hands over the same way, and is reported as offline so the phone can keep the request.
+      if (error instanceof BrainError && error.code === 'UNAVAILABLE' && !controller.signal.aborted) { unavailable = error; continue; }
+      if (error instanceof BrainError && error.code === 'OFFLINE' && !controller.signal.aborted) { offline = error; continue; }
+      throw error;
     } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
   }
+  if (offline && !refused) throw offline;
+  if (unavailable && !refused) throw unavailable;
   if (refused && !refused.ok) throw new BrainError('CONSENT_REQUIRED', refused.reason === 'HEALTH_NEEDS_CONSENT' ? 'This includes health details, so it needs your OK for this request before it leaves your phone.' : 'This needs a model outside your phone. Review what will be sent first.');
   throw new BrainError('UNAVAILABLE', request.privateMode ? 'No on-device model is available for this question. Your information has stayed on your phone. You can still use saved facts and engine calculations.' : 'No model is connected for this question yet. Your message is saved, but I won’t invent a reply.');
 }

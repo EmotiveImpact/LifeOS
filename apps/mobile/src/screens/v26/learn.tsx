@@ -24,7 +24,7 @@ import {
   recall, recallLadder, recallWhen, results, shelf, talebLens, todaysIdea, type IdeaKey,
 } from '@/state/learn';
 import { voice } from '@/services/voice';
-import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, PhotoRound, QuietLink, Row, RowsCard, Shelf, Statement, drawerStyle, two, useDrawerPhoto } from './kit';
+import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, NotYetV26, Page, PhotoRound, QuietLink, Row, RowsCard, Shelf, Statement, drawerStyle, two, useDrawerPhoto } from './kit';
 import { Composer } from './talk';
 import { IdeaPic, Device, PicAim, PicCap, type DeviceName } from './lessonpics';
 
@@ -200,7 +200,7 @@ export function LibraryV26() {
             onPress={() => openLens(c.lens)} style={styles.gridCell} />
         ))}
       </View>
-      <Callout style={{ marginTop: space.lg }}>Ideas are explained in life’s own words, not quoted. Read the originals for the full picture.</Callout>
+      <Callout style={{ marginTop: space.lg }}>Ideas are explained in Life’s own words, not quoted. Read the originals for the full picture.</Callout>
     </Page>
   );
 }
@@ -242,7 +242,7 @@ export function LensV26() {
         </Shelf>
       </> : null}
       {uses.length ? <>
-        <Text variant="title" style={{ marginTop: space.xl }}>Where life uses this lens</Text>
+        <Text variant="title" style={{ marginTop: space.xl }}>Where Life uses this lens</Text>
         <RowsCard style={{ marginTop: space.sm }}>
           {uses.map(u => {
             const locked = (u.level ?? 0) > level;
@@ -254,7 +254,7 @@ export function LensV26() {
         <SectionHead title="Read the originals" />
         <RowsCard>{books.map((b, k) => <Row key={b} icon="book" title={b} sub={k === 0 && books.length > 1 ? 'Book · the core of this lens' : 'Book'} />)}</RowsCard>
       </> : null}
-      <Callout style={{ marginTop: space.md }}>Ideas are explained in life’s own words, not quoted. Read the originals for the full picture.</Callout>
+      <Callout style={{ marginTop: space.md }}>Ideas are explained in Life’s own words, not quoted. Read the originals for the full picture.</Callout>
     </Page>
   );
 }
@@ -296,7 +296,15 @@ export function IdeaV26() {
 
 type LensName = 'Taleb' | 'Housel' | 'Munger';
 
+/** Ask through a lens. Its answers are worked from the sample life's rebate and buffer, so a real account asks Life directly. */
 export function LensaskV26() {
+  return SHOW_SAMPLES ? <LensaskSampleV26 /> : (
+    <NotYetV26 screen="lensask" title="Ask through a lens" eyebrow="Ask through a lens · day one" line="Life answers through a thinker’s lens once it knows your own numbers."
+      source="desk" ask="Ask Life a money question" examples="Should I pay off my card or save first?" />
+  );
+}
+
+function LensaskSampleV26() {
   const nav = useNavigation(), { data, choose, flag } = useSeed();
   const params = useLocalSearchParams<{ question?: string }>();
   const refund = seedTaxClaim.refund;
@@ -321,7 +329,7 @@ export function LensaskV26() {
       <View style={{ alignItems: 'flex-end' }}><ChatBubble text={question} /></View>
       <Micro style={{ marginTop: space.xl }}>SEE IT THROUGH</Micro>
       <FilterChips options={(['Taleb', 'Housel', 'Munger'] as LensName[]).map(v => ({ value: v, label: v }))} value={lens} onChange={v => { setLens(v); choose('lensask-lens', v); }} style={{ marginTop: space.xs }} />
-      <View style={[styles.inline, { marginTop: space.xl }]}><LifeOrb size={18} /><Text variant="callout" tone="ink2">{`life, through ${lens}’s lens`}</Text></View>
+      <View style={[styles.inline, { marginTop: space.xl }]}><LifeOrb size={18} /><Text variant="callout" tone="ink2">{`Life, through ${lens}’s lens`}</Text></View>
       <Statement s={lensAnswers(refund)[lens]} style={{ marginTop: space.xs }} />
       <Box style={{ marginTop: space.lg }}><PicCap total={refund} bet={cappedBet(refund)} /></Box>
       <Box pad={space.md} style={{ marginTop: space.sm }}>
@@ -330,7 +338,7 @@ export function LensaskV26() {
           <Btn label={saved ? 'Saved' : 'Save'} icon={saved ? 'check' : undefined} ghost sm fit onPress={save} disabled={saved} />
         </Between>
       </Box>
-      <Callout style={{ marginTop: space.md }}>General guidance using your numbers, not regulated financial advice. life speaks in its own voice, never as the thinker.</Callout>
+      <Callout style={{ marginTop: space.md }}>General guidance using your numbers, not regulated financial advice. Life speaks in its own voice, never as the thinker.</Callout>
     </Page>
   );
 }
@@ -355,7 +363,7 @@ export function RecallV26() {
     <Page screen="recall" bar={{ kind: 'sheet' }} footer={done ? <Btn label="Done" onPress={nav.close} /> : undefined}>
       <PhotoCard source={photos[idea.photo]} focal={{ y: 0.5 }} height={108} size="sm" chips={[{ label: 'Recall · 20 seconds', dot: t.ember }]} title={idea.title}
         topRight={<OnPhotoRound icon="close" label="Close" onPress={nav.close} />} />
-      <Statement s={recall.question} style={{ marginTop: space.md }} />
+      <Statement header s={recall.question} style={{ marginTop: space.md }} />
       <View style={{ gap: space.xs, marginTop: space.md }}>
         {recall.options.map(o => (
           <Option key={o.key} label={o.label} onPress={() => pick(o.key)}
@@ -363,7 +371,7 @@ export function RecallV26() {
         ))}
       </View>
       <View style={{ marginTop: space.sm }}>
-        {done ? <LifeSays>{right ? recall.right : recall.wrong}</LifeSays> : <Callout>life’s forgotten this one. Can you remind it?</Callout>}
+        {done ? <LifeSays>{right ? recall.right : recall.wrong}</LifeSays> : <Callout>Life’s forgotten this one. Can you remind it?</Callout>}
       </View>
       <Between style={{ marginTop: space.md }}>
         <Text variant="callout" tone="ink2">Next recall</Text>
@@ -471,13 +479,17 @@ export function TeachV26() {
         <View><Text variant="title">{idea.title}</Text><Text variant="callout" tone="ink2">{`${idea.by} · ${idea.topic}`}</Text></View>
       </View>
       <Display s={headline} style={{ marginTop: space.md }} />
-      <Press haptic={null} onPress={checked ? () => setChecked(false) : undefined} accessibilityLabel={checked ? 'Edit your explanation' : undefined}
-        style={[styles.paper, { backgroundColor: t.surface, marginTop: space.xl }, cardShadow(t.scheme)]}>
-        {checked ? <Marked text={text} /> : (
+      {/* Only the checked card is a button: around the text field, a button would hide the field from VoiceOver. */}
+      {checked ? (
+        <Press haptic={null} onPress={() => setChecked(false)} accessibilityLabel="Edit your explanation" style={[styles.paper, { backgroundColor: t.surface, marginTop: space.xl }, cardShadow(t.scheme)]}>
+          <Marked text={text} />
+        </Press>
+      ) : (
+        <View style={[styles.paper, { backgroundColor: t.surface, marginTop: space.xl }, cardShadow(t.scheme)]}>
           <TextInput maxFontSizeMultiplier={1.3} value={text} onChangeText={v => { setText(v); draft('barbell-explanation', v); }} multiline placeholder="In your own words…" placeholderTextColor={t.inkQuiet}
             selectionColor={t.ember} style={[styles.paperText, { color: t.ink, minHeight: 112 }]} accessibilityLabel="Your explanation" />
-        )}
-      </Press>
+        </View>
+      )}
       {checked ? <>
         <View style={[styles.tags, { marginTop: space.md }]}>
           {result.parts.map(p => <Chip key={p.label} label={p.label} icon={p.ok ? 'check' : undefined} tone={p.ok ? 'done' : 'q'} />)}
@@ -522,7 +534,7 @@ export function HillV26() {
           </Press>
         ))}
       </Box>
-      <Callout style={{ marginTop: space.md }}>From the ideas in Think and Grow Rich (1937), explained in life’s words. Related lenses: Clear, Munger.</Callout>
+      <Callout style={{ marginTop: space.md }}>From the ideas in Think and Grow Rich (1937), explained in Life’s words. Related lenses: Clear, Munger.</Callout>
     </Page>
   );
 }

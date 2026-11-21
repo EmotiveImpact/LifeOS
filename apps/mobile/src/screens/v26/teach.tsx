@@ -11,7 +11,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ChatBubble, Icon, LifeOrb, LifeSays, PhotoFill, Press, RoundButton, SectionHead, SegmentedV26, Text, TileGrid, V26Tile, cardShadow, feedback,
-  fonts, motion, photo, photos, radius, space, useCalmMotion, useTokens,
+  fonts, motion, photo, photos, radius, space, useCalmMotion, useTokens, durations
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
@@ -50,10 +50,13 @@ function TickOn() {
 
 /** What the telling-back covered: each link of the chain, the words that showed it, and how long it took. */
 type Told = { links: { label: string; ok: boolean; quote: string; gap: string; fix: string }[]; seconds: number };
+const readAnalysis = (raw?: string): { part: string; quote: string }[] => { try { const v = JSON.parse(raw ?? '') as { understood?: unknown }; return Array.isArray(v.understood) ? v.understood.filter((u): u is { part: string; quote: string } => !!u && typeof u.part === 'string' && typeof u.quote === 'string') : []; } catch { return []; } };
 function useTold(): Told {
   const { data } = useSeed();
   const text = data.drafts['tax-explanation'] ?? (SHOW_SAMPLES ? lesson.sampleTelling.filter(m => m.who === 'you').map(m => m.text).join(' ') : '');
-  const links = lesson.links.map(l => { const quote = quoteFor(text, l.words); return { label: l.label, ok: !!quote, quote, gap: l.gap, fix: l.fix }; });
+  // The phone's own model may have heard a part your words didn't name; its quote is always your own words.
+  const heard = readAnalysis(data.drafts['tax-analysis']);
+  const links = lesson.links.map(l => { const model = heard.find(u => u.part.toLowerCase() === l.label.toLowerCase())?.quote; const quote = model ?? quoteFor(text, l.words); return { label: l.label, ok: !!quote, quote, gap: l.gap, fix: l.fix }; });
   return { links, seconds: Number(data.choices['tellback-seconds'] ?? (SHOW_SAMPLES ? 41 : 0)) || 0 };
 }
 
@@ -87,7 +90,7 @@ export function TeachOfferV26() {
           </View>
         </View>
       </View>
-      {data.flags['teach-offer-info'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="life reads the code from your payslip. {M1} at the end means your tax is worked out on each month alone, usually a stopgap until your employer has your details. Check it in your {Personal Tax Account}." /></Box> : null}
+      {data.flags['teach-offer-info'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="Life reads the code from your payslip. {M1} at the end means your tax is worked out on each month alone, usually a stopgap until your employer has your details. Check it in your {Personal Tax Account}." /></Box> : null}
       <TileGrid style={{ marginTop: space.sm }}>
         <V26Tile label="Tax so far this year" value={`£${n(so.tax)}`} sub="On track" />
         <V26Tile label="National Insurance" value={`£${n(so.ni)}`} sub="Class 1" />
@@ -95,7 +98,7 @@ export function TeachOfferV26() {
       {!later ? <>
         <SectionHead title="It also appears in Talk" />
         <Box>
-          <View style={styles.inline}><LifeOrb size={18} /><Text variant="callout" tone="ink2">life, when you sound unsure</Text></View>
+          <View style={styles.inline}><LifeOrb size={18} /><Text variant="callout" tone="ink2">Life, when you sound unsure</Text></View>
           <Statement size="headline" s="No worries, this sounds new to you. Want a {two-minute lesson} first, then tell me in your own words?" style={{ marginTop: space.xs }} />
           <View style={[styles.pair, { marginTop: space.md }]}>
             <Btn label="Teach me" ghost sm onPress={start} style={{ flex: 1 }} />
@@ -316,7 +319,12 @@ export function TellbackV26() {
     if (!text) return;
     draft('tax-explanation', text); choose('tellback-seconds', String(seconds));
     setThinking(true); feedback.brief();
-    try { if ((await ai.analyse(text)).support) { setThinking(false); nav.replace('support'); return; } } catch { /* the local check below still runs */ }
+    draft('tax-analysis', '');
+    try {
+      const analysed = await ai.analyse(text, lesson.links.map(l => l.label));
+      if (analysed.support) { setThinking(false); nav.replace('support'); return; }
+      if (analysed.model) draft('tax-analysis', JSON.stringify(analysed.model));
+    } catch { /* the local check below still runs */ }
   };
   useEffect(() => {
     if (!thinking || params.state === 'done') return;
@@ -339,7 +347,7 @@ export function TellbackV26() {
         {typing ? (
           <View style={[styles.typeRow, { backgroundColor: t.surface2 }]}>
             <TextInput maxFontSizeMultiplier={1.3} value={typed} onChangeText={setTyped} placeholder="Type it instead" placeholderTextColor={t.inkQuiet} selectionColor={t.ember} onSubmitEditing={sendTyped}
-              style={[styles.typeInput, { color: t.ink }]} accessibilityLabel="Type your explanation" returnKeyType="send" />
+              style={[styles.typeInput, { color: t.ink }]} accessibilityLabel="Type your explanation" testID="tellback-input" returnKeyType="send" />
             <RoundButton icon="arrowUp" label="Add this" size="sm" solid onPress={sendTyped} disabled={!typed.trim()} />
           </View>
         ) : null}
@@ -360,7 +368,7 @@ export function TellbackV26() {
         {live ? <View style={{ alignItems: 'flex-end', opacity: 0.7 }}><ChatBubble text={live} /></View> : null}
       </View>
       {listen.error ? <Callout style={{ marginTop: space.md }}>{listen.error}</Callout> : null}
-      {!turns.length && !live ? <Callout style={{ marginTop: space.md }}>Say it out loud, in your own words. life listens and asks one question.</Callout> : null}
+      {!turns.length && !live ? <Callout style={{ marginTop: space.md }}>Say it out loud, in your own words. Life listens and asks one question.</Callout> : null}
     </Page>
   );
 }
@@ -405,12 +413,12 @@ export function GapsV26() {
 
 export function GotitV26() {
   const nav = useNavigation(), t = useTokens(), { data, set } = useSeed(), insets = useSafeAreaInsets(), drawer = useDrawerPhoto(), calm = useCalmMotion();
-  const scale = useSharedValue(calm ? 1 : 0.86), fade = useSharedValue(0);
+  const scale = useSharedValue(calm ? 1 : 0.95), fade = useSharedValue(0);
   useEffect(() => {
     if (!data.learned.includes('tax-codes')) set({ learned: [...data.learned, 'tax-codes'] });
     feedback.cleared();
-    fade.value = withTiming(1, { duration: calm ? 200 : 260 });
-    if (!calm) scale.value = withSpring(1, motion.bouncy);
+    fade.value = withTiming(1, { duration: calm ? durations.quick : durations.item });
+    if (!calm) scale.value = withSpring(1, motion.smooth);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const words = useAnimatedStyle(() => ({ opacity: fade.value, transform: [{ scale: scale.value }] }));
   const recallDay = new Date(Date.now() + 3 * 86400000).toLocaleDateString('en-GB', { weekday: 'long' });

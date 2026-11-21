@@ -14,12 +14,14 @@ import {
   photos, radius, space, useAreaTint, useTokens,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
-import { useSeed } from '@/state/SeedProvider';
+import { planTargets } from '@life/core';
+import { useSeed, type SeedData } from '@/state/SeedProvider';
 import { seed } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { weightDays, weightWeekChange } from '@/state/body';
 import {
-  alcohol as drinks, cook, dayKey, kcalFloor, mealWeek, nutrientsToday, nutrientsWeek, paces, progress, quality, timing, useFuelDay, uses, watchToday, week,
+  alcohol as drinks, bodyProfileRow, cook, dayKey, eatenOn, eatingWindows, engineTargets, kcalFloor, mealWeek, nutrientsToday, nutrientsWeek, paces, progress, quality, timing, useFuelDay, uses,
+  watchToday, week, weighIns,
 } from '@/state/fuel';
 import { pickAttachment } from '@/services/attachments';
 import { Axis, Measure, useWidth } from './bodykit';
@@ -28,8 +30,13 @@ import { mealPic, n, useLogMeal } from './fuel';
 
 const info = (label: string, onPress: () => void) => ({ kind: 'icon' as const, icon: 'info' as const, label, onPress });
 const r1 = (v: number) => Math.round(v * 10) / 10;
+/** A weekly pace in words: "half a kilo" near 0.5, otherwise the kilos. */
+const kiloWords = (kgs: number) => { const k = Math.round(kgs * 100) / 100; return Math.abs(k - .5) < .03 ? 'half a kilo' : `${k} kg`; };
 const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const FULL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+/** A day key as "14 November". */
+const dayWords = (key: string) => new Date(`${key}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
 /** Monday-first index of a date. */
 const monIndex = (d = new Date()) => (d.getDay() + 6) % 7;
 const shortDate = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
@@ -41,27 +48,43 @@ const ruled = (v: number, max: number) => Math.max(0, Math.min(100, Math.round(v
 /* ───────────────────────── The plan's numbers ───────────────────────── */
 
 type Goal = 'Lose' | 'Keep' | 'Gain';
-/** The daily target from the goal and pace: what your body uses, less 1,000 per kilo a week, never under the floor. */
-export function planFor(goal: Goal, pace: number) {
+export type PlanFigures = {
+  available: true; uses: number; change: number; daily: number; floor: number; floored: boolean; protein: number; fibre: number;
+  /** The pace the target really gives, kg a week, after the floor and the 1% of body weight cap. */
+  pace: number; days: number;
+} | { available: false; reason: 'under-18' | 'missing-details'; missing: string[] };
+/**
+ * The figures for a goal, target weight and pace. A real account (or real readings on the sample life) gets the
+ * engine's (`planTargets`): what your body uses from your profile and health days, the floor, protein and fibre. The
+ * sample life keeps the board's maths: 2,800 used, less 1,000 per kilo a week, never under 1,500.
+ */
+export function figuresFor(data: SeedData, goal: Goal, target: number, pace: number): PlanFigures {
+  const kg = data.weightKg;
+  if (engineTargets(data)) {
+    const t = planTargets({ record: { goal, target_weight: target, pace, exercise_addback: data.prefs.addback ?? null }, profile: bodyProfileRow(data), days: data.health.days, today: dayKey(), health: data.profile.health });
+    if (!t.available) return { available: false, reason: t.reason, missing: t.missing };
+    return { available: true, uses: t.uses.kcal, change: goal === 'Keep' ? 0 : t.kcal - t.uses.kcal, daily: t.kcal, floor: t.floor, floored: t.floored, protein: t.protein, fibre: t.fibre, pace: Math.abs(t.paceKgPerWeek), days: (t.weeksToGoal ?? 0) * 7 };
+  }
   const change = goal === 'Lose' ? -Math.round(pace * 1000) : goal === 'Gain' ? Math.round(pace * 500) : 0;
-  return { change, daily: Math.max(kcalFloor, uses + change) };
+  const days = goal === 'Keep' || !pace ? 0 : Math.round(Math.abs(kg - target) / pace * 7);
+  return { available: true, uses, change, daily: Math.max(kcalFloor, uses + change), floor: kcalFloor, floored: uses + change < kcalFloor, protein: seed.fuel.protein, fibre: seed.fuel.fibre, pace, days };
 }
 export function usePlan() {
   const { data } = useSeed();
-  const goal = (data.choices['fuel-goal'] ?? 'Lose') as Goal;
-  const target = Number(data.choices['target-weight'] ?? seed.fuel.targetWeight);
-  const pace = Number(data.choices['fuel-pace'] ?? seed.fuel.pace);
-  const kg = data.weightKg, gap = Math.abs(kg - target);
-  const days = goal === 'Keep' || !pace ? 0 : Math.round(gap / pace * 7);
+  const goal = (data.choices['fuel-goal'] ?? (SHOW_SAMPLES ? 'Lose' : 'Keep')) as Goal;
+  const target = Number(data.choices['target-weight'] ?? (SHOW_SAMPLES ? seed.fuel.targetWeight : data.weightKg));
+  const pace = Number(data.choices['fuel-pace'] ?? (SHOW_SAMPLES ? seed.fuel.pace : 0.5));
+  const kg = data.weightKg, figures = figuresFor(data, goal, target, pace);
+  const days = figures.available ? figures.days : 0;
   const reach = new Date(Date.now() + days * 86400000);
-  return { goal, target, pace, kg, days, weeks: Math.ceil(days / 7), reach, ...planFor(goal, pace) };
+  return { goal, target, pace, kg, days, weeks: Math.ceil(days / 7), reach, figures, daily: figures.available ? figures.daily : 0 };
 }
 
 /* ───────────────────────── 1. What can I cook? ───────────────────────── */
 
 export function CookV26() {
   const nav = useNavigation(), t = useTokens(), { data, choose } = useSeed(), day = useFuelDay(), log = useLogMeal();
-  const [diet, setDiet] = useState<(typeof cook.diets)[number]>((data.choices['cook-diet'] as (typeof cook.diets)[number]) ?? 'Halal');
+  const [diet, setDiet] = useState<(typeof cook.diets)[number]>((data.choices['cook-diet'] as (typeof cook.diets)[number]) ?? (SHOW_SAMPLES ? 'Halal' : 'High-protein'));
   const [open, setOpen] = useState(false), [editing, setEditing] = useState(false), [chosen, setChosen] = useState<string | null>(null);
   const found = (data.choices['cook-found'] ?? (SHOW_SAMPLES ? cook.found.join(', ') : '')).split(',').map(s => s.trim()).filter(Boolean);
   const shot = data.choices['cook-photo'];
@@ -196,34 +219,41 @@ function Sum({ parts }: { parts: [string, string][] }) {
 export function FuelgoalV26() {
   const nav = useNavigation(), { data, choose } = useSeed(), plan = usePlan();
   const [goal, setGoal] = useState<Goal>(plan.goal), [target, setTarget] = useState(plan.target), [pace, setPace] = useState(plan.pace);
-  const p = planFor(goal, pace), kg = data.weightKg;
+  const f = figuresFor(data, goal, target, pace), kg = data.weightKg;
   const wrongWay = goal === 'Lose' && target >= kg || goal === 'Gain' && target <= kg;
-  const days = Math.round(Math.abs(kg - target) / pace * 7), reach = new Date(Date.now() + days * 86400000);
-  const protein = seed.fuel.protein, perKg = r1(protein / kg);
+  const days = f.available ? f.days : 0, reach = new Date(Date.now() + days * 86400000);
+  const slower = f.available && goal !== 'Keep' && f.pace < pace - 0.01;
   return (
     <Page screen="fuelgoal" bar={{ kind: 'push', title: 'Targets' }}
-      footer={<Btn label="See my plan" disabled={wrongWay} onPress={() => { choose('fuel-goal', goal); choose('target-weight', String(target)); choose('fuel-pace', String(pace)); nav.go('fuelplan'); }} />}>
+      footer={<Btn label="See my plan" disabled={wrongWay || !f.available} onPress={() => { choose('fuel-goal', goal); choose('target-weight', String(target)); choose('fuel-pace', String(pace)); nav.go('fuelplan'); }} />}>
       <SegmentedV26 options={(['Lose', 'Keep', 'Gain'] as const).map(v => ({ value: v, label: v }))} value={goal} onChange={v => { setGoal(v); feedback.select(); }} />
       {goal !== 'Keep' ? <>
         <Eyebrow style={{ justifyContent: 'center', marginTop: space.xl }}>Target weight</Eyebrow>
         <BigStepper value={target} unit="kg" onChange={setTarget} label="target weight" />
         <Eyebrow style={{ justifyContent: 'center', marginTop: space.xl }}>Pace</Eyebrow>
         <WheelPicker options={paces.map(x => x.kg === pace ? `${x.label} · ${x.kg} kg a week` : x.label)} value={Math.max(0, paces.findIndex(x => x.kg === pace))} onChange={i => setPace(paces[i].kg)} label="Pace" style={{ marginTop: space.xs }} />
-        <Callout center style={{ marginTop: space.sm }}>{wrongWay ? `Your target is ${goal === 'Lose' ? 'above' : 'below'} your weight now (${kg.toFixed(1)} kg).` : `About ${Math.ceil(days / 7)} weeks, so ${roughly(reach)}.`}</Callout>
+        <Callout center style={{ marginTop: space.sm }}>{wrongWay ? `Your target is ${goal === 'Lose' ? 'above' : 'below'} your weight now (${kg.toFixed(1)} kg).` : days ? `About ${Math.ceil(days / 7)} weeks, so ${roughly(reach)}.` : 'Life works out how long once your details are in.'}</Callout>
       </> : <Statement s={`Keep about {${kg.toFixed(1)} kg}, with targets that match what your body uses.`} style={{ marginTop: space.xl }} />}
-      <TintCard area="home" style={{ marginTop: space.xl }}>
-        <Micro>The maths</Micro>
-        <View style={{ marginTop: space.sm }}>
-          {p.change ? <Sum parts={[[n(uses), 'what your body uses'], [p.change < 0 ? '−' : '+', ''], [n(Math.abs(p.change)), 'for your pace'], ['=', ''], [n(p.daily), 'daily calories']]} />
-            : <Sum parts={[[n(uses), 'what your body uses'], ['=', ''], [n(p.daily), 'daily calories']]} />}
-        </View>
-        <Callout style={{ marginTop: space.md }}>{`Your body uses about ${n(uses)} a day, from your height, weight, age and activity. ${goal === 'Lose' ? `${n(Math.abs(p.change))} less loses about ${pace === .5 ? 'half a kilo' : `${pace} kg`} a week.` : goal === 'Gain' ? `${n(p.change)} more gains about ${pace} kg a week, gently.` : 'Eating about that keeps you steady.'}`}</Callout>
-      </TintCard>
-      <TileGrid style={{ marginTop: space.sm }}>
-        <V26Tile label="Protein" scale={`${perKg} g per kg`} value={String(protein)} unit="g" />
-        <V26Tile label="Fibre" scale="a day" value={String(seed.fuel.fibre)} unit="g" />
-      </TileGrid>
-      <Callout style={{ marginTop: space.md }}>{`Targets never go below a healthy floor (${n(kcalFloor)} a day), and pace is capped at three quarters of a kilo a week.`}</Callout>
+      {f.available ? <>
+        <TintCard area="home" style={{ marginTop: space.xl }}>
+          <Micro>The maths</Micro>
+          <View style={{ marginTop: space.sm }}>
+            {f.change ? <Sum parts={[[n(f.uses), 'what your body uses'], [f.change < 0 ? '−' : '+', ''], [n(Math.abs(f.change)), 'for your pace'], ['=', ''], [n(f.daily), 'daily calories']]} />
+              : <Sum parts={[[n(f.uses), 'what your body uses'], [f.uses === f.daily ? '=' : '≈', ''], [n(f.daily), 'daily calories']]} />}
+          </View>
+          <Callout style={{ marginTop: space.md }}>{`Your body uses about ${n(f.uses)} a day, from your height, weight, age and activity. ${goal === 'Lose' ? `${n(Math.abs(f.change))} less loses about ${kiloWords(f.pace)} a week.` : goal === 'Gain' ? `${n(f.change)} more gains about ${kiloWords(f.pace)} a week, gently.` : 'Eating about that keeps you steady.'}${slower ? ' That’s slower than the pace you picked, so your target stays safe.' : ''}`}</Callout>
+        </TintCard>
+        <TileGrid style={{ marginTop: space.sm }}>
+          <V26Tile label="Protein" scale={`${r1(f.protein / kg)} g per kg`} value={String(f.protein)} unit="g" />
+          <V26Tile label="Fibre" scale="a day" value={String(f.fibre)} unit="g" />
+        </TileGrid>
+        <Callout style={{ marginTop: space.md }}>{engineTargets(data) ? `Targets never go below a healthy floor (${n(f.floor)} a day for you), and pace is capped at about 1% of your weight a week.` : `Targets never go below a healthy floor (${n(f.floor)} a day), and pace is capped at three quarters of a kilo a week.`}</Callout>
+      </> : f.reason === 'under-18' ? (
+        <Callout style={{ marginTop: space.xl }}>Calorie targets are for adults, so Life shows how you’re eating without them.</Callout>
+      ) : <>
+        <Statement s={`Add your {${f.missing.join(' and ')}} and Life works out the maths for you.`} style={{ marginTop: space.xl }} />
+        <Btn label="Add them in Body" ghost fit onPress={() => nav.go('measures')} style={{ marginTop: space.md }} />
+      </>}
     </Page>
   );
 }
@@ -244,18 +274,18 @@ function WeekDots({ count, end, w }: { count: number; end: string; w: number }) 
 
 export function FuelplanV26() {
   const nav = useNavigation(), { choose, flag } = useSeed(), plan = usePlan();
-  const keep = plan.goal === 'Keep';
-  const paceWords = plan.pace === .5 ? 'half a kilo' : plan.pace === .25 ? 'a quarter of a kilo' : 'three quarters of a kilo';
+  const keep = plan.goal === 'Keep', f = plan.figures, pace = f.available ? f.pace : plan.pace;
+  const paceWords = Math.abs(pace - .5) < .03 ? 'half a kilo' : Math.abs(pace - .25) < .03 ? 'a quarter of a kilo' : Math.abs(pace - .75) < .03 ? 'three quarters of a kilo' : `${Math.round(pace * 100) / 100} kg`;
   return (
     <Page screen="fuelplan" bar={{ kind: 'photo' }} contentStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingBottom: space.sm }}
       backdrop={<View pointerEvents="none" style={StyleSheet.absoluteFill}><PhotoFill source={photos.sky} focal={{ x: .37, y: 0, zoom: 2.9 }} settle /><LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} /></View>}
       footer={<View style={{ flexDirection: 'row', gap: space.xs }}><Btn label="Adjust" ghost fit onPhoto onPress={nav.close} /><View style={{ flex: 1 }}><Btn label="Start" onPhoto onPress={() => { choose('fuel-kcal', String(plan.daily)); flag('food-plan-set', true); feedback.complete(); nav.replace('fuel'); }} /></View></View>}>
       <LifeOrb size={56} state="done" color={photo.onPhoto} />
-      <Text style={[styles.moment, { color: photo.onPhoto }]}>Your plan is ready.</Text>
+      <Text variant="welcome" style={{ color: photo.onPhoto, marginTop: space.lg }}>Your plan is ready.</Text>
       <Statement onPhoto s={keep ? `You’ll keep about {${plan.kg.toFixed(1)} kg}, eating about what your body uses.` : `At ${paceWords} a week you’d reach {${plan.target} kg} around {${longDate(plan.reach)}}.`} style={{ marginTop: space.sm }} />
       {keep ? null : <Measure height={76} style={{ marginTop: space.xl }} label={`${plan.weeks} weeks from today to ${plan.target} kg, around ${longDate(plan.reach)}`}>{w => <WeekDots w={w} count={plan.weeks} end={`${shortDate(plan.reach)} · ${plan.target} kg`} />}</Measure>}
       <View style={[styles.fields, { marginTop: space.lg }]}>
-        {[['Calories', n(plan.daily)], ['Protein', `${seed.fuel.protein} g`], ['Fibre', `${seed.fuel.fibre} g`]].map(([l, v]) => (
+        {[['Calories', n(plan.daily)], ['Protein', `${f.available ? f.protein : seed.fuel.protein} g`], ['Fibre', `${f.available ? f.fibre : seed.fuel.fibre} g`]].map(([l, v]) => (
           <View key={l} style={[styles.field, { backgroundColor: photo.fill }]}><Text variant="micro" style={{ color: photo.onPhoto2 }}>{l}</Text><Text variant="headline" style={{ color: photo.onPhoto }}>{v}</Text></View>
         ))}
       </View>
@@ -286,7 +316,64 @@ function MonthDays({ cells, label }: { cells: MonthCell[]; label: string }) {
   );
 }
 
+/** Food and weight over time. The sample life keeps the board's six weeks; a real account sees its own weigh-ins and meals. */
 export function FuelprogressV26() {
+  return SHOW_SAMPLES ? <FuelprogressSampleV26 /> : <FuelprogressRealV26 />;
+}
+
+function MonthLegend() {
+  const t = useTokens();
+  return (
+    <View style={{ flexDirection: 'row', gap: space.sm }}>
+      <View style={styles.legend}><View style={[styles.legendDot, { backgroundColor: t.ink }]} /><Text variant="callout" tone="ink2">Close</Text></View>
+      <View style={styles.legend}><View style={[styles.legendDot, { backgroundColor: t.surface3 }]} /><Text variant="callout" tone="ink2">Further off</Text></View>
+    </View>
+  );
+}
+
+function FuelprogressRealV26() {
+  const { data } = useSeed(), day = useFuelDay(), { accent } = useAreaTint('health');
+  const w = weighIns(data), kg = data.weightKg, first = w[0];
+  const change = first && w.length > 1 ? r1(w[w.length - 1].kg - first.kg) : null;
+  const now = new Date(), start = new Date(now.getFullYear(), now.getMonth(), 1), last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  // A day is close when what you logged is within a tenth of your target. A day with nothing logged is never close.
+  const close = (key: string) => { const e = eatenOn(data, key); return e > 0 && day.target > 0 && Math.abs(e - day.target) <= day.target * .1; };
+  const cells: MonthCell[] = [...Array(monIndex(start)).fill('blank'), ...Array.from({ length: last }, (_, k) => k + 1 < now.getDate() ? (close(dayKey(new Date(now.getFullYear(), now.getMonth(), k + 1))) ? 'on' : 'off') as MonthCell : k + 1 === now.getDate() ? 'today' : 'ahead')];
+  const recent = Array.from({ length: 14 }, (_, k) => eatenOn(data, dayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - k)))).filter(e => e > 0);
+  const average = recent.length ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length) : 0;
+  const values = w.slice(-28).map(x => x.kg);
+  const smooth = values.map((_, k) => { const run = values.slice(Math.max(0, k - 3), k + 1); return run.reduce((a, v) => a + v, 0) / run.length; });
+  const share = change === null ? undefined : async () => { try { await Share.share({ message: `${change <= 0 ? 'Down' : 'Up'} ${Math.abs(change)} kg since ${dayWords(first.day)}.` }); } catch { /* Sharing is optional. */ } };
+  return (
+    <Page screen="fuelprogress" bar={{ kind: 'push', title: 'Progress', action: share ? { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: () => void share() } : undefined }}>
+      {change !== null ? <>
+        <Eyebrow>{`${change <= 0 ? 'Down' : 'Up'} since ${dayWords(first.day)}`}</Eyebrow>
+        <Figure value={String(Math.abs(change))} unit="kg" style={{ marginTop: 6 }} />
+      </> : <Display s="{Your progress starts here.} Weigh in on a few mornings and log your meals, and Life draws the trend." />}
+      {values.length > 1 ? (
+        <TintCard area="health" style={{ marginTop: space.lg }}>
+          <Between><Text variant="title">Weight trend</Text><Text variant="callout" tone="ink2">{`${kg.toFixed(1)} kg now`}</Text></Between>
+          <View style={{ marginTop: space.sm }}><BandLine values={values} normal={[smooth.map(v => r1(v - .3)), smooth.map(v => r1(v + .3))]} height={120} color={accent} bandColor={accent} bandOpacity={.2} label={`Your ${values.length} weigh-ins since ${dayWords(first.day)}`} /></View>
+          <Axis labels={[dayWords(w[Math.max(0, w.length - 28)].day), 'Latest']} lastInk />
+          <Callout style={{ marginTop: space.xs }}>Daily numbers move about. The pale band is your trend, give or take a normal day.</Callout>
+        </TintCard>
+      ) : null}
+      {average ? (
+        <TileGrid style={{ marginTop: space.sm }}>
+          <V26Tile label="Average" scale={day.target ? `/${n(day.target)}` : undefined} value={n(average)} unit="kcal" sub={`a day, over ${recent.length} logged ${recent.length === 1 ? 'day' : 'days'}`} />
+          <V26Tile label="Weigh-ins" value={String(w.length)} sub={first ? `since ${dayWords(first.day)}` : 'none yet'} />
+        </TileGrid>
+      ) : null}
+      <Box style={{ marginTop: space.sm }}>
+        <Between><Text variant="title">{now.toLocaleDateString('en-GB', { month: 'long' })}</Text><MonthLegend /></Between>
+        <View style={{ marginTop: space.md }}><MonthDays cells={cells} label="How close each day this month was to your target" /></View>
+        <Callout style={{ marginTop: space.sm }}>How close each day you logged was to your target. No day is marked as bad. Today is ringed.</Callout>
+      </Box>
+    </Page>
+  );
+}
+
+function FuelprogressSampleV26() {
   const { data } = useSeed(), plan = usePlan(), { accent } = useAreaTint('health'), t = useTokens();
   const kg = data.weightKg, start = progress.startWeight, down = r1(start - kg);
   const trend = [...seed.health.weightTrend.slice(0, -1), kg];
@@ -443,23 +530,28 @@ export function DescribeexerciseV26() {
 
 export function WeighinV26() {
   const nav = useNavigation(), { data, set, choose } = useSeed(), plan = usePlan(), { accent } = useAreaTint('health'), t = useTokens();
-  const [kg, setKg] = useState(r1(data.weightKg));
+  const [kg, setKg] = useState(r1(data.weightKg || 70));
+  // The sample life draws the board's fortnight under today's weight. A real account draws only the weigh-ins it logged.
+  const real = weighIns(data).slice(-14);
   const lastTrend = weightDays[weightDays.length - 1].trend, offset = data.weightKg - lastTrend;
-  const days = weightDays.slice(-14).map(d => r1(d.day + offset)), trendNow = r1(data.weightKg);
+  const days = SHOW_SAMPLES ? weightDays.slice(-14).map(d => r1(d.day + offset)) : real.map(w => w.kg), trendNow = r1(data.weightKg);
   // The trend under the daily numbers (an average of the last few days), so the band follows it day by day.
   const smooth = days.map((_, k) => { const run = days.slice(Math.max(0, k - 3), k + 1); return run.reduce((a, v) => a + v, 0) / run.length; });
-  const wk = weightWeekChange, pace = plan.pace;
-  const words = Math.abs(wk) > pace * 1.1 ? 'A bit faster than planned, which is fine.' : Math.abs(wk) < pace * .8 ? 'A little slower than planned, which is fine.' : 'Right on plan.';
+  // This week's change: the sample's, or a real account's latest weigh-in against the last one at least six days before it.
+  const latest = real[real.length - 1], before = latest ? [...real].reverse().find(w => (Date.parse(latest.day) - Date.parse(w.day)) / 86400000 >= 6) : undefined;
+  const wk = SHOW_SAMPLES ? weightWeekChange : latest && before ? r1(latest.kg - before.kg) : null, pace = plan.pace;
+  const words = wk === null ? '' : Math.abs(wk) > pace * 1.1 ? 'A bit faster than planned, which is fine.' : Math.abs(wk) < pace * .8 ? 'A little slower than planned, which is fine.' : 'Right on plan.';
+  const log = () => { set({ weightKg: kg }); choose('weighed-day', dayKey()); choose(`weight-${dayKey()}`, String(kg)); feedback.file(); nav.close(); };
   return (
-    <Page screen="weighin" bar={{ kind: 'sheet', title: 'Weight' }} footer={<Btn label="Log it" onPress={() => { set({ weightKg: kg }); choose('weighed-day', dayKey()); feedback.file(); nav.close(); }} />}>
-      <Between><Eyebrow>Your trend</Eyebrow>{plan.goal !== 'Keep' ? <Chip label={`On track · ${shortDate(plan.reach)}`} tone="done" /> : null}</Between>
-      <Figure value={trendNow.toFixed(1)} unit="kg" style={{ marginTop: 6 }} />
-      <Body s={`${wk <= 0 ? 'Down' : 'Up'} {${Math.abs(wk)}} this week. ${words}`} style={{ marginTop: space.xs }} />
-      <TintCard area="health" style={{ marginTop: space.md }}>
-        <BandLine values={days} normal={[smooth.map(v => r1(v - .3)), smooth.map(v => r1(v + .3))]} height={112} color={accent} bandColor={accent} bandOpacity={.2} label="Daily weigh-ins over 14 days against your trend" />
-        <Axis labels={['2 weeks ago', 'This morning']} lastInk />
+    <Page screen="weighin" bar={{ kind: 'sheet', title: 'Weight' }} footer={<Btn label="Log it" onPress={log} />}>
+      <Between><Eyebrow>Your trend</Eyebrow>{plan.goal !== 'Keep' ? <Chip label={SHOW_SAMPLES ? `On track · ${shortDate(plan.reach)}` : `Target · ${shortDate(plan.reach)}`} tone={SHOW_SAMPLES ? 'done' : 'q'} /> : null}</Between>
+      {data.weightKg ? <Figure value={trendNow.toFixed(1)} unit="kg" style={{ marginTop: 6 }} /> : <Display s="{Your first weigh-in.} Life keeps one a day and draws your trend." />}
+      {wk !== null ? <Body s={`${wk <= 0 ? 'Down' : 'Up'} {${Math.abs(wk)}} this week.${plan.goal !== 'Keep' ? ` ${words}` : ''}`} style={{ marginTop: space.xs }} /> : null}
+      {days.length > 1 ? <TintCard area="health" style={{ marginTop: space.md }}>
+        <BandLine values={days} normal={[smooth.map(v => r1(v - .3)), smooth.map(v => r1(v + .3))]} height={112} color={accent} bandColor={accent} bandOpacity={.2} label={SHOW_SAMPLES ? 'Daily weigh-ins over 14 days against your trend' : `Your last ${days.length} weigh-ins against your trend`} />
+        <Axis labels={SHOW_SAMPLES ? ['2 weeks ago', 'This morning'] : [dayWords(real[0].day), 'Latest']} lastInk />
         <Callout style={{ marginTop: space.xs }}>Daily numbers move about. The pale band is your trend, give or take a normal day.</Callout>
-      </TintCard>
+      </TintCard> : null}
       <Box pad={space.md} style={{ marginTop: space.sm }}>
         <Between>
           <RoundButton icon="remove" label="Lower" onPress={() => { setKg(v => r1(v - .1)); feedback.select(); }} />
@@ -526,8 +618,53 @@ export function NutrientsV26() {
 
 /* ───────────────────────── 10. Your week ───────────────────────── */
 
+/** The week's calories. The sample life keeps the board's week and birthday; a real account sees what it logged. */
 export function WeekbudgetV26() {
-  const { data, flag } = useSeed(), day = useFuelDay(), { accent } = useAreaTint('home');
+  return SHOW_SAMPLES ? <WeekbudgetSampleV26 /> : <WeekbudgetRealV26 />;
+}
+
+function RolloverBox() {
+  const { data, flag } = useSeed();
+  return (
+    <Box pad={space.md} style={{ marginTop: space.sm }}>
+      <Between>
+        <View style={{ flex: 1, minWidth: 0 }}><Text variant="title">Carry unused calories to the weekend</Text><Text variant="callout" tone="ink2">Your choice. Off until you turn it on.</Text></View>
+        <SwitchV26 value={!!data.flags['calorie-rollover']} onChange={v => { flag('calorie-rollover', v); feedback.select(); }} accessibilityLabel="Carry unused calories to the weekend" />
+      </Between>
+    </Box>
+  );
+}
+
+function WeekbudgetRealV26() {
+  const { data } = useSeed(), day = useFuelDay(), { accent } = useAreaTint('home');
+  const now = new Date(), ti = monIndex(now);
+  const keys = Array.from({ length: 7 }, (_, k) => dayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - ti + k)));
+  const logged = keys.map((k, i) => i <= ti ? eatenOn(data, k) : 0);
+  const eaten = logged.reduce((a, b) => a + b, 0), budget = day.target * 7, soFar = day.target * (ti + 1);
+  const onTrack = Math.abs(eaten - soFar) <= soFar * .05;
+  // Days so far are what you logged; the days ahead are your daily target.
+  const values = keys.map((_, i) => i <= ti ? logged[i] : day.target);
+  const ahead = ti === 6 ? '' : ti === 5 ? ' Sunday is your target.' : ` ${FULL_DAYS[ti + 1]} to Sunday are your target.`;
+  const show = eaten > 0 && day.target > 0;
+  return (
+    <Page screen="weekbudget" bar={{ kind: 'push', title: 'This week' }}>
+      <Between><Eyebrow>Week so far</Eyebrow>{show ? <Chip label={onTrack ? 'On track' : eaten > soFar ? 'A little over' : 'Room to spare'} tone={onTrack ? 'done' : 'q'} /> : null}</Between>
+      {!day.target ? <Display s="{No target yet.} Add your height and weight, and Life sets one for each day." />
+        : !eaten ? <Display s="{Nothing logged this week.} The week’s total builds as you log meals." />
+        : day.hide ? <Display s="{Your week so far,} one day at a time." /> : <Figure value={n(eaten)} unit={`/ ${n(budget)} kcal`} style={{ marginTop: 6 }} />}
+      {show ? (
+        <TintCard area="home" style={{ marginTop: space.lg }}>
+          <CapsuleBars values={values} labels={WEEK} now={ti} height={132} color={accent} dim={.35} label={`Calories by day this week: what you logged to ${FULL_DAYS[ti]}, then your target`} />
+          <Callout style={{ marginTop: space.xs }}>{`${ti ? `Monday to ${FULL_DAYS[ti]} are` : 'Monday is'} what you logged.${ahead}`}</Callout>
+        </TintCard>
+      ) : null}
+      <RolloverBox />
+    </Page>
+  );
+}
+
+function WeekbudgetSampleV26() {
+  const day = useFuelDay(), { accent } = useAreaTint('home');
   const budget = day.target * 7, eaten = week.eaten.reduce((a, b) => a + b, 0), soFar = day.target * week.eaten.length;
   const onTrack = Math.abs(eaten - soFar) <= soFar * .05;
   const values = [...week.eaten, ...week.plan];
@@ -540,31 +677,27 @@ export function WeekbudgetV26() {
         <Callout style={{ marginTop: space.xs }}>Monday to Friday are eaten. Saturday and Sunday are the plan.</Callout>
       </TintCard>
       <PhotoCard source={photos.birthday} focal={{ x: .55, y: .62, zoom: 1 }} height={176} size="md" style={{ marginTop: space.sm }} chips={[week.birthday]}
-        title="Saturday is a birthday dinner" sub={`life will keep Sunday about ${n(day.target - week.plan[1])} lighter, so the week still balances.`} />
-      <Box pad={space.md} style={{ marginTop: space.sm }}>
-        <Between>
-          <View style={{ flex: 1, minWidth: 0 }}><Text variant="title">Carry unused calories to the weekend</Text><Text variant="callout" tone="ink2">Your choice. Off until you turn it on.</Text></View>
-          <SwitchV26 value={!!data.flags['calorie-rollover']} onChange={v => { flag('calorie-rollover', v); feedback.select(); }} accessibilityLabel="Carry unused calories to the weekend" />
-        </Between>
-      </Box>
+        title="Saturday is a birthday dinner" sub={`Life will keep Sunday about ${n(day.target - week.plan[1])} lighter, so the week still balances.`} />
+      <RolloverBox />
     </Page>
   );
 }
 
 /* ───────────────────────── 11. Meals and your sleep ───────────────────────── */
 
-function WindowChart({ w }: { w: number }) {
+type Window = [string, number, number];
+function WindowChart({ w, days, late }: { w: number; days: Window[]; late: number }) {
   const t = useTokens(), { accent } = useAreaTint('work');
-  const x = (h: number) => 36 + (h - 6) * 254 / 18, gx = x(timing.late), k = w / 290;
+  const x = (h: number) => 36 + (Math.max(6, Math.min(24, h)) - 6) * 254 / 18, gx = x(late), k = w / 290;
   return (
     <Svg width={w} height={196 * k} viewBox="0 0 290 196">
       {Array.from({ length: 20 }, (_, i) => <Circle key={i} cx={gx} cy={20 + i * 8} r={1.3} fill={t.inkQuiet} />)}
       <Circle cx={gx} cy={8} r={3.5} fill={t.ember} />
-      <SvgText x={gx - 8} y={12} textAnchor="end" fontSize={11} fontWeight="600" fill={t.ink}>{`${timing.late}:00`}</SvgText>
-      {timing.days.map(([d, a, b], i) => { const late = b > timing.late, y = 24 + i * 22; return (
-        <G key={d}>
-          <SvgText x={0} y={y + 9} fontSize={11} fontWeight="600" fill={late ? t.ink : t.ink2}>{d}</SvgText>
-          <Rect x={x(a)} y={y} width={x(b) - x(a)} height={10} rx={5} fill={accent} opacity={late ? 1 : .4} />
+      <SvgText x={gx - 8} y={12} textAnchor="end" fontSize={11} fontWeight="600" fill={t.ink}>{`${late}:00`}</SvgText>
+      {days.map(([d, a, b], i) => { const after = b > late, y = 24 + i * 22; return (
+        <G key={`${d}-${i}`}>
+          <SvgText x={0} y={y + 9} fontSize={11} fontWeight="600" fill={after ? t.ink : t.ink2}>{d}</SvgText>
+          <Rect x={x(a)} y={y} width={Math.max(10, x(b) - x(a))} height={10} rx={5} fill={accent} opacity={after ? 1 : .4} />
         </G>
       ); })}
       {([['06:00', 36, 'start'], ['15:00', x(15), 'middle'], ['24:00', 290, 'end']] as const).map(([l, px, a]) => <SvgText key={l} x={px} y={192} textAnchor={a} fontSize={11} fontWeight="600" fill={t.inkQuiet}>{l}</SvgText>)}
@@ -572,15 +705,37 @@ function WindowChart({ w }: { w: number }) {
   );
 }
 
-function WindowBox({ label }: { label: string }) {
+function WindowBox({ label, days = timing.days, late = timing.late }: { label: string; days?: Window[]; late?: number }) {
   const [w, onLayout] = useWidth();
-  return <View onLayout={onLayout} style={{ height: w ? 196 * w / 290 : 200, marginTop: space.sm }} accessible accessibilityRole="image" accessibilityLabel={label}>{w ? <WindowChart w={w} /> : null}</View>;
+  return <View onLayout={onLayout} style={{ height: w ? 196 * w / 290 : 200, marginTop: space.sm }} accessible accessibilityRole="image" accessibilityLabel={label}>{w ? <WindowChart w={w} days={days} late={late} /> : null}</View>;
 }
 
+/** Meals and sleep. The sample life's pattern is the board's; a real account sees its eating window, and no link to sleep is claimed. */
 export function MealtimingV26() {
+  return SHOW_SAMPLES ? <MealtimingSampleV26 /> : <MealtimingRealV26 />;
+}
+
+function MealtimingRealV26() {
+  const { data } = useSeed(), days = eatingWindows(data);
+  return (
+    <Page screen="mealtiming" bar={{ kind: 'push', title: 'Meal timing' }}>
+      <Eyebrow>Meals and your sleep</Eyebrow>
+      <Display s={days.length ? '{Your eating window,} from the times you logged.' : '{Nothing logged this week.} Your eating window appears as you log meals.'} />
+      {days.length ? (
+        <TintCard area="work" style={{ marginTop: space.xl }}>
+          <Between><Text variant="title">Eating window</Text><Text variant="callout" tone="ink2">last 7 days</Text></Between>
+          <WindowBox days={days} late={timing.late} label={`Your eating window on ${days.length} of the last 7 days, with ${timing.late}:00 marked`} />
+        </TintCard>
+      ) : null}
+      <Callout style={{ marginTop: space.sm }}>Whether late meals change your sleep needs weeks of both. Life doesn’t draw that link yet.</Callout>
+    </Page>
+  );
+}
+
+function MealtimingSampleV26() {
   const nav = useNavigation(), { choose } = useSeed();
   return (
-    <Page screen="mealtiming" bar={{ kind: 'push', title: 'Meal timing', action: info('How life found this', () => nav.go('math')) }}
+    <Page screen="mealtiming" bar={{ kind: 'push', title: 'Meal timing', action: info('How Life found this', () => nav.go('math')) }}
       footer={<Btn label="Try finishing by 20:30 for two weeks" onPress={() => { choose('experiment', 'Finish dinner by 20:30'); nav.go('experiment'); }} />}>
       <Eyebrow>Meals and your sleep</Eyebrow>
       <Display s={`When dinner ends {after ${timing.late}:00}, you sleep {${timing.lessSleep} minutes less} and your HRV is {lower}.`} />
@@ -595,7 +750,21 @@ export function MealtimingV26() {
 
 /* ───────────────────────── 12. Food quality ───────────────────────── */
 
+/** Food quality. Counting plants and processing from meals isn't built, so a real account sees the target and what counts. */
 export function FoodqualityV26() {
+  return SHOW_SAMPLES ? <FoodqualitySampleV26 /> : (
+    <Page screen="foodquality" bar={{ kind: 'push', title: 'Food quality' }}>
+      <PhotoCard source={photos.sunday} focal={{ x: .5, y: .85, zoom: 1 }} height={210} chips={['This week']} title="Not counted yet" sub={`${quality.plantsGoal} different plants a week is a good target for gut health.`} />
+      <Box style={{ marginTop: space.sm }}>
+        <Text variant="title">What counts</Text>
+        <Body s="Fruit, vegetables, beans, grains, herbs, nuts, seeds and spices. Each different one counts once a week." style={{ marginTop: space.xxs }} />
+      </Box>
+      <Callout style={{ marginTop: space.sm }}>Life doesn’t count plants or processing from your meals yet. The meals you log are kept for when it does.</Callout>
+    </Page>
+  );
+}
+
+function FoodqualitySampleV26() {
   const t = useTokens(), q = quality;
   return (
     <Page screen="foodquality" bar={{ kind: 'push', title: 'Food quality' }}>
@@ -690,7 +859,7 @@ export function ImportfoodV26() {
     <Page screen="importfood" bar={{ kind: 'push', title: 'Import' }}>
       <View style={[styles.importIcon, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><Icon name="arrowDown" size={22} color={t.ink} /></View>
       <Display s="Start from {your real history}, not from zero." style={{ marginTop: space.lg }} />
-      <Body s="Bring your past food and weight from another app, so life’s targets and patterns begin with what you’ve already logged." style={{ marginTop: space.sm }} />
+      <Body s="Bring your past food and weight from another app, so Life’s targets and patterns begin with what you’ve already logged." style={{ marginTop: space.sm }} />
       <View style={{ marginTop: space.lg }}>
         {source('health', 'heart', 'Apple Health', 'Food and weight from other apps', 'Connect', () => { flag('food-import-health', true); feedback.select(); })}
         {source('mfp', 'doc', 'MyFitnessPal', 'Export a CSV, then pick it here', 'Choose file', () => void choose_('mfp'))}
@@ -710,7 +879,6 @@ const styles = StyleSheet.create({
   dayCol: { width: 148, borderRadius: radius.lg, paddingTop: 14, paddingHorizontal: 14, paddingBottom: space.md },
   stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.lg, marginTop: space.xs },
   sum: { flexDirection: 'row', alignItems: 'flex-start' },
-  moment: { fontFamily: fonts.sansSemibold, fontSize: 46, lineHeight: 48, letterSpacing: -2.07, marginTop: space.lg },
   fields: { flexDirection: 'row', gap: space.sm },
   field: { flex: 1, borderRadius: radius.md, paddingVertical: space.tile, paddingHorizontal: space.sm },
   legend: { flexDirection: 'row', alignItems: 'center', gap: 6 },

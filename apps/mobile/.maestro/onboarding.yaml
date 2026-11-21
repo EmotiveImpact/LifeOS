@@ -1,0 +1,14 @@
+# Onboarding: first open to Today, with nothing leaving the phone.
+appId: app.life.os
+name: Onboarding
+tags:
+  - core
+---
+- launchApp:
+    clearState: true
+- runFlow: common/setup-to-signin.yaml
+- assertVisible: "Not now, keep it on this phone"
+- runFlow: common/finish-setup.yaml
+- assertVisible: "Today’s moves"
+- tapOn: "You"
+- assertVisible: "Life knows you.*"

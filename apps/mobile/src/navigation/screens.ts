@@ -26,9 +26,9 @@ export const screens = {
   },
   "tell": {
     "key": "tell",
-    "title": "Or just tell life",
+    "title": "Or just tell Life",
     "kind": "Full screen",
-    "from": "Welcome → “Or just tell life”",
+    "from": "Welcome → “Or just tell Life”",
     "route": "/(flows)/onboarding/tell",
     "chapter": "First open"
   },
@@ -210,7 +210,7 @@ export const screens = {
   },
   "inbox": {
     "key": "inbox",
-    "title": "From life",
+    "title": "From Life",
     "kind": "Push",
     "from": "bell on Today",
     "route": "/today/inbox",
@@ -290,7 +290,7 @@ export const screens = {
   },
   "editfiled": {
     "key": "editfiled",
-    "title": "Edit what life filed",
+    "title": "Edit what Life filed",
     "kind": "Sheet",
     "from": "tap any filed item",
     "route": "/(sheets)/editfiled",
@@ -1258,7 +1258,7 @@ export const screens = {
   },
   "tellback": {
     "key": "tellback",
-    "title": "Tell it back to life",
+    "title": "Tell it back to Life",
     "kind": "Full screen",
     "from": "lesson",
     "route": "/(flows)/teach/tellback",
@@ -1330,9 +1330,9 @@ export const screens = {
   },
   "knows": {
     "key": "knows",
-    "title": "What life knows",
+    "title": "What Life knows",
     "kind": "Push",
-    "from": "You → What life knows",
+    "from": "You → What Life knows",
     "route": "/you/knows",
     "chapter": "Tab 3 · You"
   },
@@ -1354,9 +1354,9 @@ export const screens = {
   },
   "memory": {
     "key": "memory",
-    "title": "What life remembers",
+    "title": "What Life remembers",
     "kind": "Push",
-    "from": "You → What life remembers",
+    "from": "You → What Life remembers",
     "route": "/you/memory",
     "chapter": "Tab 3 · You"
   },
@@ -1466,7 +1466,7 @@ export const screens = {
   },
   "plus": {
     "key": "plus",
-    "title": "life+",
+    "title": "Life+",
     "kind": "Sheet",
     "from": "a locked feature or Settings",
     "route": "/(sheets)/plus",
@@ -1540,13 +1540,21 @@ export const screens = {
     "key": "subscription",
     "title": "Your life+",
     "kind": "Push",
-    "from": "Settings → life+",
+    "from": "Settings → Life+",
     "route": "/you/settings/subscription",
+    "chapter": "You · Settings and account"
+  },
+  "plusstart": {
+    "key": "plusstart",
+    "title": "Life+ to start",
+    "kind": "Full screen",
+    "from": "the end of setup, or opening Life with no plan",
+    "route": "/(flows)/plusstart",
     "chapter": "You · Settings and account"
   },
   "plussuccess": {
     "key": "plussuccess",
-    "title": "Welcome to life+",
+    "title": "Welcome to Life+",
     "kind": "Full screen",
     "from": "after subscribing",
     "route": "/(flows)/plussuccess",
@@ -1562,7 +1570,7 @@ export const screens = {
   },
   "legal": {
     "key": "legal",
-    "title": "About life",
+    "title": "About Life",
     "kind": "Push",
     "from": "Settings",
     "route": "/you/settings/legal",
@@ -1682,7 +1690,7 @@ export const screens = {
   },
   "aidown": {
     "key": "aidown",
-    "title": "life’s AI is having a moment",
+    "title": "Life’s AI is having a moment",
     "kind": "State",
     "from": "AI unavailable",
     "route": null,

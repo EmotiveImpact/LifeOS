@@ -14,8 +14,9 @@ import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
 import { aimReadKey, localDayKey } from '@/state/day';
 import { money, seed, seedAim, seedTaxClaim, type ChiefAim } from '@/state/seed';
+import { SHOW_SAMPLES } from '@/state/sample';
 import { gambits } from '@/state/plan';
-import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Hero, Micro, Page, PhotoBackdrop, PhotoRound, QuietLink, Row, RowsCard, Statement, Tick, Timeline } from './kit';
+import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Hero, Micro, NotYetV26, Page, PhotoBackdrop, PhotoRound, QuietLink, Row, RowsCard, Statement, Tick, Timeline } from './kit';
 
 const pct = () => Math.round(seed.finance.deposit / seed.finance.depositGoal * 100);
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -27,7 +28,7 @@ const STEPS = [
   { key: 'what', title: 'What, {exactly?}', sub: 'Make it concrete enough that you’d know the day you’ve got it.', suggestion: 'Own a two-bed flat in South London', photo: 'desk', next: 'Next: by when?' },
   { key: 'when', title: 'By {when?}', sub: 'A month and a year gives your plan somewhere to start.', suggestion: 'June 2029', photo: 'aimwrite', next: 'Next: what you’ll give' },
   { key: 'give', title: 'What will you {give for it?}', sub: 'Everything has a price: time, money, effort. Name yours.', suggestion: `Save ${money(seed.finance.savingsMonthly)} a month and grow my design rate by 20%`, photo: 'aimdesk', next: 'Next: your first plan' },
-  { key: 'plan', title: 'Your {first plan}', sub: 'It doesn’t need to be perfect. life will improve it with you.', suggestion: 'Lifetime ISA first, then a mortgage in principle by 2028', photo: 'keyshome', next: 'Save my Aim' },
+  { key: 'plan', title: 'Your {first plan}', sub: 'It doesn’t need to be perfect. Life will improve it with you.', suggestion: 'Lifetime ISA first, then a mortgage in principle by 2028', photo: 'keyshome', next: 'Save my Aim' },
 ] as const;
 type StepKey = (typeof STEPS)[number]['key'];
 
@@ -68,13 +69,14 @@ export function AimNewV26() {
           accessibilityLabel={s.title.replace(/[{}]/g, '')} style={[styles.input, { color: t.ink, fontFamily: fonts.sansMedium }]} />
         <RoundButton icon="mic" size="sm" label="Talk instead of typing" onPress={() => nav.go('talk')} />
       </View>
-      <View style={{ flexDirection: 'row', marginTop: space.sm }}>
+      {/* The suggestions are Ama's ("from what Life already knows"), so a real account doesn't see them. */}
+      {SHOW_SAMPLES ? <View style={{ flexDirection: 'row', marginTop: space.sm }}>
         {usedSuggestion
-          ? <Chip label="From what life already knows · undo" icon="check" tone="done" onPress={() => { setAim({ ...aim, [s.key]: suggested[s.key] ?? '' }); setSuggested({ ...suggested, [s.key]: undefined }); }} />
+          ? <Chip label="From what Life already knows · undo" icon="check" tone="done" onPress={() => { setAim({ ...aim, [s.key]: suggested[s.key] ?? '' }); setSuggested({ ...suggested, [s.key]: undefined }); }} />
           : <Press haptic="select" onPress={() => { setSuggested({ ...suggested, [s.key]: value }); setAim({ ...aim, [s.key]: s.suggestion }); }} accessibilityLabel={`Suggest: ${s.suggestion}`} style={[styles.suggest, { backgroundColor: t.surface, flexShrink: 1 }]}>
               <LifeOrb size={18} /><Text variant="buttonCompact" numberOfLines={1} style={{ flexShrink: 1 }}>{`Suggest: ${s.suggestion}`}</Text>
             </Press>}
-      </View>
+      </View> : null}
       <View style={{ minHeight: space.xxl }} />
       <Eyebrow>Your Aim, so far</Eyebrow>
       <Text variant="statement" tone="ink2" style={{ marginTop: space.xs }}>
@@ -97,8 +99,9 @@ function streakOf(log: string[]) {
 }
 
 export function AimV26() {
-  const t = useTokens(), nav = useNavigation(), { data, set, flag } = useSeed();
+  const t = useTokens(), nav = useNavigation(), { data, engine, set, flag } = useSeed();
   const aim = data.aim;
+  // Progress toward the Aim is the sample life's deposit; a real account has no measure of it yet, so none is drawn.
   const p = pct();
   if (!aim) {
     return (
@@ -116,32 +119,36 @@ export function AimV26() {
   const days = new Set(aim.readLog.map(e => e.slice(0, 10)));
   const cells: DotCell[] = Array.from({ length: 21 }, (_, k) => { const d = new Date(); d.setDate(d.getDate() - (20 - k)); const key = localDayKey(d); return days.has(key) ? 'on' : k === 20 ? 'now' : ''; });
   const statement = `By ${aim.when}, I will ${trimEnd(aim.what)}.`;
-  const gambit = data.profile.monthlyGambit ?? `Move ${money(seed.finance.savingsMonthly)} into the Lifetime ISA`;
-  const taxOpen = !data.completed.includes('uk-hmrc-tax-code');
+  const gambit = data.profile.monthlyGambit ?? (SHOW_SAMPLES ? `Move ${money(seed.finance.savingsMonthly)} into the Lifetime ISA` : null);
+  const taxOpen = SHOW_SAMPLES && !data.completed.includes('uk-hmrc-tax-code');
+  const move = SHOW_SAMPLES ? undefined : engine.tasks.find(v => !data.completed.includes(v.id));
+  const month = SHOW_SAMPLES ? 'Nov' : new Date().toLocaleDateString('en-GB', { month: 'short' });
   return (
     <Page screen="aim" scroll={false} backdrop={<PhotoBackdrop source={photos.keyshome} focal={{ x: 0.7, y: 0 }} fade={false} />}
       bar={{ kind: 'photo', left: <PhotoRound icon="back" label="Back" onPress={nav.close} />, right: <View style={styles.acts}>
         <PhotoRound icon="arrowUp" label="Share" onPress={() => { void Share.share({ message: statement }); }} />
         <ActionMenu items={[
-          { label: 'Edit your Aim', sub: 'life keeps the history', icon: 'edit', onPress: () => nav.go('aimnew') },
+          { label: 'Edit your Aim', sub: 'Life keeps the history', icon: 'edit', onPress: () => nav.go('aimnew') },
           { label: 'This month’s gambit', icon: 'spark', onPress: () => nav.go('gambit') },
-          { label: 'See a glimpse', sub: 'What it will feel like', icon: 'eye', onPress: () => nav.go('glimpse') },
+          ...(SHOW_SAMPLES ? [{ label: 'See a glimpse', sub: 'What it will feel like', icon: 'eye' as const, onPress: () => nav.go('glimpse') }] : []),
         ]}>{open => <PhotoRound icon="more" label="Aim actions" onPress={open} />}</ActionMenu>
       </View> }}
       contentStyle={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}>
       <View style={styles.aimHead}>
-        <Eyebrow onPhoto>{`Chief Aim · ${p}% there`}</Eyebrow>
+        <Eyebrow onPhoto>{SHOW_SAMPLES ? `Chief Aim · ${p}% there` : 'Chief Aim'}</Eyebrow>
         <Display onPhoto s={`By {${aim.when}}, I will {${trimEnd(aim.what)}.}`} style={{ marginTop: space.xxs }} />
       </View>
       <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ paddingTop: 392 }}>
         <View style={[styles.sheet, { backgroundColor: t.canvas }]}>
           <View style={[styles.handle, { backgroundColor: t.surface3 }]} />
-          <Between style={{ alignItems: 'flex-end' }}>
-            <Figure value={money(seed.finance.deposit)} />
-            <Text variant="callout" tone="ink2" style={{ marginBottom: space.tile, textAlign: 'right' }}>{`of ${money(seed.finance.depositGoal)} · `}<Text variant="callout">{`${p}%`}</Text></Text>
-          </Between>
-          <Ruler pct={p} style={{ marginTop: space.sm }} />
-          <Eyebrow style={{ marginTop: space.xxl }}>In your words</Eyebrow>
+          {SHOW_SAMPLES ? <>
+            <Between style={{ alignItems: 'flex-end' }}>
+              <Figure value={money(seed.finance.deposit)} />
+              <Text variant="callout" tone="ink2" style={{ marginBottom: space.tile, textAlign: 'right' }}>{`of ${money(seed.finance.depositGoal)} · `}<Text variant="callout">{`${p}%`}</Text></Text>
+            </Between>
+            <Ruler pct={p} style={{ marginTop: space.sm }} />
+          </> : null}
+          <Eyebrow style={{ marginTop: SHOW_SAMPLES ? space.xxl : 0 }}>In your words</Eyebrow>
           <Statement s={`In return I will {${trimEnd(aim.give)}}. My plan: {${cap(trimEnd(aim.plan))}}.`} style={{ marginTop: space.xs }} />
           <Box style={{ marginTop: space.xl }}>
             <Between style={{ alignItems: 'flex-start' }}>
@@ -160,12 +167,13 @@ export function AimV26() {
           <SectionHead title="How it breaks down" />
           <RowsCard>
             {taxOpen ? <Row photo={photos.payslip} thumbFocal={{ y: 0.78 }} title="Today’s move" sub={`Finish the P87, ${money(seedTaxClaim.refund)} to the deposit`} right={<Chip label="6 min" />} onPress={() => { set({ selectedMission: 'uk-hmrc-tax-code' }); nav.go('mission'); }} /> : null}
-            <Row photo={photos.aimdesk} thumbFocal={{ y: 0.66 }} title="This month’s gambit" sub={gambit.replace(/^I want to /, '').replace(/ this month\.?$/, '').replace(/^./, c => c.toUpperCase())} right={<Chip label="Nov" tone="q" />} onPress={() => nav.go('gambit')} />
+            {move ? <Row photo={photos[move.category === 'health' ? 'walk' : move.lifeArea === 'home' ? 'keyshome' : 'payslip']} thumbFocal={{ y: 0.78 }} title="Today’s move" sub={move.shortTitle} onPress={() => { set({ selectedMission: move.id }); nav.go('mission'); }} /> : null}
+            <Row photo={photos.aimdesk} thumbFocal={{ y: 0.66 }} title="This month’s gambit" sub={gambit ? gambit.replace(/^I want to /, '').replace(/ this month\.?$/, '').replace(/^./, c => c.toUpperCase()) : 'Two small moves toward your Aim'} right={<Chip label={month} tone="q" />} onPress={() => nav.go('gambit')} />
           </RowsCard>
           <Press haptic="open" onPress={() => nav.go('aimnew')} accessibilityLabel="Edit your Aim" style={[styles.acts, { marginTop: space.lg, alignItems: 'center', alignSelf: 'flex-start' }]}>
             <Text variant="buttonCompact">Edit your Aim</Text><Icon name="chev" size={16} color={t.ink} />
           </Press>
-          <Callout style={{ marginTop: space.xxs }}>Aims can change, and life keeps the history.</Callout>
+          <Callout style={{ marginTop: space.xxs }}>Aims can change, and Life keeps the history.</Callout>
         </View>
       </ScrollView>
     </Page>
@@ -176,7 +184,15 @@ export function AimV26() {
 
 const TIMES = ['Fri 18:00', 'Sat 10:00', 'Sat 17:00', 'Sun 19:00'] as const;
 
+/** This month's gambit. Its suggestions are the sample life's own (her P87, her ISA, her design rate), so a real account talks it through with Life. */
 export function GambitV26() {
+  return SHOW_SAMPLES ? <GambitSampleV26 /> : (
+    <NotYetV26 screen="gambit" eyebrow="This month’s gambit · day one" line="Life suggests two small moves for the month once it knows what your Aim needs."
+      source="aimdesk" focal={{ y: 0.66 }} ask="Plan the month with Life" examples="What could move your Aim forward this month?" />
+  );
+}
+
+function GambitSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, set, choose } = useSeed();
   const [k, setK] = useState(Number(data.choices['gambit-k'] ?? 0) || 0);
   const [time, setTime] = useState<(typeof TIMES)[number]>((TIMES as readonly string[]).includes(data.choices['gambit-checkin'] ?? '') ? data.choices['gambit-checkin'] as (typeof TIMES)[number] : TIMES[0]);
@@ -196,7 +212,7 @@ export function GambitV26() {
       <Timeline items={[
         { when: 'FIRST', text: g.t1, state: 'now', children: <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>{g.s1}</Text> },
         { when: 'THEN', text: g.t2, state: 'later', children: <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>{g.s2}</Text> },
-        { when: 'WEEKLY CHECK-IN', text: 'Two minutes with life, at a time you choose.', state: 'later', children: <SegmentedV26 options={TIMES.map(v => ({ value: v, label: v }))} value={time} onChange={setTime} style={{ marginTop: space.sm }} /> },
+        { when: 'WEEKLY CHECK-IN', text: 'Two minutes with Life, at a time you choose.', state: 'later', children: <SegmentedV26 options={TIMES.map(v => ({ value: v, label: v }))} value={time} onChange={setTime} style={{ marginTop: space.sm }} /> },
       ]} />
       <SectionHead title="Suggestions from your Aim" link="tap to swap" />
       <RowsCard>
@@ -208,7 +224,15 @@ export function GambitV26() {
 
 /* ───────────────────────── A glimpse, earned ───────────────────────── */
 
+/** A glimpse is earned by progress toward the Aim. Only the sample life has a measure of that yet. */
 export function GlimpseV26() {
+  return SHOW_SAMPLES ? <GlimpseSampleV26 /> : (
+    <NotYetV26 screen="glimpse" eyebrow="A glimpse · not earned yet" line="A glimpse is earned as your Aim moves forward, and Life can’t measure that yet."
+      source="keyshome" focal={{ x: 0.1, y: 0.62 }} ask="Tell Life what’s moved" examples="Money saved, a step taken, a date agreed." />
+  );
+}
+
+function GlimpseSampleV26() {
   const nav = useNavigation(), t = useTokens(), insets = useSafeAreaInsets(), { data } = useSeed();
   const aim = data.aim ?? seedAim;
   const year = aim.when.match(/\d{4}/)?.[0] ?? '';

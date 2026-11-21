@@ -1,0 +1,5 @@
+# A whole first open, keeping everything on this phone (no account), ending on Today.
+appId: app.life.os
+---
+- runFlow: setup-to-signin.yaml
+- runFlow: finish-setup.yaml

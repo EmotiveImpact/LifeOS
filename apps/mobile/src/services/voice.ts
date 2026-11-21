@@ -25,7 +25,7 @@ async function stop() {
   finally { active = false; starting = false; subscription?.remove(); subscription = null; notify = null; }
 }
 AppState.addEventListener('change', state => {
-  if (state !== 'active' && active) { notify?.(latest, true, 'Microphone paused while life is in the background.'); void stop().catch(() => {}); }
+  if (state !== 'active' && active) { notify?.(latest, true, 'Microphone paused while Life is in the background.'); void stop().catch(() => {}); }
 });
 export const voice = {
   capabilities: async () => ({ speechAvailable: !!native && await native.speechAvailable(), speakerAvailable: !!phonon && !!process.env.EXPO_PUBLIC_PHONON_MODEL_URL && await phonon.isInstalled(), recogniser: 'On-device English speech', speaker: 'Phonon · Maeve', reason: Platform.OS === 'web' ? 'Native voice cannot run in the browser preview. Type instead.' : !native ? 'The installed app needs the new native voice module.' : 'Speech needs supported on-device language assets. Phonon and the Android Kitten runtime are not bundled yet.' }),

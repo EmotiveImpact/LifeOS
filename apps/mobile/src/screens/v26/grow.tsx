@@ -11,7 +11,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   DashPager, DotGrid, DotStrip, LifeOrb, LifeSays, PhotoFill, StatusPill, Text, TileGrid, V26Tile, cardShadow, feedback, motion, photo, photoScrims,
-  photos, radius, space, useCalmMotion, useTokens, type DotCell,
+  photos, radius, space, useCalmMotion, useTokens, type DotCell, durations
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
@@ -19,6 +19,7 @@ import { money, seed } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { bornOn, gateTo, gateWords, levelPlan, levelupFirst, levelupMore, vantageReach, weekStats, weeks, yearReview, type WeekKey } from '@/state/you';
 import { Between, Body, Btn, Callout, Display, Eyebrow, Page, PeekStack, Statement, Timeline, drawerStyle, useDrawerPhoto } from './kit';
+import { WeekSteps } from './loops';
 import { OnPhotoRound, PaperChip } from './learn';
 
 const n = (v: number) => Math.round(v).toLocaleString('en-GB');
@@ -48,7 +49,7 @@ export function RecapV26() {
   const order: WeekKey[] = ['w44', 'w45', 'now'];
   // A real account has only this week until Sundays go by; the sample shows the board's three weeks.
   const missions = SHOW_SAMPLES ? weekStats.missions : data.completed.length;
-  const week = SHOW_SAMPLES ? weeks[picked] : { ...weeks.now, tag: 'This week', line: missions ? `You cleared {@checkCircle ${missions} mission${missions === 1 ? '' : 's'}} this week.` : 'Your first week with life. {Small steps count.}' };
+  const week = SHOW_SAMPLES ? weeks[picked] : { ...weeks.now, tag: 'This week', line: missions ? `You cleared {@checkCircle ${missions} mission${missions === 1 ? '' : 's'}} this week.` : 'Your first week with Life. {Small steps count.}' };
   const behind = SHOW_SAMPLES ? order.filter(k => k !== picked) : [];
   // The share card sheet (Phase 20) builds the picture and lets you hide the numbers before anything leaves.
   const share = () => { feedback.select(); nav.go('sharecard'); };
@@ -71,8 +72,9 @@ export function RecapV26() {
           {SHOW_SAMPLES ? <StatTile wide label="Health stack days" value={String(weekStats.stackDays)} unit="of 7" up={String(weekStats.stackDays)}><DotStrip days={weekStats.stackDots} style={{ marginTop: space.sm }} /></StatTile> : null}
         </TileGrid>
       ) : <Callout center style={{ marginTop: space.md }}>Tap a week behind the card to bring it forward.</Callout>}
+      {picked === 'now' ? <WeekSteps /> : null}
       <View style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-        <Eyebrow orb>Reflection from life</Eyebrow>
+        <Eyebrow orb>Reflection from Life</Eyebrow>
         <Statement s="Progress came from {small, repeated steps}, not one big push." style={{ marginTop: space.xs }} />
       </View>
     </Page>
@@ -121,14 +123,15 @@ export function LevelupV26() {
   const first = levelupFirst[reached];
   const pages = [
     { chip: `Level ${reached} unlocked`, title: first.title, line: first.line, photo: 'sky' as const, focal: { x: 0.35, y: 0, zoom: 3.1 }, to: 'plan' as const },
-    ...levelupMore.map(m => ({ ...m, line: m.line.replace('DEPOSIT', String(pct)) })),
+    // The deposit is the sample life's; a real account's Aim has no measure yet, so its page says so plainly.
+    ...levelupMore.map(m => ({ ...m, line: SHOW_SAMPLES ? m.line.replace('DEPOSIT', String(pct)) : m.to === 'aim' ? 'Every level is a step toward {your Aim}.' : m.line })),
   ];
   const p = pages[page], last = page === pages.length - 1;
-  const scale = useSharedValue(calm ? 1 : 0.6), fade = useSharedValue(0);
+  const scale = useSharedValue(calm ? 1 : 0.92), fade = useSharedValue(0);
   useEffect(() => {
     if (page === 0) feedback.cleared();
-    fade.value = 0; fade.value = withTiming(1, { duration: calm ? 200 : 320 });
-    scale.value = calm ? 1 : 0.6; if (!calm) scale.value = withSpring(1, motion.bouncy);
+    fade.value = 0; fade.value = withTiming(1, { duration: calm ? durations.quick : durations.item });
+    scale.value = calm ? 1 : 0.92; if (!calm) scale.value = withSpring(1, motion.smooth);
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
   const orb = useAnimatedStyle(() => ({ opacity: fade.value, transform: [{ scale: scale.value }] }));
   const words = useAnimatedStyle(() => ({ opacity: fade.value }));

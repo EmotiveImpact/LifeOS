@@ -2,10 +2,26 @@ import type { LifeDataStore } from './store';
 import { object } from './store';
 import type { TableName } from './schema';
 import { digest, stableId } from './ids';
+import { embed } from '@life/brain';
 
 const domainKeys = new Set(['profile', 'weightKg', 'heightCm', 'waistCm', 'prefs', 'records', 'filedRecords', 'aim', 'chiefAim', 'meals', 'habits', 'people', 'learned', 'memories', 'completed', 'missionSteps', ...syncedSettings()]);
-/** Choices, flags and whether setup is done travel with the account inside the prefs row, so a restored phone has them. */
-function syncedSettings() { return ['choices', 'flags', 'onboardingDone']; }
+/** Choices, flags, the core loops' plans and ticks, and whether setup is done travel with the account inside the prefs row, so a restored phone has them. */
+function syncedSettings() { return ['choices', 'flags', 'onboardingDone', 'loops']; }
+/**
+ * Choices that belong to this phone, not the account: the phone's own permissions (another phone's yes to the
+ * calendar isn't this one's), what Life learned of the moves you take or pass (kept on the phone, Phase 29), the log
+ * of nudges this phone sent, its push token mark, messages waiting for a connection, and its own yes or no to crash
+ * reports and the weekly count of moves (Phase 30). They stay in local state and never ride along in the synced prefs row.
+ */
+export const PHONE_ONLY_CHOICES = ['calendar-permission', 'notification-permission', 'notification-asked', 'camera-permission', 'mic-permission', 'health-permission', 'push-token-sent', 'day-learning', 'nudge-log', 'chat-queue', 'moves-log', 'share-moves', 'crash-reports'] as const;
+const phoneOnly = new Set<string>(PHONE_ONLY_CHOICES);
+const splitChoices = (choices: Record<string, unknown>) => {
+  const account: Record<string, unknown> = {}, phone: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(choices)) (phoneOnly.has(key) ? phone : account)[key] = value;
+  return { account, phone };
+};
+/** A memory's attributes kept in its source column (services/memory.ts); `lastUsed` has its own column. */
+const MEMORY_ATTRIBUTES = ['kind', 'confidence', 'validFrom', 'validTo', 'uses'] as const;
 const array = (value: unknown): Record<string, unknown>[] => Array.isArray(value) ? value.map(object) : [];
 const dataObject = (value: unknown) => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 const uid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -39,7 +55,8 @@ async function commit(store: LifeDataStore, raw: unknown, importing: boolean, so
     const p = object(input.profile), prefs = dataObject(input.prefs), choices = dataObject(input.choices);
     await entity('profile', 'main', { name: p.name ?? null, date_of_birth: p.dateOfBirth ?? null, where: { city: p.city, country: p.country, postcode: p.postcode }, work: { status: p.workStatus, annualIncome: p.annualIncome }, household: p.householdSize ?? null, pay_day: p.payDay ?? null, chronotype: p.chronotype ?? null, values: p.values ?? null, big_five: p.bigFive ?? null, level: p.earnedLevel ?? null, chapter: p.chapter ?? null, core_fields: p });
     await entity('body_profile', 'main', { height_cm: input.heightCm ?? null, weight_kg: input.weightKg ?? null, waist_cm: input.waistCm ?? null, body_fat_pct: choices['body-fat'] ? Number(choices['body-fat']) : null, sex_at_birth: choices['sex-at-birth'] ?? null, activity_level: choices.activity ?? null, ethnicity_for_ranges: choices.ethnicity ?? null, units: { weight: choices['weight-unit'] ?? 'kg' } });
-    const app = Object.fromEntries(syncedSettings().filter(key => input[key] !== undefined).map(key => [key, input[key]]));
+    const { account: accountChoices, phone: phoneChoices } = splitChoices(choices);
+    const app = Object.fromEntries(syncedSettings().filter(key => input[key] !== undefined).map(key => [key, key === 'choices' ? accountChoices : input[key]]));
     await entity('prefs', 'main', { look: prefs.look ?? null, sounds: Boolean(prefs.sounds), haptics: Boolean(prefs.haptics), hand_drawn: Boolean(prefs.handDrawn), hide_numbers: Boolean(prefs.hideNumbers), notifications: prefs.notifications ?? null, private_mode: Boolean(prefs.privateMode), fields: { ...prefs, app } });
     for (const fact of array(input.records ?? input.filedRecords)) {
       // Proposals are LOCAL draft UI state below; never become queued facts implicitly.
@@ -71,7 +88,14 @@ async function commit(store: LifeDataStore, raw: unknown, importing: boolean, so
       }
     }
     for (const [i, topic] of (Array.isArray(input.learned) ? input.learned : []).entries()) await entity('learning_record', typeof topic === 'string' ? topic : String(i), { topic: typeof topic === 'string' ? topic : String(dataObject(topic).topic ?? ''), source: { type: 'local' } });
-    for (const memory of array(input.memories)) await entity('memory', String(memory.id), { text: memory.text ?? null, source: typeof memory.source === 'string' ? { label: memory.source, ...(memory.category ? { category: memory.category } : {}), ...(memory.recordId ? { recordId: memory.recordId } : {}) } : { ...dataObject(memory.source), ...(memory.category ? { category: memory.category } : {}), ...(memory.recordId ? { recordId: memory.recordId } : {}) }, last_used: memory.lastUsed ?? null });
+    for (const memory of array(input.memories)) {
+      // A memory's own attributes (services/memory.ts) travel in its source column, so phone and server keep the
+      // same columns; the vector goes in `embedding`, named by the embedder that made it.
+      const attributes = Object.fromEntries(MEMORY_ATTRIBUTES.filter(key => memory[key] !== undefined && memory[key] !== null).map(key => [key, memory[key]]));
+      const base = typeof memory.source === 'string' ? { label: memory.source } : dataObject(memory.source);
+      const text = typeof memory.text === 'string' ? memory.text : null;
+      await entity('memory', String(memory.id), { text, source: { ...base, ...(memory.category ? { category: memory.category } : {}), ...(memory.recordId ? { recordId: memory.recordId } : {}), ...attributes }, embedding: text ? embed(text) : null, last_used: memory.lastUsed ?? null });
+    }
     const completed = new Set(Array.isArray(input.completed) ? input.completed.map(String) : []);
     const steps = dataObject(input.missionSteps);
     const missionIds = new Set([...completed, ...Object.keys(steps).map(k => k.replace(/-\d+$/, ''))]);
@@ -89,6 +113,7 @@ async function commit(store: LifeDataStore, raw: unknown, importing: boolean, so
     const local = Object.fromEntries(Object.entries(input).filter(([key]) => !domainKeys.has(key)));
     // Keep unconfirmed/removed drafts and non-domain display metadata only on device.
     local.recordDrafts = array(input.records ?? input.filedRecords).filter(r => r.status === 'proposed');
+    local.phoneChoices = phoneChoices;
     await tx.local('projection-ui', local);
     await tx.local('projection-ids', ids);
     await tx.local('projection-entities', [...new Set([...touched, ...prior.filter(k => k.startsWith('habit_log:'))])]);
@@ -102,11 +127,17 @@ async function commit(store: LifeDataStore, raw: unknown, importing: boolean, so
  * First sign-in on this phone. With nothing of its own yet (setup not finished), the phone is cleared so the
  * account's life comes back whole on the next pull. Otherwise its screen entities move to the account's ids, so they
  * merge with the same things on the account's other phones (newer edit wins) instead of sitting beside them.
+ *
+ * A phone that already belongs to another account (its session ran out, then someone signed in with a different
+ * one) never merges into the new account (fix F-43): the other account's copy on this phone is erased first, with
+ * nothing queued for either server account, and the new account's life comes down whole. `switched` says so.
  */
-export async function adoptAccount(store: LifeDataStore, accountId: string, options: { restore: boolean }) {
+export async function adoptAccount(store: LifeDataStore, accountId: string, options: { restore: boolean }): Promise<{ switched: boolean }> {
   if (!accountId) throw new Error('An account id is required');
-  if (await store.readLocal<string>('account-id') === accountId) return;
-  if (options.restore) await store.clearForRestore();
+  const current = await store.readLocal<string>('account-id');
+  if (current === accountId) return { switched: false };
+  if (current) await store.eraseThisPhone();
+  else if (options.restore) await store.clearForRestore();
   await store.atomic(async tx => {
     const ids = await tx.readLocal<Record<string, string>>('projection-ids') ?? {};
     // Parents first, so rows that point at them follow to the new ids.
@@ -121,6 +152,7 @@ export async function adoptAccount(store: LifeDataStore, accountId: string, opti
     await tx.local('projection-ids', ids);
     await tx.local('account-id', accountId);
   });
+  return { switched: !!current };
 }
 export const importLegacyProjection = (store: LifeDataStore, input: unknown, sourceKey = 'life_track_a_v17') => commit(store, input, true, sourceKey);
 export async function commitProjection(store: LifeDataStore, input: unknown) { await commit(store, input, false, ''); }
@@ -149,12 +181,16 @@ export async function loadProjection<T>(store: LifeDataStore): Promise<T | null>
   const missions = list('mission');
   const steps = Object.fromEntries(list('mission_step').map(r => [String(dataObject(r.fields).key ?? r.id), r.state === 'done']));
   const { app: synced, ...prefFields } = dataObject(prefs?.fields);
-  const result = { ...ui, ...dataObject(synced), profile: p, weightKg: body?.weight_kg, heightCm: body?.height_cm, waistCm: body?.waist_cm,
+  // The account's choices, with this phone's own (permissions, learning, nudge log) laid back over them. A phone-only
+  // key arriving from the account (written by an older build or another phone) is ignored.
+  const choices = { ...splitChoices(dataObject(dataObject(synced).choices)).account, ...dataObject(ui.phoneChoices) };
+  const result = { ...ui, ...dataObject(synced), choices, profile: p, weightKg: body?.weight_kg, heightCm: body?.height_cm, waistCm: body?.waist_cm,
     prefs: prefs ? { ...prefFields, look: prefs.look, sounds: Boolean(prefs.sounds), haptics: Boolean(prefs.haptics), handDrawn: Boolean(prefs.hand_drawn), hideNumbers: Boolean(prefs.hide_numbers), notifications: prefs.notifications, privateMode: Boolean(prefs.private_mode) } : {},
     records: [...facts, ...array(ui.recordDrafts)], aim: aim ? dataObject(aim.fields).value : null, meals, habits, people,
-    learned: list('learning_record').map(r => r.topic), memories: list('memory').map(r => ({ id: originalId('memory', r.id), text: r.text, source: typeof r.source === 'string' ? r.source : typeof dataObject(r.source).label === 'string' ? dataObject(r.source).label : JSON.stringify(r.source ?? {}), category: dataObject(r.source).category, recordId: dataObject(r.source).recordId })),
+    learned: list('learning_record').map(r => r.topic), memories: list('memory').filter(r => typeof r.text === 'string').map(r => ({ id: originalId('memory', r.id), text: r.text, source: typeof r.source === 'string' ? r.source : typeof dataObject(r.source).label === 'string' ? dataObject(r.source).label : JSON.stringify(r.source ?? {}), category: dataObject(r.source).category, recordId: dataObject(r.source).recordId, ...Object.fromEntries(MEMORY_ATTRIBUTES.filter(key => dataObject(r.source)[key] !== undefined).map(key => [key, dataObject(r.source)[key]])), ...(typeof r.last_used === 'string' ? { lastUsed: r.last_used } : {}) })),
     completed: missions.filter(r => dataObject(r.fields).completed).map(r => dataObject(r.fields).taskId), missionSteps: steps,
   };
   delete (result as Record<string, unknown>).recordDrafts;
+  delete (result as Record<string, unknown>).phoneChoices;
   return result as T;
 }

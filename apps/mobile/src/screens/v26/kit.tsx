@@ -5,19 +5,23 @@
  * Copy is written the board's way: braces mark the words that matter, `{@doc tax rebate}` sets an icon inside them.
  *   <Display s="Your {@doc tax rebate} is {one form} away." />
  */
-import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Children, createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
-import { Stack, useNavigation as useRouterNavigation } from 'expo-router';
+import { Stack, useFocusEffect, useNavigation as useRouterNavigation } from 'expo-router';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Button, Card, Footer, Icon, LifeOrb, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
-  cardShadow, componentSize, photo, photoScrims, radius, space, useTokens,
-  type Focal, type GlyphName, type SpineItem, type StatusKind, type Tone, type TopBarAction, type TwoToneSegment, type TypeStyle, type V26RowProps,
+  Appear, Button, Card, Footer, Icon, LifeOrb, PhotoCard, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
+  cardShadow, componentSize, motion, photo, photos, photoScrims, radius, space, useCalmMotion, useTokens,
+  type Focal, type GlyphName, type OrbArea, type SpineItem, type StatusKind, type Tone, type TopBarAction, type TwoToneSegment, type TypeStyle, type V26RowProps,
 } from '@/design';
 import { screens, type ScreenKey } from '@/navigation/screens';
 import { useNavigation } from '@/navigation/useNavigation';
+import { useSeed } from '@/state/SeedProvider';
+import { SHOW_SAMPLES } from '@/state/sample';
+import { setWebExit, takeReturn } from '@/navigation/webExit';
 
 /* ───────────────────────── Copy ───────────────────────── */
 
@@ -37,14 +41,23 @@ export function two(s: string): TwoToneSegment[] {
   return out;
 }
 
-/** The 34pt briefing (board `.display`), 10pt below whatever sits above it. */
+/** How deep the current page sits: a tab's home, a page opened from it, or a full-screen moment. Set by `Page`. */
+const Depth = createContext<'root' | 'detail' | 'moment'>('root');
+
+/**
+ * The opening sentence, 10pt below whatever sits above it. One size per depth, the way iOS keeps large titles for a
+ * tab's top level (Edem, 20 Nov: bring the design into harmony): 34pt (board `.display`) on Today, Plan and You and on
+ * full-screen moments and photographs; the 24pt statement on pages and sheets opened from them, so their content
+ * starts higher and the tabs stay the loudest screens.
+ */
 export function Display({ s, onPhoto, flush, center, style }: { s: string; onPhoto?: boolean; flush?: boolean; center?: boolean; style?: StyleProp<ViewStyle> }) {
-  return <TwoTone size="display" segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={[flush ? null : { marginTop: space.tile }, style]} />;
+  const depth = useContext(Depth);
+  return <TwoTone header size={depth === 'detail' && !onPhoto ? 'statement' : 'display'} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={[flush ? null : { marginTop: space.tile }, style]} />;
 }
 
 /** The 24pt two-tone sentence (board `.statement`). */
-export function Statement({ s, onPhoto, size = 'statement', center, style }: { s: string; onPhoto?: boolean; size?: 'statement' | 'lead' | 'headline'; center?: boolean; style?: StyleProp<ViewStyle> }) {
-  return <TwoTone size={size} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={style} />;
+export function Statement({ s, onPhoto, size = 'statement', center, header, style }: { s: string; onPhoto?: boolean; size?: 'statement' | 'lead' | 'headline'; center?: boolean; /** When the sentence is the screen's title, so screen readers can jump to it. */ header?: boolean; style?: StyleProp<ViewStyle> }) {
+  return <TwoTone header={header} size={size} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={style} />;
 }
 
 /** Quiet copy with the braced words in ink (board `.body`, `.callout`). */
@@ -66,7 +79,8 @@ export function Eyebrow({ children, orb, star, icon, right, onPhoto, style }: { 
       {orb ? <LifeOrb size={18} color={onPhoto ? photo.onPhoto : t.ink} /> : null}
       {star ? <View style={[styles.dot, { backgroundColor: t.ember }]} /> : null}
       {icon ? <Icon name={icon} size={componentSize.iconXs - 2} color={color} /> : null}
-      <Text variant="callout" style={{ color, flexShrink: 1 }}>{children}</Text>
+      {/* The label above a screen's opening sentence: read as a heading, so it can be jumped to. */}
+      <Text variant="callout" accessibilityRole="header" style={{ color, flexShrink: 1 }}>{children}</Text>
     </View>
   );
   if (!right) return <View style={style}>{label}</View>;
@@ -224,8 +238,19 @@ export function PhotoRound({ icon, label, onPress }: { icon: GlyphName; label: s
 
 /* ───────────────────────── The page ───────────────────────── */
 
+/** Today, Plan and You: the page name on the left, its buttons and then the orb on the right. */
+function RootBar({ bar, onImage }: { bar: Extract<Bar, { kind: 'root' }>; onImage: boolean }) {
+  const nav = useNavigation(), { data } = useSeed();
+  // From Life's two new notes in the sample: the tax rebate (Money) and the nudge to finish the P87 (Admin). The day
+  // engine hands over real notes with their areas later. Only the sample life has notes waiting; a real account's orb
+  // rests until something real arrives.
+  const orb = bar.orb === false ? undefined : { onPress: () => nav.go('inbox'), unread: SHOW_SAMPLES && !data.flags['inbox-read'], areas: ['money', 'admin'] as OrbArea[] };
+  return <TopBar look="v26" kind="root" title={bar.title} sub={bar.sub} actions={bar.actions} orb={orb} onImage={onImage} />;
+}
+
 export type Bar =
-  | { kind: 'root'; title: string; sub?: string; actions?: TopBarAction[] }
+  /** The orb sits at the right end and opens "From Life"; `orb: false` leaves it out (a gallery frame). */
+  | { kind: 'root'; title: string; sub?: string; actions?: TopBarAction[]; orb?: false }
   /** Back arrow, or a close cross with `close` (full-screen flows). Leave the title empty when a big heading follows. */
   | { kind: 'push'; title?: string; titleNode?: ReactNode; action?: TopBarAction; close?: boolean }
   /** The sheet's handle and, with a title, its bar and close. */
@@ -252,18 +277,49 @@ export type PageProps = {
   /** Centre the content in the space between bar and foot (focus, states). */
   center?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
-  onPull?: () => void;
   /** Dark status bar text over a light photograph (board `status('lt-ink')`). */
   statusInk?: boolean;
+  /** Called as you scroll near the bottom, so a long list (`useLongList`) can draw its next page. */
+  onEnd?: () => void;
 };
 
 /**
  * One V26 screen: the bar fixed outside the scroll, content with the board's 4/20/28 padding and no automatic gaps
  * (each block sets its own space above, as the board does), then the foot.
  */
-export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, onPull, statusInk }: PageProps) {
-  const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets();
+export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, statusInk, onEnd }: PageProps) {
+  const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets(), calm = useCalmMotion();
   const meta = screens[screen];
+  const web = Platform.OS === 'web';
+  // Web preview only (webExit.ts): `leave` plays the page out before a close; `back` slides the revealed page in.
+  const leave = useSharedValue(0), back = useSharedValue(1), enter = useSharedValue(web ? 0 : 1);
+  useEffect(() => { if (web) enter.value = calm ? 1 : withSpring(1, motion.smooth); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useFocusEffect(useCallback(() => {
+    if (!web) return;
+    leave.value = 0;
+    if (takeReturn() && !calm) { back.value = 0; back.value = withSpring(1, motion.snappy); }
+    if (meta.kind === 'Tab') return;
+    return setWebExit(done => {
+      if (calm) return done();
+      leave.value = withTiming(1, LEAVE);
+      // A pushed page hands over just before its fade ends, so the page underneath shows with no empty frame between
+      // them; a sheet's page was in view all along, so the sheet finishes dropping first.
+      setTimeout(done, meta.kind === 'Sheet' ? LEAVE.duration : LEAVE.duration - 50);
+    }, meta.kind !== 'Sheet');
+  }, [web, calm, meta.kind, leave, back]));
+  const flow = useAnimatedStyle(() => {
+    if (!web) return {};
+    const k = 1 - back.value;
+    if (calm) return { opacity: 1 - leave.value };
+    return {
+      opacity: (1 - leave.value) * (1 - 0.4 * k),
+      transform: meta.kind === 'Push' || meta.kind === 'Tab'
+        ? [{ translateX: leave.value * 56 - k * 28 }]
+        : [{ translateX: -k * 28 }, { translateY: leave.value * 64 }],
+    };
+  });
+  const scrimIn = useAnimatedStyle(() => ({ opacity: enter.value * (1 - leave.value) }));
+  const sheetOut = useAnimatedStyle(() => ({ transform: [{ translateY: leave.value * (calm ? 0 : 420) }], opacity: calm ? 1 - leave.value : 1 }));
   const close = onClose ?? nav.close;
   const sheet = meta.kind === 'Sheet';
   const b: Bar = bar ?? (meta.kind === 'Tab' ? { kind: 'root', title: meta.title } : sheet ? { kind: 'sheet' } : meta.kind === 'Full screen' ? { kind: 'push', close: true } : { kind: 'push' });
@@ -273,38 +329,46 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
   // A sheet is only as tall as what's in it (Edem, 20 Nov): a photograph-led sheet draws its own drawer instead.
   const fits = sheet && !backdrop && scroll && !center;
   const fit = useSheetFit(fits);
-  const top = b.kind === 'root' ? <TopBar look="v26" kind="root" title={b.title} sub={b.sub} actions={b.actions} onImage={onPhoto} />
+  const top = b.kind === 'root' ? <RootBar bar={b} onImage={onPhoto} />
     : b.kind === 'push' ? <TopBar look="v26" kind="push" title={b.title} titleNode={b.titleNode} action={b.action} onBack={close} closeIcon={b.close} onImage={onPhoto} />
     : b.kind === 'sheet' ? (b.title ? <TopBar look="v26" kind="sheet" title={b.title} action={b.action} onClose={close} onImage={onPhoto} /> : <SheetHandle />)
     : b.kind === 'flow' ? <TopBar look="v26" kind="flow" closeLabel={b.left ?? 'Back'} closeIcon={b.leftIcon} step={b.step} action={b.action} onClose={close} onImage={onPhoto} />
     : b.kind === 'photo' ? <View style={styles.photoBar}><View style={{ flexShrink: 1 }}>{b.left ?? null}</View><View>{b.right ?? (b.close === false ? null : <PhotoRound icon="close" label="Close" onPress={close} />)}</View></View>
     : null;
   const pad = { paddingHorizontal: space.gutter, paddingTop: space.xxs, paddingBottom: 28 + (footer || bottom || meta.kind === 'Tab' ? 0 : insets.bottom) };
+  const content = <Depth.Provider value={meta.kind === 'Tab' ? 'root' : meta.kind === 'Push' || sheet ? 'detail' : 'moment'}>{children}</Depth.Provider>;
   const body = scroll
     ? <ScrollView style={fits && fit.web ? { flexGrow: 0, flexShrink: 1, minHeight: 0 } : { flex: 1, minHeight: 0 }} contentInsetAdjustmentBehavior="never" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
-        onScroll={onPull ? e => { if (e.nativeEvent.contentOffset.y < -60) onPull(); } : undefined} scrollEventThrottle={16}
+        onScroll={onEnd ? e => {
+          const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+          if (contentOffset.y + layoutMeasurement.height > contentSize.height - END_REACH) onEnd();
+        } : undefined} scrollEventThrottle={16}
         onContentSizeChange={fits ? (_w, h) => fit.part('body', h) : undefined}
-        contentContainerStyle={[pad, center ? { flexGrow: 1, justifyContent: 'center' } : null, contentStyle]}>{children}</ScrollView>
-    : <View style={[{ flex: 1, minHeight: 0 }, pad, center ? { justifyContent: 'center' } : null, contentStyle]}>{children}</View>;
+        contentContainerStyle={[pad, center ? { flexGrow: 1, justifyContent: 'center' } : null, contentStyle]}>{content}</ScrollView>
+    : <View style={[{ flex: 1, minHeight: 0 }, pad, center ? { justifyContent: 'center' } : null, contentStyle]}>{content}</View>;
   const head = <View style={{ flexShrink: 0 }} onLayout={fits ? e => fit.part('top', e.nativeEvent.layout.height) : undefined}>{top}</View>;
   const foot = footer ? <View onLayout={fits ? e => fit.part('foot', e.nativeEvent.layout.height) : undefined}><Footer style={{ backgroundColor: onPhoto ? 'transparent' : bg }}>{footer}</Footer></View> : null;
   if (fits && fit.web) {
     // The web preview has no native sheet, so draw one: dimmed page behind, the sheet hugging its content at the bottom.
     return (
-      <View nativeID={`screen-${screen}`} style={{ flex: 1, minHeight: 0, backgroundColor: t.scrim, justifyContent: 'flex-end' }}>
+      <View nativeID={`screen-${screen}`} style={{ flex: 1, minHeight: 0, justifyContent: 'flex-end' }}>
         <Stack.Screen options={{ statusBarStyle }} />
         <StatusBar style={statusBarStyle} />
+        {/* The page underneath stays in view and dims; the sheet rises over it, and drops away again on close. */}
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.scrim }, scrimIn]} />
         <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
-        <View style={[styles.webSheet, { backgroundColor: bg, maxHeight: '94%' }]}>
-          {head}
-          {body}
-          {foot}
-          {bottom}
-        </View>
+        <Animated.View style={[{ maxHeight: '94%', flexShrink: 1, minHeight: 0 }, sheetOut]}>
+          <Appear rise={220} style={[styles.webSheet, { backgroundColor: bg }]}>
+            {head}
+            {body}
+            {foot}
+            {bottom}
+          </Appear>
+        </Animated.View>
       </View>
     );
   }
-  return (
+  const page = (
     <View nativeID={`screen-${screen}`} style={{ flex: 1, minHeight: 0, backgroundColor: onPhoto ? t.ink : bg }}>
       <Stack.Screen options={{ statusBarStyle }} />
       <StatusBar style={statusBarStyle} />
@@ -317,7 +381,45 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
       </SafeAreaView>
     </View>
   );
+  // Phones get the system's own push, modal and sheet transitions. The browser preview has none, so a screen there
+  // arrives the same calm way: a pushed page slides in a little from the right, a full-screen flow rises, both fading.
+  if (!web) return page;
+  if (meta.kind === 'Tab') return <Animated.View style={[{ flex: 1, minHeight: 0 }, flow]}>{page}</Animated.View>;
+  return (
+    <Animated.View style={[{ flex: 1, minHeight: 0 }, flow]}>
+      <Appear from={meta.kind === 'Push' ? 'right' : 'below'} rise={meta.kind === 'Push' ? 36 : 40} style={{ flex: 1, minHeight: 0 }}>{page}</Appear>
+    </Animated.View>
+  );
 }
+
+/** How close to the bottom (pt) a long list starts drawing its next page: about a screen and a half ahead. */
+const END_REACH = 1200;
+/** Rows a long list draws at a time. */
+export const LONG_LIST_PAGE = 40;
+
+/**
+ * A long list (what Life remembers, what it knows, your people, a conversation) draws a page of rows at a time and
+ * the next as you scroll near the end (`Page`'s `onEnd`), so a year of records never builds hundreds of rows at
+ * once. `from: 'end'` keeps the newest rows, for a conversation. The rows stay inside their card, as on the board.
+ */
+export function useLongList<T>(items: T[], { page = LONG_LIST_PAGE, from = 'start' }: { page?: number; from?: 'start' | 'end' } = {}) {
+  const [shown, setShown] = useState(page);
+  const visible = items.length <= shown ? items : from === 'end' ? items.slice(items.length - shown) : items.slice(0, shown);
+  const more = items.length - visible.length;
+  const showMore = useCallback(() => setShown(n => (n < items.length ? n + page : n)), [items.length, page]);
+  return { visible, more, showMore };
+}
+
+/** The way to the rest of a long list for anyone not scrolling: VoiceOver, TalkBack, a keyboard. */
+export function MoreRows({ more, onPress, earlier, style }: { more: number; onPress: () => void; earlier?: boolean; style?: StyleProp<ViewStyle> }) {
+  if (more <= 0) return null;
+  const n = Math.min(more, LONG_LIST_PAGE);
+  return <QuietLink label={earlier ? `Show ${n} earlier` : `Show ${n} more`} onPress={onPress} style={[{ marginTop: space.sm }, style]} />;
+}
+
+/** How a page leaves in the web preview: short, moving at once and easing to a stop, so the page underneath shows
+ *  without a gap. A spring would settle too slowly to hand over in time. */
+const LEAVE = { duration: 180, easing: Easing.out(Easing.cubic) } as const;
 
 /**
  * Keeps a sheet only as tall as its content. On a phone it asks the native sheet to rest at the content's height
@@ -489,3 +591,32 @@ const styles = StyleSheet.create({
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   ptile: { borderRadius: radius.tile, overflow: 'hidden', justifyContent: 'flex-end' },
 });
+
+/* ───────────────────────── Not yet: a part of life Life hasn't heard about ───────────────────────── */
+
+/**
+ * A real account (no sample life) on a screen whose figures would otherwise be the sample life's, until Life has heard
+ * about that part of life: Plan's day-one shape (board `emptyplan`) with one way in, never a stranger's figures and
+ * never a zero dressed up as a reading. `children` holds anything that is already true (a preview row, a calculator).
+ */
+export function NotYetV26({ screen, title, eyebrow, line, source, focal, ask, examples, children }: {
+  screen: ScreenKey; title?: string; eyebrow: string; line: string; source: keyof typeof photos; focal?: { x?: number; y?: number };
+  /** The photograph's title: what to tell Life. */
+  ask: string;
+  /** Its line: a few examples. */
+  examples: string;
+  children?: ReactNode;
+}) {
+  const nav = useNavigation();
+  return (
+    <Page screen={screen} bar={{ kind: 'push', title }}>
+      <Eyebrow star>{eyebrow}</Eyebrow>
+      <Display s={`{Nothing here yet.} ${line}`} />
+      <PhotoCard source={photos[source]} focal={focal} height={250} chips={['Your first move · about a minute']} title={ask} sub={examples} style={{ marginTop: space.lg }}>
+        <Btn label="Talk to Life" icon="mic" onPhoto onPress={() => nav.go('talk')} style={{ marginTop: space.md }} />
+      </PhotoCard>
+      {children}
+      <Callout center style={{ marginTop: space.md }}>Nothing is saved until you say so.</Callout>
+    </Page>
+  );
+}

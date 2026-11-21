@@ -15,7 +15,7 @@ import { sessionStore } from './sessionStore';
 
 export type SignInProvider = 'apple' | 'google' | 'email';
 /** Why a sign-in didn't finish, in words the sheet can show. */
-export type AccountProblem = 'offline' | 'bad-code' | 'too-many' | 'not-ready' | 'failed';
+export type AccountProblem = 'offline' | 'bad-code' | 'too-many' | 'held' | 'not-ready' | 'failed';
 export type AccountResult<T> = { ok: true; data: T; mode: 'account' | 'local-preview' } | { ok: false; problem: AccountProblem };
 export interface SignedIn { userId: string; name: string; email: string }
 
@@ -39,20 +39,22 @@ export const accountsLive = () => accountBase() !== null;
 export const sessionToken = () => sessionStore.get(SESSION_KEY);
 setBrainSessionProvider(sessionToken);
 
-async function call(path: string, body: unknown, token?: string | null): Promise<Response | null> {
+async function call(path: string, body: unknown, token?: string | null, method: 'POST' | 'GET' = 'POST'): Promise<Response | null> {
   const base = accountBase();
   if (!base) return null;
   try {
     return await fetch(`${base}${path}`, {
-      method: 'POST',
+      method,
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify(body),
+      body: method === 'GET' ? undefined : JSON.stringify(body),
     });
   } catch { return null; }
 }
 
 function problemOf(response: Response | null, code?: string): AccountProblem {
   if (!response) return 'offline';
+  // The server's hourly limits (fix F-11) hold sign-in for longer than a burst does, and say so in seconds.
+  if (response.status === 429 && Number(response.headers.get('x-retry-after') ?? 0) > 120) return 'held';
   if (response.status === 429 || code === 'TOO_MANY_ATTEMPTS') return 'too-many';
   if (code === 'INVALID_OTP' || code === 'OTP_EXPIRED') return 'bad-code';
   return 'failed';
@@ -129,11 +131,81 @@ export async function signOut() {
   await sessionStore.remove(SESSION_KEY);
 }
 
+/** True when this phone holds a session for a real account (not the local preview). */
+export async function isSignedIn(): Promise<boolean> {
+  return accountsLive() && !!(await sessionToken());
+}
+
+export type AccountDataProblem = 'signed-out' | 'offline' | 'failed';
+
+/** This account's id on Life's server (`GET /me`), or null when signed out or offline. Billing signs RevenueCat in with it. */
+export async function myUserId(): Promise<string | null> {
+  const token = await sessionToken();
+  if (!accountsLive() || !token) return null;
+  const response = await call('/me', null, token, 'GET');
+  if (!response?.ok) return null;
+  const body = await response.json().catch(() => null) as { userId?: unknown } | null;
+  return typeof body?.userId === 'string' && body.userId ? body.userId : null;
+}
+
+/** Everything life's server holds for this account (Phase 23 `GET /account/export`). */
+export async function exportAccount(): Promise<{ ok: true; data: unknown } | { ok: false; problem: AccountDataProblem }> {
+  const token = await sessionToken();
+  if (!accountsLive() || !token) return { ok: false, problem: 'signed-out' };
+  const response = await call('/account/export', null, token, 'GET');
+  if (!response) return { ok: false, problem: 'offline' };
+  if (response.status === 401) return { ok: false, problem: 'signed-out' };
+  const data = response.ok ? await response.json().catch(() => null) : null;
+  return data ? { ok: true, data } : { ok: false, problem: 'failed' };
+}
+
+/**
+ * Closes the account on the server (Phase 23 `POST /account/delete`). Every session ends there, so the token is
+ * forgotten here too. Nothing on this phone changes until the server has said yes.
+ */
+export async function closeAccount(): Promise<{ ok: true; deleteAfter: string } | { ok: false; problem: AccountDataProblem }> {
+  const token = await sessionToken();
+  if (!accountsLive() || !token) return { ok: false, problem: 'signed-out' };
+  const response = await call('/account/delete', { confirm: 'DELETE' }, token);
+  if (!response) return { ok: false, problem: 'offline' };
+  if (response.status === 401) { await sessionStore.remove(SESSION_KEY); return { ok: false, problem: 'signed-out' }; }
+  const body = response.ok ? await response.json().catch(() => null) as { closed?: boolean; deleteAfter?: string } | null : null;
+  if (!body?.closed || !body.deleteAfter) return { ok: false, problem: 'failed' };
+  await sessionStore.remove(SESSION_KEY);
+  return { ok: true, deleteAfter: body.deleteAfter };
+}
+
+/**
+ * Gives the server this phone's Expo push token, or `null` to stop push (Phase 23 `POST /push/register`). The token
+ * itself comes from `expo-notifications`, which arrives with Phase 29's notifications; until then nothing calls this.
+ */
+export async function registerPushToken(token: string | null): Promise<boolean> {
+  const session = await sessionToken();
+  if (!accountsLive() || !session) return false;
+  const response = await call('/push/register', { device: await deviceId(), token }, session);
+  return response?.ok === true;
+}
+
+/**
+ * One finished week's count of moves, for Life's north star (Phase 30 `POST /metrics/moves`). Only the week, the
+ * count and the kind of phone go. The session only keeps strangers out: the server adds the count to a tally and
+ * keeps nothing that says whose it was. `later` means try again on the next run; `refused` means drop this week.
+ */
+export async function reportMoves(week: string, moves: number): Promise<'sent' | 'refused' | 'later'> {
+  const session = await sessionToken();
+  if (!accountsLive() || !session) return 'later';
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') return 'refused';
+  const response = await call('/metrics/moves', { week, moves, platform: Platform.OS }, session);
+  if (!response || response.status === 401 || response.status === 429 || response.status >= 500) return 'later';
+  return response.ok ? 'sent' : 'refused';
+}
+
 /** Words for each problem, for the sheet. */
 export const problemWords: Record<AccountProblem, string> = {
-  offline: 'life couldn’t reach the internet. Check your connection and try again.',
+  offline: 'Life couldn’t reach the internet. Check your connection and try again.',
   'bad-code': 'That code didn’t work. Check the email, or send a new code.',
   'too-many': 'Too many tries. Wait a minute, then send a new code.',
+  held: 'That’s a lot of codes in a short time, so Life is pausing sign-in to keep your account safe. Try again in an hour.',
   'not-ready': 'That way of signing in arrives with the next update. Use email for now.',
   failed: 'Sign-in didn’t go through. Try again in a moment.',
 };

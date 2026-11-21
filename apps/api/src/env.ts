@@ -5,6 +5,9 @@ import { z } from 'zod';
  * request, and the error names the setting, never its value. Secrets live only in the host's environment
  * (BUILD_V26 global rules); the phone never sees any of these.
  */
+/** An empty line in `.env` (`NAME=`) means unset, never an empty value: `ACCOUNT_GRACE_DAYS=` must not mean 0. */
+const unsetIfBlank = <T extends z.ZodType>(inner: T) => z.preprocess(v => (v === '' ? undefined : v), inner);
+
 const schema = z.object({
   DATABASE_URL: z.string().url(),
   BETTER_AUTH_SECRET: z.string().min(32, 'at least 32 characters'),
@@ -18,6 +21,36 @@ const schema = z.object({
   APPLE_APP_BUNDLE_IDENTIFIER: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  /** Object storage for meal photos and letters (R2 or S3). Without these, file routes answer 503. */
+  STORAGE_ENDPOINT: unsetIfBlank(z.string().url().optional()),
+  STORAGE_BUCKET: z.string().optional(),
+  STORAGE_REGION: z.string().optional(),
+  STORAGE_ACCESS_KEY_ID: z.string().optional(),
+  STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
+  /** Days between "Delete account" and the hard delete. The delete screen promises 30. */
+  ACCOUNT_GRACE_DAYS: unsetIfBlank(z.coerce.number().int().min(0).max(90).default(30)),
+  /** The scheduler's secret for `POST /jobs/sweep`. Without it the sweep route stays closed. */
+  JOBS_SECRET: unsetIfBlank(z.string().min(32, 'at least 32 characters').optional()),
+  /** Model providers (decision 7). Each key switches on that provider's models in `src/models/registry.ts`. */
+  ANTHROPIC_API_KEY: unsetIfBlank(z.string().min(10).optional()),
+  OPENAI_API_KEY: unsetIfBlank(z.string().min(10).optional()),
+  /** Gemini API key: trial data only. Real people's data goes through Google Cloud's EU endpoint (owner decision). */
+  GEMINI_API_KEY: unsetIfBlank(z.string().min(10).optional()),
+  /** WHOOP and Oura developer apps (decision 8). Each pair switches that wearable on in `src/wearables.ts`. */
+  WHOOP_CLIENT_ID: unsetIfBlank(z.string().min(1).optional()),
+  WHOOP_CLIENT_SECRET: unsetIfBlank(z.string().min(1).optional()),
+  OURA_CLIENT_ID: unsetIfBlank(z.string().min(1).optional()),
+  OURA_CLIENT_SECRET: unsetIfBlank(z.string().min(1).optional()),
+  /** The API's public address for wearable sign-in redirects; BETTER_AUTH_URL when unset. */
+  PUBLIC_URL: unsetIfBlank(z.string().url().optional()),
+  /** RevenueCat's webhook signing secret (fix F-20). Without it the webhook answers 503 and nothing needs a subscription. */
+  REVENUECAT_WEBHOOK_SECRET: unsetIfBlank(z.string().min(16, 'at least 16 characters').optional()),
+  /** The RevenueCat entitlement that unlocks Life; `life` when unset. */
+  REVENUECAT_ENTITLEMENT: unsetIfBlank(z.string().min(1).optional()),
+  /** `1` once the stores and RevenueCat are live: the routes that cost money then need a trial or a subscription. */
+  BILLING_ENFORCED: unsetIfBlank(z.enum(['0', '1']).default('0')),
+  /** `1` to count sandbox purchases (TestFlight, Play's internal testing). Never in production. */
+  BILLING_SANDBOX: unsetIfBlank(z.enum(['0', '1']).default('0')),
   PORT: z.coerce.number().int().positive().default(8787),
 });
 
@@ -30,4 +63,22 @@ export function readEnv(source: Record<string, string | undefined> = process.env
     throw new Error(`The API can't start. Missing or invalid settings: ${names.join(', ')}`);
   }
   return parsed.data;
+}
+
+/** The wearable apps that have both an id and a secret. */
+export function wearableApps(env: Env) {
+  return {
+    ...(env.WHOOP_CLIENT_ID && env.WHOOP_CLIENT_SECRET ? { whoop: { clientId: env.WHOOP_CLIENT_ID, clientSecret: env.WHOOP_CLIENT_SECRET } } : {}),
+    ...(env.OURA_CLIENT_ID && env.OURA_CLIENT_SECRET ? { oura: { clientId: env.OURA_CLIENT_ID, clientSecret: env.OURA_CLIENT_SECRET } } : {}),
+  };
+}
+
+/** RevenueCat's webhook and the subscription check (`src/billing.ts`). */
+export function billingFromEnv(env: Env) {
+  return {
+    webhookSecret: env.REVENUECAT_WEBHOOK_SECRET,
+    entitlement: env.REVENUECAT_ENTITLEMENT,
+    enforce: env.BILLING_ENFORCED === '1',
+    sandbox: env.BILLING_SANDBOX === '1',
+  };
 }

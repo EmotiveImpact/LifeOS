@@ -5,3 +5,6 @@ import type { LifeDataStore } from './store';
 export async function openLocalData(_userId: string): Promise<{ store: LifeDataStore; orm: unknown }> {
   throw new Error('Encrypted SQLite requires a native development build; use the existing web preview adapter on web.');
 }
+
+/** Native only (open.native.ts): the web preview has no encrypted database to remove. */
+export async function forgetLocalData(_userId: string): Promise<void> {}

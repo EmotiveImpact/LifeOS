@@ -143,7 +143,7 @@ function TypeSection() {
       <TwoTone size="statement" segments={[{ text: 'Are you registered for ', tone: 'quiet' }, { text: 'Self Assessment?' }]} />
       <TwoTone size="lead" segments={[{ text: 'I’m arriving ', tone: 'quiet' }, { text: 'calm' }, { text: '.', tone: 'quiet' }]} />
       <View style={{ gap: 6 }}>
-        <Text variant="numeralXl">1<Text variant="unit" tone="ink2"> Stabilize</Text></Text>
+        <Text variant="numeralXl">1<Text variant="unit" tone="ink2"> Stabilise</Text></Text>
         <Text variant="numeralL">7h 10m</Text>
         <Text variant="heading">58<Text variant="unit" tone="ink2"> ms</Text></Text>
         <Text variant="titleSerif">Claim your tax rebate</Text>
@@ -184,7 +184,7 @@ function BarsSection() {
   return (
     <Section id="bars" title="Top bars" note="How a screen opened decides its bar. Never two bars, never more than one action on a pushed screen.">
       <Label>ROOT · TWO BUTTONS AT MOST</Label>
-      <View style={frame}><TopBar look="v26" kind="root" title="Today" sub="Mon 16 Nov" actions={[{ kind: 'icon', icon: 'search', label: 'Search', onPress: none }, { kind: 'icon', icon: 'bell', label: 'From life', onPress: none, badge: true }]} /></View>
+      <View style={frame}><TopBar look="v26" kind="root" title="Today" sub="Mon 16 Nov" actions={[{ kind: 'icon', icon: 'search', label: 'Search', onPress: none }]} orb={{ onPress: none, unread: true }} /></View>
       <Label>PUSH · BACK, TITLE, ONE SMART ACTION OR NONE</Label>
       <View style={frame}><TopBar look="v26" kind="push" title="Readiness" onBack={none} action={{ kind: 'icon', icon: 'info', label: 'How this is worked out', onPress: none }} /></View>
       <View style={frame}><TopBar look="v26" kind="push" title="Talk" closeIcon onBack={none} /></View>
@@ -209,7 +209,7 @@ function ButtonsSection() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, flexWrap: 'wrap' }}>
         <RoundButton icon="add" size="sm" label="Add" onPress={() => {}} />
         <RoundButton icon="search" label="Search" onPress={() => {}} />
-        <RoundButton icon="bell" label="From life" dot onPress={() => {}} />
+        <RoundButton icon="bell" label="From Life" dot onPress={() => {}} />
         <RoundButton icon="mic" solid label="Hold to talk" onPress={() => {}} />
         <RoundButton icon="arrow" size="lg" solid label="Next" onPress={() => {}} />
         <RoundButton icon="stop" size="xl" solid label="Stop" onPress={() => {}} />
@@ -239,21 +239,21 @@ function ButtonsSection() {
 
 function ChipsSection() {
   return (
-    <Section id="chips" title="Section heads, chips and life speaking">
+    <Section id="chips" title="Section heads, chips and Life speaking">
       <View>
         <SectionHead first title="Today’s moves" link="1 of 3" />
         <SectionHead title="Coming up" link="Calendar" onLink={() => {}} />
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-        <StatusPill size="chip" label="Level 1 · Stabilize" />
+        <StatusPill size="chip" label="Level 1 · Stabilise" />
         <StatusPill size="chip" kind="live" label="Finish the P87 · 6 min" />
         <StatusPill size="chip" kind="done" label="Good recovery" />
         <StatusPill size="chip" kind="quiet" label="Usual" />
         <StatusPill size="chip" icon="check" label="Checked in · 9:41" />
       </View>
       <LifeSays>The walk after dinner may be what kept you steady.</LifeSays>
-      <LifeSays eyebrow="life noticed">An emergency tax code on your March payslip.</LifeSays>
-      <LifeSays eyebrow="life · just now" orb="done">Filed. Your rent situation has a new date.</LifeSays>
+      <LifeSays eyebrow="Life noticed">An emergency tax code on your March payslip.</LifeSays>
+      <LifeSays eyebrow="Life · just now" orb="done">Filed. Your rent situation has a new date.</LifeSays>
     </Section>
   );
 }
@@ -324,7 +324,7 @@ function TilesSection() {
         <MetricTile look="v26" wide label="Fuel" dot="home" scale="/2,300 kcal" value="1,420" meter={0.62} parts={[{ label: 'Protein', value: '28g left' }, { label: 'Carbs', value: '98g left' }, { label: 'Fat', value: '31g left' }]} onPress={() => {}} />
         <MetricTile look="v26" label="Load" dot="goal" scale="/21" value="11.4" sub="In today’s range" onPress={() => {}} />
         <MetricTile look="v26" label="Stress" dot="you" scale="/3" value="1.4" sub="Low" onPress={() => {}} />
-        <MetricTile look="v26" label="life knows you" scale="64%" value="214" sub="things filed" />
+        <MetricTile look="v26" label="Life knows you" scale="64%" value="214" sub="things filed" />
         <MetricTile look="v26" label="Streak" scale="best 11" value="4" unit="days"><DotStrip days="11011101101111" style={{ marginTop: space.sm }} /></MetricTile>
       </TileGrid>
       <Label>SLIM, THREE IN A ROW (BODY)</Label>
@@ -336,7 +336,7 @@ function TilesSection() {
       <MetricTile look="reading" name="Heart rate variability" icon="heart" tag="Better" tagKind="done" value="58" unit="ms" delta="6 ms above your normal" series={[49, 52, 47, 55, 51, 54, 58]} normal={[47, 56]} onPress={() => {}} />
       <MetricTile look="reading" name="Resting heart rate" icon="heart" tag="Usual" value="54" unit="bpm" delta="Just under your normal" series={[57, 58, 56, 57, 55, 56, 54]} normal={[55, 59]} onPress={() => {}} />
       <Card>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><Text variant="title">life knows you</Text><Text variant="title">64%</Text></View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><Text variant="title">Life knows you</Text><Text variant="title">64%</Text></View>
         <Ticks variant="ruler" count={36} filled={23} />
         <Text variant="callout" tone="ink2" style={{ marginTop: space.tile }}>214 things filed from your words and records.</Text>
       </Card>
@@ -415,7 +415,7 @@ function WelcomeSection() {
   return (
     <Section id="welcome" title="Full-photo screen (the Welcome treatment)" note="For every full-screen moment: edge to edge, big words low and left, one round arrow, a dash pager.">
       <View style={{ height: 700, borderRadius: radius.xl, overflow: 'hidden' }}>
-        <FullPhotoScreen source={photos.friends} title="Life, handled." statement={[{ text: 'life finds ', tone: 'quiet' }, { text: 'what you’re owed' }, { text: ', ', tone: 'quiet' }, { text: 'what’s due' }, { text: ' and ', tone: 'quiet' }, { text: 'what’s next' }, { text: '.', tone: 'quiet' }]} pager={{ count: 3, index: page }} onNext={() => setPage(p => (p + 1) % 3)} onSkip={() => {}} />
+        <FullPhotoScreen source={photos.friends} title="Life, handled." statement={[{ text: 'Life finds ', tone: 'quiet' }, { text: 'what you’re owed' }, { text: ', ', tone: 'quiet' }, { text: 'what’s due' }, { text: ' and ', tone: 'quiet' }, { text: 'what’s next' }, { text: '.', tone: 'quiet' }]} pager={{ count: 3, index: page }} onNext={() => setPage(p => (p + 1) % 3)} onSkip={() => {}} />
       </View>
       <View style={{ flexDirection: 'row', gap: space.md, alignItems: 'center' }}>
         <View style={{ height: 40, paddingHorizontal: space.md, borderRadius: radius.lg, justifyContent: 'center', overflow: 'hidden' }}><PhotoFill source={photos.sky} focal={{ y: 0.15 }} /><DashPager count={4} index={1} /></View>
@@ -534,7 +534,7 @@ function ControlsSection() {
 function TalkSection() {
   const [live, setLive] = useState(false);
   return (
-    <Section id="talk" title="Conversation" note="What you said sits in a white bubble; life never uses one.">
+    <Section id="talk" title="Conversation" note="What you said sits in a white bubble; Life never uses one.">
       <UserBubble look="v26" text="Why do I feel flat today?" />
       <LifeReply look="v26" segments={[{ text: 'Your sleep was ', tone: 'quiet' }, { text: '40 minutes short' }, { text: ' and your heart worked harder overnight.', tone: 'quiet' }]} />
       <VoiceNote duration="0:34" onPlay={() => {}} />
@@ -556,10 +556,10 @@ function TimelineSection() {
     <Section id="timeline" title="Timeline" note="A spine of small dots, never a line. Done in ink, now in ember, later quiet.">
       <TwoTone size="display" segments={[{ text: 'Tax rebate.' }, { text: ' About ', tone: 'quiet' }, { text: '£840' }, { text: ' back, one form to go.', tone: 'quiet' }]} />
       <ActivityTimeline look="spine" items={[
-        { time: 'THU 12 NOV', text: 'life noticed an emergency tax code on your March payslip.', state: 'done' },
+        { time: 'THU 12 NOV', text: 'Life noticed an emergency tax code on your March payslip.', state: 'done' },
         { time: 'FRI 13 NOV', text: '“I think I overpaid when I changed jobs.”', state: 'done', children: <VoiceNote duration="0:34" style={{ marginTop: space.tile }} /> },
         { time: 'TODAY', text: 'One form left.', state: 'now', children: <Card padding={space.md} style={{ marginTop: space.sm }}><StatusPill size="chip" kind="live" label="Finish the P87 · 6 min" style={{ alignSelf: 'flex-start' }} /><Text variant="body" style={{ marginTop: space.xs }}>Sign in to Government Gateway, add your software and kit, then submit.</Text><Button size="md" label="Continue" icon="arrow" iconPosition="trailing" style={{ marginTop: space.md }} onPress={() => {}} /></Card> },
-        { time: 'ABOUT 22 NOV', text: 'HMRC replies. life will watch for it and tell you.', state: 'later' },
+        { time: 'ABOUT 22 NOV', text: 'HMRC replies. Life will watch for it and tell you.', state: 'later' },
       ]} />
     </Section>
   );
@@ -583,8 +583,8 @@ function DockSection() {
         <View style={{ backgroundColor: t.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingBottom: space.lg, ...sheetShadow }}>
           <TopBar look="v26" kind="sheet" title="Add something" onClose={() => {}} />
           <View style={{ paddingHorizontal: space.gutter, gap: space.xs }}>
-            <ListRow look="v26" icon="mic" title="Say it" sub="life files it as you talk" onPress={() => {}} />
-            <ListRow look="v26" icon="camera" title="Snap a letter or a meal" sub="life reads it" onPress={() => {}} />
+            <ListRow look="v26" icon="mic" title="Say it" sub="Life files it as you talk" onPress={() => {}} />
+            <ListRow look="v26" icon="camera" title="Snap a letter or a meal" sub="Life reads it" onPress={() => {}} />
             <ListRow look="v26" icon="doc" title="Type it" sub="A note, a date, a figure" onPress={() => {}} />
           </View>
         </View>

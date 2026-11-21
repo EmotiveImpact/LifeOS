@@ -105,7 +105,7 @@ export function SourcesV26() {
             );
           })}
         </View>
-        <LifeSays style={{ marginTop: space.md }}>{used === 'Oura' ? 'life used Oura: rings track sleep more closely than watches for most people.' : 'life uses Garmin for sleep now, because you chose it.'}</LifeSays>
+        <LifeSays style={{ marginTop: space.md }}>{used === 'Oura' ? 'Life used Oura: rings track sleep more closely than watches for most people.' : 'Life uses Garmin for sleep now, because you chose it.'}</LifeSays>
         <Press haptic="select" onPress={() => pick(used === 'Oura' ? 'Garmin' : 'Oura')} accessibilityLabel="Change the sleep source" style={styles.link}>
           <Text variant="buttonCompact">Change it any time</Text><Icon name="chev" size={16} color={t.ink} />
         </Press>
@@ -157,7 +157,7 @@ export function CgmV26() {
         <PhotoCard source={photos.walk} focal={{ y: 0.25 }} height={176} size="sm" chips={['Steady']} title="Dinner, then a 10-min walk" sub="Barely moved" onPress={() => nav.go('mealtiming')} />
       </PhotoGrid>
       <LifeSays style={{ marginTop: space.md }}>The walk after dinner may be what kept you steady.</LifeSays>
-      <Callout style={{ marginTop: space.md }}>Wellness, not medical advice. life never diagnoses or advises on medication. Talk to your GP about anything worrying.</Callout>
+      <Callout style={{ marginTop: space.md }}>Wellness, not medical advice. Life never diagnoses or advises on medication. Talk to your GP about anything worrying.</Callout>
     </Page>
   );
 }
@@ -191,12 +191,12 @@ export function BasicsV26() {
         </View>
       </TintCard>
       <PhotoCard source={photos.desk} focal={{ y: 0.3 }} height={150} size="md" chips={[walked ? { label: 'Done', icon: 'check' } : `Sitting · ${sitting}`]}
-        title={walked ? 'Walked. Nice.' : 'A 3-minute walk now'} sub={walked ? 'life will check in again in an hour.' : `Free in your calendar until ${basicsData.freeUntil}.`}
+        title={walked ? 'Walked. Nice.' : 'A 3-minute walk now'} sub={walked ? 'Life will check in again in an hour.' : `Free in your calendar until ${basicsData.freeUntil}.`}
         onPress={() => { flag('basics-walk', !walked); if (!walked) feedback.complete(); }} style={{ marginTop: space.sm }} />
       <Reading icon="heart" name="Heart-rate recovery" value={String(basicsData.hrRecovery)} unit="bpm" tag="Personal baseline"
         delta={`Drop in the first minute after your run. ${better ? 'Better than' : 'Close to'} your 3-month average (${basicsData.hrRecoveryAvg}).`}
         series={basicsData.hrRecoveryWeek} normal={[25.5, 28.5]} onPress={() => nav.go('workoutdetail')} style={{ marginTop: space.sm }} />
-      <Callout style={{ marginTop: space.md }}>life never nudges you to move in the middle of a meeting.</Callout>
+      <Callout style={{ marginTop: space.md }}>Life never nudges you to move in the middle of a meeting.</Callout>
     </Page>
   );
 }
@@ -316,7 +316,7 @@ export function WeightV26() {
           <SwitchV26 value={onToday} onChange={v => { flag('weight-on-today', v); feedback.select(); }} accessibilityLabel="Show weight on Today" />
         </Between>
       </Box>
-      <Callout style={{ marginTop: space.md }}>Optional and hidden by default. life never puts your weight on Today unless you turn this on.</Callout>
+      <Callout style={{ marginTop: space.md }}>Optional and hidden by default. Life never puts your weight on Today unless you turn this on.</Callout>
       <QuietLink label="BMI and waist, explained" ink onPress={() => nav.go('bmi')} style={{ marginTop: space.sm }} />
     </Page>
   );
@@ -330,7 +330,7 @@ export function BmiV26() {
   const rPos = clamp((ratio - 0.35) / 0.35 * 100), bPos = clamp((bmi - 16) / 19 * 100);
   const healthy = ratio < 0.5;
   const bmiWords = bmi < 18.5 ? 'Under 18.5, the lower end. Worth a chat with your GP if you’ve lost weight without trying.'
-    : bmi < 25 ? 'Inside the usual range. BMI still can’t tell muscle from fat, so life leans on your waist.'
+    : bmi < 25 ? 'Inside the usual range. BMI still can’t tell muscle from fat, so Life leans on your waist.'
     : healthy ? `Just over 25, but your waist and resting heart rate look healthy. Muscle weighs more than fat, and BMI can’t tell them apart.`
     : 'Over 25, and your waist is over half your height. Small, steady changes help most; your GP can help you plan.';
   return (
@@ -353,7 +353,7 @@ export function BmiV26() {
       </Box>
       <Box pad={space.md} style={{ marginTop: space.sm }}>
         <Text variant="title">Thresholds differ by background</Text>
-        <Callout style={{ marginTop: space.xxs }}>NHS guidance sets lower BMI thresholds for some heritages. life uses them once you’ve told it yours.</Callout>
+        <Callout style={{ marginTop: space.xxs }}>NHS guidance sets lower BMI thresholds for some heritages. Life uses them once you’ve told it yours.</Callout>
       </Box>
       <Callout style={{ marginTop: space.md }}>Wellness information, not a diagnosis. Talk to your GP about weight or health concerns.</Callout>
     </Page>
@@ -496,7 +496,7 @@ export function ProvenanceV26() {
         <Leader label="Compared with" value="Your last 60 nights" />
         <Leader label="Confidence" value={<View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}><Text variant="buttonCompact">High</Text>{sure}</View>} />
       </View>
-      <Body variant="callout" s="Every number in Body has a receipt like this. life compares you only with your own past readings." style={{ marginTop: space.md }} />
+      <Body variant="callout" s="Every number in Body has a receipt like this. Life compares you only with your own past readings." style={{ marginTop: space.md }} />
     </Page>
   );
 }

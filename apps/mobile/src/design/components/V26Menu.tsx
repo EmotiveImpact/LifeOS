@@ -5,7 +5,7 @@ import { Icon, type GlyphName } from '../Icon';
 import { Press } from '../Press';
 import { Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
-import { floatLift, motion, radius, space, touch } from '../tokens';
+import { durations, floatLift, motion, radius, space, touch } from '../tokens';
 
 /** One choice in a pull-down menu. `destructive` draws it in the signal colour, as iOS draws Delete in red. */
 export type MenuItem = { label: string; /** A quiet second line, as iOS menus allow. */ sub?: string; icon?: GlyphName; destructive?: boolean; onPress: () => void };
@@ -33,7 +33,7 @@ export function ActionMenu({ items, children }: { items: MenuItem[]; children: (
       const up = below + height > win.height - EDGE;
       setAt({ top: up ? Math.max(EDGE, y - space.xs - height) : below, right: Math.max(EDGE, win.width - (x + w)), up });
       grow.value = 0;
-      grow.value = calm ? withTiming(1, { duration: 150 }) : withSpring(1, motion.snappy);
+      grow.value = calm ? withTiming(1, { duration: durations.quick }) : withSpring(1, motion.snappy);
     });
   };
   const close = (then?: () => void) => { setAt(null); then?.(); };

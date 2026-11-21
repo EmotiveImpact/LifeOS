@@ -8,7 +8,7 @@
  * - Row-level security on every user table lives in `drizzle/0001_row_level_security.sql`.
  * - The auth tables (`users`, `sessions`, `accounts`, `verifications`) follow Better Auth's core schema.
  */
-import { bigint, bigserial, boolean, doublePrecision, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { bigint, bigserial, boolean, doublePrecision, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 /* ───────────────────────── Accounts (Better Auth core schema) ───────────────────────── */
 
@@ -141,18 +141,102 @@ export const oauthTokens = pgTable('oauth_tokens', {
 export const lessonCache = pgTable('lesson_cache', { key: text('key').primaryKey(), body: jsonb('body').notNull(), created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow() });
 export const sceneCache = pgTable('scene_cache', { key: text('key').primaryKey(), body: jsonb('body').notNull(), created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow() });
 
-/** The AI cost ledger: one row per model call, durable, per user and job (Phase 24 fills it). */
+/**
+ * The AI cost ledger: one row per billed model call, durable, per user and job (`src/router.ts`). `tier` is what the
+ * allowances count; `outcome` is `ok`, `rejected` (the answer failed life's checks) or `declined` (the model refused
+ * or its reply was cut off), because those calls cost money too.
+ *
+ * `request_id` is the phone's own random id for the question, never its words. A question resent after its answer was
+ * lost on the way (the connection dropped, or Life closed before saving it) runs again, because no answer is kept here,
+ * and is marked `repeat`: it counts toward the monthly spending cap, but not against the person's allowance (fix F-46).
+ */
 export const aiUsage = pgTable('ai_usage', {
   id: text('id').primaryKey(),
   user_id: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   job: text('job').notNull(),
   model: text('model').notNull(),
   location: text('location').notNull(),
+  tier: text('tier').notNull().default('fast'),
+  outcome: text('outcome').notNull().default('ok'),
   input_tokens: integer('input_tokens').notNull().default(0),
   output_tokens: integer('output_tokens').notNull().default(0),
   cost_micros: bigint('cost_micros', { mode: 'number' }).notNull().default(0),
   at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
-}, t => [index('ai_usage_user_at').on(t.user_id, t.at)]);
+  request_id: text('request_id'),
+  repeat: boolean('repeat').notNull().default(false),
+}, t => [index('ai_usage_user_at').on(t.user_id, t.at), index('ai_usage_user_request').on(t.user_id, t.request_id)]);
+
+/**
+ * Meal photos and scanned letters in object storage (Phase 23, `src/storage.ts`). The server chooses every key:
+ * `tmp/<user>/<id>` for a file that goes once it has been read (the bucket also expires `tmp/` after a day), or
+ * `keep/<user>/<id>` for one the person chose to keep. `delete_after` is null for kept files.
+ */
+export const files = pgTable('files', {
+  id: text('id').primaryKey(),
+  user_id: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  key: text('key').notNull().unique(),
+  kind: text('kind').notNull(),
+  content_type: text('content_type').notNull(),
+  keep: boolean('keep').notNull().default(false),
+  delete_after: timestamp('delete_after', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [index('files_user').on(t.user_id)]);
+
+/**
+ * Accounts their owners asked to delete. Every session ends at once; signing in again before `delete_after` keeps
+ * the account; after it, the sweep deletes the person, every row (by cascade) and every file. Like `sessions`, this
+ * holds no personal content and has no row-level security, because the sweep reads it across accounts.
+ */
+export const accountClosures = pgTable('account_closures', {
+  user_id: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  requested_at: timestamp('requested_at', { withTimezone: true }).notNull().defaultNow(),
+  delete_after: timestamp('delete_after', { withTimezone: true }).notNull(),
+}, t => [index('account_closures_due').on(t.delete_after)]);
 
 /** Tables that hold one person's rows. Each has row-level security on `user_id`. */
-export const userTables = [...Object.keys(phoneTables), 'devices', 'sync_ops', 'oauth_tokens', 'ai_usage'] as const;
+/**
+ * The north star (Phase 30): moves finished per week, as a tally. Each row counts how many phones on a platform
+ * finished `moves` moves in `week`. It holds no person: no user, device, address or time beyond the ISO week, so
+ * it has no row-level security, like the caches. Phones send it only when the person switches it on.
+ */
+export const weeklyMoves = pgTable('weekly_moves', {
+  week: text('week').notNull(),
+  platform: text('platform').notNull(),
+  moves: integer('moves').notNull(),
+  reports: integer('reports').notNull().default(0),
+}, t => [primaryKey({ columns: [t.week, t.platform, t.moves] })]);
+
+/**
+ * Counters for sign-in limits (`src/limits.ts`, fix F-11): how many codes an address or a network address asked for,
+ * how many guesses an address made, how many codes failed. `key` is a keyed hash, so no email or network address is
+ * stored, and the daily sweep deletes rows whose window has long passed. No row-level security: it holds no person.
+ */
+export const authLimits = pgTable('auth_limits', {
+  key: text('key').primaryKey(),
+  count: integer('count').notNull().default(0),
+  window_start: timestamp('window_start', { withTimezone: true }).notNull().defaultNow(),
+}, t => [index('auth_limits_window').on(t.window_start)]);
+
+/**
+ * Life's own record of each person's subscription (fix F-20), kept from RevenueCat's webhook. It holds the store, the
+ * product and dates, never a price, receipt, card or country. No row-level security, like `account_closures`: the
+ * webhook writes it for whoever RevenueCat names, with no session. Deleting the account deletes the row.
+ */
+export const subscriptions = pgTable('subscriptions', {
+  user_id: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  product: text('product').notNull(),
+  /** RevenueCat's period type: TRIAL, INTRO, NORMAL, PROMOTIONAL or PREPAID. */
+  period: text('period').notNull(),
+  /** APP_STORE, PLAY_STORE and so on. */
+  store: text('store').notNull(),
+  sandbox: boolean('sandbox').notNull().default(false),
+  /** When access ends; null only for a purchase that never expires. */
+  expires_at: timestamp('expires_at', { withTimezone: true }),
+  renews: boolean('renews').notNull().default(true),
+  billing_issue: boolean('billing_issue').notNull().default(false),
+  /** The newest event applied, so an older one arriving late can't undo it. */
+  event_at: timestamp('event_at', { withTimezone: true }).notNull(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const userTables = [...Object.keys(phoneTables), 'devices', 'sync_ops', 'oauth_tokens', 'ai_usage', 'files'] as const;

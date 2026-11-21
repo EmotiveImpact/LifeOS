@@ -1,0 +1,42 @@
+# A lesson: Teach me tax codes from the tax check, through each bite, the guess and the puzzle, the recap, telling it
+# back, and the gap Life found.
+appId: app.life.os
+name: A lesson
+tags:
+  - core
+---
+- launchApp:
+    clearState: true
+- runFlow: common/setup.yaml
+- tapOn: "Plan"
+- scrollUntilVisible:
+    element:
+      text: "Check your tax code.*"
+- tapOn: "Check your tax code.*"
+- tapOn: "Teach me"
+- extendedWaitUntil:
+    visible: "Start.*"
+    timeout: 20000
+- tapOn: "Start.*"
+- tapOn: "Next"
+- tapOn: "Next"
+- tapOn: "More"
+- assertVisible: "More tax\\..*"
+- tapOn: "Next"
+- tapOn: "Your employer doesn’t have your details yet"
+- tapOn: "See the recap"
+- assertVisible: "Recap"
+- tapOn: "Now tell it back"
+- tapOn: "Type instead"
+- tapOn:
+    id: "tellback-input"
+- inputText: "The number is how much you earn tax free, divided by ten. The letter says what kind of allowance you get."
+- tapOn: "Add this"
+- tapOn: "I’m done"
+- extendedWaitUntil:
+    visible: "How you did"
+    timeout: 20000
+- tapOn: "Show me"
+- tapOn: "I’ve got it now"
+- tapOn: "Back to Today"
+- assertVisible: "Today’s moves"

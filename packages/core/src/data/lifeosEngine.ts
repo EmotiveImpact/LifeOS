@@ -78,7 +78,7 @@ export const LIFE_DESTINATIONS: Array<{
   {
     id: 'fix-stabilize',
     label: 'Clear Chaos & Build Runway',
-    shortLabel: 'Stabilize Life',
+    shortLabel: 'Stabilise Life',
     tagline: 'Stop HMRC/tax overpayment, lock high-yield buffer & clear overdue health admin',
   },
   {
@@ -164,7 +164,7 @@ export const WORLD_RULES: WorldRuleLesson[] = [
   {
     id: 'rule-sequence-defense',
     category: 'Money Mechanics',
-    title: 'Rule 03 · Sequence the Game: Stabilize → Rails → Upside',
+    title: 'Rule 03 · Sequence the Game: Stabilise → Rails → Upside',
     ruleSummary:
       'Wealth builders play in order: stop silent leaks (wrong tax code, unused subscriptions, missed council discounts), move cash off 0% accounts into FSCS-shielded yield, then deploy capital toward leverage.',
     practicalAction: 'Check your Personal Tax Code (1257L) and automate a separate high-yield buffer account first.',
@@ -1680,7 +1680,7 @@ export function computeGameChapter(
   if (ch1Open > 0) {
     return {
       chapterNumber: 1,
-      chapterLabel: 'Chapter I · Protect & Stabilize',
+      chapterLabel: 'Chapter I · Protect & Stabilise',
       headline: `Destination: ${destInfo.shortLabel}`,
       nextUnlockText: `${ch1Open} immediate stability move${ch1Open === 1 ? '' : 's'} unlock Stage II`,
       readinessPct,
@@ -2857,7 +2857,7 @@ export function computeLifeLevelState(
 ): LifeLevelState {
   const readiness = stageReadiness(profile, eligible, completedIds);
   const currentLevel = readiness.level;
-  const levelNames = ['Starting out', 'Stabilize', 'Set your routines', 'Build momentum', 'Expand your options'];
+  const levelNames = ['Starting out', 'Stabilise', 'Set your routines', 'Build momentum', 'Expand your options'];
   const taglines: Record<LifeLevel, string> = {
     1: 'Know where your cash is going and handle the things that are time-sensitive.',
     2: 'Put bills, care and recurring costs on a routine you can keep.',

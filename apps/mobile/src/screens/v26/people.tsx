@@ -20,7 +20,7 @@ import {
   contacts, datedPeople, daysUntil, faces, kindOf, kofiCase, kofiCaseFor, monthName, nextDate, peopleWords, personPhotos, planSteps, quietPerson, shortDay, snapshot,
   turning, weekday, type DatedPerson,
 } from '@/state/people';
-import { Between, Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, QuietLink, Row, RowsCard, Statement, Tick, Timeline, drawerStyle, useDrawerPhoto } from './kit';
+import { Between, Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, QuietLink, Row, RowsCard, Statement, Tick, Timeline, drawerStyle, useDrawerPhoto, MoreRows, useLongList } from './kit';
 import { OnPhotoRound, PaperChip } from './learn';
 import { RoundPhoto } from './you';
 
@@ -82,8 +82,9 @@ export function PeopleV26() {
   const afterIds = SHOW_SAMPLES ? ['mum', 'priya', 'sam', 'efua'] : dated.slice(1, 5).map(d => d.person.id);
   const after = afterIds.map(id => data.people.find(p => p.id === id)).filter((p): p is SeedPerson => !!p && p.id !== next?.person.id);
   const quiet = SHOW_SAMPLES ? data.people.find(p => p.id === quietPerson.id) : undefined;
+  const long = useLongList(data.people);
   return (
-    <Page screen="people" bar={{ kind: 'push', action: { kind: 'node', node: <View style={styles.actions}><RoundButton icon="calendar" label="Dates" onPress={() => nav.go('dates')} /><RoundButton icon="add" label="Add someone" onPress={() => nav.go('addperson')} /></View> } }}>
+    <Page screen="people" onEnd={all ? long.showMore : undefined} bar={{ kind: 'push', action: { kind: 'node', node: <View style={styles.actions}><RoundButton icon="calendar" label="Dates" onPress={() => nav.go('dates')} /><RoundButton icon="add" label="Add someone" onPress={() => nav.go('addperson')} /></View> } }}>
       <Eyebrow>{`Your people · ${soon} ${soon === 1 ? 'date' : 'dates'} coming up`}</Eyebrow>
       <Display s={data.people.length ? `{${data.people.length} ${data.people.length === 1 ? 'person' : 'people'}} you want to show up for.` : '{The people} you want to show up for.'} />
       {next ? (
@@ -95,7 +96,7 @@ export function PeopleV26() {
       ) : (
         <View style={[styles.empty, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Text variant="headline">No dates yet.</Text>
-          <Body s="Add the people you care about and life reminds you before their days." style={{ marginTop: space.xs }} />
+          <Body s="Add the people you care about and Life reminds you before their days." style={{ marginTop: space.xs }} />
           <Btn label="Add people" onPress={() => nav.go('addperson')} style={{ marginTop: space.md }} />
         </View>
       )}
@@ -108,11 +109,12 @@ export function PeopleV26() {
           })}
         </View>
       </> : null}
-      {all ? (
+      {all ? (<>
         <RowsCard style={{ marginTop: space.sm }}>
-          {data.people.map(p => { const at = nextDate(p.date); return <Row key={p.id} lead={<Face id={p.id} size={40} />} title={p.name} sub={p.id === 'kwame' ? 'Remembered quietly · no reminder' : at ? `${p.relation} · ${shortDay(at)}` : `${p.relation} · no date saved`} onPress={() => open(p.id)} />; })}
+          {long.visible.map(p => { const at = nextDate(p.date); return <Row key={p.id} lead={<Face id={p.id} size={40} />} title={p.name} sub={p.id === 'kwame' ? 'Remembered quietly · no reminder' : at ? `${p.relation} · ${shortDay(at)}` : `${p.relation} · no date saved`} onPress={() => open(p.id)} />; })}
         </RowsCard>
-      ) : null}
+        <MoreRows more={long.more} onPress={long.showMore} />
+      </>) : null}
       {quiet ? (
         <Press haptic="open" onPress={() => open(quiet.id)} accessibilityLabel={`${quiet.name}, ${quietPerson.sub}. Say hello`} style={[styles.quiet, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Face id={quiet.id} size={48} />
@@ -205,7 +207,7 @@ export function PersonV26() {
                     </Press>
                   ))}
                 </View>
-              </> : <Body s="No date saved. Tell life their birthday and it plans the card, the gift and the message." />}
+              </> : <Body s="No date saved. Tell Life their birthday and it plans the card, the gift and the message." />}
               {person.note ? <Body s={person.note} style={{ marginTop: space.lg }} /> : null}
             </View>
           )}
@@ -231,8 +233,9 @@ function HugeTwo({ s }: { s: string }) {
 export function AddpersonV26() {
   const nav = useNavigation(), { data, set, flag } = useSeed();
   const params = useLocalSearchParams<{ state?: string }>();
-  const [typed, setTyped] = useState(params.state === 'type');
-  const [picked, setPicked] = useState(['kofi', 'priya', 'efua']);
+  // The contacts list is a sample (no phone contacts are read yet), so a real account types people in.
+  const [typed, setTyped] = useState(params.state === 'type' || !SHOW_SAMPLES);
+  const [picked, setPicked] = useState(SHOW_SAMPLES ? ['kofi', 'priya', 'efua'] : []);
   const [missing, setMissing] = useState('');
   const [name, setName] = useState(''), [relation, setRelation] = useState(''), [date, setDate] = useState('');
   const noDate = contacts.find(c => picked.includes(c.id) && !c.date);
@@ -257,28 +260,28 @@ export function AddpersonV26() {
   return (
     <Page screen="addperson" bar={{ kind: 'sheet', title: 'Add people' }}
       footer={typed
-        ? <><Btn label="Add this person" disabled={!name.trim()} onPress={addTyped} /><Callout center>Gift ideas and notes can come later. Just tell life.</Callout></>
+        ? <><Btn label="Add this person" disabled={!name.trim()} onPress={addTyped} /><Callout center>Gift ideas and notes can come later. Just tell Life.</Callout></>
         : <><Btn label={picked.length ? `Add ${picked.length} ${picked.length === 1 ? 'person' : 'people'}` : 'Tick someone to add'} disabled={!picked.length} onPress={addContacts} /><Callout center>Birthdays already in your contacts come straight across.</Callout></>}>
       <Statement s="Who do you want to {show up for?}" style={{ marginTop: space.xs }} />
-      <SegmentedV26 options={[{ value: 'contacts', label: 'From contacts' }, { value: 'type', label: 'Type it in' }]} value={typed ? 'type' : 'contacts'} onChange={v => setTyped(v === 'type')} style={{ marginTop: space.md }} />
+      {SHOW_SAMPLES ? <SegmentedV26 options={[{ value: 'contacts', label: 'From contacts' }, { value: 'type', label: 'Type it in' }]} value={typed ? 'type' : 'contacts'} onChange={v => setTyped(v === 'type')} style={{ marginTop: space.md }} /> : null}
       {typed ? <>
         <View style={{ gap: space.sm, marginTop: space.md }}>
-          <Field label="Name" value={name} onChangeText={setName} placeholder="Their name" />
-          <Field label="Who they are to you" value={relation} onChangeText={setRelation} placeholder="Brother, friend, neighbour" />
+          <Field label="Name" testID="person-name" value={name} onChangeText={setName} placeholder="Their name" />
+          <Field label="Who they are to you" testID="person-relation" value={relation} onChangeText={setRelation} placeholder="Brother, friend, neighbour" />
           <Field label="A date to keep" value={date} onChangeText={setDate} placeholder="A birthday or anniversary" />
         </View>
         <RowsCard style={{ marginTop: space.sm }}>
           <Row icon="bell" title="Nudge me to stay in touch" sub="Off unless you switch it on" right={<SwitchV26 value={!!data.flags['addperson-nudge']} onChange={v => flag('addperson-nudge', v)} accessibilityLabel="Nudge me to stay in touch" />} />
         </RowsCard>
       </> : <>
-        <Callout style={{ marginTop: space.md }}>life reads only the people you tick, and only their name and dates.</Callout>
+        <Callout style={{ marginTop: space.md }}>Life reads only the people you tick, and only their name and dates.</Callout>
         <RowsCard style={{ marginTop: space.sm }}>
           {contacts.map(c => {
             const on = picked.includes(c.id);
             return <Row key={c.id} lead={<InitialsAvatar initials={c.initials} />} title={c.name} sub={c.date ? `Birthday ${shortOf(c.date)}` : 'No birthday saved'} right={<Tick on={on} icon={on ? 'check' : 'add'} />} haptic="select" onPress={() => setPicked(p => on ? p.filter(x => x !== c.id) : [...p, c.id])} />;
           })}
         </RowsCard>
-        {noDate ? <Field label={`${noDate.name.split(' ')[0]}’s birthday`} value={missing} onChangeText={setMissing} placeholder="Add it now, or tell life later" style={{ marginTop: space.sm }} /> : null}
+        {noDate ? <Field label={`${noDate.name.split(' ')[0]}’s birthday`} value={missing} onChangeText={setMissing} placeholder="Add it now, or tell Life later" style={{ marginTop: space.sm }} /> : null}
       </>}
     </Page>
   );
@@ -322,7 +325,7 @@ export function BirthdayMoveV26({ b, day, onDone }: { b: DatedPerson; day: strin
         knob={{ icon: 'check', label: 'Card ordered', onPress: () => { flag(`person-${b.person.id}-0`, true); feedback.complete(); onDone?.(); } }}
         right={{ label: 'Not today', text: true, onPress: () => { choose(`birthday-nudge-${b.person.id}`, day); onDone?.(); } }} />
       <Callout center style={{ marginTop: space.sm }}>Tap the tick when it’s ordered.</Callout>
-      <LifeSays style={{ marginTop: space.lg }}>{`On ${weekday(b.at)} morning life will draft a message for you to send.`}</LifeSays>
+      <LifeSays style={{ marginTop: space.lg }}>{`On ${weekday(b.at)} morning Life will draft a message for you to send.`}</LifeSays>
     </View>
   );
 }

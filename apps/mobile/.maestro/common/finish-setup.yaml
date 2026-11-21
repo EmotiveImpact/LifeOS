@@ -1,0 +1,18 @@
+# From "Save your progress" (or right after signing in) to Today, past the first move.
+appId: app.life.os
+---
+- runFlow:
+    when:
+      visible: "Not now, keep it on this phone"
+    commands:
+      - tapOn: "Not now, keep it on this phone"
+- runFlow:
+    when:
+      visible: "See my plan"
+    commands:
+      - tapOn: "See my plan"
+- extendedWaitUntil:
+    visible: "Go to Today"
+    timeout: 15000
+- tapOn: "Go to Today"
+- runFlow: dismiss-prompts.yaml

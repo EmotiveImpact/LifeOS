@@ -1,4 +1,5 @@
-node_modules/
+node_modules
+# Without the slash, so a symlinked node_modules (a file to git) is ignored too.
 .expo/
 dist/
 web-build/

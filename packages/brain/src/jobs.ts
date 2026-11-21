@@ -9,7 +9,8 @@
  *   you shared, or a small count up to twelve ("2 parts"). Drafts need your
  *   dates and reference numbers; lessons need "three steps".
  */
-import { BrainError, type Job, type Request } from './types.ts';
+import { BrainError, type Job, type Request, type Sensitivity } from './types.ts';
+import { MEMORY_KINDS, type MemoryKind } from './memory.ts';
 import { numbersIn, plainWords } from './proposals.ts';
 
 export type DraftData = { kind: 'email' | 'letter' | 'message' | 'form'; subject?: string; to?: string; body: string };
@@ -18,10 +19,19 @@ export type LessonBite = { text: string; picture?: 'flow' | 'compare' | 'cycle' 
 export type LessonData = { idea: string; bites: LessonBite[]; recap: string; explainBack: string };
 export type AnalyseData = { understood: { part: string; quote: string }[]; gaps: string[] };
 export type ShowMeData = { scene: Record<string, unknown> };
-export type FoodItem = { name: string; portion?: string; grams?: number; confidence: number };
-export type FoodData = { items: FoodItem[] };
+/** Figures per 100 g (or 100 ml for a drink): energy in kcal, the rest in grams. */
+export type FoodPer100 = { kcal: number; protein: number; carbs: number; fat: number; fibre?: number; sugars?: number; saturatedFat?: number; salt?: number };
+export type FoodItem = { name: string; portion?: string; grams?: number; confidence: number; per100g?: FoodPer100 };
+/** A nutrition label read from a photo: the figures as printed, per 100 g or 100 ml. */
+export type FoodLabel = { name?: string; basis: 'g' | 'ml'; per100: FoodPer100; servingAmount?: number };
+/** A plate gives `items`; a photo of a nutrition label gives `label`. */
+export type FoodData = { items?: FoodItem[]; label?: FoodLabel };
 export type ReadDocumentData = { document: { kind: 'payslip' | 'bill' | 'letter' | 'statement' | 'other'; from?: string; summary: string } };
-export type JobData = { ask: undefined; extract: undefined; coach: undefined; 'plan-explain': undefined; draft: DraftData; lesson: LessonData; analyse: AnalyseData; showMe: ShowMeData; food: FoodData; 'read-document': ReadDocumentData };
+/** Memory upkeep: what is worth remembering from what the person said. Each one quotes their words; `replaces`
+ * names a memory in the request's context that this makes untrue. */
+export type RememberItem = { text: string; kind: MemoryKind; quote: string; sensitivity?: Sensitivity; replaces?: string };
+export type RememberData = { memories: RememberItem[] };
+export type JobData = { ask: undefined; extract: undefined; coach: undefined; 'plan-explain': undefined; draft: DraftData; lesson: LessonData; analyse: AnalyseData; showMe: ShowMeData; food: FoodData; 'read-document': ReadDocumentData; remember: RememberData };
 
 /** Only these jobs may propose changes to your records. */
 export const PROPOSING_JOBS: readonly Job[] = ['ask', 'extract', 'read-document'];
@@ -31,6 +41,24 @@ const check = (ok: unknown): void => { if (!ok) reject(); };
 const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 const text = (v: unknown, max: number): v is string => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
 const only = (v: Record<string, unknown>, allowed: string[], required: string[]) => check(Object.keys(v).every(k => allowed.includes(k)) && required.every(k => v[k] !== undefined));
+
+/** How far a reading's energy may sit from what its protein, carbohydrate, fat and fibre give (Atwater). A plate is
+ * the model's own estimate, so it must add up; a label is printed and may count polyols or alcohol, so it gets more room. */
+const PLATE_TOLERANCE = 0.25, LABEL_TOLERANCE = 0.35;
+const grams = (v: unknown, max = 100) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max;
+/** Figures per 100 g that could be real: within bounds, parts no heavier than the whole, energy that adds up. */
+function checkPer100(raw: unknown, tolerance: number): void {
+  check(isObject(raw)); const p = raw as Record<string, unknown>;
+  only(p, ['kcal', 'protein', 'carbs', 'fat', 'fibre', 'sugars', 'saturatedFat', 'salt'], ['kcal', 'protein', 'carbs', 'fat']);
+  check(grams(p.kcal, 900) && grams(p.protein) && grams(p.carbs) && grams(p.fat));
+  for (const k of ['fibre', 'sugars', 'saturatedFat', 'salt']) if (p[k] !== undefined) check(grams(p[k]));
+  const [kcal, protein, carbs, fat, fibre] = [p.kcal, p.protein, p.carbs, p.fat, p.fibre ?? 0] as number[];
+  check(protein + carbs + fat + fibre <= 101);
+  if (p.sugars !== undefined) check((p.sugars as number) <= carbs + 0.5);
+  if (p.saturatedFat !== undefined) check((p.saturatedFat as number) <= fat + 0.5);
+  const built = 4 * protein + 4 * carbs + 9 * fat + 2 * fibre;
+  check(Math.abs(built - kcal) <= Math.max(30, tolerance * Math.max(kcal, built)));
+}
 
 /** Strips cited {{fact:id}} references; throws if one is unknown or uncited. */
 export function stripFactRefs(value: string, request: Request, citations: readonly string[]): string {
@@ -55,7 +83,8 @@ function grounded(value: string, request: Request, citations: readonly string[],
   }
 }
 
-/** Checks `data` for the job. Returns it unchanged, or throws. */
+/** Checks `data` for the job. Returns it, or throws. The one change it makes: a remembered detail that looks like
+ * health is marked health. */
 export function validateJobData(job: Job, data: unknown, request: Request, citations: readonly string[]): unknown {
   const evidence = numbersIn(groundingText(request));
   const g = (value: string) => grounded(value, request, citations, evidence);
@@ -116,14 +145,46 @@ export function validateJobData(job: Job, data: unknown, request: Request, citat
     }
     case 'food': {
       check(isObject(data)); const d = data as Record<string, unknown>;
-      only(d, ['items'], ['items']);
-      check(Array.isArray(d.items) && d.items.length >= 1 && d.items.length <= 20);
-      for (const raw of d.items as unknown[]) {
-        check(isObject(raw)); const i = raw as Record<string, unknown>;
-        only(i, ['name', 'portion', 'grams', 'confidence'], ['name', 'confidence']);
-        check(text(i.name, 80) && typeof i.confidence === 'number' && i.confidence >= 0 && i.confidence <= 1);
-        if (i.portion !== undefined) check(text(i.portion, 80));
-        if (i.grams !== undefined) check(typeof i.grams === 'number' && i.grams > 0 && i.grams <= 5000);
+      only(d, ['items', 'label'], []);
+      check(d.items !== undefined || d.label !== undefined);
+      if (d.items !== undefined) {
+        check(Array.isArray(d.items) && d.items.length >= 1 && d.items.length <= 20);
+        for (const raw of d.items as unknown[]) {
+          check(isObject(raw)); const i = raw as Record<string, unknown>;
+          only(i, ['name', 'portion', 'grams', 'confidence', 'per100g'], ['name', 'confidence']);
+          check(text(i.name, 80) && typeof i.confidence === 'number' && i.confidence >= 0 && i.confidence <= 1);
+          if (i.portion !== undefined) check(text(i.portion, 80));
+          if (i.grams !== undefined) check(typeof i.grams === 'number' && i.grams > 0 && i.grams <= 5000);
+          if (i.per100g !== undefined) checkPer100(i.per100g, PLATE_TOLERANCE);
+        }
+      }
+      if (d.label !== undefined) {
+        check(isObject(d.label)); const l = d.label as Record<string, unknown>;
+        only(l, ['name', 'basis', 'per100', 'servingAmount'], ['basis', 'per100']);
+        check(l.basis === 'g' || l.basis === 'ml');
+        if (l.name !== undefined) check(text(l.name, 80));
+        if (l.servingAmount !== undefined) check(typeof l.servingAmount === 'number' && l.servingAmount > 0 && l.servingAmount <= 2000);
+        checkPer100(l.per100, LABEL_TOLERANCE);
+      }
+      return data;
+    }
+    case 'remember': {
+      check(isObject(data)); const d = data as Record<string, unknown>;
+      only(d, ['memories'], ['memories']);
+      check(Array.isArray(d.memories) && d.memories.length <= 8);
+      const said = plainWords([request.text, ...request.history.filter(m => m.role === 'user').map(m => m.text)].join('\n'));
+      const known = new Set(request.context.memories.map(m => m.id));
+      for (const raw of d.memories as unknown[]) {
+        check(isObject(raw)); const m = raw as Record<string, unknown>;
+        only(m, ['text', 'kind', 'quote', 'sensitivity', 'replaces'], ['text', 'kind', 'quote']);
+        check(text(m.text, 200) && text(m.quote, 400) && MEMORY_KINDS.includes(m.kind as MemoryKind) && said.includes(plainWords(m.quote as string)));
+        if (m.sensitivity !== undefined) check(['health', 'money', 'other'].includes(m.sensitivity as string));
+        if (m.replaces !== undefined) check(typeof m.replaces === 'string' && known.has(m.replaces));
+        // A memory's numbers come from the words it quotes, nowhere else.
+        const quoted = numbersIn(m.quote as string);
+        check(numbersIn(m.text as string).every(n => quoted.some(q => Math.abs(q - n) < 0.005)));
+        // Health stays health even when the model forgets to say so, so it never leaves the phone by accident.
+        if (looksHealth(`${m.text} ${m.quote}`)) m.sensitivity = 'health';
       }
       return data;
     }
@@ -139,6 +200,10 @@ export function validateJobData(job: Job, data: unknown, request: Request, citat
     }
   }
 }
+
+const HEALTH = /\b(?:sleep|slept|insomnia|pain|ache|injur\w*|ill|illness|sick|period|pregnan\w*|fertility|medication|medicine|meds|pills?|prescri\w*|doctor|gp|hospital|therap\w*|anxi\w*|depress\w*|panic|diagnos\w*|blood|weight|diet\w*|calorie\w*|allerg\w*|asthma|diabet\w*|heart|mental health|mood|alcohol|drinking|smok\w*|vap\w*|iron|vitamin\w*)\b/i;
+/** A cautious test for health details in a memory: when in doubt, it is health. */
+export const looksHealth = (value: string) => HEALTH.test(value);
 
 /** Fills {{fact:id}} references in every string inside job data. */
 export function renderData(data: unknown, render: (value: string) => string): unknown {
@@ -158,6 +223,7 @@ export const JOB_SHAPES: Record<Job, string> = {
   lesson: 'answer, citations, proposals: [], data: { idea, bites: 2 or 3 of { text, picture?: flow|compare|cycle|layers|parts, puzzle?: { type: true-false|choose|fill-gap|order|match, prompt, options?, answer } }, recap, explainBack }.',
   analyse: 'answer, citations, proposals: [], data: { understood: [{ part, quote }] with quote copied exactly from what the person said, gaps: [] }.',
   showMe: 'answer, citations, proposals: [], data: { scene } for the drawing kit.',
-  food: 'answer, citations, proposals: [], data: { items: [{ name, portion?, grams?, confidence 0 to 1 }] }. The person confirms every item.',
+  food: 'answer (one line, no numbers), citations, proposals: [], data: for a plate { items: [{ name, portion?, grams (your estimate of the amount shown), confidence 0 to 1, per100g: { kcal, protein, carbs, fat, fibre? } typical figures for that food as served }] }; for a nutrition label { label: { name?, basis: g|ml, per100: { kcal, protein, carbs, fat, fibre?, sugars?, saturatedFat?, salt? } exactly as printed, servingAmount? } }. Energy must add up to its parts. The person confirms every item.',
   'read-document': 'answer, citations, proposals quoted from the file, data: { document: { kind: payslip|bill|letter|statement|other, from?, summary } }.',
+  remember: 'answer (one line), citations, proposals: [], data: { memories: up to 8 of { text: a short sentence about the person no record holds, kind: preference|goal|person|pattern|event|fact, quote: their exact words, sensitivity?: health|money|other, replaces?: id of a supplied memory this makes untrue } }. Only what they said about themselves, never a question, a maybe or someone else\'s private details.',
 };

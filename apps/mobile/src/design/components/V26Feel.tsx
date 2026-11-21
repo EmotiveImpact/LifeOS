@@ -10,6 +10,7 @@ import { Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
 import { cardShadow, componentSize, floatLift, motion, photo, radius, sheetShadow, space } from '../tokens';
 import { photos, type PhotoName } from '../photos';
+import { Appear } from './Appear';
 import { LifeOrb } from './Orb';
 import { TwoTone } from './Story';
 import { Button } from './Surfaces';
@@ -27,18 +28,21 @@ export type FeelMood = {
   /** First half of the line under the field ("A clear head today."). */
   head: string;
   line: string;
+  /** The one line under the field in the check-in drawer. Kept short enough for one line on a phone, so the drawer
+   *  never grows or shrinks as the orb moves between moods (Edem, 20 Nov 2026). */
+  brief: string;
   /** Where the orb rests for this mood, 0–1 across (tense → easy) and down (energised → drained). */
   at: readonly [number, number];
 };
 
 /** Copied from the board's `kit.js` so the app and the board say the same thing for each mood. */
 export const FEEL_MOODS: Record<FeelMoodId, FeelMood> = {
-  calm: { id: 'calm', name: 'Calm', photo: 'desk', head: 'A clear head today.', line: 'Good day for the form you’ve been putting off.', at: [0.72, 0.52] },
-  driven: { id: 'driven', name: 'Driven', photo: 'run', head: 'You’ve got energy.', line: 'Put it into your one bigger move.', at: [0.74, 0.2] },
-  restless: { id: 'restless', name: 'Restless', photo: 'walk', head: 'Let’s burn it off.', line: 'Three five-minute wins first.', at: [0.26, 0.2] },
-  anxious: { id: 'anxious', name: 'Anxious', photo: 'breathe', head: 'Let’s make it smaller.', line: 'Only what’s due this week is showing.', at: [0.22, 0.52] },
-  drained: { id: 'drained', name: 'Drained', photo: 'calm', head: 'Go gently today.', line: 'One small thing, then rest.', at: [0.26, 0.84] },
-  peaceful: { id: 'peaceful', name: 'Peaceful', photo: 'journal', head: 'A soft, steady day.', line: 'Health and home come first.', at: [0.74, 0.84] },
+  calm: { id: 'calm', name: 'Calm', photo: 'desk', head: 'A clear head today.', line: 'Good day for the form you’ve been putting off.', brief: 'Clear head. A good day for that form.', at: [0.72, 0.52] },
+  driven: { id: 'driven', name: 'Driven', photo: 'run', head: 'You’ve got energy.', line: 'Put it into your one bigger move.', brief: 'Good energy. Put it into one big move.', at: [0.74, 0.2] },
+  restless: { id: 'restless', name: 'Restless', photo: 'walk', head: 'Let’s burn it off.', line: 'Three five-minute wins first.', brief: 'Burn it off with three quick wins.', at: [0.26, 0.2] },
+  anxious: { id: 'anxious', name: 'Anxious', photo: 'breathe', head: 'Let’s make it smaller.', line: 'Only what’s due this week is showing.', brief: 'Only what’s due this week is showing.', at: [0.22, 0.52] },
+  drained: { id: 'drained', name: 'Drained', photo: 'calm', head: 'Go gently today.', line: 'One small thing, then rest.', brief: 'Go gently. One small thing, then rest.', at: [0.26, 0.84] },
+  peaceful: { id: 'peaceful', name: 'Peaceful', photo: 'journal', head: 'A soft, steady day.', line: 'Health and home come first.', brief: 'A steady day. Health and home first.', at: [0.74, 0.84] },
 };
 
 /** The order a screen reader steps through the moods (swipe up or down on the field). */
@@ -192,6 +196,8 @@ function FeelDot({ col, row, rows, px, py, w, h, still }: { col: number; row: nu
 
 /* ───────────────────────── FeelingDrawer (Today's check-in) ───────────────────────── */
 
+const LONGEST_BRIEF = Object.values(FEEL_MOODS).reduce((a, m) => (m.brief.length > a.length ? m.brief : a), '');
+
 export type FeelingDrawerProps = {
   initial?: FeelMoodId;
   /** "Not now": the drawer closes and Today shows the small card. */
@@ -218,12 +224,16 @@ export function FeelingDrawer({ initial = 'calm', onClose, onSet, onChange, fiel
   const body = <>
     {bare ? null : <View style={[styles.grabber, { backgroundColor: t.surface3 }]} />}
     <View style={styles.headRow}>
-      <TwoTone size="statement" segments={[{ text: 'How are you ', tone: 'quiet' }, { text: 'arriving?' }]} style={{ flex: 1 }} />
+      <TwoTone header size="statement" segments={[{ text: 'How are you ', tone: 'quiet' }, { text: 'arriving?' }]} style={{ flex: 1 }} />
       <RoundButton icon="close" size="sm" label="Not now" onPress={onClose} />
     </View>
     <FeelField initial={initial} height={fieldHeight} onChange={id => { setMood(id); onChange?.(id); }} style={{ marginTop: space.sm }} />
     <TwoTone size="lead" segments={[{ text: 'I’m arriving ', tone: 'quiet' }, { text: m.name.toLowerCase() }, { text: '.', tone: 'quiet' }]} style={{ marginTop: space.md }} />
-    <Text variant="callout" tone="ink2" style={{ marginTop: space.xs }}>{`${m.head} ${m.line}`}</Text>
+    <View style={{ marginTop: space.xs }}>
+      {/* An invisible copy of the longest line holds the height, so nothing below it moves when the mood changes. */}
+      <Text variant="callout" aria-hidden style={{ opacity: 0 }}>{LONGEST_BRIEF}</Text>
+      <Appear key={mood} rise={4} style={StyleSheet.absoluteFill}><Text variant="callout" tone="ink2">{m.brief}</Text></Appear>
+    </View>
     <Button size="md" label="Set today’s pace" onPress={() => onSet(mood)} style={{ marginTop: space.md }} />
   </>;
   if (bare) return <View style={style}>{body}</View>;

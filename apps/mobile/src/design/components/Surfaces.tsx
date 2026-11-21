@@ -3,6 +3,7 @@ import { Image, StyleSheet, View, useWindowDimensions, type ImageSourcePropType,
 import { LinearGradient } from 'expo-linear-gradient';
 import { Icon as Ionicons, type GlyphName } from '../Icon';
 import { Press } from '../Press';
+import { findControl, nestedActionProps } from '../a11y';
 import { Callout, Text, Title, type Tone } from '../Text';
 import { useTokens } from '../theme';
 import Svg, { Circle, Defs, Mask, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -85,7 +86,7 @@ export function Card({ variant = 'default', domain = 'admin', padding, style, ch
     ) : null;
   if (onPress) {
     return (
-      <Press haptic="open" onPress={onPress} accessibilityLabel={accessibilityLabel} style={[base, style]}>
+      <Press haptic="open" onPress={onPress} accessibilityLabel={accessibilityLabel} {...nestedActionProps(findControl(children), onPress)} style={[base, style]}>
         {tint}
         {children}
       </Press>

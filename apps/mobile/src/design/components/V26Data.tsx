@@ -12,6 +12,16 @@ function useWidth(initial = 0): [number, (e: LayoutChangeEvent) => void] {
   return [w, onLayout];
 }
 
+/** A reading, or null for a day with nothing measured (drawn as a gap, never as zero). */
+export type Gappy = number | null;
+const known = (values: readonly Gappy[]) => values.filter((v): v is number => v !== null && Number.isFinite(v));
+/** Runs of consecutive indexes that have a value, so a line breaks where a day is missing. */
+function runsOf(values: readonly Gappy[]): number[][] {
+  const runs: number[][] = [];
+  values.forEach((v, k) => { if (v === null || !Number.isFinite(v)) return; const run = runs[runs.length - 1]; if (run && run[run.length - 1] === k - 1) run.push(k); else runs.push([k]); });
+  return runs;
+}
+
 const fmtMinutes = (m: number) => m >= 60 ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`.replace(' 00m', '') : `${m}m`;
 
 /* ───────────────────────── DotStrip (board `days14`) ───────────────────────── */
@@ -87,8 +97,8 @@ export function BecomingScale({ marks, ends = ['NO', 'YES'], label, style }: { m
 /* ───────────────────────── NormalBandChart (Body, Readiness) ───────────────────────── */
 
 export type NormalBandChartProps = {
-  /** One reading a day, oldest first; the last is today. */
-  values: number[];
+  /** One reading a day, oldest first; the last is today. A null day is left empty. */
+  values: Gappy[];
   /** The person's own normal range, low and high. */
   normal: [number, number];
   /** Day labels under the dots; the last is today. */
@@ -110,20 +120,20 @@ export function NormalBandChart({ values, normal, labels = ['M', 'T', 'W', 'T', 
   const t = useTokens();
   const [W, onLayout] = useWidth();
   const [lo, hi] = normal;
-  const min = domain?.[0] ?? Math.min(lo, ...values) - 3, max = domain?.[1] ?? Math.max(hi, ...values) + 4;
+  const min = domain?.[0] ?? Math.min(lo, ...known(values)) - 3, max = domain?.[1] ?? Math.max(hi, ...known(values)) + 4;
   const top = 22, bot = 28, last = values.length - 1;
   const x = (k: number) => 96 + k * (W - 114) / Math.max(1, last);
   const y = (v: number) => top + (max - v) / (max - min || 1) * (height - top - bot);
   return (
-    <View onLayout={onLayout} style={{ height }} accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel ?? `Readings this week against your normal range of ${lo} to ${hi}. Today ${values[last]}.`}>
+    <View onLayout={onLayout} style={{ height }} accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel ?? `Readings this week against your normal range of ${lo} to ${hi}. Today ${values[last] ?? 'no reading'}.`}>
       {W ? <Svg width={W} height={height}>
         <Rect x={0} y={y(hi)} width={W} height={y(lo) - y(hi)} rx={10} fill={t.surface2} />
         <SvgText x={8} y={y(hi) + 15} fontSize={11} fontFamily={fonts.sansSemibold} fill={t.inkQuiet}>{bandLabel}</SvgText>
         {values.map((v, k) => {
           const today = k === last;
           return <G key={k}>
-            <Circle cx={x(k)} cy={y(v)} r={today ? 8 : 5} fill={t.ink} opacity={today ? 1 : .32} />
-            {today ? <SvgText x={x(k)} y={y(v) - 14} fontSize={13} fontFamily={fonts.sansSemibold} fill={t.ink} textAnchor="middle">{todayLabel ?? String(v)}</SvgText> : null}
+            {v === null ? null : <Circle cx={x(k)} cy={y(v)} r={today ? 8 : 5} fill={t.ink} opacity={today ? 1 : .32} />}
+            {today && v !== null ? <SvgText x={x(k)} y={y(v) - 14} fontSize={13} fontFamily={fonts.sansSemibold} fill={t.ink} textAnchor="middle">{todayLabel ?? String(v)}</SvgText> : null}
             <SvgText x={x(k)} y={height - 6} fontSize={11} fontFamily={fonts.sansSemibold} fill={today ? t.ink : t.inkQuiet} textAnchor="middle">{labels[k] ?? ''}</SvgText>
           </G>;
         })}
@@ -135,17 +145,17 @@ export function NormalBandChart({ values, normal, labels = ['M', 'T', 'W', 'T', 
 /* ───────────────────────── Sparkline (board `spark`) ───────────────────────── */
 
 /** A small week line with your normal as a band, for a reading row. Today's point is solid. */
-export function Sparkline({ values, normal, width = 118, height = 44, color }: { values: number[]; normal: [number, number]; width?: number; height?: number; color?: string }) {
+export function Sparkline({ values, normal, width = 118, height = 44, color }: { values: Gappy[]; normal: [number, number]; width?: number; height?: number; color?: string }) {
   const t = useTokens();
   const ink = color ?? t.ink, pad = 6, [lo, hi] = normal;
-  const min = Math.min(...values, lo), max = Math.max(...values, hi), last = values.length - 1;
+  const min = Math.min(...known(values), lo), max = Math.max(...known(values), hi), last = values.length - 1;
   const x = (k: number) => pad + k * (width - pad * 2) / Math.max(1, last);
   const y = (n: number) => height - pad - (n - min) / (max - min || 1) * (height - pad * 2);
   return (
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width, height }}><Svg width={width} height={height}>
       <Rect x={0} y={y(hi)} width={width} height={y(lo) - y(hi)} rx={6} fill={t.surface2} />
-      <Polyline points={values.map((n, k) => `${x(k)},${y(n)}`).join(' ')} fill="none" stroke={ink} strokeWidth={1.6} strokeLinejoin="round" />
-      {values.map((n, k) => <Circle key={k} cx={x(k)} cy={y(n)} r={k === last ? 3.6 : 2.6} fill={k === last ? ink : t.surface} stroke={ink} strokeWidth={1.6} />)}
+      {runsOf(values).map((run, i) => run.length > 1 ? <Polyline key={i} points={run.map(k => `${x(k)},${y(values[k] as number)}`).join(' ')} fill="none" stroke={ink} strokeWidth={1.6} strokeLinejoin="round" /> : null)}
+      {values.map((n, k) => n === null ? null : <Circle key={k} cx={x(k)} cy={y(n)} r={k === last ? 3.6 : 2.6} fill={k === last ? ink : t.surface} stroke={ink} strokeWidth={1.6} />)}
     </Svg></View>
   );
 }
@@ -159,7 +169,7 @@ export function Sparkline({ values, normal, width = 118, height = 44, color }: {
  * Everything is kept inside the drawn area, so nothing looks as if it spills past the band.
  */
 export function BandLine({ values, normal, baseline, height = 120, width, color, bandColor, bandOpacity = 1, label }: {
-  values: number[]; normal?: [number, number] | [number[], number[]]; baseline?: number; height?: number; width?: number;
+  values: Gappy[]; normal?: [number, number] | [number[], number[]]; baseline?: number; height?: number; width?: number;
   color?: string; bandColor?: string; bandOpacity?: number; label?: string;
 }) {
   const t = useTokens();
@@ -168,8 +178,9 @@ export function BandLine({ values, normal, baseline, height = 120, width, color,
   const perPoint = !!normal && Array.isArray(normal[0]);
   const los = normal ? (perPoint ? normal[0] as number[] : values.map(() => normal[0] as number)) : [];
   const his = normal ? (perPoint ? normal[1] as number[] : values.map(() => normal[1] as number)) : [];
-  const known = [...values, ...los, ...his, ...(baseline === undefined ? [] : [baseline])].filter(Number.isFinite);
-  const min = Math.min(...known), max = Math.max(...known);
+  const span = known([...values, ...los, ...his, ...(baseline === undefined ? [] : [baseline])]);
+  const min = Math.min(...span), max = Math.max(...span);
+  const lastSeen = values.reduce<number>((at, v, k) => (v === null ? at : k), -1);
   const x = (k: number) => pad + k * (W - pad * 2) / Math.max(1, last);
   const y = (n: number) => height - pad - (n - min) / (max - min || 1) * (height - pad * 2);
   // A per-point band is drawn as one shape over each run of points that have a range.
@@ -178,7 +189,7 @@ export function BandLine({ values, normal, baseline, height = 120, width, color,
   const fill = bandColor ?? t.surface2;
   const fallback = normal ? `against your range of ${los[last] ?? los[0]} to ${his[last] ?? his[0]}` : 'over time';
   return (
-    <View onLayout={width ? undefined : onLayout} style={{ height, width }} accessible accessibilityRole="image" accessibilityLabel={label ?? `Trend ${fallback}. Latest ${values[last]}.`}>
+    <View onLayout={width ? undefined : onLayout} style={{ height, width }} accessible accessibilityRole="image" accessibilityLabel={label ?? `Trend ${fallback}. Latest ${lastSeen >= 0 ? values[lastSeen] : 'not measured'}.`}>
       {W ? <Svg width={W} height={height}>
         {normal && !perPoint ? <Rect x={0} y={y(his[0])} width={W} height={Math.max(0, y(los[0]) - y(his[0]))} rx={Math.min(10, (y(los[0]) - y(his[0])) / 2)} fill={fill} opacity={bandOpacity} /> : null}
         {runs.map((run, i) => {
@@ -188,8 +199,10 @@ export function BandLine({ values, normal, baseline, height = 120, width, color,
           return <Path key={i} d={`M${top.join(' L')} L${bottom.join(' L')} Z`} fill={fill} opacity={bandOpacity} strokeLinejoin="round" />;
         })}
         {baseline !== undefined ? <Line x1={pad} x2={W - pad} y1={y(baseline)} y2={y(baseline)} stroke={ink} strokeOpacity={0.45} strokeWidth={2} strokeDasharray="1 7" strokeLinecap="round" /> : null}
-        <Polyline points={values.map((n, k) => `${x(k)},${y(n)}`).join(' ')} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        <Circle cx={x(last)} cy={y(values[last])} r={small ? 3.5 : 5} fill={ink} />
+        {runsOf(values).map((run, i) => run.length > 1
+          ? <Polyline key={i} points={run.map(k => `${x(k)},${y(values[k] as number)}`).join(' ')} fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+          : <Circle key={i} cx={x(run[0])} cy={y(values[run[0]] as number)} r={small ? 2 : 3} fill={ink} />)}
+        {lastSeen >= 0 ? <Circle cx={x(lastSeen)} cy={y(values[lastSeen] as number)} r={small ? 3.5 : 5} fill={ink} /> : null}
       </Svg> : null}
     </View>
   );
@@ -198,18 +211,20 @@ export function BandLine({ values, normal, baseline, height = 120, width, color,
 /* ───────────────────────── CapsuleBars (MiniBars look="capsule", board `bars`) ───────────────────────── */
 
 /** Tall capsule bars for a week or a set of readings, drawn at their real width. `now` (default the last) is solid. */
-export function CapsuleBars({ values, labels, now, height = 120, width, max, color, dim = .2, label }: { values: number[]; labels?: string[]; now?: number; height?: number; width?: number; max?: number; color?: string; dim?: number; label?: string }) {
+export function CapsuleBars({ values, labels, now, height = 120, width, max, color, dim = .2, label }: { values: Gappy[]; labels?: string[]; now?: number; height?: number; width?: number; max?: number; color?: string; dim?: number; label?: string }) {
   const t = useTokens();
   const [measured, onLayout] = useWidth();
-  const W = width ?? measured, top = Math.max(...values, max ?? 0) || 1, picked = now ?? values.length - 1;
+  const W = width ?? measured, top = Math.max(...known(values), max ?? 0) || 1, picked = now ?? values.length - 1;
   const col = W / values.length, bw = Math.max(2, Math.min(30, col - 8)), ink = color ?? t.ink;
   return (
     <View onLayout={width ? undefined : onLayout} style={{ height, width }} accessible accessibilityRole="image" accessibilityLabel={label ?? `Chart of ${values.length} values`}>
       {W ? <Svg width={W} height={height}>
         {values.map((v, k) => {
-          const h = Math.max(6, v / top * (height - 26));
+          const h = Math.max(6, (v ?? 0) / top * (height - 26));
           return <G key={k}>
-            <Rect x={col * k + col / 2 - bw / 2} y={height - 20 - h} width={bw} height={h} rx={Math.min(bw / 2, h / 2)} fill={ink} opacity={k === picked ? 1 : dim} />
+            {v === null
+              ? <Circle cx={col * k + col / 2} cy={height - 23} r={3} fill={t.surface3} />
+              : <Rect x={col * k + col / 2 - bw / 2} y={height - 20 - h} width={bw} height={h} rx={Math.min(bw / 2, h / 2)} fill={ink} opacity={k === picked ? 1 : dim} />}
             {labels ? <SvgText x={col * k + col / 2} y={height - 4} fontSize={11} fontFamily={fonts.sansSemibold} fill={k === picked ? t.ink : t.inkQuiet} textAnchor="middle">{labels[k]}</SvgText> : null}
           </G>;
         })}

@@ -42,7 +42,7 @@ The 16 references come from different apps. This is how they're unified — foll
 |---|---|
 | 05 uses progress **rings** | Ticks or the capsule meter. No rings anywhere. |
 | 02 uses **outlined** plan cards; 09 uses **blue** status pills; 13 a **purple** FAB; 14 **purple/pink** cards | No borders and no extra hues. Selection = surface inversion (ink fill, paper text). Status pills are tonal. Stack cards take muted domain tints (§3.3). |
-| 04 uses a heavy condensed display face; 07 sets every heading in lowercase | Display = Instrument Serif. Sentence case everywhere. Only the wordmark `life` is lowercase. |
+| 04 uses a heavy condensed display face; 07 sets every heading in lowercase | Display = Instrument Serif. Sentence case everywhere. The logo is `LIFE` in spaced capitals; in sentences the name is written `Life`. |
 | 08, 12, 13, 16 each have a **different week strip** | One `WeekStrip` component (§6.4) with light/dark variants. |
 | 10 uses monospace for titles | Mono is **only** for timestamps and reference IDs. |
 | 05 orange, 06 emerald, 08 red dot, 16 amber/crimson | One signal colour (**ember**) + one money colour (**gain**). All other colour comes from atmospheres and photos. |
@@ -117,7 +117,7 @@ Fonts (load with `expo-font` / `@expo-google-fonts/*`; block the splash screen u
 
 Rules:
 - **Minimum 13px**, everywhere. The only exceptions are the weekday initials in `WeekStrip` and the dock labels (11px, 600).
-- **Sentence case.** No ALL-CAPS section labels. Wordmark is always lowercase `life`.
+- **Sentence case.** No ALL-CAPS section labels. The one exception is the logo, `LIFE` in spaced capitals (the `Wordmark` component), used only where the name stands alone: welcome, sign-in, Plus and About. In sentences the name is a name: "Life found one gap". The orb sits at the right end of the top bar on Today, Plan and You only, after their buttons: tapping it opens From Life. It sits in the same 40pt disc as the buttons beside it. The ten ring dots belong to ten areas, in this order: Money, Home, Work, Body, Food, People, Admin, Learning, Goals, You (`ORB_AREAS`). In the top bar the ring holds still, first dot at twelve o'clock, so a dot's place is its area. It always breathes slowly (one breath every 5 s). When something new is waiting, the dots for those areas also light up ember red and pulse one after another on top of the breath (0.8 s each, then a 1 s pause). With Reduce Motion nothing pulses and the red dots simply stay lit. The bottom bar keeps four tabs, Today, Plan, You and Talk, with every label showing. The You tab is the person's face: their photo, or their initial without one, with a thin ring (1.5pt ink, 1.5pt gap) when it's open in place of a colour change (`FaceAvatar`). The photo is added in Your details and stays on the phone (`services/profilePhoto.ts`), never in the synced profile and never in iCloud or computer backups. Deeper pages never carry it; elsewhere it shows only where Life is speaking or listening (Edem, 20 Nov 2026).
 - Serif is for **numbers and screen titles only**. Never serif for body or buttons.
 - Money: whole part in `ink`, decimals in `ink-quiet` (`£12,847` + `.50`). Units/denominators are sans `unit` style, top-aligned.
 - Dynamic Type: support scaling up to 1.3× without clipping (use `maxFontSizeMultiplier={1.3}` on display styles).
@@ -731,7 +731,7 @@ Reduce Motion: springs become 160ms fades, drift and particles stop, and shared 
 ## 46. The top bar (final): it never moves
 - **The header is fixed.** Same place and same height on every screen of its kind. Only the content scrolls underneath. No collapsing large titles, no titles fading in, no bar sliding away, no hairline appearing on scroll. (`TopBar.tsx`, sits outside the ScrollView.)
 - **Which bar is decided by how the screen opened:**
-  - **Root** (Today, Plan, You): eyebrow + large title on the left, at most two icon buttons on the right. Today: search, From life (bell). Plan: add. You: your avatar, settings.
+  - **Root** (Today, Plan, You): eyebrow + large title on the left, at most two icon buttons on the right. Today: search, From life (bell). Plan: add. You: your avatar, settings. Search opens only from its button, never by pulling down or scrolling the page (Edem, 21 Nov 2026).
   - **Push**: back · centred title · **one** smart action or nothing. Edit on a person or profile, ⓘ on any score, + on a list, Share on a recap, ⋯ only for objects with several actions (mission, bill, chat, document).
   - **Sheet**: grabber, title on the left, close (or one text action like Done) on the right.
   - **Full-screen flow**: close · progress · step count (onboarding, lessons, tests, focus).

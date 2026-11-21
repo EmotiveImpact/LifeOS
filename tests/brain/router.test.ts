@@ -121,3 +121,47 @@ describe("the phone's small context window", () => {
     expect(seen).toBeLessThan(20);
   });
 });
+
+describe('Phase 24: what the life API needs from the runtime', () => {
+  test('a provider that is down hands over to the next model in the tier', async () => {
+    const used: string[] = [];
+    const down = model('model-b', used, { generate: async () => { used.push('model-b'); throw new BrainError('UNAVAILABLE', 'Overloaded.'); } });
+    const result = await runBrain(consented({ ...request('Draft a note'), job: 'draft' }), [down, model('model-a', used)], undefined, { route: { table } });
+    expect(used).toEqual(['model-b', 'model-a']);
+    expect(result.route.model).toBe('model-a');
+  });
+  test('a timeout or a bad answer does not hand over: it stops there', async () => {
+    const used: string[] = [];
+    const wrong = model('model-b', used, { generate: async () => { used.push('model-b'); return { answer: 'You earn £3,000.', citations: [], proposals: [] }; } });
+    await expect(runBrain(consented({ ...request('Draft a note'), job: 'draft' }), [wrong, model('model-a', used)], undefined, { route: { table } })).rejects.toMatchObject({ code: 'INVALID_OUTPUT' });
+    expect(used).toEqual(['model-b']);
+  });
+  test('the server can skip life’s own rules, so filing reaches the model', async () => {
+    const used: string[] = [];
+    const filer = model('model-a', used, { jobs: ['extract'], generate: async () => { used.push('model-a'); return { answer: 'Review this.', citations: [], proposals: [] }; } });
+    const words = consented({ ...request('My rent is £950 a month'), job: 'extract' });
+    expect((await runBrain(words, [filer])).route.model).toBe('life-rules');
+    expect((await runBrain(words, [filer], undefined, { rules: false })).route.model).toBe('model-a');
+  });
+  test('the checked answer comes back unrendered as well, for the phone to check again', async () => {
+    const result = await runBrain(consented(request('Tell me something kind')), [model('model-a', [])]);
+    expect(result.answer).toBe('Your take-home is £2,400.');
+    expect(result.output).toEqual({ answer: 'Your take-home is {{fact:net}}.', citations: ['engine:income'], proposals: [] });
+  });
+  test('the life API may add one line of notice; a model may not', async () => {
+    const relayed = { ...reply, notice: 'Your allowance for life’s deepest model is used up this month, so this answer uses the strong model.' };
+    const api = model('life-api', [], { relay: true, generate: async () => relayed });
+    expect((await runBrain(consented(request('Tell me something kind')), [api])).notices).toEqual([relayed.notice]);
+    const provider = model('model-a', [], { generate: async () => relayed });
+    expect((await runBrain(consented(request('Tell me something kind')), [provider])).notices).toEqual([]);
+  });
+  test('when the life API hears distress, the phone shows its own support screen', async () => {
+    const api = model('life-api', [], { relay: true, generate: async () => ({ support: { level: 'urgent', kinds: ['self-harm'] } }) });
+    const result = await runBrain(consented(request('Tell me something kind')), [api]);
+    expect(result.route.model).toBe('life-safety');
+    expect(result.safety?.route).toBe('/states/support');
+    expect(result.proposals).toEqual([]);
+    const provider = model('model-a', [], { generate: async () => ({ support: { level: 'urgent', kinds: ['self-harm'] } }) });
+    await expect(runBrain(consented(request('Tell me something kind')), [provider])).rejects.toMatchObject({ code: 'INVALID_OUTPUT' });
+  });
+});

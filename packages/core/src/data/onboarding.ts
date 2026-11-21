@@ -24,7 +24,7 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     id: 'q-destination', stepTitle: 'Direction', prompt: 'What are you working toward?',
     whyItMatters: 'This moves the most relevant tasks up your plan.',
     options: [
-      { label: 'Stabilize this month', hint: 'Work out bills, income and urgent admin.', patch: { destination: 'fix-stabilize' } },
+      { label: 'Stabilise this month', hint: 'Work out bills, income and urgent admin.', patch: { destination: 'fix-stabilize' } },
       { label: 'Build a business', hint: 'Check setup, tax reserves and funding.', patch: { destination: 'launch-business' } },
       { label: 'Buy a home', hint: 'Plan the deposit and compare total costs.', patch: { destination: 'buy-home' } },
       { label: 'Improve health', hint: 'Start with preventive care and sustainable habits.', patch: { destination: 'health-longevity' } },

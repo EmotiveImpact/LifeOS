@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "default",
+  "updated": "2026-11-20",
+  "jobs": {
+    "extract": "fast",
+    "ask": "fast",
+    "coach": "strong",
+    "plan-explain": "strong",
+    "draft": "strong",
+    "lesson": "strong",
+    "analyse": "strong",
+    "showMe": "strong",
+    "food": "vision",
+    "read-document": "strong",
+    "remember": "fast"
+  },
+  "tiers": {
+    "fast": ["claude-haiku-5-5", "gpt-6-luna"],
+    "strong": ["claude-sonnet-5-5", "gpt-6.2-sol", "gemini-4-hydrogen"],
+    "top": ["claude-opus-5-5", "gemini-4-neon"],
+    "vision": ["claude-haiku-5-5", "gpt-6-luna"]
+  }
+}

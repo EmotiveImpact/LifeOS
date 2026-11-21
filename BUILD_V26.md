@@ -289,7 +289,7 @@ Track B is test-first. Each phase lists its tests by name and what they must ass
 | `lesson`, `analyse`, `showMe` | strong | Teach me | the Feynman lesson shape (MASTER_PLAN §3.5), teach-back gaps |
 | `food` | vision | Snap a meal | items with confidence, for the user to confirm |
 
-- [ ] Memory (mem0-style, open source, self-hosted on Neon pgvector, MASTER_PLAN §3.3c): add from confirmed conversations, search per reply, list, edit and delete from "What life remembers"; one space per user; on-device embeddings in private mode.
+- [ ] Memory (our own layer, mem0-style; the owner chose not to install mem0, MASTER_PLAN §3.3c): add from confirmed conversations, search per reply, list, edit and delete from "What life remembers"; one space per user; on-device embeddings in private mode.
 - [ ] Offline queue on the phone: AI requests wait with the board's state and send once on reconnect.
 - [ ] Tests first, per job: `extract never saves without confirmation`; `ask cites only supplied sources`; `lesson matches the lesson schema`; `food items carry confidence`; `memory search returns only this user's memories`; `a deleted memory is never used again`; `queues an extract request offline and sends it once on reconnect`.
 - [ ] Wire Talk, chat, Ask, missions, Teach me and Snap to the real jobs. Gate.

@@ -1,12 +1,13 @@
 import { useState, type ReactNode } from 'react';
-import { StyleSheet, TextInput, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, StyleSheet, TextInput, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import { Icon, type GlyphName } from '../Icon';
 import type { FeedbackKind } from '../feedback';
 import { Press } from '../Press';
 import { Text } from '../Text';
 import { RichText } from '../RichText';
+import { containsControl, nestedActionProps, nestedControl, Unread } from '../a11y';
 import { useTokens } from '../theme';
-import { cardShadow, componentSize, radius, space, type } from '../tokens';
+import { cardShadow, componentSize, fonts, radius, space, type } from '../tokens';
 import { RoundButton } from './V26Chrome';
 import { PhotoFill, type Focal } from './V26PhotoFill';
 
@@ -96,6 +97,8 @@ export function WheelPicker({ options, value, onChange, label, style }: WheelPic
 
 export type FieldProps = {
   label: string;
+  /** For automated tests (Maestro): the text field's id. */
+  testID?: string;
   value?: string;
   placeholder?: string;
   /** Makes it a text input. Without it the field shows its value and opens something on press. */
@@ -109,14 +112,16 @@ export type FieldProps = {
 };
 
 /** A white field with a micro label over its value. No border; the shadow sets it off the page. Placeholder in quiet. */
-export function Field({ label, value, placeholder = '', onChangeText, onPress, keyboardType, autoComplete, maxLength, style }: FieldProps) {
+export function Field({ label, testID, value, placeholder = '', onChangeText, onPress, keyboardType, autoComplete, maxLength, style }: FieldProps) {
   const t = useTokens();
   const box: ViewStyle = { backgroundColor: t.surface, borderRadius: radius.button, paddingVertical: space.tile, paddingHorizontal: space.md, ...cardShadow(t.scheme) };
   const head = <Text variant="micro" tone="ink2">{label}</Text>;
+  // The caption names the field on screen; the field itself carries the same name for screen readers, so the caption
+  // isn't read twice.
   if (onChangeText) return (
     <View style={[box, style]}>
-      {head}
-      <TextInput maxFontSizeMultiplier={1.3} value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor={t.inkQuiet} keyboardType={keyboardType} autoComplete={autoComplete} textContentType={autoComplete === 'one-time-code' ? 'oneTimeCode' : autoComplete === 'email' ? 'emailAddress' : undefined} autoCapitalize={autoComplete ? 'none' : undefined} maxLength={maxLength} accessibilityLabel={label} selectionColor={t.ember}
+      <Unread>{head}</Unread>
+      <TextInput maxFontSizeMultiplier={1.3} value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor={t.inkQuiet} keyboardType={keyboardType} autoComplete={autoComplete} textContentType={autoComplete === 'one-time-code' ? 'oneTimeCode' : autoComplete === 'email' ? 'emailAddress' : undefined} autoCapitalize={autoComplete ? 'none' : undefined} maxLength={maxLength} accessibilityLabel={label} testID={testID} selectionColor={t.ember}
         style={[type.greeting, { color: t.ink, marginTop: 2, paddingVertical: 1.5, paddingHorizontal: 0 }]} />
     </View>
   );
@@ -198,19 +203,26 @@ export type V26RowProps = {
 export function V26Row({ title, sub, icon, thumb, thumbFocal, date, lead, end, endStrong, right, chevron, onPress, haptic = 'open', style }: V26RowProps) {
   const t = useTokens();
   const showChev = chevron ?? (!!onPress && !end && !right);
+  // A switch or button at the end is offered by the row itself, since VoiceOver can't reach inside it.
+  const control = nestedControl(right);
   const body = <>
     {lead ?? (thumb ? <Thumb source={thumb} focal={thumbFocal} /> : date ? <DateBox day={date.day} month={date.month} /> : icon ? <IconWell icon={icon} /> : null)}
     <View style={{ flex: 1, minWidth: 0 }}>
       <Text variant="rowTitle" numberOfLines={2}>{title}</Text>
       {sub ? <Text variant="callout" tone="ink2" numberOfLines={2}>{sub}</Text> : null}
     </View>
-    {right ?? (end ? <Text variant={endStrong ? 'rowTitle' : 'callout'} tone={endStrong ? 'ink' : 'ink2'} style={{ fontVariant: ['tabular-nums'] }}>{end}</Text> : null)}
+    {right ? (control ? <Unread>{right}</Unread> : right) : (end ? <Text variant={endStrong ? 'rowTitle' : 'callout'} tone={endStrong ? 'ink' : 'ink2'} style={{ fontVariant: ['tabular-nums'] }}>{end}</Text> : null)}
     {showChev ? <Icon name="chev" size={componentSize.iconXs} color={t.inkQuiet} /> : null}
   </>;
   const a11y = [title, sub, end].filter(Boolean).join(', ');
+  if (!onPress && control?.kind === 'switch') {
+    // A settings row: the whole row is the switch, as it is read, and a tap anywhere on it flips it.
+    return <Press haptic="select" pressScale={1} disabled={control.disabled} onPress={() => control.set(!control.value)} accessibilityRole="switch" accessibilityState={{ checked: control.value, disabled: control.disabled }} accessibilityLabel={title} accessibilityHint={sub} style={[styles.row, style]}>{body}</Press>;
+  }
+  const actions = nestedActionProps(control, onPress);
   return onPress
-    ? <Press haptic={haptic} onPress={onPress} accessibilityLabel={a11y} style={[styles.row, style]}>{body}</Press>
-    : <View accessible accessibilityLabel={a11y} style={[styles.row, style]}>{body}</View>;
+    ? <Press haptic={haptic} onPress={onPress} accessibilityLabel={a11y} {...actions} style={[styles.row, style]}>{body}</Press>
+    : <View accessible accessibilityLabel={a11y} {...actions} style={[styles.row, style]}>{body}</View>;
 }
 
 /* ───────────────────────── CheckRows (board `check`) ───────────────────────── */
@@ -275,7 +287,8 @@ export function SpineTimeline({ items, style }: { items: SpineItem[]; style?: St
   return (
     <View style={[{ gap: 22 }, style]}>
       {items.map((it, i) => (
-        <View key={`${i}-${it.when}`} style={{ paddingLeft: 26 }} accessible accessibilityLabel={`${it.when}. ${it.text.replace(/[{}]/g, '')}${it.state === 'now' ? '. Now' : it.state === 'done' ? '. Done' : ''}`}>
+        // A step holding its own controls (ticks, a switch, a choice of times) is read part by part, so they can be reached.
+        <View key={`${i}-${it.when}`} style={{ paddingLeft: 26 }} accessible={!containsControl(it.children)} accessibilityLabel={`${it.when}. ${it.text.replace(/[{}]/g, '')}${it.state === 'now' ? '. Now' : it.state === 'done' ? '. Done' : ''}`}>
           {i < items.length - 1 ? (
             <View pointerEvents="none" style={styles.spine}>
               {Array.from({ length: 40 }, (_, k) => <View key={k} style={{ width: 3.2, height: 3.2, borderRadius: 1.6, backgroundColor: t.surface3 }} />)}
@@ -300,6 +313,22 @@ export function InitialsAvatar({ initials, lg, style }: { initials: string; lg?:
   return (
     <View accessible accessibilityLabel={initials} style={[{ width: d, height: d, borderRadius: radius.full, backgroundColor: t.surface2, alignItems: 'center', justifyContent: 'center' }, style]}>
       <Text variant={lg ? 'heading' : 'buttonCompact'}>{initials}</Text>
+    </View>
+  );
+}
+
+/** Your face: your photo when you've added one, otherwise your initial on surface2. `ring` draws the thin selected ring
+ * (1.5pt ink, 1.5pt gap) the You tab uses in place of a colour change; the space for it is always kept so nothing moves. */
+export function FaceAvatar({ uri, initials, size = 40, ring, style }: { uri?: string | null; initials: string; size?: number; ring?: boolean; style?: StyleProp<ViewStyle> }) {
+  const t = useTokens();
+  const gap = ring === undefined ? 0 : 1.5, line = ring === undefined ? 0 : 1.5, outer = size + 2 * (gap + line);
+  return (
+    <View style={[{ width: outer, height: outer, borderRadius: radius.full, borderWidth: line, borderColor: ring ? t.ink : 'transparent', alignItems: 'center', justifyContent: 'center' }, style]}>
+      {uri
+        ? <Image source={{ uri }} accessibilityIgnoresInvertColors style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: t.surface2 }} />
+        : <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: t.surface2, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: t.ink, fontFamily: fonts.sansSemibold, fontSize: Math.round(size * 0.46), lineHeight: Math.round(size * 0.6) }}>{initials}</Text>
+          </View>}
     </View>
   );
 }

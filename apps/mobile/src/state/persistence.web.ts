@@ -15,6 +15,7 @@ export async function openProjectionStorage(): Promise<ProjectionStorage> {
     exportEverything: load,
     close: async () => {},
     sync: async () => ({ applied: 0 }),
-    adoptAccount: async () => {},
+    adoptAccount: async () => ({ switched: false }),
+    accountOnPhone: async () => null,
   };
 }

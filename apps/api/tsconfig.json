@@ -11,7 +11,9 @@
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "paths": { "@life/brain": ["../../packages/brain/src/index.ts"], "@life/core": ["../../packages/core/src/index.ts"] }
   },
   "include": ["src", "drizzle.config.ts", "../../tests/api"]
 }

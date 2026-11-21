@@ -18,10 +18,15 @@ import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { money, moneyCompact, rentBuyInputs, seed, seedLabResults, seedTaxClaim } from '@/state/seed';
 import { bloodTiles, bufferMonths, cashWeeks, niYears, TOOLS } from '@/state/plan';
-import { BigPhoto, Between, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Figure, Hero, Legend, Micro, Page, PeekStack, PhotoTile, Row, RowsCard, Shelf, Statement, Tick } from './kit';
+import { BigPhoto, Between, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Figure, Hero, Legend, Micro, NotYetV26, Page, PeekStack, PhotoTile, Row, RowsCard, Shelf, Statement, Tick } from './kit';
+import { SHOW_SAMPLES } from '@/state/sample';
 import { useOpenTool } from './plan';
+import { MoneyNotYetV26 } from './money';
 
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+/** Where Income and structure's slider starts: the figure you last tried, your own income, or the board's example. */
+export const structureProfit = (data: { choices: Record<string, string>; profile: { annualIncome: number } }) =>
+  Number(data.choices['structure-profit'] ?? (SHOW_SAMPLES ? seed.finance.structureProfit : data.profile.annualIncome || seed.finance.structureProfit));
 const info = (label: string, onPress: () => void) => ({ kind: 'icon' as const, icon: 'info' as const, label, onPress });
 
 function useShow() {
@@ -40,6 +45,13 @@ function useToolState() {
 /* ───────────────────────── 30-day cash plan ───────────────────────── */
 
 export function CashplanV26() {
+  // The balance, bills and weeks are the sample life's; a real account starts by telling Life about its money.
+  if (!SHOW_SAMPLES) return <NotYetV26 screen="cashplan" title="30-day cash plan" eyebrow="Your 30-day cash plan" line="Life works out what’s safe to spend from your pay, bills and balance."
+    source="payslip" focal={{ y: 0.85 }} ask="Tell Life about your money" examples="Your pay day, your rent, what’s in your account." />;
+  return <CashplanSampleV26 />;
+}
+
+function CashplanSampleV26() {
   const t = useTokens(), { data, set, choose, flag } = useSeed(), show = useShow();
   const cp = seed.finance.cashplan;
   const [coming, setComing] = useState(Number(data.choices['cashplan-income'] ?? cp.comingIn));
@@ -71,7 +83,7 @@ export function CashplanV26() {
         <Row icon="home" title="Essential bills" sub="Rent, council tax, utilities, phone" end={show(essentials)} endStrong />
         <Row icon="shield" title="Tax set-aside" sub="For your Self Assessment" end={show(tax)} endStrong />
       </RowsCard>
-      {saved ? <Callout style={{ marginTop: space.md }}>Saved on this phone. life checks it again on payday.</Callout> : null}
+      {saved ? <Callout style={{ marginTop: space.md }}>Saved on this phone. Life checks it again on payday.</Callout> : null}
     </Page>
   );
 }
@@ -79,14 +91,21 @@ export function CashplanV26() {
 /* ───────────────────────── Tax and NI ───────────────────────── */
 
 export function TaxcheckV26() {
+  // The P800, the refund and the NI record are the sample life's. A real account starts by telling Life about its pay.
+  if (!SHOW_SAMPLES) return <NotYetV26 screen="taxcheck" title="Tax & NI" eyebrow="Find money you’re owed" line="Life checks your tax from your payslips and what you tell it."
+    source="payslip" focal={{ y: 0.86 }} ask="Tell Life about your pay" examples="Your job, your tax code, work costs you paid yourself." />;
+  return <TaxcheckSampleV26 />;
+}
+
+function TaxcheckSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, set, flag } = useSeed(), show = useShow();
   const ni = seed.finance.niRecord;
   const years = [{ y: '2022/23', b: 'OK', s: 'Settled' }, { y: '2023/24', b: 'OK', s: 'Settled' }, { y: '2024/25', b: show(seedTaxClaim.refund), s: 'P800 · overpaid', now: true }];
   return (
     <Page screen="taxcheck" bar={{ kind: 'push', title: 'Tax & NI', action: info('How this is checked', () => flag('tax-details')) }}
       footer={<Btn label="Check if it’s worth filling" onPress={() => { flag('ni-reviewed', true); set({ profile: { ...data.profile, taxReviewed: true } }); nav.go('chat', { question: 'How do I check gaps in my National Insurance record?' }); }} />}>
-      <BigPhoto source={photos.payslip} focal={{ y: 0.86 }} height={204} chip="Money · HMRC" chipRight="2024/25 · P800" line="You overpaid. Owed to you:" figure={`${show(seedTaxClaim.refund)} back`} sub="From your P800 and the work costs you told life about." style={{ marginTop: space.xxs }} />
-      {data.flags['tax-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="life works this out from your payslips, your P800 and the work costs you’ve told it. It doesn’t sign in to HMRC for you. Check the figure in your {Personal Tax Account} before you claim." /></Box> : null}
+      <BigPhoto source={photos.payslip} focal={{ y: 0.86 }} height={204} chip="Money · HMRC" chipRight="2024/25 · P800" line="You overpaid. Owed to you:" figure={`${show(seedTaxClaim.refund)} back`} sub="From your P800 and the work costs you told Life about." style={{ marginTop: space.xxs }} />
+      {data.flags['tax-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="Life works this out from your payslips, your P800 and the work costs you’ve told it. It doesn’t sign in to HMRC for you. Check the figure in your {Personal Tax Account} before you claim." /></Box> : null}
       <View style={[styles.years, { marginTop: space.sm }]}>
         {years.map(y => (
           <View key={y.y} style={[styles.year, { backgroundColor: y.now ? t.ink : t.surface }, y.now ? null : cardShadow(t.scheme)]}>
@@ -102,7 +121,7 @@ export function TaxcheckV26() {
         <Legend style={{ marginTop: space.sm }} items={[{ label: `${ni.years} qualifying years`, color: t.ink }, { label: `1 gap · ${ni.gapYear}`, color: t.ember }]} />
         <Body s={`Filling it costs roughly {${show(ni.indicativeCost)}} and adds about {${show(ni.indicativeAnnualPension)} a year} to your State Pension, for life. Check the exact figure with HMRC first.`} style={{ marginTop: space.sm }} />
       </TintCard>
-      <Callout style={{ marginTop: space.md }}>An estimate from what you’ve told life, not tax advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>An estimate from what you’ve told Life, not tax advice.</Callout>
     </Page>
   );
 }
@@ -111,7 +130,7 @@ export function TaxcheckV26() {
 
 export function IncomeV26() {
   const nav = useNavigation(), { data, choose, flag, engine } = useSeed(), show = useShow();
-  const [profit, setProfit] = useState(Number(data.choices['structure-profit'] ?? seed.finance.structureProfit));
+  const [profit, setProfit] = useState(structureProfit(data));
   const s = compareUKBusinessStructures({ ...data.profile, annualIncome: profit });
   const sole = s.soleTrader.netTakeHomeAnnual, company = s.director.netTakeHomeAnnual, fees = seed.finance.accountantFees;
   const edge = sole - (company - fees);
@@ -124,16 +143,27 @@ export function IncomeV26() {
         <Cols style={{ marginTop: 14 }} items={[{ small: 'Sole trader', value: show(sole), sub: 'take-home' }, { small: 'Limited company', value: show(company), sub: `before ~${show(fees)} fees` }]} />
       </Hero>
       <Callout style={{ marginTop: space.sm }}>{`Take-home per year · tax year ${engine.income.taxYear} · before ~${money(fees)} accountant fees for a company`}</Callout>
-      {data.flags['income-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="A sole trader pays income tax and Class 4 NI on profit. A company pays corporation tax, then you take a small salary and dividends. life uses this year’s rates and your other income." /></Box> : null}
+      {data.flags['income-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s="A sole trader pays income tax and Class 4 NI on profit. A company pays corporation tax, then you take a small salary and dividends. Life uses this year’s rates and your other income." /></Box> : null}
       <Btn label="Ask about the trade-offs" ghost onPress={() => nav.go('ask')} style={{ marginTop: space.md }} />
-      <Callout style={{ marginTop: space.md }}>An estimate from life’s engine, not tax advice. life suggests speaking to an accountant before switching.</Callout>
+      <Callout style={{ marginTop: space.md }}>An estimate from Life’s engine, not tax advice. Life suggests speaking to an accountant before switching.</Callout>
     </Page>
   );
 }
 
 /* ───────────────────────── Rent vs buy ───────────────────────── */
 
-export function RentbuyV26() {
+/* Tools built on the sample life's savings, home and blood test: a real account (a deep link) sees a day one instead. */
+const HomeNotYet = ({ screen, title }: { screen: ScreenKey; title: string }) => <NotYetV26 screen={screen} title={title} eyebrow="Home · day one" line="Life builds this from what you tell it about where you live and what you save."
+  source="movein" focal={{ y: 0.82 }} ask="Tell Life about your home" examples="Your rent, what you’ve saved, where you’d like to live." />;
+export function RentbuyV26() { return SHOW_SAMPLES ? <RentbuySampleV26 /> : <HomeNotYet screen="rentbuy" title="Rent vs buy" />; }
+export function BedroomsV26() { return SHOW_SAMPLES ? <BedroomsSampleV26 /> : <HomeNotYet screen="bedrooms" title="Your next home" />; }
+export function BufferV26() { return SHOW_SAMPLES ? <BufferSampleV26 /> : <MoneyNotYetV26 screen="buffer" title="How big a buffer?" />; }
+export function BloodV26() {
+  return SHOW_SAMPLES ? <BloodSampleV26 /> : <NotYetV26 screen="blood" title="Bloodwork" eyebrow="Bloodwork reader" line="Life explains your results once you add them."
+    source="walk" focal={{ y: 0.48 }} ask="Tell Life about a blood test" examples="The test, the date, the numbers on the letter." />;
+}
+
+function RentbuySampleV26() {
   const nav = useNavigation(), { data, flag } = useSeed(), show = useShow();
   const bedrooms = Number(data.choices.bedrooms ?? 2);
   const price = rentBuyInputs.price * bedrooms / 2;
@@ -161,7 +191,7 @@ export function RentbuyV26() {
       </Box>
       {data.flags['rentbuy-details'] ? <Box pad={space.md} style={{ marginTop: space.sm }}><Body s={`The model compares owning (mortgage, upkeep, the home growing ${rentBuyInputs.homeGrowthPct}% a year, selling costs) with renting and investing whatever you’d save at ${rentBuyInputs.investmentReturnPct}% a year.`} /></Box> : null}
       <Row icon="home" title={`${bedrooms} bedrooms`} sub="Change the size of home" onPress={() => nav.go('bedrooms')} style={{ marginTop: space.xs }} />
-      <Callout style={{ marginTop: space.sm }}>A model from life’s engine, not financial advice.</Callout>
+      <Callout style={{ marginTop: space.sm }}>A model from Life’s engine, not financial advice.</Callout>
     </Page>
   );
 }
@@ -179,7 +209,7 @@ function RangeDot({ pos, flag }: { pos: number; flag?: boolean }) {
   );
 }
 
-export function BloodV26() {
+function BloodSampleV26() {
   const { data, set, flag } = useSeed();
   const health = data.profile.health ?? {};
   const labs: Partial<Record<LabMarkerId, LabResult>> = { ...seedLabResults, ...data.profile.health?.labResults };
@@ -207,14 +237,14 @@ export function BloodV26() {
     flag('add-lab', false); setError(''); setValue(''); feedback.file();
   };
   return (
-    <Page screen="blood" bar={{ kind: 'push', title: 'Bloodwork', action: info('How life reads results', () => flag('blood-details')) }}
+    <Page screen="blood" bar={{ kind: 'push', title: 'Bloodwork', action: info('How Life reads results', () => flag('blood-details')) }}
       footer={<>
         <Btn label={adding ? 'Save this result' : 'Add a result'} icon={adding ? 'check' : 'add'} onPress={adding ? saveResult : () => flag('add-lab', true)} />
-        <Callout center>life explains results, it doesn’t diagnose. Always check with your GP.</Callout>
+        <Callout center>Life explains results, it doesn’t diagnose. Always check with your GP.</Callout>
       </>}>
       <Eyebrow>Health · 3 Nov · your last test</Eyebrow>
       <Display s={flagged.length ? `{${inRange} of ${rows.length} in range.} ${words[flagged.length] ?? flagged.length} worth a word with your {GP.}` : `{All ${rows.length} in range.} Nothing to raise right now.`} />
-      {data.flags['blood-details'] ? <Box pad={space.md} style={{ marginTop: space.md }}><Body s="Each marker is compared with the range printed on your report, or with a published guide when there isn’t one. Your GP knows your history; life only explains." /></Box> : null}
+      {data.flags['blood-details'] ? <Box pad={space.md} style={{ marginTop: space.md }}><Body s="Each marker is compared with the range printed on your report, or with a published guide when there isn’t one. Your GP knows your history; Life only explains." /></Box> : null}
       <TileGrid style={{ marginTop: space.xl }}>
         {rows.map(r => (
           <Box key={r.g.id} pad={space.md} style={{ minHeight: 118 }}>
@@ -264,7 +294,7 @@ export function ProtectV26() {
         <Body s={gap.id === 'prot-income' && selfEmployed ? 'Self-employed: {no sick pay.} Compare how long your savings last with what a policy would pay.' : gap.whyNeeded} style={{ marginTop: space.xxs }} />
         <Btn label="Talk it through" icon="arrow" trail onPress={() => nav.go('chat', { question: `How should I think about ${plain(gap.name).toLowerCase()}?` })} style={{ marginTop: space.md }} />
         <Press2 label={`Mark ${plain(gap.name).toLowerCase()} as sorted`} onPress={() => toggle(gap.id)} />
-      </Box> : <Callout style={{ marginTop: space.sm }}>Every check is done. life asks again in a year.</Callout>}
+      </Box> : <Callout style={{ marginTop: space.sm }}>Every check is done. Life asks again in a year.</Callout>}
       <RowsCard style={{ marginTop: space.sm }}>
         {rest.map(p => <Row key={p.id} lead={<Tick on={p.inPlace} />} title={plain(p.name)} sub={p.whyNeeded} right={<Chip label={p.inPlace ? 'Done' : p.urgency === 'Critical' ? 'Soon' : 'To do'} tone={p.inPlace ? 'done' : 'q'} />} onPress={() => toggle(p.id)} />)}
       </RowsCard>
@@ -282,17 +312,18 @@ function Press2({ label, onPress }: { label: string; onPress: () => void }) {
 
 export function GrowthV26() {
   const t = useTokens(), nav = useNavigation(), { data, choose } = useSeed();
+  // The payday sweep, the rate and the lessons done are the sample life's; a real account sees the path itself.
   const picked = data.choices['growth-checkin'];
   return (
     <Page screen="growth" bar={{ kind: 'push', action: { kind: 'text', label: 'Levels', onPress: () => nav.go('levels') } }}>
       <Eyebrow>Level 4 · growth path</Eyebrow>
-      <Display s="You’ve kept your {payday sweep} for {3 months}. Next: {raise your rate.}" />
+      <Display s={SHOW_SAMPLES ? 'You’ve kept your {payday sweep} for {3 months}. Next: {raise your rate.}' : '{Your growth path.} A weekly check-in, and lessons for earning more.'} />
       <PhotoCard source={photos.journal} focal={{ y: 0.6 }} height={284} size="md" chips={['This week’s check-in']} chipRight={{ label: 'Due Sun', dot: t.ember }} title="What did you do this week that future-you will thank you for?" style={{ marginTop: space.lg }}>
         <View style={styles.photoChips}>
           {['Saved more', 'Learned something', 'Rested properly'].map(c => <Chip key={c} label={c} onPhoto icon={picked === c ? 'check' : undefined} onPress={() => { choose('growth-checkin', c); feedback.select(); }} />)}
         </View>
       </PhotoCard>
-      <SectionHead title="Lessons" link="2 of 6" onLink={() => nav.go('library')} />
+      <SectionHead title="Lessons" link={SHOW_SAMPLES ? '2 of 6' : 'All'} onLink={() => nav.go('library')} />
       <Shelf>
         <PhotoTile source={photos.areawork} focal={{ y: 0.55 }} width={150} title="Pricing your work" meta="6 min" metaIcon="play" onPress={() => nav.go('idea')} />
         <PhotoTile source={photos.friends} width={150} title="Asking for a rate rise" meta="5 min" metaIcon="play" onPress={() => nav.go('idea')} />
@@ -305,7 +336,7 @@ export function GrowthV26() {
 
 /* ───────────────────────── Your next home: bedrooms ───────────────────────── */
 
-export function BedroomsV26() {
+function BedroomsSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, choose } = useSeed();
   const [n, setN] = useState(Number(data.choices.bedrooms ?? 2));
   const price = rentBuyInputs.price * n / 2;
@@ -326,7 +357,7 @@ export function BedroomsV26() {
 
 /* ───────────────────────── How big a buffer? ───────────────────────── */
 
-export function BufferV26() {
+function BufferSampleV26() {
   const nav = useNavigation(), { data, choose } = useSeed(), show = useShow();
   const [months, setMonths] = useState(Number(data.choices['buffer-months'] ?? seed.finance.bufferMonths));
   const essentials = seed.finance.cashplan.essentialBills, sweep = seed.finance.bufferSavingMonthly, balance = seed.finance.balance;
@@ -486,7 +517,15 @@ function Press3({ label, onPress }: { label: string; onPress: () => void }) {
 
 /* ───────────────────────── Health stack ───────────────────────── */
 
+/** What you take, and when. The stack (and the low iron) are the sample life's, so a real account starts by telling Life. */
 export function HealthstackV26() {
+  return SHOW_SAMPLES ? <HealthstackSampleV26 /> : (
+    <NotYetV26 screen="healthstack" title="Health stack" eyebrow="Health stack · day one" line="Your stack builds from what you tell Life you take."
+      source="walk" focal={{ y: 0.3 }} ask="Tell Life what you take" examples="Vitamins, supplements, medicines, and when." />
+  );
+}
+
+function HealthstackSampleV26() {
   const t = useTokens(), nav = useNavigation();
   const ironLow = true;
   const caps: { icon: 'sun' | 'fitness' | 'water'; title: string; sub: string; end?: string; gp?: boolean }[] = [

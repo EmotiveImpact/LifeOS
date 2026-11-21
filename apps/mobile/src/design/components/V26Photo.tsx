@@ -4,10 +4,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type GlyphName } from '../Icon';
 import { Press } from '../Press';
+import { containsControl, findControl, nestedActionProps, nestedControl, Unread } from '../a11y';
 import { Text } from '../Text';
 import { useTokens } from '../theme';
 import { areaColors, cardShadow, componentSize, photo, photoScrims, radius, space, tint, type Area } from '../tokens';
 import { LifeOrb } from './Orb';
+import { Wordmark } from './Wordmark';
 import { StatusPill } from './Surfaces';
 import { TwoTone, type TwoToneSegment } from './Story';
 import { DashPager, RoundButton } from './V26Chrome';
@@ -53,12 +55,14 @@ function PhotoChip({ chip }: { chip: string | PhotoChipSpec }) {
 /** A photograph card: chips on a top line, copy low on the card fade. Radius 24, `cardShadow`, no border, no panel. */
 export function PhotoCard({ source, title, titleSuffix, sub, chips, chipRight, topRight, lead, children, height = 230, size = 'lg', focal, onPress, accessibilityLabel, style }: PhotoCardProps) {
   const t = useTokens();
+  // The round button in the corner is offered by the card, since VoiceOver can't reach inside it.
+  const corner = chipRight ? null : nestedControl(topRight), actions = nestedActionProps(corner ?? (onPress ? findControl(children) : null), onPress);
   const body = <>
     <PhotoFill source={source} focal={focal} />
     <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
     <View style={styles.topline}>
       <View style={styles.chips}>{chips?.map((c, i) => <PhotoChip key={i} chip={c} />)}</View>
-      {chipRight ? <PhotoChip chip={chipRight} /> : topRight ?? null}
+      {chipRight ? <PhotoChip chip={chipRight} /> : corner ? <Unread>{topRight}</Unread> : topRight ?? null}
     </View>
     <View style={{ gap: size === 'lg' ? 0 : 2 }}>
       {lead ? <Text variant="callout" tone="paper2">{lead}</Text> : null}
@@ -74,8 +78,8 @@ export function PhotoCard({ source, title, titleSuffix, sub, chips, chipRight, t
   return (
     <View style={[{ borderRadius: radius.photo, ...cardShadow(t.scheme) }, style]}>
       {onPress
-        ? <Press haptic="open" onPress={onPress} accessibilityLabel={accessibilityLabel ?? [title, titleSuffix, sub].filter(Boolean).join(', ')} style={box}>{body}</Press>
-        : <View accessible accessibilityLabel={accessibilityLabel ?? [title, titleSuffix, sub].filter(Boolean).join(', ')} style={box}>{body}</View>}
+        ? <Press haptic="open" onPress={onPress} accessibilityLabel={accessibilityLabel ?? [title, titleSuffix, sub].filter(Boolean).join(', ')} {...actions} style={box}>{body}</Press>
+        : <View accessible={!containsControl(children)} accessibilityLabel={accessibilityLabel ?? [title, titleSuffix, sub].filter(Boolean).join(', ')} {...actions} style={box}>{body}</View>}
     </View>
   );
 }
@@ -125,7 +129,7 @@ export function FullPhotoScreen({ source, focal, title, statement, pager, onNext
       <PhotoFill source={source} focal={focal} settle />
       <LinearGradient pointerEvents="none" colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} />
       <View style={[styles.photoBar, { marginTop: insets.top }]}>
-        {brand ? <View style={styles.brand}><LifeOrb size={22} color={photo.onPhoto} /><Text variant="headline" tone="paper">life</Text></View> : <View />}
+        {brand ? <View style={styles.brand}><Wordmark variant="headline" color={photo.onPhoto} /></View> : <View />}
         {onSkip ? <Press haptic="select" onPress={onSkip} accessibilityLabel={skipLabel} hitSlop={12}><Text variant="button" tone="paper">{skipLabel}</Text></Press> : null}
       </View>
       <View style={{ flex: 1 }} />
@@ -161,7 +165,7 @@ export function TintCard({ area, children, padding = space.cardPad, onPress, acc
   const box: ViewStyle = { backgroundColor: t.surface, borderRadius: r, padding, ...cardShadow(t.scheme), ...own };
   const wash = <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: r, backgroundColor: tint[t.scheme][area] }]} />;
   return onPress
-    ? <Press haptic="open" onPress={onPress} accessibilityLabel={accessibilityLabel} style={box}>{wash}{children}</Press>
+    ? <Press haptic="open" onPress={onPress} accessibilityLabel={accessibilityLabel} {...nestedActionProps(findControl(children), onPress)} style={box}>{wash}{children}</Press>
     : <View style={box}>{wash}{children}</View>;
 }
 

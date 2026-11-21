@@ -15,13 +15,17 @@ import {
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed, type SeedData } from '@/state/SeedProvider';
 import { money, seed, type FiledRecord } from '@/state/seed';
+import { compareUKBusinessStructures } from '@life/core/finance';
+import { structureProfit } from './toolkit';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { ai } from '@/services/ai';
 import { SAMPLE_TALK, chunkTranscript, sampleStream, voice, type HeardChunk } from '@/services/voice';
 import { useBrainConversation, newConversation } from '@/services/useBrainConversation';
+import { useBrainJob } from '@/services/useBrainJob';
+import { proposalRecord } from '@/services/brainState';
 import { pickAttachment, removeAttachmentCopy } from '@/services/attachments';
 import { ConversationAttachments } from '../ConversationAttachments';
-import { Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, QuietLink, Row, RowsCard, Statement, Between } from './kit';
+import { Body, Btn, Callout, Chip, Display, Eyebrow, Micro, NotYetV26, Page, QuietLink, Row, RowsCard, Statement, Between, MoreRows, useLongList } from './kit';
 
 const AREAS: [Area, string][] = [['you', 'You'], ['home', 'Home'], ['work', 'Work'], ['money', 'Money'], ['health', 'Health'], ['goal', 'Goals']];
 const areaName = (a: Area) => AREAS.find(x => x[0] === a)?.[1] ?? a;
@@ -58,6 +62,14 @@ export function TalkV26() {
   const before = useRef<Pick<SeedData, 'records' | 'knowledge' | 'profile' | 'memories' | 'brain'> | null>(null);
   const filed = useRef<FiledRecord[]>(preset === 'filed' ? sampleProposals() : []);
   const mounted = useRef(true);
+  // What you said, kept for "Ask life to read it" when life's own rules found nothing to file.
+  const heard = useRef('');
+  const job = useBrainJob('Your talk');
+  useEffect(() => {
+    if (job.state.step !== 'done') return;
+    // What the model picked out is proposed for review, never filed (BUILD_V26 Phase 25).
+    set({ proposals: job.state.result.proposals.map(proposal => proposalRecord(proposal, 'talk')) });
+  }, [job.state]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; stopStream.current?.(); timers.current.forEach(clearTimeout); void voice.stop(); }; }, []);
   // Preview states (`?state=review|filed`) show the sample talk's own details, not whatever was waiting before.
   useEffect(() => { if (preset === 'review') set({ proposals: sampleProposals() }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -96,11 +108,12 @@ export function TalkV26() {
     return () => { cancelled = true; stopStream.current?.(); stopStream.current = null; };
   }, [phase, paused, run]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const restart = () => { stopStream.current?.(); timers.current.forEach(clearTimeout); void voice.stop(); setChunks([]); setLit([]); setSecs(0); setEnded(false); setPaused(false); setError(''); set({ proposals: [] }); setPhase('listening'); setRun(r => r + 1); };
+  const restart = () => { job.reset(); heard.current = ''; stopStream.current?.(); timers.current.forEach(clearTimeout); void voice.stop(); setChunks([]); setLit([]); setSecs(0); setEnded(false); setPaused(false); setError(''); set({ proposals: [] }); setPhase('listening'); setRun(r => r + 1); };
   const review = async () => {
     stopStream.current?.();
     const words = mode === 'live' ? (await voice.stop()) || chunks.map(c => c.text).join('') : '';
     const said = mode === 'live' ? await ai.talk(words) : null;
+    heard.current = mode === 'live' ? words : '';
     // Distress always goes to support, never to filing (BUILD_V26 review focus 5).
     if (said?.support) { set({ proposals: [] }); nav.replace('support'); return; }
     const proposals = said ? said.data : sampleProposals();
@@ -126,7 +139,18 @@ export function TalkV26() {
     ? (proposals.length
       ? <DecisionDrawer title={`File these ${proposals.length} ${proposals.length === 1 ? 'detail' : 'details'}?`} sub={`Into ${listAreas(proposals.map(p => p.area))}. You decide.`}
           leave={{ label: 'Leave them', onPress: restart }} confirm={{ label: `File all ${proposals.length}`, onPress: fileAll, haptic: null }} ask={{ label: 'Go through them one by one', onPress: () => nav.go('understood', params.setup ? { setup: '1' } : undefined) }} />
-      : <DecisionDrawer title="Nothing to file yet." sub="Keep talking, or type it instead." undo={{ label: 'Keep talking', onPress: restart }} />)
+      : job.state.step === 'ask'
+        ? <DecisionDrawer title="Send what you said to Life’s AI?" sub={`Your words${job.state.request.context.memories.length ? ` and ${job.state.request.context.memories.length} ${job.state.request.context.memories.length === 1 ? 'memory' : 'memories'}` : ''} go to the Life API and its model. Nothing is filed until you say so.`}
+            leave={{ label: 'Keep it here', onPress: job.reset }} confirm={{ label: 'Send it', icon: 'arrowUp', onPress: job.allow }} />
+        : job.state.step === 'working'
+          ? <DecisionDrawer title="Reading what you said…" sub="Nothing is filed until you say so." undo={{ label: 'Stop', onPress: job.reset }} />
+          : job.state.step === 'waiting'
+            ? <DecisionDrawer title="Saved for later." sub={`${job.state.note} It’ll be in your conversations.`} undo={{ label: 'Keep talking', onPress: restart }} />
+            : job.state.step === 'failed' || job.state.step === 'done'
+              ? <DecisionDrawer title="Nothing to file yet." sub={job.state.step === 'failed' ? job.state.message : 'Life’s AI didn’t find anything to file either.'} undo={{ label: 'Keep talking', onPress: restart }} />
+              : job.available && heard.current
+                ? <DecisionDrawer title="Nothing to file yet." sub="Keep talking, or let Life’s AI read what you said." leave={{ label: 'Keep talking', onPress: restart }} confirm={{ label: 'Ask Life to read it', icon: 'spark', onPress: () => job.start('extract', heard.current) }} />
+                : <DecisionDrawer title="Nothing to file yet." sub="Keep talking, or type it instead." undo={{ label: 'Keep talking', onPress: restart }} />)
     : phase === 'filed'
       ? <DecisionDrawer title="Filed." sub={`${filed.current.length} ${filed.current.length === 1 ? 'detail is' : 'details are'} in their places.${mode === 'sample' ? ' Your rent situation has a new date.' : ''}`} undo={{ onPress: undo }} />
       : null;
@@ -156,7 +180,7 @@ export function TalkV26() {
           return <AreaTile key={a} area={a} name={name} count={items.length} text={items.length ? items[items.length - 1].label! : 'Nothing yet'} hitKey={hit?.area === a ? hit.key : -1} />;
         })}
       </View>
-      {mode === 'sample' ? <Callout style={{ marginTop: space.md }}>Sample talk. On-device speech isn’t available here, so life plays an example.</Callout> : null}
+      {mode === 'sample' ? <Callout style={{ marginTop: space.md }}>Sample talk. On-device speech isn’t available here, so Life plays an example.</Callout> : null}
       {error ? <Callout style={{ marginTop: space.xs }}>{error}</Callout> : null}
     </Page>
   );
@@ -169,7 +193,7 @@ function AreaTile({ area, name, count, text, hitKey }: { area: Area; name: strin
   useEffect(() => {
     if (hitKey < 0) return;
     if (calm) { ink.value = withSequence(withTiming(1, { duration: 120 }), withDelay(700, withTiming(0, { duration: 200 }))); return; }
-    scale.value = withSequence(withSpring(1.05, motion.bouncy), withDelay(600, withSpring(1, motion.snappy)));
+    scale.value = withSequence(withSpring(1.03, motion.snappy), withDelay(600, withSpring(1, motion.smooth)));
     ink.value = withSequence(withTiming(1, { duration: 180 }), withDelay(620, withTiming(0, { duration: 250 })));
   }, [hitKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const box = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -226,11 +250,11 @@ export function UnderstoodV26() {
         <Btn label={kept.length ? `File ${kept.length} ${kept.length === 1 ? 'detail' : 'details'}` : 'Nothing to file'} disabled={!kept.length} onPress={() => { confirmRecords(); flag('records-confirmed', true); feedback.file(); if (params.setup) nav.replace('where'); else nav.home(); }} />
         <Composer value={fix} onChange={setFix} placeholder="Fix something, like “the review is on 3 March”" onSend={() => { void sendFix(); }} />
       </>}>
-      <Text variant="titleSerif" accessibilityRole="header">What life understood from your talk</Text>
+      <Text variant="titleSerif" accessibilityRole="header">What Life understood from your talk</Text>
       <Eyebrow icon="clock" style={{ marginTop: space.xs }}>{`${when}${areas.length ? ` · ${listAreas(areas)}` : ''}`}</Eyebrow>
       <View style={[styles.wrapRow, { marginTop: space.md }]}><Chip label="Summary" icon="down" /><Chip label={`${kept.length} ${kept.length === 1 ? 'detail' : 'details'}`} tone="q" /></View>
       <Text variant="title" style={{ marginTop: space.xl }}>Overview</Text>
-      <Body style={{ marginTop: space.xs }} s={kept.length ? `You told life {${kept.length} ${kept.length === 1 ? 'thing' : 'things'}} worth keeping: ${kept.map(p => p.label).join('; ')}. Take out anything it got wrong before you file.` : 'Nothing is waiting to be filed. Keep talking, or type a fix below.'} />
+      <Body style={{ marginTop: space.xs }} s={kept.length ? `You told Life {${kept.length} ${kept.length === 1 ? 'thing' : 'things'}} worth keeping: ${kept.map(p => p.label).join('; ')}. Take out anything it got wrong before you file.` : 'Nothing is waiting to be filed. Keep talking, or type a fix below.'} />
       <RowsCard style={{ marginTop: space.md }}>
         {data.proposals.map(p => (
           <Row key={p.id} icon={iconFor(p.area)} title={p.label} sub={`${areaName(p.area)}${p.source.excerpt ? ` · ${p.source.excerpt}` : ''}`} onPress={() => toggle(p.id)}
@@ -263,33 +287,39 @@ export function Composer({ value, onChange, placeholder, onSend, onAttach, onMic
 export function AskV26() {
   const nav = useNavigation(), { data, update, engine } = useSeed();
   const saved = !!data.flags['ask-saved'];
-  const sole = engine.structures.soleTrader.netTakeHomeAnnual, ltd = engine.structures.director.netTakeHomeAnnual;
+  // A real account asks about the profit it tried in Income and structure (or its own income), never £0.
+  const structures = SHOW_SAMPLES ? engine.structures : compareUKBusinessStructures({ ...data.profile, annualIncome: structureProfit(data) });
+  const sole = structures.soleTrader.netTakeHomeAnnual, ltd = structures.director.netTakeHomeAnnual;
   const gap = Math.abs(ltd - sole), fees = seed.finance.accountantFees;
   const stay = ltd - sole < fees;
   const revisit = 60_000;
   const save = () => update(c => ({ ...c, flags: { ...c.flags, 'ask-saved': true }, records: [...c.records.filter(r => r.id !== 'decision-structure'), { id: 'decision-structure', kind: 'decision', area: 'work', label: `Revisit sole trader or company if profit passes ${money(revisit)}`, source: { type: 'chat', at: new Date().toISOString() }, status: 'confirmed' }] }));
   const unsave = () => update(c => ({ ...c, flags: { ...c.flags, 'ask-saved': false }, records: c.records.filter(r => r.id !== 'decision-structure') }));
   return (
-    <Page screen="ask" bar={{ kind: 'push', title: 'Ask life', close: true, action: { kind: 'icon', icon: 'clock', label: 'Your conversations', onPress: () => nav.go('chathistory') } }}
+    <Page screen="ask" bar={{ kind: 'push', title: 'Ask Life', close: true, action: { kind: 'icon', icon: 'clock', label: 'Your conversations', onPress: () => nav.go('chathistory') } }}
       bottom={saved
-        ? <DecisionDrawer title="Saved to Work." sub={`life will bring it back if profit passes ${money(revisit / 1000)}k.`} undo={{ onPress: unsave }} />
+        ? <DecisionDrawer title="Saved to Work." sub={`Life will bring it back if profit passes ${money(revisit / 1000)}k.`} undo={{ onPress: unsave }} />
         : <DecisionDrawer title="Save this to Work?" sub={`As a decision to revisit if profit passes ${money(revisit / 1000)}k.`}
             leave={{ label: 'Not now', onPress: nav.close }} confirm={{ label: 'Save to Work', onPress: () => { save(); feedback.file(); }, haptic: null }} ask={{ label: 'Ask a follow-up', icon: 'mic', onPress: () => nav.go('talk') }} />}>
       <View style={{ alignItems: 'flex-end' }}><ChatBubble text="Should I go limited company or stay a sole trader?" /></View>
-      <PhotoCard source={photos.gotit} focal={{ y: 0.39 }} height={214} chips={[{ label: 'life, from your numbers', orb: true }]} lead="For now," title={stay ? 'stay a sole trader.' : 'a company may pay.'} style={{ marginTop: space.md }} />
-      <Body style={{ marginTop: space.sm }} s={`At your {${money(data.profile.annualIncome / 1000)}k} profit, the two come out within about {${money(Math.max(100, Math.round(gap / 100) * 100))} a year}, and a company adds around {${money(fees)}} in accountant fees.`} />
+      <PhotoCard source={photos.gotit} focal={{ y: 0.39 }} height={214} chips={[{ label: 'Life, from your numbers', orb: true }]} lead="For now," title={stay ? 'stay a sole trader.' : 'a company may pay.'} style={{ marginTop: space.md }} />
+      <Body style={{ marginTop: space.sm }} s={`At your {${money((SHOW_SAMPLES ? data.profile.annualIncome : structureProfit(data)) / 1000)}k} profit, the two come out within about {${money(Math.max(100, Math.round(gap / 100) * 100))} a year}, and a company adds around {${money(fees)}} in accountant fees.`} />
       <TintCard area="work" padding={space.md} style={{ marginTop: space.md }}>
         <Between><Micro>{`Take-home per year · ${engine.income.taxYear}`}</Micro><Chip label="Engine estimate" /></Between>
         <View style={{ marginTop: space.xs }}><KeyValue label="Sole trader" value={money(sole)} /><KeyValue label="Limited company" value={money(ltd)} /></View>
       </TintCard>
-      <Callout style={{ marginTop: space.md }}>An estimate from life’s engine, not tax advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>An estimate from Life’s engine, not tax advice.</Callout>
     </Page>
   );
 }
 
 /* ───────────────────────── Attach ───────────────────────── */
 
-export function AttachV26() {
+/**
+ * Add a photo, scan or file to the conversation. From Talk it closes back to the chat; as a real account's Scan (fix
+ * F-64) it opens the chat with the attachment, where Life reads it with you.
+ */
+export function AttachV26({ screen = 'attach', then = 'close' }: { screen?: 'attach' | 'scan'; then?: 'close' | 'chat' } = {}) {
   const nav = useNavigation(), { data, update } = useSeed();
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const add = async (kind: 'camera' | 'photos' | 'files') => {
@@ -306,15 +336,15 @@ export function AttachV26() {
         const next = { ...target, attachments: [...target.attachments, attachment], updatedAt: new Date().toISOString() };
         return { ...state, brain: { ...state.brain, activeConversationId: next.id, conversations: existing ? state.brain.conversations.map(c => c.id === next.id ? next : c) : [...state.brain.conversations, next] } };
       });
-      nav.close();
+      if (then === 'chat') nav.replace('chat'); else nav.close();
     } catch (e) { setError(e instanceof Error ? e.message : 'The attachment could not be added.'); }
     finally { setBusy(false); }
   };
   const corner = (icon: 'camera' | 'images' | 'folder' | 'pulse') => <View style={[styles.photoRound, { backgroundColor: photo.onPhoto }]}><Icon name={icon} size={componentSize.iconXs} color={photo.ink} /></View>;
   return (
-    <Page screen="attach" bar={{ kind: 'push', title: 'Attach', close: true }}>
-      <Display s="{Add something} to the conversation." flush />
-      <PhotoCard source={photos.letter} focal={{ y: 0.6 }} height={204} chips={['life reads it for you']} topRight={corner('camera')} title="Scan a letter" sub="Use your camera. life files what matters." onPress={() => { void add('camera'); }} style={{ marginTop: space.lg }} />
+    <Page screen={screen} bar={{ kind: 'push', title: then === 'chat' ? 'Scan' : 'Attach', close: true }}>
+      <Display s={then === 'chat' ? '{Scan a letter or a document,} and Life reads it with you.' : '{Add something} to the conversation.'} flush />
+      <PhotoCard source={photos.letter} focal={{ y: 0.6 }} height={204} chips={['Life reads it for you']} topRight={corner('camera')} title="Scan a letter" sub="Use your camera. Life files what matters." onPress={() => { void add('camera'); }} style={{ marginTop: space.lg }} />
       <PhotoGrid style={{ marginTop: space.tile }}>
         <PhotoCard source={photos.food} focal={{ x: 0.38, y: 0.42 }} height={138} size="sm" topRight={corner('camera')} title="Camera" sub="Take a photo" onPress={() => { void add('camera'); }} />
         <PhotoCard source={photos.siblings} focal={{ y: 0.42 }} height={138} size="sm" topRight={corner('images')} title="Photos" sub="Choose an image" onPress={() => { void add('photos'); }} />
@@ -329,6 +359,11 @@ export function AttachV26() {
 /* ───────────────────────── Letter, understood ───────────────────────── */
 
 export function ScanV26() {
+  // A real account scans its own letter: the sample's Lambeth council tax bill never shows (fix F-64).
+  return SHOW_SAMPLES ? <ScanSampleV26 /> : <AttachV26 screen="scan" then="chat" />;
+}
+
+function ScanSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag } = useSeed();
   const annual = seed.finance.councilTaxAnnual, instalment = annual / 10;
   const alone = data.profile.householdSize === 1;
@@ -346,10 +381,10 @@ export function ScanV26() {
             <Micro style={{ marginTop: space.lg }}>Filed into your life</Micro>
             <View style={[styles.row2, { marginTop: space.xs }]}>
               <FiledTile area="money" name="Money" text={`${money(instalment, 2)} a month from 1 Dec. Added to your cash plan.`} onPress={() => nav.go('editfiled')} />
-              <FiledTile area="home" name="Home" text="Watch for a household change. life will remind you." onPress={() => nav.go('household')} />
+              <FiledTile area="home" name="Home" text="Watch for a household change. Life will remind you." onPress={() => nav.go('household')} />
             </View>
             <View style={[styles.row2, { marginTop: space.md, alignItems: 'center' }]}>
-              <Btn label="Ask life" ghost fit onPress={() => nav.go('chat', { question: 'Explain my council tax letter' })} />
+              <Btn label="Ask Life" ghost fit onPress={() => nav.go('chat', { question: 'Explain my council tax letter' })} />
               <View style={{ flex: 1 }}><Btn label={set ? 'Reminder saved' : 'Set up the direct debit'} onPress={() => { flag('direct-debit-preview', true); feedback.file(); }} /></View>
             </View>
           </View>
@@ -402,9 +437,10 @@ export function ChatV26() {
   const ask = async (q: string) => { if (!q.trim() || conversation.thinking || conversation.pending) return; setText(''); await conversation.send(q); };
   useEffect(() => { if (params.question && !first.current) { first.current = true; void ask(params.question); } }, [params.question]); // eslint-disable-line react-hooks/exhaustive-deps
   const messages = conversation.current?.messages ?? [];
+  const long = useLongList(messages, { from: 'end' });
   const title = (
-    <Press haptic="select" onPress={() => nav.go('chathistory')} accessibilityLabel="life, your conversations" style={styles.chatTitle}>
-      <LifeOrb size={18} state={conversation.thinking ? 'thinking' : 'ring'} /><Text variant="title">life</Text>
+    <Press haptic="select" onPress={() => nav.go('chathistory')} accessibilityRole="header" accessibilityLabel="Life, your conversations" style={styles.chatTitle}>
+      <LifeOrb size={18} state={conversation.thinking ? 'thinking' : 'ring'} /><Text variant="title">Life</Text>
     </Press>
   );
   return (
@@ -420,27 +456,27 @@ export function ChatV26() {
             <Press key={s} haptic="select" onPress={() => { void ask(s); }} accessibilityLabel={s} style={[styles.sug, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><Text variant="buttonCompact">{s}</Text></Press>
           ))}
         </ScrollView>
-        <Composer value={text} onChange={setText} placeholder="Message life, or hold the mic" onAttach={() => nav.go('attach')} onMic={() => nav.go('talk')}
+        <Composer value={text} onChange={setText} placeholder="Message Life, or hold the mic" onAttach={() => nav.go('attach')} onMic={() => nav.go('talk')}
           onSend={() => { void ask(text.trim() || 'Read the attached text'); }} disabled={conversation.thinking || !!conversation.pending} />
       </>}>
       <View style={{ gap: 14 }}>
         {messages.length
-          ? messages.map(m => <ChatMessage key={m.id} message={m} onReview={() => { conversation.review(m.proposals ?? []); flag('records-confirmed', false); nav.go('understood'); }} />)
+          ? <><MoreRows earlier more={long.more} onPress={long.showMore} style={{ marginTop: 0 }} />{long.visible.map(m => <ChatMessage key={m.id} message={m} onReview={() => { conversation.review(m.proposals ?? []); flag('records-confirmed', false); nav.go('understood'); }} />)}</>
           : SHOW_SAMPLES ? <SampleThread /> : <>
             <Text variant="titleSerif" style={{ marginTop: space.md }}>What’s on your mind?</Text>
-            <Body s="Ask about your plan, tell life something to remember, or attach a document. {Nothing is saved until you say so.}" />
+            <Body s="Ask about your plan, tell Life something to remember, or attach a document. {Nothing is saved until you say so.}" />
           </>}
         {conversation.thinking ? <View style={styles.checking}><LifeOrb size={20} state="searching" /><Callout>Working on your message…</Callout></View> : null}
         {conversation.pending ? (
           <View style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
             <Text variant="headline">Use a model outside this phone?</Text>
-            <Body style={{ marginTop: space.xs }} s={`This sends your message, {${conversation.pending.request.history.length} recent turns}, ${conversation.pending.request.context.facts.length} matched facts, ${conversation.pending.request.context.memories.length} memories and text from ${conversation.pending.request.attachments.filter(f => f.text).length} attachments to the life API and its model. Original photos and file paths are not sent.`} />
+            <Body style={{ marginTop: space.xs }} s={`This sends your message, {${conversation.pending.request.history.length} recent turns}, ${conversation.pending.request.context.facts.length} matched facts, ${conversation.pending.request.context.memories.length} memories and text from ${conversation.pending.request.attachments.filter(f => f.text).length} attachments to the Life API and its model. Original photos and file paths are not sent.`} />
             <Btn label="Allow for this message" onPress={() => { void conversation.allowNetwork(); }} style={{ marginTop: space.md }} />
             <QuietLink label="Keep it on this phone" onPress={conversation.declineNetwork} style={{ marginTop: space.xs }} />
           </View>
         ) : null}
         {error ? <Callout>{error}</Callout> : null}
-        <Callout>{data.prefs.privateMode ? 'Private mode · nothing leaves this phone.' : 'Saved on this phone. life’s engine and what you’ve confirmed answer without a model.'}</Callout>
+        <Callout>{data.prefs.privateMode ? 'Private mode · nothing leaves this phone.' : 'Saved on this phone. Life’s engine and what you’ve confirmed answer without a model.'}</Callout>
       </View>
     </Page>
   );
@@ -468,7 +504,7 @@ function ChatMessage({ message, onReview }: { message: Message; onReview: () => 
         {message.detail ? <Body s={message.detail} /> : null}
         {message.sources?.map(s => <Callout key={s.id}>{`${s.sample ? 'Sample · ' : ''}${s.label}${s.at ? ` · ${new Date(s.at).toLocaleDateString('en-GB')}` : ''}`}</Callout>)}
       </View> : null}
-      {message.route ? <Callout>{message.route.startsWith('rules') ? 'From saved facts and life’s engine · on this phone' : message.route.startsWith('device') ? 'On-device AI' : 'AI-assisted · outside this phone'}</Callout> : null}
+      {message.route ? <Callout>{message.route.startsWith('rules') ? 'From saved facts and Life’s engine · on this phone' : message.route.startsWith('device') ? 'On-device AI' : 'AI-assisted · outside this phone'}</Callout> : null}
     </View>
   );
 }
@@ -494,7 +530,7 @@ function SampleThread() {
       {checking ? <View style={styles.checking}><LifeOrb size={20} state="searching" /><Callout>Checking London schemes and the NHS…</Callout></View> : null}
       {step >= 3 ? <Statement s="Congrats on going freelance. Two things {matter this week}: register for {Self Assessment} by 5 October, and start a {tax pot} so January isn’t a shock." /> : null}
       {step >= 4 ? <PhotoGrid>
-        <PhotoCard source={photos.payslip} focal={{ y: 0.82 }} height={184} size="sm" chips={[{ label: 'Due 5 Oct', dot: t.ember }]} title="Register as self-employed" sub="10 minutes on GOV.UK · life drafts every answer" onPress={() => nav.go('taxcheck')} />
+        <PhotoCard source={photos.payslip} focal={{ y: 0.82 }} height={184} size="sm" chips={[{ label: 'Due 5 Oct', dot: t.ember }]} title="Register as self-employed" sub="10 minutes on GOV.UK · Life drafts every answer" onPress={() => nav.go('taxcheck')} />
         <TintCard area="money" padding={space.md} style={{ height: 184 }} onPress={() => nav.go('cashplan')}>
           <Text variant="callout" tone="ink2">Tax pot</Text>
           <Text variant="numeralL" style={{ marginTop: 14 }}>25%</Text>
@@ -532,8 +568,9 @@ export function ChatHistoryV26() {
   const filedTotal = useSamples ? 12 : threads.reduce((n, c) => n + filedCount(c), 0);
   const when = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   const open = (id: string) => { conversation.openThread(id); nav.go('chat'); };
+  const long = useLongList(threads.slice(1));
   return (
-    <Page screen="chathistory" bar={{ kind: 'push', action: { kind: 'icon', icon: searching ? 'close' : 'search', label: searching ? 'Close search' : 'Search conversations', onPress: () => { setSearching(s => !s); setQuery(''); } } }}>
+    <Page screen="chathistory" onEnd={long.showMore} bar={{ kind: 'push', action: { kind: 'icon', icon: searching ? 'close' : 'search', label: searching ? 'Close search' : 'Search conversations', onPress: () => { setSearching(s => !s); setQuery(''); } } }}>
       <Eyebrow>Talk · your conversations</Eyebrow>
       {searching
         ? <TextInput maxFontSizeMultiplier={1.3} autoFocus value={query} onChangeText={setQuery} placeholder="Search conversations" placeholderTextColor={t.ink2} accessibilityLabel="Search conversations" selectionColor={t.ember}
@@ -548,11 +585,12 @@ export function ChatHistoryV26() {
       </> : threads.length && (filter === 'All' || filter === 'Chat') ? <>
         <PhotoCard source={photos[THREAD_PHOTOS[0]]} focal={{ x: 0.78 }} height={176} chips={[`Latest · Chat · ${when(threads[0].updatedAt)}`]} chipRight={`Filed ${filedCount(threads[0])}`} title={threads[0].title} sub={`“${threads[0].messages.find(m => m.role === 'user')?.text ?? ''}”`} onPress={() => open(threads[0].id)} style={{ marginTop: space.md }} />
         <PhotoGrid style={{ marginTop: space.tile }}>
-          {threads.slice(1).map((c, i) => <PhotoCard key={c.id} source={photos[THREAD_PHOTOS[(i + 1) % THREAD_PHOTOS.length]]} height={150} size="sm" chips={[`Chat · ${when(c.updatedAt)}`]} title={c.title} sub={`Filed ${filedCount(c)}`} onPress={() => open(c.id)} />)}
+          {long.visible.map((c, i) => <PhotoCard key={c.id} source={photos[THREAD_PHOTOS[(i + 1) % THREAD_PHOTOS.length]]} height={150} size="sm" chips={[`Chat · ${when(c.updatedAt)}`]} title={c.title} sub={`Filed ${filedCount(c)}`} onPress={() => open(c.id)} />)}
         </PhotoGrid>
+        <MoreRows more={long.more} onPress={long.showMore} />
       </> : null}
       <Btn label="New conversation" ghost onPress={() => { conversation.newThread(); nav.go('chat'); }} style={{ marginTop: space.lg }} />
-      <Callout style={{ marginTop: space.md }}>Nothing here is needed to use life. Everything useful is already filed in its place.</Callout>
+      <Callout style={{ marginTop: space.md }}>Nothing here is needed to use Life. Everything useful is already filed in its place.</Callout>
     </Page>
   );
 }
@@ -561,7 +599,18 @@ export function ChatHistoryV26() {
 
 type Token = 'what' | 'amount' | 'due' | 'where';
 
+/** Changing something filed from chat. The sample's council tax line is Ama's; a real account changes its own in What Life knows. */
 export function EditFiledV26() {
+  const nav = useNavigation();
+  return SHOW_SAMPLES ? <EditFiledSampleV26 /> : (
+    <NotYetV26 screen="editfiled" title="Filed from chat" eyebrow="Filed from chat" line="What you tell Life is filed in What Life knows, and you can change it there."
+      source="letter" focal={{ y: 0.6 }} ask="Tell Life something to file" examples="A bill, a date, a person, a goal.">
+      <QuietLink label="See what Life knows" ink center={false} onPress={() => nav.go('knows')} style={{ marginTop: space.md }} />
+    </NotYetV26>
+  );
+}
+
+function EditFiledSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, update, flag } = useSeed();
   const [what, setWhat] = useState('Council tax');
   const [amount, setAmount] = useState(seed.finance.councilTaxMonthly);
@@ -587,7 +636,7 @@ export function EditFiledV26() {
     <Page screen="editfiled" bar={{ kind: 'sheet', title: 'Filed from chat' }}
       footer={<>
         <Btn label="Save" onPress={save} />
-        <Between><QuietLink label={unfiled ? 'Undo unfile' : 'Unfile this'} ink center={false} onPress={() => { flag('council-unfiled'); update(c => ({ ...c, records: c.records.map(r => r.id === 'council-edited' ? { ...r, status: unfiled ? 'confirmed' : 'removed' } : r) })); }} /><Callout>life learns from the correction.</Callout></Between>
+        <Between><QuietLink label={unfiled ? 'Undo unfile' : 'Unfile this'} ink center={false} onPress={() => { flag('council-unfiled'); update(c => ({ ...c, records: c.records.map(r => r.id === 'council-edited' ? { ...r, status: unfiled ? 'confirmed' : 'removed' } : r) })); }} /><Callout>Life learns from the correction.</Callout></Between>
       </>}>
       <View style={styles.sentence}>
         {tok('what', what)}{word(' is ')}{tok('amount', `${money(amount)} a month`, ',')}{word(' due on the ')}{tok('due', due, ',')}{word(' filed in ')}{tok('where', 'Money → Bills', '.')}

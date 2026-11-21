@@ -3,26 +3,37 @@
  * The feeling check rises as a drawer on the first open of the day; today's moves follow it as a deck.
  */
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Modal, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView, initialWindowMetrics } from 'react-native-safe-area-context';
+import { Linking, Modal, Platform, ScrollView, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import type { BodyToday } from '@life/core';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  ArrivingCard, DecideRow, FEEL_MOODS, FeelingDrawer, Icon, LifeOrb, MoveDeck, PhotoCard, PhotoFill, Press, ReorderRow, RoundButton, Ruler,
-  SectionHead, StatusPill, Text, TileGrid, TintCard, V26Tile, Waveform, cardShadow, componentSize, feedback, fonts, photo, photoScrims, photos,
+  Appear, ArrivingCard, DecideRow, FEEL_MOODS, FeelingDrawer, Icon, LifeOrb, MoveDeck, PhotoCard, PhotoFill, Press, ReorderRow, RoundButton, Ruler,
+  SectionHead, StatusPill, Text, TileGrid, TintCard, V26Tile, Waveform, cardShadow, componentSize, feedback, photo, photoScrims, photos,
   radius, space, type, useCalmMotion, useTokens, type FeelMoodId, type MoveCard, type TopBarAction,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { isOnLocalDay, useLocalDay } from '@/state/day';
+import { useDayPlan } from '@/state/dayplan';
 import { money, seed, seedTaxClaim } from '@/state/seed';
-import { useFuelDay } from '@/state/fuel';
+import { budgetScale, fuelShare, macroParts, useFuelDay } from '@/state/fuel';
 import { TODAY_MOVES, councilTax, dayShape, heavyCount, heavyWeek, hm, lighterDay, moveOrder, payday, readDecisions, todayBrief } from '@/state/today';
 import {
-  Body, Btn, Callout, Chip, Display, Duo, Eyebrow, Figure, Hero, Micro, NumWell, Page, PhotoBackdrop, QuietLink, Row, RowsCard, Sp, Statement, Thumb, Tick, Timeline, Between,
+  Body, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, PhotoBackdrop, QuietLink, Row, RowsCard, Sp, Statement, Thumb, Between,
 } from './kit';
 import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
+import { levelPlan } from '@/state/you';
+import { TodayLoops } from './loops';
+import { SearchModal } from './search';
+import { SHOW_SAMPLES } from '@/state/sample';
+import { CalendarRealV26, WhyRealV26, moveCard, useComingUp, useRealMoves } from './dayengine';
+import { since, useBodyToday } from '@/state/health';
+
+// Plan ahead and Get unstuck live with the other core-loop screens; the Today chapter still exports them.
+export { EveningV26, NudgeV26 } from './loops';
 
 const isMood = (id: string | undefined): id is FeelMoodId => !!id && id in FEEL_MOODS;
 const shortDate = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
@@ -46,8 +57,9 @@ function useLogMood() {
 }
 
 /** The root bar every Today page shares: the orb, Today, the date, search and the bell. */
-function todayActions(onSearch: () => void, unread: boolean, onBell: () => void): TopBarAction[] {
-  return [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: onSearch }, { kind: 'icon', icon: 'bell', label: 'From life', badge: unread, onPress: onBell }];
+/* "From Life" lives in the orb at the right of the bar now, so Today keeps only search. */
+function todayActions(onSearch: () => void): TopBarAction[] {
+  return [{ kind: 'icon', icon: 'search', label: 'Search everything', onPress: onSearch }];
 }
 
 /* ───────────────────────── Today ───────────────────────── */
@@ -88,6 +100,32 @@ function metricValue(name: MetricName, hideNumbers: boolean): { value: string; s
     case 'Body signals': return { value: 'In range', sub: 'Nothing unusual' };
   }
 }
+/**
+ * The same tile on a real account (Phase 29): the engine's number from this phone's readings, or a dash and what it
+ * needs. Never the sample's figures.
+ */
+function realMetricValue(name: MetricName, body: BodyToday | null): { value: string; scale?: string; sub?: string } {
+  const last = (xs: (number | null)[] | undefined) => [...(xs ?? [])].reverse().find((x): x is number => typeof x === 'number') ?? null;
+  const none = (sub: string) => ({ value: '–', sub });
+  if (!body) return none('No reading yet');
+  switch (name) {
+    case 'Readiness': {
+      const r = body.readiness;
+      if (r.status === 'ready') return { value: String(r.score), scale: '/100', sub: r.score >= 67 ? 'Well recovered' : r.score >= 34 ? 'Steady' : 'Take it easier' };
+      return none(r.status === 'calibrating' ? `Learning you · ${r.daysWithData} of ${r.daysNeeded} days` : 'Needs heart readings');
+    }
+    case 'Sleep': return body.sleep?.last ? { value: hm(body.sleep.last.asleepMinutes), scale: `/${Math.round(body.sleep.need.minutes / 60)}h`, sub: body.sleep.debt.minutes > 0 ? `${hm(body.sleep.debt.minutes)} short this week` : 'No sleep debt' } : none('No night yet');
+    case 'Load': return body.load ? { value: String(Math.round(body.load.today * 10) / 10), scale: '/21', sub: body.load.today < body.load.sweetSpot.low ? 'Below today’s range' : body.load.today > body.load.sweetSpot.high ? 'Above today’s range' : 'In today’s range' } : none('Needs heart rate');
+    case 'Stress': { const n = body.stress?.now; return typeof n === 'number' ? { value: String(n), scale: '/3', sub: n < 1.5 ? 'Low' : n < 2.2 ? 'Medium' : 'High' } : none('Needs heart rate'); }
+    case 'HRV': { const v = last(body.readings.hrv); return v !== null ? { value: String(Math.round(v)), sub: 'ms' } : none('No reading yet'); }
+    case 'Resting heart rate': { const v = last(body.readings.restingHr); return v !== null ? { value: String(Math.round(v)), sub: 'bpm' } : none('No reading yet'); }
+    case 'Steps': return body.steps !== null ? { value: body.steps.toLocaleString('en-GB'), sub: 'so far today' } : none('None yet today');
+    case 'Body signals': return body.daysWithData ? { value: body.signals.illness ? 'Take it easy' : 'In range', sub: body.signals.illness ? 'A few signals are off' : 'Nothing unusual' } : none('No reading yet');
+    case 'Fuel': return none('');
+  }
+}
+const healthApp = Platform.OS === 'android' ? 'Health Connect' : 'Apple Health';
+
 const METRIC_DOT: Partial<Record<MetricName, 'health' | 'work' | 'home' | 'goal' | 'you'>> = { Readiness: 'health', Sleep: 'work', Fuel: 'home', Load: 'goal', Stress: 'you' };
 const METRIC_TO: Record<MetricName, ScreenKey> = { Readiness: 'readiness', Sleep: 'sleep', Fuel: 'fuel', Load: 'strain', Stress: 'stress', HRV: 'hrv', 'Resting heart rate': 'trends', Steps: 'body', 'Body signals': 'signals' };
 
@@ -107,11 +145,20 @@ export function TodayV26() {
   const [searching, setSearching] = useState(false);
   const order = moveOrder(mood);
   const dec = preview === 'day' ? 'yny' : readDecisions(data.choices['today-moves'], day);
-  const decide = (d: string) => choose('today-moves', `${day}|${d}`);
+  // A real account's moves come from the day engine (Phase 29); the sample life keeps the board's three.
+  const real = useRealMoves();
+  const decide = (d: string) => { choose('today-moves', `${day}|${d}`); if (!SHOW_SAMPLES && !d) real.reset(); };
   const left = order.slice(dec.length).map(i => TODAY_MOVES[i]);
-  const chosen = order.filter((_, k) => dec[k] === 'y').map(i => TODAY_MOVES[i]);
-  const cards: MoveCard[] = left.map(m => ({ key: m.key, title: m.title, chip: m.chip, sub: `${m.value} · for your first home`, photo: photos[m.photo], focal: { y: m.photo === 'payslip' ? 0.78 : 0.55 } }));
-  const openMove = (key: string) => { const m = TODAY_MOVES.find(x => x.key === key)!; if (m.mission) update(c => ({ ...c, selectedMission: m.mission! })); nav.go(m.to); };
+  const cards: MoveCard[] = SHOW_SAMPLES ? left.map(m => ({ key: m.key, title: m.title, chip: m.chip, sub: `${m.value} · for your first home`, photo: photos[m.photo], focal: { y: m.photo === 'payslip' ? 0.78 : 0.55 } })) : real.cards;
+  const chosen: { key: string; title: string; chip: string; value: string; photo: ImageSourcePropType }[] = SHOW_SAMPLES
+    ? order.filter((_, k) => dec[k] === 'y').map(i => TODAY_MOVES[i]).map(m => ({ key: m.key, title: m.title, chip: m.chip, value: m.value, photo: photos[m.photo] }))
+    : real.taken.map(m => { const c = moveCard(real.sources[m.id], m); return { key: m.id, title: m.title, chip: c.chip, value: c.sub, photo: c.photo }; });
+  const total = SHOW_SAMPLES ? TODAY_MOVES.length : real.moves.length, decided = SHOW_SAMPLES ? dec.length : real.decided;
+  const openMove = (key: string) => {
+    if (!SHOW_SAMPLES) { real.open(key); return; }
+    const m = TODAY_MOVES.find(x => x.key === key)!; if (m.mission) update(c => ({ ...c, selectedMission: m.mission! })); nav.go(m.to);
+  };
+  const onDecide = (d: string, card: MoveCard) => { if (SHOW_SAMPLES) decide(`${dec}${d === 'take' ? 'y' : 'n'}`); else real.onDecide(d === 'take' ? 'take' : 'pass', card.key); };
 
   const qi = Number(data.choices['today-question-index'] ?? 0), q = QUESTIONS[qi], answered = data.choices['today-answer-day'] === day;
   const answer = (choice: string) => {
@@ -126,12 +173,15 @@ export function TodayV26() {
 
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const level = engine.level.currentLevel;
-  const levelName = ['Stabilize', 'Protect', 'Build', 'Grow', 'Free'][Math.max(0, Math.min(4, level - 1))];
+  // The same four names as Your levels, so Today and that page never disagree.
+  const levelName = levelPlan[Math.max(0, Math.min(levelPlan.length - 1, level - 1))].name;
   const fuel = useFuelDay();
+  const body = useBodyToday();
+  const comingUp = useComingUp();
   const aimPct = Math.round(seed.finance.deposit / seed.finance.depositGoal * 100);
 
   return (
-    <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions: todayActions(() => setSearching(true), !data.flags['inbox-read'], () => nav.go('inbox')) }} onPull={() => setSearching(true)}>
+    <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions: todayActions(() => setSearching(true)) }}>
       <Between>
         <Text variant="callout" tone="ink2" numberOfLines={1} style={{ flexShrink: 1 }}>{`${greeting}, ${data.profile.name}`}</Text>
         <Chip label={`Level ${level} · ${levelName}`} onPress={() => nav.go('levels')} />
@@ -139,29 +189,32 @@ export function TodayV26() {
       {birthday ? <>
         <Display s={birthdayBrief(birthday)} />
         <BirthdayMoveV26 b={birthday} day={day} />
+        <TodayLoops />
       </> : <>
-      <Display s={todayBrief(mood)} />
+      <Display s={SHOW_SAMPLES ? todayBrief(mood) : real.brief} />
       <ArrivingCard mood={mood} onPress={() => setDrawer(true)} style={{ marginTop: space.lg }} />
+      <TodayLoops />
 
       {cards.length ? <>
-        <SectionHead title="Today’s moves" link={`${dec.length + 1} of ${TODAY_MOVES.length}`} style={{ marginTop: space.xl }} />
-        <MoveDeck cards={cards} onDecide={d => decide(`${dec}${d === 'take' ? 'y' : 'n'}`)} />
+        <SectionHead title="Today’s moves" link={`${decided + 1} of ${total}`} style={{ marginTop: space.xl }} />
+        <MoveDeck cards={cards} onDecide={onDecide} />
+        {SHOW_SAMPLES ? null : <QuietLink label="Why am I seeing this?" center={false} onPress={() => nav.go('why')} style={{ marginTop: space.xs }} />}
       </> : chosen.length ? <>
         <SectionHead title={`Your day · ${chosen.length} ${chosen.length === 1 ? 'move' : 'moves'}`} link="Choose again" onLink={() => decide('')} style={{ marginTop: space.xl }} />
         <View style={[styles.card, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Micro sig>First</Micro>
           <Text variant="headline" style={{ marginTop: space.tile }}>{chosen[0].title}</Text>
-          <Body s={`${chosen[0].chip} · {${chosen[0].value}}`} style={{ marginTop: space.xxs }} />
+          <Body s={chosen[0].value ? `${chosen[0].chip} · {${chosen[0].value}}` : chosen[0].chip} style={{ marginTop: space.xxs }} />
           <Btn label="Continue" icon="arrow" trail onPress={() => openMove(chosen[0].key)} style={{ marginTop: space.md }} />
           {chosen.slice(1).map(c => (
             <Press key={c.key} haptic="open" onPress={() => openMove(c.key)} accessibilityLabel={`Then ${c.title}`} style={styles.then}>
-              <Thumb source={photos[c.photo]} size={componentSize.round} />
+              <Thumb source={c.photo} size={componentSize.round} />
               <View style={{ flex: 1, minWidth: 0 }}><Text variant="rowTitle" numberOfLines={1}>{c.title}</Text><Text variant="callout" tone="ink2" numberOfLines={1}>{c.chip}</Text></View>
               <Text variant="callout" tone="ink2">Then</Text>
             </Press>
           ))}
         </View>
-      </> : (
+      </> : !SHOW_SAMPLES && !total ? null : (
         <View style={[styles.card, { marginTop: space.lg, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Text variant="headline">Nothing taken on today.</Text>
           <Body s="That’s allowed. Your moves keep until tomorrow." style={{ marginTop: space.xs }} />
@@ -170,13 +223,13 @@ export function TodayV26() {
       )}
       </>}
 
-      <SectionHead title="Body" link="Apple Health · 6 min ago" onLink={() => nav.go('body')} />
+      <SectionHead title="Body" link={SHOW_SAMPLES ? 'Apple Health · 6 min ago' : data.health.lastRead ? `${healthApp} · ${since(data.health.lastRead)}` : 'Connect'} onLink={() => nav.go(SHOW_SAMPLES || data.health.lastRead ? 'body' : 'devices')} />
       <TileGrid>
         {metrics.visible.map(name => {
-          const v = metricValue(name, data.prefs.hideNumbers);
+          const v = SHOW_SAMPLES ? metricValue(name, data.prefs.hideNumbers) : realMetricValue(name, body);
           if (name === 'Fuel') return (
-            <V26Tile key={name} wide label="Fuel" dot="home" scale={`/${fuel.budget.toLocaleString('en-GB')} kcal`} value={data.prefs.hideNumbers ? 'Balanced' : fuel.eaten.toLocaleString('en-GB')} meter={Math.min(1, fuel.eaten / fuel.budget)} onPress={() => nav.go('fuel')}
-              parts={fuel.macros.map(m => ({ label: m.label, value: `${Math.max(0, m.max - m.value)}${m.unit} left` }))} />
+            <V26Tile key={name} wide label="Fuel" dot="home" scale={budgetScale(fuel)} value={data.prefs.hideNumbers ? 'Balanced' : fuel.eaten.toLocaleString('en-GB')} meter={fuelShare(fuel)} onPress={() => nav.go('fuel')}
+              parts={macroParts(fuel)} />
           );
           return <V26Tile key={name} label={name} dot={METRIC_DOT[name]} scale={v.scale} value={v.value} sub={v.sub} onPress={() => nav.go(METRIC_TO[name])} />;
         })}
@@ -184,29 +237,36 @@ export function TodayV26() {
 
       {q && !answered ? (
         <View style={[styles.card, { marginTop: space.xxl, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-          <Eyebrow orb>life is asking</Eyebrow>
+          <Eyebrow orb>Life is asking</Eyebrow>
           <Statement s={`${q.intro}{${q.focus}}`} style={{ marginTop: space.xs }} />
           <View style={[styles.row, { marginTop: space.md }]}>{q.choices.map(c => <Btn key={c} label={c} ghost sm fit onPress={() => answer(c)} />)}</View>
         </View>
       ) : null}
 
+      {SHOW_SAMPLES ? <>
       <SectionHead title="Coming up" link="Calendar" onLink={() => nav.go('calendar')} />
       <RowsCard>
         <Row date={{ day: 18, month: 'Nov' }} title="Kofi’s birthday" sub="Turning 31 · running vest idea" end="Sat" onPress={() => nav.go('person')} />
         <Row date={{ day: '01', month: 'Dec' }} title="Council tax" sub={`${money(councilTax.amount)} · Direct Debit`} end={`${councilTax.days} days`} onPress={() => nav.go('bill')} />
         <Row date={{ day: 12, month: 'Jan' }} title="Car MOT due" sub="Book from 12 Dec" end="8 weeks" onPress={() => nav.go('renewal')} />
       </RowsCard>
+      </> : comingUp.length ? <>
+      <SectionHead title="Coming up" link="Calendar" onLink={() => nav.go('calendar')} />
+      <RowsCard>
+        {comingUp.map(c => <Row key={c.id} date={{ day: c.day, month: c.month }} title={c.title} end={c.end} onPress={() => nav.go('people')} />)}
+      </RowsCard>
+      </> : null}
 
-      <Press haptic="open" onPress={() => nav.go('aim')} accessibilityLabel={`Your Aim, ${aimPct}% there`} style={[styles.aim, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+      <Press haptic="open" onPress={() => nav.go('aim')} accessibilityLabel={SHOW_SAMPLES ? `Your Aim, ${aimPct}% there` : 'Your Aim'} style={[styles.aim, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
         <Thumb source={photos.keyshome} />
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Micro>{`Your Aim · ${aimPct}% there`}</Micro>
-          <Text variant="title" style={{ marginTop: 2 }} numberOfLines={2}>{data.aim ? `Own a two-bed flat by ${data.aim.when}` : 'Choose your Aim'}</Text>
+          <Micro>{SHOW_SAMPLES ? `Your Aim · ${aimPct}% there` : 'Your Aim'}</Micro>
+          <Text variant="title" style={{ marginTop: 2 }} numberOfLines={2}>{!data.aim ? 'Choose your Aim' : SHOW_SAMPLES ? `Own a two-bed flat by ${data.aim.when}` : `${data.aim.what.charAt(0).toUpperCase()}${data.aim.what.slice(1)} by ${data.aim.when}`}</Text>
         </View>
         <Icon name="chev" size={componentSize.iconXs} color={t.inkQuiet} />
       </Press>
-      <Press haptic="open" onPress={() => nav.go('knows')} accessibilityLabel={`life knows you, ${data.knowledge.overall}%`} style={[styles.card, { marginTop: space.sm, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-        <Between><Text variant="title">life knows you</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
+      <Press haptic="open" onPress={() => nav.go('knows')} accessibilityLabel={`Life knows you, ${data.knowledge.overall}%`} style={[styles.card, { marginTop: space.sm, backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+        <Between><Text variant="title">Life knows you</Text><Text variant="title">{`${data.knowledge.overall}%`}</Text></Between>
         <Ruler pct={data.knowledge.overall} style={{ marginTop: space.sm }} />
         <Text variant="callout" tone="ink2" style={{ marginTop: space.tile }}>{`${data.knowledge.recordCount} things filed from your words and records.`}</Text>
       </Press>
@@ -215,65 +275,11 @@ export function TodayV26() {
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
           <View style={[StyleSheet.absoluteFill, { backgroundColor: t.scrim }]} />
           <Press haptic={null} accessibilityLabel="Not now" onPress={() => { choose('pulse-skipped-day', day); setDrawer(false); }} style={{ flex: 1 }} />
-          <FeelingDrawer initial={mood ?? 'calm'} onClose={() => { if (!mood) choose('pulse-skipped-day', day); setDrawer(false); }} onSet={m => { logMood(m); decide(''); setDrawer(false); }} />
+          {/* The scrim fades; the drawer rises from the bottom edge like a native sheet. */}
+          <Appear rise={120}><FeelingDrawer initial={mood ?? 'calm'} onClose={() => { if (!mood) choose('pulse-skipped-day', day); setDrawer(false); }} onSet={m => { logMood(m); decide(''); setDrawer(false); }} /></Appear>
         </SafeAreaProvider>
       </Modal>
-      <Modal visible={params.nudge === '1' && !data.flags['nudge-dismissed']} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => nav.replace('today')}>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}><NudgeV26 onClose={() => nav.replace('today')} /></SafeAreaProvider>
-      </Modal>
-      <Modal visible={searching} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => setSearching(false)}>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}><SearchV26 onClose={() => setSearching(false)} /></SafeAreaProvider>
-      </Modal>
-    </Page>
-  );
-}
-
-/* ───────────────────────── Nudge ───────────────────────── */
-
-export function NudgeV26({ onClose }: { onClose?: () => void }) {
-  const nav = useNavigation(), { data, flag, update } = useSeed();
-  const later = !!data.flags['nudge-snoozed'];
-  const close = onClose ?? nav.close;
-  const refund = money(seedTaxClaim.refund), kit = money(seedTaxClaim.workExpenses);
-  const start = () => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); close(); nav.go('mission'); };
-  return (
-    <Page screen="nudge" onClose={close} bar={{ kind: 'push', close: true, action: { kind: 'node', node: <Chip label={later ? 'Moved to 6pm' : 'Free 13:40 to 14:00'} tone={later ? 'q' : 'live'} /> } }}
-      footer={later ? <Btn label="Do it now instead" ghost onPress={() => flag('nudge-snoozed', false)} /> : <>
-        <Btn label="Start step 1" icon="arrow" trail onPress={start} />
-        <Duo><Btn label="At 6pm" ghost sm onPress={() => flag('nudge-snoozed', true)} /><Btn label="Not this week" ghost sm onPress={() => { flag('nudge-dismissed', true); close(); }} /></Duo>
-      </>}>
-      <Eyebrow orb>{later ? 'life · noted' : 'life · just now'}</Eyebrow>
-      {later ? <>
-        <Display s={`Moved to {@clock 6pm}. The {P87} and your {${refund}} will keep.`} />
-        <Body s="life writes first {at most once a day}, so nothing else is coming before then." style={{ marginTop: space.sm }} />
-      </> : <>
-        <Display s={`You’re free until {@clock 2pm}. The {@doc P87} is all that stands between you and {${refund}}.`} />
-        <Body s="Three steps, about {6 minutes}." style={{ marginTop: space.sm }} />
-      </>}
-      <Hero source={photos.payslip} focal={{ y: 0.78 }} height={156} small="Tax rebate · HMRC" title="Claim your tax rebate" titleSize="headline" style={{ marginTop: space.xl }}>
-        <View style={{ marginVertical: -space.tile }}>
-          <Row lead={<NumWell n={1} />} title="Sign in to Government Gateway" end="1 min" />
-          <Row lead={<NumWell n={2} />} title={`Add ${kit} of software and kit`} end="3 min" />
-          <Row lead={<NumWell n={3} />} title="Submit and save the reference" end="2 min" />
-        </View>
-      </Hero>
-      <SectionHead title={later ? 'Your day now' : 'Why now'} link="Your day" onLink={() => nav.go('calendar')} />
-      <View style={[styles.card, styles.pad16, useCardStyle()]}>
-        <Timeline items={[
-          { when: '09:00', text: 'Design review', state: 'done' },
-          later ? { when: '13:40 · LEFT FREE', text: 'You chose to keep this one clear.', state: 'later' } : { when: '13:40 · FREE FOR 20 MINUTES', text: '{This is the gap.} Three steps fit inside it.', state: 'now' },
-          { when: '14:00', text: 'Deep work', state: 'later' },
-          ...(later ? [{ when: '18:00 · MOVED HERE', text: '{Claim your tax rebate.} About 6 minutes.', state: 'now' as const }] : []),
-        ]} />
-      </View>
-      <SectionHead title="Already in hand" />
-      <Row thumb={photos.payslip} thumbFocal={{ y: 0.75 }} title="Your payslip" sub="Filed · shows the emergency code" right={<Chip label="Ready" tone="q" />} />
-      <Row icon="folder" title={`Receipts for ${kit}`} sub="Software and kit · already added up" right={<Chip label="Ready" tone="q" />} />
-      <SectionHead title="After you send it" />
-      <View style={[styles.card, styles.pad16, useCardStyle()]}>
-        <Body s={`{life keeps watch for the reply} and tells you when the ${refund} is on its way. You don’t have to chase it.`} />
-      </View>
-      <Callout style={{ marginTop: space.md }}>One nudge a day at most, and never between 9pm and 8am.</Callout>
+      <SearchModal visible={searching} onClose={() => setSearching(false)} />
     </Page>
   );
 }
@@ -332,9 +338,9 @@ export function CheckinV26() {
         </View>
       </PhotoCard>
       <Statement s={`You’ve felt drained or anxious on {${heavyCount} of the last 7 days}. That’s a lot to carry.`} style={{ marginTop: space.md }} />
-      <Body s="life can make the next few days lighter. And if it would help to talk to someone:" style={{ marginTop: space.sm }} />
+      <Body s="Life can make the next few days lighter. And if it would help to talk to someone:" style={{ marginTop: space.sm }} />
       <SupportRowsV26 style={{ marginTop: space.md }} />
-      <Callout style={{ marginTop: space.md }}>life isn’t a medical service. If you’re in danger right now, call 999.</Callout>
+      <Callout style={{ marginTop: space.md }}>Life isn’t a medical service. If you’re in danger right now, call 999.</Callout>
     </Page>
   );
 }
@@ -355,6 +361,11 @@ export function SupportRowsV26({ style }: { style?: object }) {
 export function CustomiseV26() {
   const t = useTokens(), nav = useNavigation(), { data } = useSeed();
   const { visible, hidden, toggle, move } = useTodayMetrics();
+  // The preview shows what Today will show: the sample's figures in a sample build, this phone's own readings otherwise
+  // (fix F-64), never the sample's numbers on a real account.
+  const body = useBodyToday(), fuel = useFuelDay();
+  const preview = (n: MetricName) => SHOW_SAMPLES ? metricValue(n, data.prefs.hideNumbers)
+    : n === 'Fuel' ? { value: data.prefs.hideNumbers ? 'Balanced' : fuel.eaten.toLocaleString('en-GB') } : realMetricValue(n, body);
   const tintFor = (n: MetricName) => n === 'Readiness' ? 'health' as const : n === 'Sleep' ? 'work' as const : null;
   return (
     <Page screen="customise" bar={{ kind: 'sheet', title: 'Today’s numbers' }} footer={<Btn label="Done" onPress={nav.close} />}>
@@ -362,7 +373,7 @@ export function CustomiseV26() {
       <Between style={{ marginTop: space.lg }}><Micro>PREVIEW</Micro><Callout>{`${visible.length} of 5 chosen`}</Callout></Between>
       <View style={[styles.mini, { marginTop: space.xs }]}>
         {visible.map(n => {
-          const v = metricValue(n, data.prefs.hideNumbers), area = tintFor(n);
+          const v = preview(n), area = tintFor(n);
           const cell = <><Text variant="micro" tone="ink2">{n === 'Stress' ? 'Stress · estimate' : n}</Text><Text variant="headline" style={{ fontVariant: ['tabular-nums'] }}>{v.value}</Text></>;
           const wide = n === 'Fuel';
           return area
@@ -410,6 +421,31 @@ function YearStrip({ on, next }: { on: number[]; next: number }) {
 }
 
 export function RoutinesV26() {
+  return SHOW_SAMPLES ? <RoutinesSampleV26 /> : <RoutinesRealV26 />;
+}
+
+/** A real account: nothing repeats until Life knows the payday and the bills, so nothing claims to be running. */
+function RoutinesRealV26() {
+  const nav = useNavigation();
+  return (
+    <Page screen="routines" bar={{ kind: 'push', title: 'Routines' }}>
+      <Eyebrow>Jobs that repeat, kept in order</Eyebrow>
+      <Display s="{Nothing running yet.} Routines start once Life knows your payday and your bills." />
+      <SectionHead title="Ready when you are" />
+      <RowsCard>
+        <Row icon="wallet" title="Payday sweep" sub="Every month · move what’s left after bills into your buffer" right={<Chip label="Tell Life" tone="q" />} onPress={() => nav.go('talk')} />
+        <Row icon="doc" title="Annual NI and tax check" sub="Every year · check last year against your HMRC record" right={<Chip label="Tell Life" tone="q" />} onPress={() => nav.go('talk')} />
+      </RowsCard>
+      <SectionHead title="Available at level 3" />
+      <RowsCard>
+        <Row icon="heart" title="Care review" sub="Every year, you pick the month · bloodwork and a GP check-in" right={<Chip label="Level 3" tone="q" />} />
+        <Row icon="repeat" title="Subscription check" sub="Every 3 months · cancel what you don’t use" right={<Chip label="Level 3" tone="q" />} />
+      </RowsCard>
+    </Page>
+  );
+}
+
+function RoutinesSampleV26() {
   const nav = useNavigation(), { engine } = useSeed();
   const running = Math.max(2, engine.level.unlockedNormals.length);
   const all = MONTHS.map((_, k) => k);
@@ -441,13 +477,18 @@ export function RoutinesV26() {
 /* ───────────────────────── Why am I seeing this? ───────────────────────── */
 
 export function WhyV26() {
+  // A real account's reasons come from the day engine; the sample keeps the board's lighter-day story.
+  return SHOW_SAMPLES ? <WhySampleV26 /> : <WhyRealV26 />;
+}
+
+function WhySampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag } = useSeed();
   const back = data.flags['lighter-day'] === false;
   const drained = FEEL_MOODS.drained;
   return (
     <Page screen="why">
       <Eyebrow orb right={<RoundButton icon="close" size="sm" label="Close" onPress={nav.close} />}>Why today is lighter</Eyebrow>
-      <Statement s={back ? 'Put back. {The P87} is on {today} again, as it was.' : 'life moved {the P87} to tomorrow and kept {one small task} today.'} style={{ marginTop: space.sm }} />
+      <Statement s={back ? 'Put back. {The P87} is on {today} again, as it was.' : 'Life moved {the P87} to tomorrow and kept {one small task} today.'} style={{ marginTop: space.sm }} />
       <Micro style={{ marginTop: space.lg }}>THE THREE SIGNALS IT USED</Micro>
       <View style={[styles.row, { marginTop: space.xs, gap: space.xs }]}>
         <TintCard area="health" padding={12} style={styles.sig}><Text variant="micro" tone="ink2">Readiness</Text><Text variant="headline" style={styles.sigVal}>{String(lighterDay.readiness)}</Text><Text variant="micro" tone="ink2">Low for you</Text></TintCard>
@@ -470,21 +511,26 @@ export function WhyV26() {
 /* ───────────────────────── Calendar-aware day ───────────────────────── */
 
 export function CalendarV26() {
+  // A real account sees its own calendar, times only (Phase 29); the sample keeps the board's busy day.
+  return SHOW_SAMPLES ? <CalendarSampleV26 /> : <CalendarRealV26 />;
+}
+
+function CalendarSampleV26() {
   const t = useTokens(), nav = useNavigation(), { update } = useSeed();
   const { now } = useLocalDay();
   return (
     <Page screen="calendar" bar={{ kind: 'push', title: 'Your day', action: { kind: 'icon', icon: 'calendar', label: 'Calendar access', onPress: () => nav.go('calprimer') } }}>
       <Eyebrow>{`${shortDate(now)} · ${dayShape.booked} booked`}</Eyebrow>
-      <Display s="A {busy day}. life found {@clock one 20-minute gap} for the {P87}." />
+      <Display s="A {busy day}. Life found {@clock one 20-minute gap} for the {P87}." />
       <View style={{ marginTop: space.xl, gap: 6 }}>
         {dayShape.blocks.map(b => (
           <View key={b.at} style={{ flexDirection: 'row', gap: space.tile }}>
             <Text variant="callout" tone={b.kind === 'gap' ? 'ink' : 'ink2'} style={{ width: 44, paddingTop: space.xs, fontVariant: ['tabular-nums'] }}>{b.at}</Text>
             {b.kind === 'gap' ? (
-              <Press haptic="open" onPress={() => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); nav.go('mission'); }} accessibilityLabel="Free for 20 minutes. life will nudge you here: finish the P87." style={[styles.block, styles.gap, { backgroundColor: t.emberTint }]}>
+              <Press haptic="open" onPress={() => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); nav.go('mission'); }} accessibilityLabel="Free for 20 minutes. Life will nudge you here: finish the P87." style={[styles.block, styles.gap, { backgroundColor: t.emberTint }]}>
                 <View style={{ flex: 1 }}>
                   <Micro sig>FREE · 20 MIN</Micro>
-                  <Text variant="title" style={{ marginTop: 6 }}>life will nudge you here</Text>
+                  <Text variant="title" style={{ marginTop: 6 }}>Life will nudge you here</Text>
                   <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>Finish the P87.</Text>
                 </View>
                 <Thumb source={photos.payslip} focal={{ y: 0.75 }} />
@@ -498,7 +544,7 @@ export function CalendarV26() {
           </View>
         ))}
       </View>
-      <Callout style={{ marginTop: space.md }}>life only reads when you’re busy or free, never the details of your events.</Callout>
+      <Callout style={{ marginTop: space.md }}>Life only reads when you’re busy or free, never the details of your events.</Callout>
     </Page>
   );
 }
@@ -506,6 +552,41 @@ export function CalendarV26() {
 /* ───────────────────────── Morning brief ───────────────────────── */
 
 export function MorningBriefV26() {
+  return SHOW_SAMPLES ? <MorningBriefSampleV26 /> : <MorningBriefRealV26 />;
+}
+
+/** Braces and @ shape a Display line, so words from elsewhere are kept plain inside one. */
+const plainWords = (s: string) => s.replace(/[{}@]/g, '').trim();
+
+/**
+ * A real account's morning brief (fix F-64): last night's sleep from this phone and the day's first move, only what
+ * Life knows. The sample's sleep, bill, run and flat never show, and there's no Listen control until Life can read the
+ * brief aloud itself.
+ */
+function MorningBriefRealV26() {
+  const t = useTokens(), nav = useNavigation(), { data } = useSeed();
+  const { now } = useLocalDay();
+  const body = useBodyToday(), { left } = useDayPlan();
+  const stamp = `${now.toLocaleDateString('en-GB', { weekday: 'long' })} · ${now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+  const name = plainWords(data.profile.name);
+  const readiness = body?.readiness.status === 'ready' ? body.readiness.score : null;
+  const feel = readiness === null ? '' : readiness >= 67 ? ', and you’re {well recovered}' : readiness >= 34 ? ', and you’re {steady}' : ', so go {a little easier} today';
+  const night = body?.sleep?.last ? `You slept {@moon ${hm(body.sleep.last.asleepMinutes)}}${feel}. ` : '';
+  const first = left[0] ? plainWords(left[0].title) : '';
+  const day = first ? `First up: {${first}}${left.length > 1 ? `, then ${left.length - 1} more` : ''}.` : '{Nothing planned yet.} Tell Life what’s going on and it plans the day.';
+  return (
+    <Page screen="morningbrief" scroll={false} backdrop={<><PhotoBackdrop source={photos.calmdesk} /><LinearGradient pointerEvents="none" colors={['rgba(8,9,10,0)', t.scrim]} locations={[0.3, 0.75]} style={StyleSheet.absoluteFill} /></>}
+      bar={{ kind: 'photo', left: <Chip label={stamp} onPhoto /> }}
+      footer={<Btn label="Start the day" onPhoto onPress={nav.close} />}>
+      <View style={{ flex: 1 }} />
+      <Text variant="title" tone="paper">{name ? `Good morning, ${name}` : 'Good morning'}</Text>
+      <Display onPhoto s={night + day} style={{ marginTop: space.xs }} />
+      <Sp h={space.xs} />
+    </Page>
+  );
+}
+
+function MorningBriefSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag } = useSeed();
   const { now } = useLocalDay();
   const playing = !!data.flags['brief-playing'];
@@ -527,44 +608,31 @@ export function MorningBriefV26() {
   );
 }
 
-/* ───────────────────────── Close the day ───────────────────────── */
+/* ───────────────────────── From life ───────────────────────── */
 
-export function EveningV26() {
-  const t = useTokens(), nav = useNavigation(), { data, flag, draft } = useSeed();
-  const { now } = useLocalDay();
-  const did = [{ t: 'Paid the energy bill', a: 'Money' }, { t: '20-minute run', a: 'Body' }, { t: 'Read your Aim', a: 'Aim' }];
+export function InboxV26() {
+  return SHOW_SAMPLES ? <InboxSampleV26 /> : <InboxRealV26 />;
+}
+
+/** A real account: the sample's rebate, sleep and shopping notes never show. What's real is the weekly recap. */
+function InboxRealV26() {
+  const nav = useNavigation();
   return (
-    <Page screen="evening" scroll={false} backdrop={<PhotoBackdrop source={photos.calm} focal={{ y: 1 }} height={480} />}
-      bar={{ kind: 'photo', left: <View style={[styles.photoChip, { backgroundColor: photo.fill }]}><Text variant="micro" tone="paper">{`${now.toLocaleDateString('en-GB', { weekday: 'long' })}, done`}</Text></View> }}
-      bottom={
-        <View style={[styles.sheet, { backgroundColor: t.surface }]}>
-          {did.map(d => <Row key={d.t} lead={<Tick on />} title={d.t} end={d.a} style={{ minHeight: 46, paddingVertical: space.xxs }} />)}
-          <Row lead={<Tick icon="arrow" />} title="Call the dentist" sub="Moved to tomorrow, 9:30" end="Tomorrow" style={{ minHeight: 52, paddingVertical: space.xxs }} />
-          <Micro style={{ marginTop: space.sm }}>ONE LINE ABOUT TODAY?</Micro>
-          <TextInput maxFontSizeMultiplier={1.3} value={data.drafts.evening ?? ''} onChangeText={v => draft('evening', v)} placeholder="Felt sharper after the run." placeholderTextColor={t.inkQuiet} accessibilityLabel="One line about today"
-            style={[styles.note, { backgroundColor: t.surface2, color: t.ink, fontFamily: fonts.sans }]} selectionColor={t.ember} />
-          <Btn label="Close the day" onPress={() => { flag('day-closed', true); feedback.complete(); nav.close(); }} style={{ marginTop: space.md }} />
-        </View>
-      }>
-      <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: space.xl }}>
-        <View style={styles.ticks} accessibilityElementsHidden>
-          {[0, 1, 2].map(k => <View key={k} style={[styles.bigTick, { backgroundColor: photo.onPhoto }]}><Icon name="check" size={componentSize.iconSm} color={photo.ink} /></View>)}
-          <View style={[styles.bigTick, { backgroundColor: photo.fill }]}><Icon name="arrow" size={componentSize.iconSm} color={photo.onPhoto} /></View>
-        </View>
-        <Display onPhoto s="{3 of 4 moves.} A good day." style={{ marginTop: space.md }} />
-      </View>
+    <Page screen="inbox" bar={{ kind: 'push', title: 'From Life' }}>
+      <Display s="{Nothing new.} When Life finds something worth knowing, it lands here." style={{ marginTop: space.xxs }} />
+      <SectionHead title="Every week" />
+      <RowsCard><Row thumb={photos.journal} title="Weekly recap" sub="Grow · every Sunday" onPress={() => nav.go('recap')} /></RowsCard>
+      <Callout style={{ marginTop: space.md }}>Nothing important lives only here.</Callout>
     </Page>
   );
 }
 
-/* ───────────────────────── From life ───────────────────────── */
-
-export function InboxV26() {
+function InboxSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag, update } = useSeed();
   const read = !!data.flags['inbox-read'];
   return (
-    <Page screen="inbox" bar={{ kind: 'push', title: 'From life', action: { kind: 'node', node: <Chip label="Read all" onPress={() => flag('inbox-read', true)} /> } }}>
-      <Display s={read ? '{All read.} Nothing important lives only here.' : '{2 new} from life. Nothing important lives only here.'} style={{ marginTop: space.xxs }} />
+    <Page screen="inbox" bar={{ kind: 'push', title: 'From Life', action: { kind: 'node', node: <Chip label="Read all" onPress={() => flag('inbox-read', true)} /> } }}>
+      <Display s={read ? '{All read.} Nothing important lives only here.' : '{2 new} from Life. Nothing important lives only here.'} style={{ marginTop: space.xxs }} />
       <View style={{ marginTop: space.xl, paddingTop: 28 }}>
         <Press haptic="open" onPress={() => nav.go('today', { nudge: '1' })} accessibilityLabel="20 free minutes before 14:00. Nudge, 11:20" style={[styles.peek, { backgroundColor: t.surface3 }]}>
           <View style={styles.row}>{read ? null : <View style={[styles.unread, { backgroundColor: t.ember }]} />}<Text variant="micro" tone="quiet">20 free minutes before 14:00</Text></View>
@@ -572,7 +640,7 @@ export function InboxV26() {
         </Press>
         <PhotoCard source={photos.payslip} focal={{ y: 0.7 }} height={236} onPress={() => { update(c => ({ ...c, selectedMission: 'uk-hmrc-tax-code' })); nav.go('mission'); }}
           chips={[read ? 'Earlier · 2h ago' : { label: 'New · 2h ago', dot: t.ember }]} chipRight="Tax rebate"
-          title={seedTaxClaim.refund ? `You’re likely owed ${money(seedTaxClaim.refund)}` : 'Your tax record is worth checking'} sub="From work expenses you told life about. One form claims it." />
+          title={seedTaxClaim.refund ? `You’re likely owed ${money(seedTaxClaim.refund)}` : 'Your tax record is worth checking'} sub="From work expenses you told Life about. One form claims it." />
       </View>
       <SectionHead title="Earlier" />
       <RowsCard>
@@ -608,7 +676,7 @@ export function FocusV26() {
         <View style={[styles.row, { marginTop: space.xl, gap: space.tile }]} accessible accessibilityLabel="Block 2 of 3">
           {[t.ink, t.ember, t.surface3].map((c, k) => <View key={k} style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: c }} />)}
         </View>
-        <Text variant="title" style={{ marginTop: space.xl }}>Portfolio case study</Text>
+        <Text variant="title" style={{ marginTop: space.xl }} accessibilityRole="header">Portfolio case study</Text>
         <Chip label="Notifications quiet" tone="q" icon="moon" style={{ marginTop: space.tile, alignSelf: 'center' }} />
       </View>
     </Page>
@@ -617,69 +685,10 @@ export function FocusV26() {
 
 /* ───────────────────────── Search ───────────────────────── */
 
-export function SearchV26({ onClose }: { onClose: () => void }) {
-  const t = useTokens(), nav = useNavigation(), { update } = useSeed();
-  const [query, setQuery] = useState('');
-  const go = (fn: () => void) => { onClose(); fn(); };
-  const areas: { n: string; p: keyof typeof photos; to: ScreenKey }[] = [{ n: 'Home', p: 'home', to: 'areahome' }, { n: 'Work', p: 'work', to: 'areawork' }, { n: 'Body', p: 'run', to: 'body' }, { n: 'People', p: 'people', to: 'people' }, { n: 'Learn', p: 'bench', to: 'library' }];
-  const asked: { icon: 'doc' | 'home' | 'moon' | 'wallet' | 'gift' | 'folder' | 'food'; t: string; to: ScreenKey }[] = [{ icon: 'doc', t: 'tax code', to: 'taxcheck' }, { icon: 'home', t: 'council tax', to: 'bill' }, { icon: 'moon', t: 'sleep', to: 'sleep' }, { icon: 'wallet', t: 'rent', to: 'budget' }, { icon: 'gift', t: 'Kofi’s birthday', to: 'person' }, { icon: 'folder', t: 'passport', to: 'vault' }, { icon: 'food', t: 'lunch', to: 'fuel' }];
-  const found = [
-    { k: 'ct', title: 'Council tax', sub: `Money · ${money(councilTax.amount)} · due in ${councilTax.days} days`, date: { day: '01', month: 'Dec' }, to: 'bill' as ScreenKey },
-    { k: 'letter', title: 'Council tax letter', sub: 'Scan · yesterday', icon: 'camera' as const, to: 'scan' as ScreenKey },
-    { k: 'code', title: `Tax code ${seed.finance ? '1257L' : ''}`, sub: 'Money · from your payslip', icon: 'doc' as const, to: 'taxcheck' as ScreenKey },
-    { k: 'disc', title: 'Council tax discount', sub: 'Single person · 25% off', icon: 'home' as const, to: 'mission' as ScreenKey, mission: 'uk-single-person-council' },
-  ].filter(r => !query || `${r.title} ${r.sub}`.toLowerCase().includes(query.toLowerCase()));
-  return (
-    <View style={{ flex: 1, backgroundColor: t.canvas }}>
-      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <View style={styles.searchBar}>
-          <Icon name="search" size={componentSize.icon} color={t.ink} />
-          <TextInput maxFontSizeMultiplier={1.3} autoFocus value={query} onChangeText={setQuery} placeholder="Search" placeholderTextColor={t.ink2} accessibilityLabel="Search everything" returnKeyType="search"
-            onSubmitEditing={() => go(() => nav.go('chat', { question: query }))} selectionColor={t.ember}
-            style={[styles.searchInput, { color: t.ink, fontFamily: fonts.sansMedium }]} />
-          <RoundButton icon="close" solid label="Close search" onPress={onClose} />
-        </View>
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: space.gutter, paddingTop: space.xxs, paddingBottom: 28 }}>
-          {query ? null : <>
-            <Micro style={{ marginTop: space.xs }}>YOUR AREAS</Micro>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -space.gutter, marginTop: space.sm }} contentContainerStyle={{ paddingHorizontal: space.gutter, gap: space.tile, paddingBottom: space.xxs }}>
-              {areas.map(a => (
-                <Press key={a.n} haptic="open" onPress={() => go(() => nav.go(a.to))} accessibilityLabel={a.n} style={[styles.ptile, { backgroundColor: t.surface2, ...cardShadow(t.scheme) }]}>
-                  <PhotoFill source={photos[a.p]} />
-                  <LinearGradient pointerEvents="none" colors={photoScrims.deck.colors} locations={photoScrims.deck.locations} style={StyleSheet.absoluteFill} />
-                  <Text variant="buttonCompact" tone="paper" style={{ padding: space.tile }}>{a.n}</Text>
-                </Press>
-              ))}
-            </ScrollView>
-            <Micro style={{ marginTop: space.xxl }}>ASKED MOST</Micro>
-            <View style={[styles.wrap, { marginTop: space.sm }]}>
-              {asked.map(a => (
-                <Press key={a.t} haptic="select" onPress={() => go(() => nav.go(a.to))} accessibilityLabel={a.t} style={[styles.askChip, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-                  <Icon name={a.icon} size={componentSize.iconXs} color={t.ink} /><Text variant="buttonCompact">{a.t}</Text>
-                </Press>
-              ))}
-            </View>
-          </>}
-          <Micro style={{ marginTop: query ? space.xs : space.xxl }}>{query ? 'FOUND' : 'FROM YOUR LIFE'}</Micro>
-          <View style={{ marginTop: space.sm, gap: space.xs }}>
-            {found.map(r => (
-              <Press key={r.k} haptic="open" onPress={() => go(() => { if (r.mission) update(c => ({ ...c, selectedMission: r.mission! })); nav.go(r.to); })} accessibilityLabel={`${r.title}, ${r.sub}`} style={[styles.found, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-                {r.date ? <View style={[styles.datebox, { backgroundColor: t.surface2 }]}><Text variant="title" style={{ lineHeight: 18 }}>{r.date.day}</Text><Text variant="micro" tone="ink2">{r.date.month.toUpperCase()}</Text></View>
-                  : <View style={[styles.iconWell, { backgroundColor: t.surface2 }]}><Icon name={r.icon!} size={componentSize.iconSm} color={t.ink} /></View>}
-                <View style={{ flex: 1, minWidth: 0 }}><Text variant="title">{r.title}</Text><Text variant="callout" tone="ink2">{r.sub}</Text></View>
-              </Press>
-            ))}
-          </View>
-          <Btn label={query ? `Ask life: “${query}”` : 'Ask life a question'} ghost onPress={() => go(() => nav.go('chat', { question: query }))} style={{ marginTop: space.lg }} />
-        </ScrollView>
-      </SafeAreaView>
-    </View>
-  );
-}
+export { SearchV26, SearchModal } from './search';
 
 const styles = StyleSheet.create({
   card: { borderRadius: radius.lg, padding: space.cardPad },
-  pad16: { padding: space.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   then: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: space.xs },
@@ -699,18 +708,6 @@ const styles = StyleSheet.create({
   gap: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.sm, paddingLeft: 14 },
   listen: { flexDirection: 'row', alignItems: 'center', gap: space.tile, paddingVertical: space.xs, paddingLeft: space.xs, paddingRight: space.md, borderRadius: radius.full, alignSelf: 'flex-start', marginTop: space.lg },
   play: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  photoChip: { paddingVertical: 6, paddingHorizontal: space.tile, borderRadius: radius.full },
-  sheet: { borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingTop: space.tile, paddingHorizontal: space.lg, paddingBottom: 30, ...StyleSheet.flatten({}) },
-  note: { borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: space.md, fontSize: 15, lineHeight: 22, marginTop: space.xs },
-  ticks: { flexDirection: 'row', gap: space.xs },
-  bigTick: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   peek: { position: 'absolute', left: space.lg, right: space.lg, top: 0, height: 60, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, paddingVertical: 7, paddingHorizontal: space.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   unread: { width: 6, height: 6, borderRadius: 3 },
-  searchBar: { height: 64, flexDirection: 'row', alignItems: 'center', gap: space.tile, paddingHorizontal: space.gutter },
-  searchInput: { flex: 1, minWidth: 0, ...type.titleSerif, paddingVertical: 0 },
-  ptile: { width: 112, height: 150, borderRadius: radius.tile, overflow: 'hidden', justifyContent: 'flex-end' },
-  askChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingLeft: space.tile, paddingRight: 14, borderRadius: radius.full },
-  found: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.md, borderRadius: radius.lg },
-  datebox: { width: 48, height: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
-  iconWell: { width: componentSize.round, height: componentSize.round, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
 });

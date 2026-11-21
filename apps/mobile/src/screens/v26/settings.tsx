@@ -4,20 +4,31 @@
  * words and figures live in `state/settings.ts`; every switch saves to the same preferences and flags as before.
  */
 import React, { useEffect, useState, type ReactNode } from 'react';
-import { Alert, Appearance, Platform, Share, StyleSheet, View } from 'react-native';
+import { Alert, Appearance, AppState, BackHandler, Linking, Platform, Share, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams } from 'expo-router';
 import {
   AccordionGroup, DotGrid, Field, Icon, InitialsAvatar, LifeOrb, LifeSays, PhotoCard, PhotoFill, Press, SectionHead, SegmentedV26, SwitchV26, Text, TileGrid,
-  V26Tile, cardShadow, componentSize, feedback, photo, photos, radius, space, useTokens, type DotCell, type GlyphName,
+  V26Tile, Wordmark, cardShadow, componentSize, feedback, photo, photos, radius, space, useTokens, type DotCell, type GlyphName,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
+import { CHECK_IN_WORDS, useLoops } from '@/state/loops';
+import { CHECK_IN_STYLES } from '@life/core';
 import { money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
+import { openSupport, supportAddress, type SupportKind, type SupportResult } from '@/services/support';
+import { billingLive, loadPlans, loadStanding, manageSubscription, restore, subscribe, type PlansResult } from '@/services/billing';
+import { trialWords, type Plan, type Standing } from '@/services/billingModel';
+import { plusGate } from '@/services/plusGate';
 import { ai } from '@/services/ai';
+import { closeAccount, exportAccount, isSignedIn, type AccountDataProblem } from '@/services/account';
+import { sharesMoves, withMovesSharing } from '@/services/moves';
+import { privacyPolicy, terms, type LegalDoc } from '@/content/legal';
+import { CRASH_REPORTS_KEY, crashReportsAvailable } from '@/services/crashes';
 import { voice } from '@/services/voice';
+import { askNotifications, notificationPermission, notificationsSupported, type NotificationPermission } from '@/services/notifications';
 import { faces } from '@/state/people';
 import { workTitle } from '@/state/you';
 import { longDate, useHealthConsent } from '@/state/firstopen';
@@ -34,17 +45,54 @@ import { Composer } from './talk';
 const n = (v: number) => Math.round(v).toLocaleString('en-GB');
 const hh = (h: number) => `${String(h % 24).padStart(2, '0')}:00`;
 
-/** Whether life Plus is on: the sample account is a member; a real account is once it subscribes. */
-function usePlus() {
+/**
+ * Whether Life Plus is on (fix F-20). With billing live, RevenueCat says, loaded as the screen opens. Without it, only
+ * the sample account is a member, so a release build never shows a subscription that wasn't bought.
+ */
+function usePlus(): { on: boolean; standing: Standing | null } {
   const { data } = useSeed();
-  return (SHOW_SAMPLES || !!data.flags['plus-preview']) && !data.flags['plus-cancelled'];
+  const [standing, setStanding] = useState<Standing | null>(null);
+  useEffect(() => {
+    if (!billingLive) return;
+    let live = true;
+    void loadStanding().then(s => { if (live) setStanding(s); });
+    return () => { live = false; };
+  }, []);
+  if (billingLive) return { on: !!standing && ['trial', 'active', 'grace'].includes(standing.status), standing };
+  return { on: SHOW_SAMPLES && !data.flags['plus-cancelled'], standing: null };
 }
 
-/** Your data as one file through the phone's share sheet. */
+const day = (d: Date | null) => d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+const planWord = (plan: Standing['plan']) => plan === 'annual' ? 'Yearly' : plan === 'monthly' ? 'Monthly' : 'Life Plus';
+const storeName = Platform.OS === 'android' ? 'Google Play' : 'the App Store';
+
+/** The Life Plus row's second line. A paid-only app has no free plan, so nobody reads "Free". */
+function plusLine({ on, standing }: { on: boolean; standing: Standing | null }): string {
+  if (!billingLive) return on ? `Yearly · renews ${plusPrice.renews}` : 'Not subscribed · see Life Plus';
+  if (!standing) return 'See Life Plus';
+  switch (standing.status) {
+    case 'trial': return `Free trial · ends ${day(standing.ends)}`;
+    case 'active': return `${planWord(standing.plan)} · ${standing.renews ? 'renews' : 'ends'} ${day(standing.ends)}`;
+    case 'grace': return `Payment didn’t go through · update it in ${storeName}`;
+    case 'ended': return 'Ended · subscribe again';
+    default: return 'Not subscribed · see Life Plus';
+  }
+}
+
+/**
+ * Your data as one file through the phone's share sheet. Signed in, the file also holds everything the account keeps
+ * on life's server (Phase 23); if the server can't be reached, it says so and still gives this phone's copy.
+ */
 function useExport() {
   const { exportEverything } = useSeed();
   return async () => {
-    try { await Share.share({ title: 'Your life data', message: JSON.stringify(await exportEverything(), null, 2) }); }
+    try {
+      const phone = await exportEverything();
+      const server = await isSignedIn() ? await exportAccount() : null;
+      const file = !server ? phone : server.ok ? { phone, account: server.data }
+        : { phone, account: null, note: 'Your account couldn’t be reached, so this file holds what’s on this phone. Export again when you’re online for the rest.' };
+      await Share.share({ title: 'Your life data', message: JSON.stringify(file, null, 2) });
+    }
     catch { Alert.alert('Couldn’t export your data', 'Your data has not changed. Please try again.'); }
   };
 }
@@ -105,7 +153,7 @@ export function SettingsV26() {
   const t = useTokens(), nav = useNavigation(), { data, pref } = useSeed(), plus = usePlus(), exportData = useExport();
   const { nudges, live, appearance } = useSettingsWords();
   const p = data.prefs, mcp = live.some(c => c.to === 'yourai');
-  const sentence = `life sends {@bell ${nudges} nudge${nudges === 1 ? '' : 's'} a day}, has {@swap ${live.length ? `${live.length} connection${live.length === 1 ? '' : 's'}` : 'no connections'}} on and sells {@shield nothing}.`;
+  const sentence = `Life sends {@bell ${nudges} nudge${nudges === 1 ? '' : 's'} a day}, has {@swap ${live.length ? `${live.length} connection${live.length === 1 ? '' : 's'}` : 'no connections'}} on and sells {@shield nothing}.`;
   const face = faces.ama;
   const lineOf = [workTitle, data.profile.city].filter(Boolean).join(' · ');
   return (
@@ -115,32 +163,32 @@ export function SettingsV26() {
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text variant="headline" numberOfLines={1}>{data.profile.name || 'You'}</Text>
           {lineOf ? <Text variant="callout" tone="ink2" numberOfLines={1}>{lineOf}</Text> : null}
-          <Chip label={plus ? 'life Plus · Active' : 'Free plan'} style={{ marginTop: space.xs }} />
+          <Chip label={plus.on ? (plus.standing?.status === 'trial' ? 'Life Plus · Free trial' : 'Life Plus · Active') : 'Not subscribed'} style={{ marginTop: space.xs }} />
         </View>
         <Icon name="chev" size={componentSize.iconXs} color={t.inkQuiet} />
       </Press>
       <Display s={sentence} style={{ marginTop: space.lg }} />
       <AccordionGroup style={{ marginTop: space.lg }} initial="behaves" items={[
-        { key: 'behaves', title: 'How life behaves', count: '4', content: <View>
+        { key: 'behaves', title: 'How Life behaves', count: '4', content: <View>
           <Row icon="bell" title="Notifications" sub={`At most ${nudges} a day · ${nudgeWindow.replace(' and ', '–')}`} onPress={() => nav.go('notifs')} />
           <Row icon="sun" title="Look, sound and feel" sub={`${appearance} · sounds ${p.sounds ? 'on' : 'off'}, haptics ${p.haptics ? 'on' : 'off'}`} onPress={() => nav.go('appearance')} />
           <Row icon="images" title="Pictures" sub={`${p.look === 'mix' ? 'Mixed cast' : 'Places only'}${p.followMood ? ' · follows your mood' : ''}`} onPress={() => nav.go('appearance')} />
           <Row icon="food" title="Calorie numbers" sub={p.hideNumbers ? 'Balance-only · switch to numbers' : 'Shown · switch to balance-only'} onPress={() => pref('hideNumbers', !p.hideNumbers)} />
         </View> },
-        { key: 'reach', title: 'What life can reach', count: '3', content: <View>
+        { key: 'reach', title: 'What Life can reach', count: '3', content: <View>
           <Row icon="swap" title="Connected services" sub={`${live.length} on · bank not connected`} onPress={() => nav.go('services')} />
           <Row icon="shield" title="Private mode" sub={p.privateMode ? `AI kept on this phone · ${onPhoneMB} MB` : 'Off · cloud work asks first'} onPress={() => nav.go('ondevice')} />
           <Row icon="spark" title="Your AI" sub={mcp ? 'Read-only · last used 2h ago' : 'Not connected'} onPress={() => nav.go('yourai')} />
         </View> },
         { key: 'data', title: 'Your data and account', count: '4', content: <View>
-          <Row icon="folder" title="What life knows" sub={`${n(data.knowledge.recordCount)} records · see and edit everything`} onPress={() => nav.go('knows')} />
+          <Row icon="folder" title="What Life knows" sub={`${n(data.knowledge.recordCount)} records · see and edit everything`} onPress={() => nav.go('knows')} />
           <Row icon="arrowDown" title="Export your data" sub="A copy of everything, as a file" onPress={() => { void exportData(); }} />
-          <Row icon="wallet" title="life Plus" sub={plus ? `Yearly · renews ${plusPrice.renews}` : 'Free · see what life Plus adds'} onPress={() => nav.go(plus ? 'subscription' : 'plus')} />
+          <Row icon="wallet" title="Life Plus" sub={plusLine(plus)} onPress={() => nav.go(plus.on ? 'subscription' : 'plus')} />
           <Row icon="trash" title="Delete everything" sub="This can’t be undone" onPress={() => nav.go('deleteacct')} />
         </View> },
         { key: 'help', title: 'Help and about', count: '2', content: <View>
-          <Row icon="help" title="Help" sub="Ask life how anything works" onPress={() => nav.go('help')} />
-          <Row icon="info" title="About life" sub={releaseLabel} onPress={() => nav.go('legal')} />
+          <Row icon="help" title="Help" sub="Ask Life how anything works" onPress={() => nav.go('help')} />
+          <Row icon="info" title="About Life" sub={releaseLabel} onPress={() => nav.go('legal')} />
         </View> },
       ]} />
     </Page>
@@ -161,9 +209,23 @@ function QuietHoursRuler({ from, until }: { from: number; until: number }) {
 
 const FROM = [20, 21, 22, 23], UNTIL = [6, 7, 8, 9];
 
+/** The phone's own notification setting for Life, checked again when you come back from Settings. */
+function useNotificationPermission(): NotificationPermission {
+  const [state, setState] = useState<NotificationPermission>('unavailable');
+  useEffect(() => {
+    const check = () => { void notificationPermission().then(setState); };
+    check();
+    const sub = AppState.addEventListener('change', s => { if (s === 'active') check(); });
+    return () => sub.remove();
+  }, []);
+  return state;
+}
+
 export function NotifsV26() {
-  const { data, flag, choose } = useSeed();
-  const nudges = data.choices.nudges ?? '1';
+  const { data, flag, choose, pref } = useSeed(), L = useLoops();
+  const permission = useNotificationPermission();
+  const turnOn = async () => { pref('notifications', true); if (notificationsSupported) choose('notification-permission', await askNotifications() ? 'granted' : 'declined'); };
+  const style = L.loops.checkIn, words = CHECK_IN_WORDS[style];
   const from = Number(data.choices['quiet-from'] ?? quietHours.from), until = Number(data.choices['quiet-until'] ?? quietHours.until);
   const isOn = (key: string, fallback: boolean) => data.flags[`notification-off-${key}`] === undefined ? fallback : !data.flags[`notification-off-${key}`];
   const kinds = notifGroups.flatMap(g => g.kinds), on = kinds.filter(k => isOn(k.key, k.on)).length;
@@ -171,14 +233,24 @@ export function NotifsV26() {
   return (
     <Page screen="notifs" bar={{ kind: 'push', title: 'Notifications' }}>
       <Eyebrow>{`${on} of ${kinds.length} kinds are on`}</Eyebrow>
-      <Display s={`At most {@bell ${nudges} nudge${nudges === '1' ? '' : 's'} a day}, and {@moon nothing at night}.`} />
+      <Display s={style === 'off' ? 'Life {@bell won’t ask}, and {@moon nothing at night}.' : `Life checks in {@bell ${words.line}}, and {@moon nothing at night}.`} />
+      {!data.prefs.notifications ? (
+        <Card style={{ marginTop: space.lg }}>
+          <Text variant="title">Nudges are off</Text>
+          <Callout style={{ marginTop: space.xxs }}>Turn them on and Life sends one a day at most, never in quiet hours.</Callout>
+          <Btn label="Turn on nudges" sm fit onPress={() => { void turnOn(); }} style={{ marginTop: space.sm }} />
+        </Card>
+      ) : notificationsSupported && permission === 'denied' ? (
+        <Card style={{ marginTop: space.lg }}>
+          <Text variant="title">Your phone has notifications off for Life</Text>
+          <Callout style={{ marginTop: space.xxs }}>Turn them on in Settings and Life can nudge you. Nothing changes here until you do.</Callout>
+          <Btn label="Open Settings" sm fit ghost onPress={() => { void Linking.openSettings(); }} style={{ marginTop: space.sm }} />
+        </Card>
+      ) : null}
       <Card style={{ marginTop: space.lg }}>
-        <Micro>NUDGES A DAY, AT MOST</Micro>
-        <Between style={{ alignItems: 'flex-end', marginTop: 6 }}>
-          <Figure value={nudges} unit="a day" />
-          <SegmentedV26 style={{ width: 150, marginBottom: space.xs }} options={['1', '2', '3'].map(v => ({ value: v, label: v }))} value={nudges} onChange={v => choose('nudges', v)} />
-        </Between>
-        <Callout style={{ marginTop: space.xs }}>{`Sent between ${nudgeWindow}. Too many? Turn it down here.`}</Callout>
+        <Micro>HOW LIFE CHECKS IN</Micro>
+        <SegmentedV26 style={{ marginTop: space.xs }} options={CHECK_IN_STYLES.map(v => ({ value: v, label: CHECK_IN_WORDS[v].label }))} value={style} onChange={v => L.setCheckIn(v)} />
+        <Callout style={{ marginTop: space.xs }}>{`${words.sub} Never more than one nudge a day, sent between ${nudgeWindow}.`}</Callout>
         <Micro style={{ marginTop: space.lg }}>QUIET HOURS</Micro>
         <QuietHoursRuler from={from} until={until} />
         <Between style={{ marginTop: space.xs }}><Callout>00:00</Callout><Callout>12:00</Callout><Callout>24:00</Callout></Between>
@@ -190,7 +262,7 @@ export function NotifsV26() {
           <Callout>{`${24 - from + until} quiet hours`}</Callout>
         </Between>
       </Card>
-      <Callout style={{ marginTop: space.sm }}>life learns your timing. You always have the final say.</Callout>
+      <Callout style={{ marginTop: space.sm }}>Life learns your timing. You always have the final say.</Callout>
       <SectionHead title="What can reach you" />
       {notifGroups.map((g, i) => (
         <View key={g.title} style={{ marginTop: i ? space.lg : 0 }}>
@@ -232,7 +304,7 @@ export function OndeviceV26() {
       <RowsCard style={{ marginTop: space.xs }}>
         {cloudJobs.map(j => <Row key={j.title} icon={j.icon} title={j.title} sub={j.sub} right={<Chip label="Asks" tone="q" />} />)}
       </RowsCard>
-      <LifeSays style={{ marginTop: space.lg }}>Your numbers always come from life’s own engine, never from a guess by the AI.</LifeSays>
+      <LifeSays style={{ marginTop: space.lg }}>Your numbers always come from Life’s own engine, never from a guess by the AI.</LifeSays>
     </Page>
   );
 }
@@ -246,7 +318,7 @@ export function YouraiV26() {
   const count = aiScopes.filter((_, i) => isOn(i)).length;
   const node = (lead: ReactNode, label: string) => <View style={[styles.node, { backgroundColor: t.surface2 }]}>{lead}<Text variant="buttonCompact">{label}</Text></View>;
   const down = <Icon name="arrowDown" size={componentSize.iconXs} color={t.inkQuiet} />;
-  const explain = () => Alert.alert('How the connection works', 'Your assistant sends a question to life over a private connection (MCP). life answers from what you allow here, read-only. It can never change anything, and switching it off ends the connection at once.');
+  const explain = () => Alert.alert('How the connection works', 'Your assistant sends a question to Life over a private connection (MCP). Life answers from what you allow here, read-only. It can never change anything, and switching it off ends the connection at once.');
   return (
     <Page screen="yourai" bar={{ kind: 'push', title: 'Your AI', action: { kind: 'icon', icon: 'info', label: 'How the connection works', onPress: explain } }}
       footer={<Btn ghost label={revoked ? 'Switch the connection on' : 'Switch off and revoke'} onPress={() => { if (revoked) { flag('mcp-revoked', false); flag('mcp-on', true); } else { flag('mcp-revoked', true); flag('mcp-on', false); } feedback.select(); }} />}>
@@ -254,13 +326,13 @@ export function YouraiV26() {
         <Chip label={revoked ? 'Off' : 'Read-only'} />
         {!revoked && SHOW_SAMPLES ? <Chip label="Last used 2h ago" tone="q" /> : null}
       </View>
-      <Text variant="titleSerif" style={{ marginTop: space.md }}>Ask your usual assistant. It answers from life.</Text>
+      <Text variant="titleSerif" style={{ marginTop: space.md }}>Ask your usual assistant. It answers from Life.</Text>
       <View style={[styles.flow, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
         <View style={[styles.said, { backgroundColor: t.surface2 }]}><Text variant="body">“How did I sleep this month?”</Text></View>
         {down}
         {node(<Icon name="spark" size={componentSize.iconSm} color={t.ink} />, 'Your usual assistant')}
         {down}
-        {node(<LifeOrb size={22} />, 'life answers, read-only')}
+        {node(<LifeOrb size={22} />, 'Life answers, read-only')}
       </View>
       <Body s="A private connection (MCP). {You pick exactly what it can see}, and can switch it off any time." style={{ marginTop: space.md }} />
       <SectionHead title="What it can see" link={`${count} of ${aiScopes.length} on`} />
@@ -327,6 +399,10 @@ export function AppearanceV26() {
         <ToggleTile icon="bell" title="Sounds" value={p.sounds} onChange={v => pref('sounds', v)} />
         <ToggleTile icon="pulse" title="Haptics" value={p.haptics} onChange={v => pref('haptics', v)} />
       </TileGrid>
+      <SectionHead title="Words" />
+      <RowsCard>
+        <SwitchRow icon="doc" title="Icons in sentences" sub={p.sentenceIcons !== false ? 'Small icons beside the key words' : 'Words only'} value={p.sentenceIcons !== false} onChange={v => pref('sentenceIcons', v)} />
+      </RowsCard>
       <SectionHead title="Pictures" />
       <RowsCard>
         <Row thumb={photos.walk} title="Pictures follow your mood" sub={p.look === 'mix' ? 'A mixed cast, in daylight' : 'Places only, in daylight'} right={<SwitchV26 value={p.followMood} onChange={v => pref('followMood', v)} accessibilityLabel="Pictures follow your mood" />} />
@@ -381,7 +457,7 @@ export function ServicesV26() {
 /* ───────────────────────── Your data ───────────────────────── */
 
 export function PrivacyV26() {
-  const nav = useNavigation(), { data } = useSeed(), exportData = useExport(), health = useHealthConsent();
+  const nav = useNavigation(), { data, update, choose } = useSeed(), exportData = useExport(), health = useHealthConsent();
   // The recorded health-data yes (Phase 20's consent step). Withdrawing happens on that same screen.
   const healthLine = health.consent ? `You said yes on ${longDate(health.consent.at)}`
     : health.withdrawnAt ? 'You took your yes back · off' : health.declined ? 'Off · you said not now' : 'Not asked yet';
@@ -405,7 +481,10 @@ export function PrivacyV26() {
       <RowsCard>
         <Row icon="pulse" title="Health data" sub={healthLine} onPress={() => nav.go('healthconsent', { next: 'settings' })} />
         <Row icon="shield" title="Backed up" sub="Encrypted, in the UK and EU" />
-        <Row icon="people" title="Who helps run life" sub="Hosting, AI, email · 4 companies" onPress={() => nav.go('legal')} />
+        <Row icon="people" title="Who helps run Life" sub="Hosting, AI, email · 4 companies" onPress={() => nav.go('legal')} />
+        {/* Off until the person says yes (services/moves.ts). Off again forgets every count. */}
+        <SwitchRow icon="chart" title="Share how much gets done" sub="One number a week, never who it’s from" value={sharesMoves(data.choices)} onChange={v => update(d => withMovesSharing(d, v))} />
+        {crashReportsAvailable() || SHOW_SAMPLES ? <SwitchRow icon="info" title="Send crash reports" sub="What broke and where, never who or what you wrote" value={data.choices[CRASH_REPORTS_KEY] !== 'off'} onChange={v => choose(CRASH_REPORTS_KEY, v ? 'on' : 'off')} /> : null}
       </RowsCard>
       <Row icon="trash" title="Delete my account" sub="30 days to change your mind" onPress={() => nav.go('deleteacct')} style={{ marginTop: space.xl }} />
     </Page>
@@ -414,28 +493,60 @@ export function PrivacyV26() {
 
 /* ───────────────────────── Delete your account ───────────────────────── */
 
+/** Why deleting an account didn't go through. Nothing on the phone changes until the server has said yes. */
+const deleteProblem: Record<AccountDataProblem, string> = {
+  offline: 'Life couldn’t reach your account, so nothing was deleted. Try again when you’re online.',
+  'signed-out': 'Your sign-in has run out. Sign in again, then delete your account.',
+  failed: 'Your account wasn’t deleted. Try again in a moment.',
+};
+
+/**
+ * Delete your account (Phase 23). Signed in, the server closes the account at once (every session ends) and keeps it
+ * for 30 days in case the person signs back in, then deletes every row and file. With no account, everything lives on
+ * this phone, so it goes at once and the screen says so instead of promising a grace period it can't keep.
+ */
 export function DeleteacctV26() {
   const t = useTokens(), nav = useNavigation(), { reset } = useSeed(), exportData = useExport();
   const params = useLocalSearchParams<{ state?: string }>();
   const [typed, setTyped] = useState(params.state === 'typed' ? 'DELETE' : '');
-  const armed = typed.trim() === 'DELETE';
+  const [signedIn, setSignedIn] = useState(false), [busy, setBusy] = useState(false), [problem, setProblem] = useState<string | null>(null);
+  useEffect(() => { let live = true; void isSignedIn().then(on => { if (live) setSignedIn(on); }); return () => { live = false; }; }, []);
+  const armed = typed.trim() === 'DELETE', account = SHOW_SAMPLES || signedIn;
   const plus = SHOW_SAMPLES ? 'a life Plus refund is owed' : 'a refund is owed';
+  const remove = async () => {
+    if (!armed || busy) return;
+    feedback.select(); setBusy(true); setProblem(null);
+    try {
+      if (signedIn) {
+        const closed = await closeAccount();
+        if (!closed.ok) { setProblem(deleteProblem[closed.problem]); if (closed.problem === 'signed-out') setSignedIn(false); return; }
+      }
+      // Once the account is closed, the phone is erased without queueing deletes, so signing back in keeps everything.
+      if (await reset({ thisPhoneOnly: signedIn })) nav.replace('welcome');
+    } finally { setBusy(false); }
+  };
+  const armedWords = account ? 'Your account closes today. Sign in again within 30 days to keep it.' : 'Everything on this phone goes now.';
   return (
     <Page screen="deleteacct" bar={{ kind: 'push', title: '' }}
       footer={<View style={{ gap: space.xs }}>
         <Field label="Type DELETE to confirm" value={typed} placeholder="DELETE" onChangeText={setTyped} />
-        <Btn ghost={!armed} disabled={!armed} label="Delete account" onPress={async () => { if (!armed) return; feedback.select(); if (await reset()) nav.replace('welcome'); }} />
-        <Callout center>{armed ? 'Your account closes today. 30 days to change your mind.' : 'The button wakes when you type DELETE.'}</Callout>
+        <Btn ghost={!armed} disabled={!armed || busy} label="Delete account" onPress={() => { void remove(); }} />
+        <Callout center>{problem ?? (armed ? armedWords : 'The button wakes when you type DELETE.')}</Callout>
       </View>}>
       <Text variant="titleSerif" style={{ marginTop: space.xxs }}>Delete your account?</Text>
-      <Body s="Read this once. {After 30 days it can’t be undone.}" style={{ marginTop: space.xs }} />
+      <Body s={account ? 'Read this once. {After 30 days it can’t be undone.}' : 'Read this once. {It can’t be undone.}'} style={{ marginTop: space.xs }} />
       <Micro style={{ marginTop: space.xl }}>DELETED</Micro>
-      <Statement s="{Everything you’ve told life}, your health data and your chats." style={{ marginTop: space.xs }} />
+      <Statement s="{Everything you’ve told Life}, your health data and your chats." style={{ marginTop: space.xs }} />
       <Micro style={{ marginTop: space.lg }}>KEPT</Micro>
       <Statement s={`{Nothing}, unless ${plus}.`} style={{ marginTop: space.xs }} />
-      <Micro style={{ marginTop: space.lg }}>GRACE PERIOD</Micro>
-      <Statement s="{30 days} to change your mind." style={{ marginTop: space.xs }} />
-      <DotGrid cells={Array<DotCell>(30).fill('')} columns={15} label="30 days" style={{ marginTop: space.sm }} />
+      {account ? <>
+        <Micro style={{ marginTop: space.lg }}>GRACE PERIOD</Micro>
+        <Statement s="{30 days} to change your mind." style={{ marginTop: space.xs }} />
+        <DotGrid cells={Array<DotCell>(30).fill('')} columns={15} label="30 days" style={{ marginTop: space.sm }} />
+      </> : <>
+        <Micro style={{ marginTop: space.lg }}>WHERE IT LIVES</Micro>
+        <Statement s="{Only on this phone}, so it goes as soon as you press the button." style={{ marginTop: space.xs }} />
+      </>}
       <Press haptic="select" onPress={() => { void exportData(); }} accessibilityLabel="Download my data first" pressScale={0.99} style={[styles.switchCard, { backgroundColor: t.surface, ...cardShadow(t.scheme), marginTop: space.lg }]}>
         <View style={{ flex: 1 }}><Text variant="title">Download my data first</Text><Text variant="callout" tone="ink2">One file with everything in it</Text></View>
         <View style={[styles.round, { backgroundColor: t.surface2 }]}><Icon name="arrowDown" size={componentSize.iconSm} color={t.ink} /></View>
@@ -456,20 +567,35 @@ function planMonth() {
   return Math.max(1, Math.min(12, months + 1));
 }
 
+/** The store's plans, loaded once the screen opens (fix F-20). Builds without billing never ask. */
+function usePlans(): PlansResult | null {
+  const [plans, setPlans] = useState<PlansResult | null>(billingLive ? null : { ok: false, problem: 'not-set' });
+  useEffect(() => {
+    if (!billingLive) return;
+    let live = true;
+    void loadPlans().then(p => { if (live) setPlans(p); });
+    return () => { live = false; };
+  }, []);
+  return plans;
+}
+
+const INCLUDES = '{@grid every tool} at every level, {@repeat your routines}, {@book unlimited Teach me} and {@shield Private mode}';
+
 export function SubscriptionV26() {
-  const nav = useNavigation(), { flag } = useSeed(), plus = usePlus();
-  const month = planMonth();
-  if (!plus) return (
-    <Page screen="subscription" bar={{ kind: 'push', title: 'life Plus' }} footer={<Btn label="See life Plus" onPress={() => nav.go('plus')} />}>
-      <Display flush style={{ marginTop: space.xxs }} s="You’re on the {free plan}. Everything free {stays free}." />
-      <Statement s={`life Plus adds {@grid every tool} at every level, {@repeat your routines}, {@book unlimited Teach me} and {@shield Private mode}, for ${money(plusPrice.annual, 2)} a year.`} style={{ marginTop: space.lg }} />
+  const nav = useNavigation(), { flag } = useSeed(), { on, standing } = usePlus(), plans = usePlans();
+  if (!on) return (
+    <Page screen="subscription" bar={{ kind: 'push', title: 'Life Plus' }} footer={<Btn label="See Life Plus" onPress={() => nav.go('plus')} />}>
+      <Display flush style={{ marginTop: space.xxs }} s={standing?.status === 'ended' ? 'Your Life Plus {has ended}.' : 'Life Plus {isn’t on} for this account.'} />
+      <Statement s={`Life Plus is ${INCLUDES}${billingLive ? '' : `, for ${money(plusPrice.annual, 2)} a year`}.`} style={{ marginTop: space.lg }} />
     </Page>
   );
+  if (billingLive && standing) return <LiveSubscription standing={standing} plans={plans} />;
+  const month = planMonth();
   return (
-    <Page screen="subscription" bar={{ kind: 'push', title: 'life Plus' }}
+    <Page screen="subscription" bar={{ kind: 'push', title: 'Life Plus' }}
       footer={<View style={{ gap: space.xs }}>
         <Btn ghost label={`Switch to monthly · ${money(plusPrice.monthly, 2)} a month`} onPress={() => nav.go('plus')} />
-        <QuietLink label="Cancel life Plus" onPress={() => { flag('plus-cancelled', true); feedback.select(); }} />
+        <QuietLink label="Cancel Life Plus" onPress={() => { flag('plus-cancelled', true); feedback.select(); }} />
         <Micro center>One tap, then managed by the App Store</Micro>
       </View>}>
       <PhotoCard source={photos.gotit} focal={{ y: 0.37 }} height={200} chips={['Active']} title="Your life Plus" sub="Yearly plan" />
@@ -482,34 +608,163 @@ export function SubscriptionV26() {
         <DotGrid cells={Array.from({ length: 12 }, (_, i): DotCell => (i < month ? 'on' : ''))} columns={12} label={`Month ${month} of 12`} style={{ marginTop: space.md }} />
         <Callout style={{ marginTop: space.md }}>{`Month ${month} of 12. Paid once a year.`}</Callout>
       </Card>
-      <Statement s="Includes {@grid every tool} at every level, {@repeat your routines}, {@book unlimited Teach me} and {@shield Private mode}." style={{ marginTop: space.lg }} />
+      <Statement s={`Includes ${INCLUDES}.`} style={{ marginTop: space.lg }} />
+    </Page>
+  );
+}
+
+/** A real subscription, as the store reports it. Changing or cancelling happens in the store, never in Life. */
+function LiveSubscription({ standing, plans }: { standing: Standing; plans: PlansResult | null }) {
+  const plan = plans?.ok ? plans.plans.find(p => p.key === standing.plan) ?? null : null;
+  const per = standing.plan === 'monthly' ? 'a month' : 'a year';
+  const chip = standing.status === 'trial' ? 'Free trial' : standing.status === 'grace' ? 'Payment due' : 'Active';
+  // Months into a yearly plan, counted back from when it renews.
+  const month = standing.plan === 'annual' && standing.status === 'active' && standing.ends
+    ? Math.max(1, Math.min(12, 12 - Math.floor((standing.ends.getTime() - Date.now()) / (30.44 * 24 * 3600 * 1000)))) : null;
+  const note = standing.status === 'trial'
+    ? `Your free trial ends on ${day(standing.ends)}. ${standing.renews ? `Then ${plan ? `${plan.price} ${per}` : `Life Plus ${per}`}, unless you cancel before.` : 'It won’t renew.'}`
+    : standing.status === 'grace' ? `${storeName === 'Google Play' ? 'Google Play' : 'The App Store'} couldn’t take the last payment. Update your payment details there to keep Life Plus.`
+    : month ? `Month ${month} of 12. Paid once a year.` : standing.plan === 'monthly' ? 'Paid each month.' : `${standing.renews ? 'Renews' : 'Ends'} on ${day(standing.ends)}.`;
+  return (
+    <Page screen="subscription" bar={{ kind: 'push', title: 'Life Plus' }}
+      footer={<View style={{ gap: space.xs }}>
+        <Btn ghost label="Switch plan" onPress={() => { void manageSubscription(standing); }} />
+        <QuietLink label="Cancel Life Plus" onPress={() => { void manageSubscription(standing); }} />
+        <Micro center>{`One tap, then managed by ${storeName}`}</Micro>
+      </View>}>
+      <PhotoCard source={photos.gotit} focal={{ y: 0.37 }} height={200} chips={[chip]} title="Your Life Plus" sub={standing.plan ? `${planWord(standing.plan)} plan` : 'Life Plus'} />
+      {plan ? <Between style={{ alignItems: 'flex-end', flexWrap: 'wrap', columnGap: space.sm, rowGap: space.xs, marginTop: space.lg }}>
+        <Figure value={plan.price} unit={per} />
+        {plan.perMonth ? <Chip label={`${plan.perMonth} a month`} style={{ marginBottom: 10 }} /> : null}
+      </Between> : null}
+      <Card style={{ marginTop: space.md }}>
+        <Between><Micro>{standing.status === 'trial' ? 'TRIAL ENDS' : standing.renews ? 'RENEWS' : 'ENDS'}</Micro><Text variant="title">{day(standing.ends)}</Text></Between>
+        {month ? <DotGrid cells={Array.from({ length: 12 }, (_, i): DotCell => (i < month ? 'on' : ''))} columns={12} label={`Month ${month} of 12`} style={{ marginTop: space.md }} /> : null}
+        <Callout style={{ marginTop: space.md }}>{note}</Callout>
+      </Card>
+      <Statement s={`Includes ${INCLUDES}.`} style={{ marginTop: space.lg }} />
     </Page>
   );
 }
 
 /* ───────────────────────── life Plus (the offer) ───────────────────────── */
 
-export function PlusV26() {
-  const t = useTokens(), nav = useNavigation(), { flag } = useSeed();
+/** The paywall's words for a plan: the store's prices, and any free trial this person can have. */
+function offerLine(plan: Plan): string {
+  return plan.key === 'annual' ? `${plan.price} a year${plan.perMonth ? ` · ${plan.perMonth} a month` : ''}` : `${plan.price} a month`;
+}
+
+/**
+ * Where Life Plus is showing. offer: the sheet from Settings or a locked feature (the board's). setup: the end of setup,
+ * after Save your progress and before the first move (Edem, 21 Nov 2026). start and ended: opening Life with no plan,
+ * or once a trial or plan has ended (services/plusGate.ts).
+ */
+export type PlusMode = 'offer' | 'setup' | 'start' | 'ended';
+
+/** Life Plus as a full screen: the end of setup, or Life opening for someone without a plan. */
+export function PlusstartV26() {
+  const { why } = useLocalSearchParams<{ why?: string }>();
+  return <PlusV26 mode={why === 'ended' ? 'ended' : why === 'start' ? 'start' : 'setup'} />;
+}
+
+/** The headline for each place Life Plus shows. A free trial is named only when the store offers this person one. */
+function plusHeadline(mode: PlusMode, trial: Plan['trial']): string {
+  if (mode === 'offer') return 'Unlock {@mic unlimited Talk}, {@book every lesson}, {@repeat your routines} and more.';
+  if (mode === 'ended') return 'Your {Life Plus has ended}.';
+  const offer = trial ? `Try {all of Life} free for {${trialWords(trial)}}.` : '{Life Plus} opens {all of Life}.';
+  return mode === 'setup' ? `Your plan is ready. ${offer}` : offer;
+}
+
+export function PlusV26({ mode = 'offer' }: { mode?: PlusMode }) {
+  const t = useTokens(), nav = useNavigation(), { flag, set } = useSeed(), plans = usePlans();
   const [plan, setPlan] = useState<'annual' | 'monthly'>('annual');
-  const line = plan === 'annual' ? `${money(plusPrice.annual, 2)} a year · ${money(plusPrice.perMonth, 2)} a month` : `${money(plusPrice.monthly, 2)} a month · ${money(plusPrice.monthly * 12, 2)} a year`;
+  const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const full = mode !== 'offer';
+  // Paid only: once billing is live, the full screen has no Back or Skip, only a plan, Restore, and the way to your data
+  // and account. A build that can't sell keeps the board's Skip, so it never stops anyone using Life.
+  const held = full && billingLive;
+  useEffect(() => {
+    if (!full) return;
+    // Setup's questions are done by now, so leaving here comes back to this screen rather than to the start of setup.
+    if (mode === 'setup') set({ onboardingDone: true });
+    if (!held) return;
+    plusGate.open = true;
+    const back = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => { plusGate.open = false; back.remove(); };
+  }, [full, held, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  // After a plan starts, setup goes on to the first move; anywhere else, the welcome to Life Plus.
+  const onward = () => nav.replace(mode === 'setup' ? 'firstmove' : 'plussuccess');
+  const offered = plans?.ok ? plans.plans : [];
+  const chosen = offered.find(p => p.key === plan) ?? offered[0] ?? null;
+  const annual = offered.find(p => p.key === 'annual'), monthly = offered.find(p => p.key === 'monthly');
+  const save = billingLive
+    ? annual && monthly && monthly.pkg.product.price > 0 ? Math.round((1 - annual.pkg.product.price / (monthly.pkg.product.price * 12)) * 100) : null
+    : plusPrice.save;
+  const line = !billingLive
+    ? plan === 'annual' ? `${money(plusPrice.annual, 2)} a year · ${money(plusPrice.perMonth, 2)} a month` : `${money(plusPrice.monthly, 2)} a month · ${money(plusPrice.monthly * 12, 2)} a year`
+    : chosen ? offerLine(chosen) : plans === null ? 'Loading prices…' : 'Prices can’t be loaded right now';
+  const trial = billingLive && chosen?.trial ? chosen.trial : null;
+  const notConnected = 'Subscriptions aren’t connected in this build yet, so nothing was charged.';
+
+  const buy = async () => {
+    setNote(null);
+    if (!billingLive) {
+      // Sample builds keep the board's preview; a real build without billing never pretends to sell anything.
+      if (!SHOW_SAMPLES) { setNote(notConnected); feedback.warn(); return; }
+      flag('plus-cancelled', false); feedback.select(); onward();
+      return;
+    }
+    if (!chosen || busy) return;
+    setBusy(true);
+    const outcome = await subscribe(chosen);
+    setBusy(false);
+    if (outcome === 'subscribed') { feedback.select(); onward(); }
+    else if (outcome === 'pending') setNote('Your payment is waiting for approval. Life Plus opens as soon as it goes through.');
+    else if (outcome === 'failed') { setNote('The purchase didn’t go through. Try again in a moment.'); feedback.warn(); }
+    else if (outcome === 'not-set') setNote(notConnected);
+  };
+  const restoreIt = async () => {
+    setNote(null);
+    if (!billingLive) {
+      if (SHOW_SAMPLES) Alert.alert('Nothing to restore', 'No earlier Life Plus purchase was found on this account.');
+      else setNote('Subscriptions aren’t connected in this build yet, so there’s nothing to restore.');
+      return;
+    }
+    const outcome = await restore();
+    if (outcome === 'restored') onward();
+    else if (outcome === 'nothing') Alert.alert('Nothing to restore', `No earlier Life Plus purchase was found on this ${Platform.OS === 'android' ? 'Google' : 'Apple'} account.`);
+    else Alert.alert('The store can’t be reached', 'Check your connection, then try again.');
+  };
+  const skip = mode === 'setup' ? () => nav.replace('firstmove') : nav.close;
   return (
-    <Page screen="plus" bar={{ kind: 'flow', left: 'Back', leftIcon: 'back', action: { kind: 'text', label: 'Skip', onPress: nav.close } }}
+    <Page screen={full ? 'plusstart' : 'plus'} bar={held ? { kind: 'none' } : { kind: 'flow', left: 'Back', leftIcon: 'back', action: { kind: 'text', label: 'Skip', onPress: skip } }}
       footer={<View style={{ gap: space.xs }}>
-        <Btn label="Subscribe" onPress={() => { flag('plus-preview', true); flag('plus-cancelled', false); feedback.select(); nav.replace('plussuccess'); }} style={{ minHeight: 56 }} />
-        <QuietLink label="Restore purchases" onPress={() => Alert.alert('Nothing to restore', 'No earlier life Plus purchase was found on this account.')} />
-        <Micro center>Recurring billing · cancel any time</Micro>
+        {note ? <Callout>{note}</Callout> : null}
+        <Btn label={trial ? 'Start free trial' : 'Subscribe'} disabled={billingLive && (!chosen || busy)} onPress={() => { void buy(); }} style={{ minHeight: 56 }} />
+        <QuietLink label="Restore purchases" onPress={() => { void restoreIt(); }} />
+        <Micro center>{trial && chosen ? `Free for ${trialWords(trial)}, then ${chosen.price} ${chosen.key === 'annual' ? 'a year' : 'a month'} · cancel any time` : 'Recurring billing · cancel any time'}</Micro>
+        <View style={styles.legalLinks}>
+          <QuietLink label="Terms" onPress={() => nav.go('legal', { open: 'terms' })} />
+          <QuietLink label="Privacy" onPress={() => nav.go('legal', { open: 'privacy' })} />
+          {/* With no way past, downloading your data and deleting your account stay one tap away (Apple asks for both). */}
+          {held ? <QuietLink label="Your data" onPress={() => nav.go('privacy')} /> : null}
+        </View>
       </View>}>
-      <Text variant="title" style={{ marginTop: space.xl }}>life Plus</Text>
-      <Display s="Unlock {@mic unlimited Talk}, {@book every lesson}, {@repeat your routines} and more." style={{ marginTop: 6 }} />
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.xs, marginTop: space.xl }}><Wordmark variant="title" /><Text variant="title" tone="ink2">Plus</Text></View>
+      <Display s={plusHeadline(mode, trial)} style={{ marginTop: 6 }} />
+      {mode === 'ended' ? <Body s="Everything you’ve told Life {is still here}. Subscribe to carry on, or download it from Your data." style={{ marginTop: space.xs }} /> : null}
       <Press haptic="select" onPress={() => setPlan(plan === 'annual' ? 'monthly' : 'annual')} accessibilityLabel={`${plan === 'annual' ? 'Annual' : 'Monthly'}, ${line}. Tap to switch`} pressScale={0.99}
         style={[styles.pick, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text variant="title">{plan === 'annual' ? 'Annual' : 'Monthly'}</Text>
           <Text variant="callout" tone="ink2">{line}</Text>
         </View>
-        {plan === 'annual' ? <Chip label={`Save ${plusPrice.save}%`} tone="live" /> : <Chip label="Switch to annual" tone="q" />}
+        {plan === 'annual' ? (save ? <Chip label={`Save ${save}%`} tone="live" /> : null) : <Chip label="Switch to annual" tone="q" />}
       </Press>
+      {trial && chosen ? <Callout style={{ marginTop: space.md }}>{`Free for ${trialWords(trial)}. Then ${offerLine(chosen)}, renewing until you cancel. Cancel before the trial ends and you won’t be charged.`}</Callout> : null}
+      {/* A whole screen has room to say what Life Plus holds, in the same words as Your Life Plus. */}
+      {full ? <Statement s={`Includes ${INCLUDES}.`} style={{ marginTop: space.lg }} /> : null}
     </Page>
   );
 }
@@ -527,7 +782,7 @@ export function PlussuccessV26() {
       footer={<Btn onPhoto label="Back to what I was doing" onPress={nav.home} />}
       contentStyle={{ justifyContent: 'flex-end', paddingBottom: space.sm }}>
       <LifeOrb size={72} state="done" color={photo.onPhoto} />
-      <Text variant="welcome" style={{ color: photo.onPhoto, marginTop: 10 }}>You’re on life Plus.</Text>
+      <Text variant="welcome" style={{ color: photo.onPhoto, marginTop: 10 }}>You’re on Life Plus.</Text>
       <Statement onPhoto size="lead" s={`Thank you${name}. {${plusOpens.length === 4 ? 'Four' : plusOpens.length} things just opened.}`} style={{ marginTop: space.xs, marginBottom: 14 }} />
       <View style={styles.opens}>
         {plusOpens.map(o => (
@@ -544,12 +799,22 @@ export function PlussuccessV26() {
 /* ───────────────────────── Help ───────────────────────── */
 
 export function HelpV26() {
-  const nav = useNavigation(), { data, flag } = useSeed(), [q, setQ] = useState('');
-  const reported = !!data.flags['support-report'];
+  const nav = useNavigation(), [q, setQ] = useState('');
+  // What happened when "Email us" or "Report a number" was tapped (fix F-10). Nothing is remembered: each tap opens mail.
+  const [support, setSupport] = useState<{ kind: SupportKind; result: SupportResult } | null>(null);
+  const write = async (kind: SupportKind) => {
+    const result = await openSupport(kind);
+    setSupport({ kind, result });
+    // The button already gave its tap; only a message that couldn't start adds a warning.
+    if (result !== 'opened') feedback.warn();
+  };
+  const note = support && support.result !== 'opened'
+    ? <Callout style={{ marginTop: space.sm }}>{support.result === 'not-set' ? 'Support isn’t connected in this build yet, so nothing was sent.' : `This phone has no mail app set up. Write to ${supportAddress} from any email.`}</Callout>
+    : null;
   return (
     <Page screen="help" bar={{ kind: 'push', title: 'Help' }}>
       <View style={{ alignItems: 'center', paddingTop: space.sm }}><LifeOrb size={56} /></View>
-      <Text variant="titleSerif" align="center" style={{ marginTop: 18 }}>Ask life how anything works</Text>
+      <Text variant="titleSerif" align="center" style={{ marginTop: 18 }}>Ask Life how anything works</Text>
       <View style={{ marginTop: space.lg }}>
         <Composer value={q} onChange={setQ} placeholder="Type your question" onSend={() => { const s = q.trim(); if (!s) return; setQ(''); nav.go('chat', { question: s }); }} />
       </View>
@@ -559,26 +824,28 @@ export function HelpV26() {
         content: <View>
           <Body s={a.text} />
           {a.link && a.to ? <Press haptic="select" onPress={() => nav.go(a.to!)} accessibilityLabel={a.link} style={styles.link}><Text variant="buttonCompact">{a.link}</Text><LinkChevIcon /></Press> : null}
-          {a.button ? <Btn ghost sm fit label={reported ? 'Thanks, a person will look' : a.button} onPress={() => { flag('support-report', true); feedback.select(); }} style={{ marginTop: space.sm }} /> : null}
+          {a.button ? <Btn ghost sm fit label={a.button} onPress={() => { void write('number'); }} style={{ marginTop: space.sm }} /> : null}
+          {a.button && support?.kind === 'number' ? note : null}
         </View>,
       }))} />
-      <Press haptic="open" onPress={() => flag('support-email', true)} accessibilityLabel="Email us" pressScale={0.99} style={{ marginTop: space.sm }}>
-        <EmailCard sent={!!data.flags['support-email']} />
+      <Press haptic="open" onPress={() => { void write('question'); }} accessibilityLabel="Email us" pressScale={0.99} style={{ marginTop: space.sm }}>
+        <EmailCard />
       </Press>
+      {support?.kind === 'question' ? note : null}
     </Page>
   );
 }
 
 function LinkChevIcon() { const t = useTokens(); return <Icon name="chev" size={componentSize.iconXs} color={t.ink} />; }
 
-function EmailCard({ sent }: { sent: boolean }) {
+function EmailCard() {
   const t = useTokens();
   return (
     <View style={[styles.switchCard, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
       <View style={[styles.well, { backgroundColor: t.surface2 }]}><Icon name="people" size={componentSize.iconSm} color={t.ink} /></View>
       <View style={{ flex: 1 }}>
         <Text variant="title">Email us</Text>
-        <Text variant="callout" tone="ink2">{sent ? 'Opens your mail app once support is connected' : 'A person replies within a day'}</Text>
+        <Text variant="callout" tone="ink2">A person replies within a day</Text>
       </View>
       <Icon name="chev" size={componentSize.iconXs} color={t.inkQuiet} />
     </View>
@@ -587,24 +854,47 @@ function EmailCard({ sent }: { sent: boolean }) {
 
 /* ───────────────────────── About life ───────────────────────── */
 
+/** One legal document, block by block (`content/legal.ts`, generated from docs/launch). Tables read as one line per row. */
+function LegalText({ doc }: { doc: LegalDoc }) {
+  const plain = (s: string) => s.replace(/[{}]/g, '');
+  return (
+    <View style={{ marginTop: space.md }}>
+      <Text variant="title" accessibilityRole="header">{doc.title}</Text>
+      {doc.blocks.map((b, i) => {
+        if (b.kind === 'heading') return <SectionHead key={i} title={plain(b.text)} />;
+        if (b.kind === 'subheading') return <Text key={i} variant="headline" accessibilityRole="header" style={{ marginTop: space.md }}>{plain(b.text)}</Text>;
+        if (b.kind === 'text') return <Body key={i} s={b.text} style={{ marginTop: space.xs }} />;
+        if (b.kind === 'list') return <View key={i} style={{ marginTop: space.xs, gap: space.xxs }}>{b.items.map((item, j) => <Body key={j} s={`•  ${item}`} />)}</View>;
+        return <View key={i} style={{ marginTop: space.xs, gap: space.xs }}>{b.rows.map((row, j) => <Body key={j} s={`{${plain(row[0])}}  ${row.slice(1).filter(Boolean).join(' · ')}`} />)}</View>;
+      })}
+    </View>
+  );
+}
+
 export function LegalV26() {
-  const t = useTokens(), nav = useNavigation(), { data, flag } = useSeed();
+  const t = useTokens(), nav = useNavigation();
+  // Health Connect's "why does Life read this?" arrives with the privacy policy open (fix F-25).
+  const { open: start } = useLocalSearchParams<{ open?: string }>();
+  // Which text is open under the rows. One at a time, so the page stays readable.
+  const [open, setOpen] = useState<'terms' | 'privacy' | 'notices' | null>(start === 'privacy' || start === 'terms' ? start : null);
+  const toggle = (k: 'terms' | 'privacy' | 'notices') => setOpen(o => (o === k ? null : k));
   return (
     <Page screen="legal" bar={{ kind: 'push', title: 'About' }}>
       <View style={{ alignItems: 'center', paddingTop: space.md }}>
         <View style={[styles.mark, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><LifeOrb size={34} /></View>
-        <Text variant="titleSerif" style={{ marginTop: space.md }}>life</Text>
+        <Wordmark variant="title" style={{ marginTop: space.md }} />
         <Text variant="callout" tone="ink2" style={{ fontVariant: ['tabular-nums'], marginTop: 2 }}>{releaseLabel}</Text>
       </View>
       <Display center s="{@heart Wellness}, not medical. {@cash Guidance}, not advice." style={{ marginTop: space.xl }} />
-      <Body align="center" s="life helps you notice and decide. It doesn’t diagnose, and it isn’t a financial adviser." style={{ marginTop: space.sm }} />
+      <Body align="center" s="Life helps you notice and decide. It doesn’t diagnose, and it isn’t a financial adviser." style={{ marginTop: space.sm }} />
       <RowsCard style={{ marginTop: space.xl }}>
-        <Row icon="doc" title="Terms" onPress={() => flag('legal-terms')} style={{ minHeight: 56 }} />
-        <Row icon="shield" title="Privacy policy" onPress={() => nav.go('privacy')} style={{ minHeight: 56 }} />
-        <Row icon="layers" title="Open-source notices" sub={`${openSource.count} libraries · ${openSource.licences}`} onPress={() => flag('legal-notices')} />
+        <Row icon="doc" title="Terms" onPress={() => toggle('terms')} style={{ minHeight: 56 }} />
+        <Row icon="shield" title="Privacy policy" onPress={() => toggle('privacy')} style={{ minHeight: 56 }} />
+        <Row icon="layers" title="Open-source notices" sub={`${openSource.count} libraries · ${openSource.licences}`} onPress={() => toggle('notices')} />
       </RowsCard>
-      {data.flags['legal-terms'] ? <Body s="life is a wellness and life-admin app, not a medical service or a regulated financial adviser. {Full terms are published before launch.}" style={{ marginTop: space.md }} /> : null}
-      {data.flags['legal-notices'] ? <Body s="Expo, React, React Native, Reanimated, Gesture Handler and SVG: MIT. Atria and Cal-AI: MIT. Fenny teaching references: the owner’s code, reused with permission. {Every notice is kept in THIRD_PARTY_NOTICES.md.}" style={{ marginTop: space.md }} /> : null}
+      {open === 'terms' ? <LegalText doc={terms} /> : null}
+      {open === 'privacy' ? <><LegalText doc={privacyPolicy} /><QuietLink label="See and manage your data" onPress={() => nav.go('privacy')} style={{ marginTop: space.md }} /></> : null}
+      {open === 'notices' ? <Body s="Expo, React, React Native, Reanimated, Gesture Handler and SVG: MIT. Atria and Cal-AI: MIT. Fenny teaching references: the owner’s code, reused with permission. Food facts © Open Food Facts contributors, under the Open Database Licence. {Every notice is kept in THIRD_PARTY_NOTICES.md.}" style={{ marginTop: space.md }} /> : null}
     </Page>
   );
 }
@@ -622,7 +912,7 @@ export function AimodelsV26() {
         {builtIn ? <Figure value={String(onPhoneMB)} unit="MB" /> : <Figure value="1–2" unit="GB" />}
         <Chip label={builtIn ? 'Built-in AI found' : 'No built-in AI'} style={{ marginBottom: 10 }} />
       </Between>
-      <Statement style={{ marginTop: space.sm }} s={builtIn ? `This ${phone} brings {its own AI}, so life downloads only {what’s missing}.` : `This ${phone} has {no built-in AI}, so life adds {a small open model} over Wi-Fi.`} />
+      <Statement style={{ marginTop: space.sm }} s={builtIn ? `This ${phone} brings {its own AI}, so Life downloads only {what’s missing}.` : `This ${phone} has {no built-in AI}, so Life adds {a small open model} over Wi-Fi.`} />
       <Card style={{ marginTop: space.lg }}>
         <Between style={{ gap: space.sm }}><Text variant="callout" style={{ flexShrink: 1 }}>{`This ${phone}`}</Text><Text variant="callout">{builtIn ? `${onPhoneMB} MB` : 'about 1 to 2 GB'}</Text></Between>
         <View style={[styles.meter, { backgroundColor: t.surface3 }]}><View style={{ width: builtIn ? '12%' : '100%', height: '100%', borderRadius: radius.full, backgroundColor: t.ink }} /></View>
@@ -639,7 +929,7 @@ export function AimodelsV26() {
           </View>
         </View>,
       }))} />
-      <Callout style={{ marginTop: space.md }}>Downloads over Wi-Fi, can be removed any time, and are checked against life’s tests before each update. Reading a photo and building a new lesson still ask before using the cloud.</Callout>
+      <Callout style={{ marginTop: space.md }}>Downloads over Wi-Fi, can be removed any time, and are checked against Life’s tests before each update. Reading a photo and building a new lesson still ask before using the cloud.</Callout>
     </Page>
   );
 }
@@ -663,6 +953,7 @@ const styles = StyleSheet.create({
   toggleTile: { borderRadius: radius.lg, padding: space.md },
   round: { width: componentSize.round, height: componentSize.round, borderRadius: componentSize.round / 2, alignItems: 'center', justifyContent: 'center' },
   pick: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 72, paddingHorizontal: 18, borderRadius: radius.lg, marginTop: space.lg },
+  legalLinks: { flexDirection: 'row', justifyContent: 'center', gap: space.lg },
   opens: { flexDirection: 'row', flexWrap: 'wrap', gap: space.tile },
   open: { flexBasis: '45%', flexGrow: 1, gap: space.sm, paddingTop: 14, paddingHorizontal: space.md, paddingBottom: space.md, borderRadius: radius.lg },
   link: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: space.sm, alignSelf: 'flex-start' },

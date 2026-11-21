@@ -1,0 +1,8 @@
+{
+  "name": "life-web-preview",
+  "private": true,
+  "description": "Web preview of the life app with Ama's sample life. Built by Vercel from apps/mobile.",
+  "engines": {
+    "node": "22.x"
+  }
+}

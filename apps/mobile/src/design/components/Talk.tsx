@@ -6,7 +6,7 @@ import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Callout, Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
-import { areaColors, radius, springs, type Area } from '../tokens';
+import { areaColors, durations, radius, springs, type Area } from '../tokens';
 import { DottedOrb } from './Chrome';
 import { TwoTone, type TwoToneSegment } from './Story';
 import { LifeOrb } from './Orb';
@@ -123,7 +123,7 @@ function TrayTile({ area, count }: { area: Area; count: number }) {
   const prev = useRef(count);
   useEffect(() => {
     if (count > prev.current) {
-      s.value = withSequence(withSpring(1.06, springs.snappy), withSpring(1, springs.smooth));
+      s.value = withSequence(withSpring(1.03, springs.snappy), withSpring(1, springs.smooth));
       feedback.file();
     }
     prev.current = count;
@@ -161,10 +161,10 @@ export function LifeReply({ segments, card, chips, onChip, thinking, look }: { s
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         {look === 'v26' ? <LifeOrb size={20} state={thinking ? 'thinking' : 'ring'} /> : <DottedOrb size={20} state={thinking ? 'thinking' : 'idle'} />}
-        <Callout tone="ink2">{thinking ? 'life is thinking…' : 'life'}</Callout>
+        <Callout tone="ink2">{thinking ? 'Life is thinking…' : 'Life'}</Callout>
       </View>
       {segments && !thinking ? <TwoTone segments={segments} size="headline" /> : null}
-      {card && !thinking ? <Animated.View entering={FadeIn}>{card}</Animated.View> : null}
+      {card && !thinking ? <Animated.View entering={FadeIn.duration(durations.quick)}>{card}</Animated.View> : null}
       {chips && chips.length && !thinking ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           {chips.slice(0, 4).map((c) => (
@@ -255,7 +255,7 @@ export function AttachMenu({ visible, options, onPick, onClose }: { visible: boo
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: t.scheme === 'dark' ? 'rgba(0,0,0,0.55)' : 'rgba(13,14,16,0.3)' }]} onPress={onClose} accessibilityLabel="Close attach menu" />
       <View style={[styles.attach, { backgroundColor: t.surface }]}>
         {options.map((o, i) => (
-          <Animated.View key={o.key} entering={FadeInDown.delay(i * 40).springify().damping(16)}>
+          <Animated.View key={o.key} entering={FadeInDown.delay(i * 40).springify().dampingRatio(1).duration(320)}>
             <Press
               haptic="open"
               onPress={() => {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { Database } from 'bun:sqlite';
-import { LifeDataStore, type OutboxOp } from '../../apps/mobile/src/data/store';
+import { LifeDataStore, object, type OutboxOp } from '../../apps/mobile/src/data/store';
 import { drizzleMigrations } from '../../apps/mobile/src/data/migrations';
 import { tableNames } from '../../apps/mobile/src/data/schema';
 import type { SqlDriver, SqlExecutor, SqlValue } from '../../apps/mobile/src/data/driver';
@@ -93,6 +93,43 @@ describe('local SQLite repositories', () => {
     const dates = await store.repos.important_date.list(); expect(dates[0].kind).toBe('memorial'); expect(dates[0].reminder).toBeNull();
     await store.commitProjection(loaded);
     expect((await store.loadProjection<any>()).memories).toHaveLength(1);
+  });
+  test('keeps the core loops (plans, ticks, check-in style) through a save and a reopen, and queues them to sync', async () => {
+    const { store, adapter } = await fixture(); await store.importLegacyOnce(projection());
+    const loops = {
+      plans: { '2026-11-21': { items: [{ id: 'own:a', text: 'Protect time to edit', own: true, steps: [] }, { id: 'starter:paperwork', text: 'Get my paperwork ready', own: false, area: 'admin', steps: [{ key: 'starter:paperwork:gather', title: 'Gather two documents', minutes: 10 }] }], savedAt: '2026-11-20T22:00:00.000Z' } },
+      skipped: {}, marks: { 'starter:paperwork:gather': { state: 'started', at: '2026-11-21T09:00:00.000Z', title: 'Gather two documents', priority: 'Get my paperwork ready', area: 'admin' } },
+      checkIn: 'noticed', wins: ['admin'],
+    };
+    await store.commitProjection({ ...await store.loadProjection<any>(), loops });
+    const reopened = await new LifeDataStore(adapter, 'owner').initialise();
+    expect((await reopened.loadProjection<any>()).loops).toEqual(loops);
+    expect(JSON.stringify(await reopened.pending())).toContain('Protect time to edit');
+  });
+  test('what belongs to this phone (its permissions, what Life learned of your moves, the nudge log, unsent messages) stays out of sync and comes back on reopen', async () => {
+    const { store, adapter } = await fixture(); await store.importLegacyOnce(projection());
+    const phoneOnly = {
+      'calendar-permission': 'granted', 'notification-permission': 'granted', 'notification-asked': 'yes', 'camera-permission': 'granted', 'mic-permission': 'granted', 'health-permission': 'granted',
+      'push-token-sent': 'ExponentPushToken[x]', 'day-learning': JSON.stringify({ 'people|calm': { a: 3, b: 1 } }), 'nudge-log': JSON.stringify([{ id: 'move:1', at: 1, kind: 'move' }]), 'chat-queue': JSON.stringify(['Ask about my tax code']),
+    };
+    const loaded = await store.loadProjection<any>();
+    await store.commitProjection({ ...loaded, choices: { ...loaded.choices, ...phoneOnly, 'fuel-goal': 'maintain' } });
+    const outbox = JSON.stringify(await store.pending());
+    for (const [key, value] of Object.entries(phoneOnly)) { expect(outbox).not.toContain(key); expect(outbox).not.toContain(value.slice(0, 12)); }
+    expect(outbox).toContain('fuel-goal');
+    const reopened = await new LifeDataStore(adapter, 'owner').initialise();
+    const back = await reopened.loadProjection<any>();
+    expect(back.choices).toMatchObject({ ...phoneOnly, 'fuel-goal': 'maintain', 'selected-meal': 'meal-one' });
+  });
+  test('a permission another phone recorded in the account is never taken as this phone’s', async () => {
+    const { store } = await fixture(); await store.importLegacyOnce(projection());
+    const [prefs] = await store.repos.prefs.list();
+    const fields = object(prefs.fields), app = object(fields.app);
+    const row = { ...prefs, fields: { ...fields, app: { ...app, choices: { ...object(app.choices), 'calendar-permission': 'granted', 'fuel-goal': 'lose' } } }, updated_at: new Date(Date.now() + 60_000).toISOString() };
+    await store.sync({ push: async (_user, ops) => ({ acknowledged: ops.map(o => o.id) }), pull: async () => ({ cursor: 'one', changes: [{ table: 'prefs', op: 'upsert', row }] }) });
+    const back = await store.loadProjection<any>();
+    expect(back.choices['fuel-goal']).toBe('lose');
+    expect(back.choices['calendar-permission']).toBeUndefined();
   });
   test('subsequent commits update domain rows and retain unrelated health samples', async () => {
     const { store } = await fixture(); await store.importLegacyOnce(projection());

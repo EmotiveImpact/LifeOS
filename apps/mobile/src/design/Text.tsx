@@ -54,6 +54,9 @@ export const maxTextScale = 1.3;
 const preview = Number(process.env.EXPO_PUBLIC_TEXT_SCALE) || 0;
 const previewScale = Platform.OS === 'web' && preview > 1 ? Math.min(preview, maxTextScale) : 0;
 
+/** The big title sizes are a screen's or a moment's title, so VoiceOver and TalkBack can jump to them as headings. */
+const HEADING_VARIANTS = new Set<TypeStyle>(['welcome', 'huge', 'titleSerif', 'display']);
+
 /** The one text component. Screens never set font sizes directly (DESIGN.md §4). */
 export function Text({ variant = 'body', tone = 'ink', align, style, children, ...rest }: LifeTextProps) {
   const color = useToneColor(tone);
@@ -62,6 +65,7 @@ export function Text({ variant = 'body', tone = 'ink', align, style, children, .
   return (
     <RNText
       maxFontSizeMultiplier={maxTextScale}
+      accessibilityRole={HEADING_VARIANTS.has(variant) ? 'header' : undefined}
       {...rest}
       style={[base, scaled, { color, textAlign: align }, style]}
     >

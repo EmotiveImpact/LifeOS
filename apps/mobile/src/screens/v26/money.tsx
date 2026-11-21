@@ -9,11 +9,15 @@ import {
   SectionHead, SliderV26, SwitchV26, Text, TileGrid, TintCard, V26Tile, cardShadow, feedback, photo, photos, radius, space, useAreaTint, useTokens, type DotCell,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
+import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { money, seed, seedDocuments, seedSubscriptionDetails, SEED_DATE } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
+import { dayKey } from '@/state/fuel';
+import { knownMoney, type KnownCost, type KnownMoney } from '@/state/moneyKnown';
+import { ordinalDay } from '@/state/you';
 import { bankChoices, bufferMonths, cancelPages, daysUnused, docDates, monthWeeks, netWorthYear, paydaySweep } from '@/state/plan';
-import { BigPhoto, Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Legend, Micro, Page, PeekStack, QuietLink, Row, RowsCard, Statement, Timeline } from './kit';
+import { BigPhoto, Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Legend, Micro, NotYetV26, Page, PeekStack, QuietLink, Row, RowsCard, Statement, Timeline } from './kit';
 
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
 const word = (n: number) => WORDS[n] ?? String(n);
@@ -31,9 +35,16 @@ function useMoney() {
   return { hidden, show, eye };
 }
 
+/**
+ * The subscriptions on the profile, plus (for a real account) the ones told to Life that aren't on it yet. Those are
+ * marked in use: Life can't see whether they're used, so it never says they aren't.
+ */
 function useSubscriptions() {
   const { data } = useSeed();
-  const all = data.profile.subscriptions ?? [];
+  const saved = data.profile.subscriptions ?? [];
+  const told = SHOW_SAMPLES ? [] : knownMoney({ records: data.records, today: dayKey() }).subscriptions
+    .filter(x => !saved.some(s => s.id === x.id)).map(x => ({ id: x.id, name: x.name, monthlyCost: x.monthly, category: 'Other' as const, essential: true, cancelled: false }));
+  const all = [...saved, ...told];
   const active = all.filter(s => !s.cancelled);
   const unused = active.filter(s => !s.essential), inUse = active.filter(s => s.essential);
   return { all, active, unused, inUse, monthly: sum(active.map(s => s.monthlyCost)), unusedMonthly: sum(unused.map(s => s.monthlyCost)), inUseMonthly: sum(inUse.map(s => s.monthlyCost)) };
@@ -58,9 +69,110 @@ function PhotoMeter({ pct }: { pct: number }) {
 
 const TXN_PHOTO = ['payslip', 'terrace', null, null] as const;
 
+/* ───────────────────────── Money, before Life knows it ───────────────────────── */
+
+/**
+ * A real account's Money (hub and area). Every balance, payment and plan on these pages is the sample life's, and no
+ * bank is connected yet, so a real account sees Plan's day-one shape with one way in instead.
+ */
+export function MoneyNotYetV26({ screen, title }: { screen: ScreenKey; title?: string }) {
+  const nav = useNavigation(), { data } = useSeed();
+  return (
+    <NotYetV26 screen={screen} title={title} eyebrow="Money · day one" line="Life builds this from what you tell it about your pay, rent and bills."
+      source="payslip" focal={{ y: 0.85 }} ask="Tell Life about your money" examples="Your pay day, your rent, a bill on your mind.">
+      <SectionHead title="More in Money" />
+      <RowsCard>
+        <Row icon="shield" title="Connect your bank" sub={data.choices.bank ? `${data.choices.bank} chosen · read-only` : 'Read-only'} right={<Chip label="Preview" tone="q" />} onPress={() => nav.go('connectbank')} />
+      </RowsCard>
+    </NotYetV26>
+  );
+}
+
+/* ───────────────────────── Money, from what you've told Life ───────────────────────── */
+
+/** What a real account has told Life about money: pay, pay day, rent, bills and subscriptions (F-37). */
+export function useKnownMoney(): KnownMoney {
+  const { data, engine } = useSeed();
+  const payDay = Number(data.profile.payDay ?? data.choices['payday-day']) || null;
+  return knownMoney({ records: data.records, payDay, takeHomeMonthly: engine.income.netTakeHomeMonthly, today: dayKey() });
+}
+
+const OFTEN: Record<NonNullable<KnownCost['often']>, string> = { weekly: 'a week', monthly: 'a month', quarterly: 'a quarter', yearly: 'a year' };
+const inDaysWords = (n: number) => n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`;
+
+/**
+ * A real account's Money once Life knows something: the month as told (take-home, rent, bills, subscriptions), what's
+ * coming up by date, and each thing Life knows. No bank is connected, so there are no balances or payments here.
+ */
+function MoneyKnownV26({ screen, known }: { screen: ScreenKey; known: KnownMoney }) {
+  const nav = useNavigation(), t = useTokens(), { data } = useSeed(), { show, eye } = useMoney();
+  const k = known, billsMonthly = sum(k.bills.map(b => b.monthly)), subsMonthly = sum(k.subscriptions.map(x => x.monthly));
+  const what = [k.rent ? 'rent' : null, k.bills.length ? 'bills' : null, k.subscriptions.length ? 'subscriptions' : null].filter(Boolean).join(k.rent && k.bills.length && k.subscriptions.length ? ', ' : ' and ').replace(/, (?=[^,]*$)/, ' and ');
+  const headline = k.left !== null
+    ? k.left >= 0 ? `{${show(k.left)} a month} is left after ${what}.` : `${what.charAt(0).toUpperCase()}${what.slice(1)} ${what === 'rent' ? 'comes' : 'come'} to {${show(-k.left)} a month more} than you take home.`
+    : k.out > 0 ? `{${show(k.out)} a month} goes on ${what}.`
+    : k.takeHome !== null ? `You take home about {${show(k.takeHome)} a month}.`
+    : k.payDay ? `{Paid on the ${ordinalDay(k.payDay)}.} Tell Life your rent and bills to see the month.`
+    : '{A start.} Tell Life more to see the month.';
+  const counted = (c: KnownCost) => c.often ? `${show(c.amount, 2)} ${OFTEN[c.often]}` : `${show(c.amount, 2)} · counted as monthly`;
+  const parts = [
+    ...(k.rent ? [{ flex: k.rent.monthly, color: t.ink }] : []),
+    ...(billsMonthly ? [{ flex: billsMonthly, color: t.ink2, apart: !!k.rent }] : []),
+    ...(subsMonthly ? [{ flex: subsMonthly, color: t.ember, apart: !!(k.rent || billsMonthly) }] : []),
+  ];
+  return (
+    <Page screen={screen} bar={{ kind: 'push', title: 'Money', action: eye }}>
+      <Eyebrow star>Money · from what you’ve told Life</Eyebrow>
+      <Display s={headline} />
+      {k.takeHome !== null || k.out > 0 ? (
+        <TintCard area="money" style={{ marginTop: space.lg }}>
+          <Between><Text variant="title">{k.out > 0 ? 'Going out each month' : 'Take-home each month'}</Text><Text variant="title">{show(k.out > 0 ? k.out : k.takeHome ?? 0, 2)}</Text></Between>
+          {parts.length ? <SplitBar style={{ marginTop: space.sm }} parts={parts} /> : null}
+          {k.out > 0 ? <View style={{ marginTop: space.xs, gap: 2 }}>
+            {k.rent ? <Between><Text variant="callout" tone="ink2">Rent</Text><Text variant="callout">{show(k.rent.monthly, 2)}</Text></Between> : null}
+            {billsMonthly ? <Between><Text variant="callout" tone="ink2">{`Bills · ${k.bills.length}`}</Text><Text variant="callout">{show(billsMonthly, 2)}</Text></Between> : null}
+            {subsMonthly ? <Between><Text variant="callout" tone="ember">{`Subscriptions · ${k.subscriptions.length}`}</Text><Text variant="callout" tone="ember">{show(subsMonthly, 2)}</Text></Between> : null}
+            {k.takeHome !== null ? <Between style={{ marginTop: space.xs }}><Text variant="callout" tone="ink2">Take-home, estimated</Text><Text variant="callout">{show(k.takeHome, 2)}</Text></Between> : null}
+          </View> : null}
+        </TintCard>
+      ) : null}
+      {k.next.length ? <>
+        <SectionHead title="Coming up" />
+        <RowsCard>
+          {k.next.map(d => <Row key={d.id} icon={d.kind === 'pay' ? 'cash' : 'calendar'} title={d.name} sub={`The ${ordinalDay(d.day)} · ${inDaysWords(d.inDays)}`} end={d.amount !== null ? `${d.kind === 'pay' ? '+' : ''}${show(d.amount, 2)}` : undefined} endStrong />)}
+        </RowsCard>
+      </> : null}
+      <SectionHead title="What Life knows" link="Change" onLink={() => nav.go('knows')} />
+      <RowsCard>
+        {k.income ? <Row icon="briefcase" title="Pay" sub={k.takeHome !== null ? `${show(k.income)} a year · about ${show(k.takeHome)} a month after tax` : `${show(k.income)} a year`} onPress={() => nav.go('income')} /> : null}
+        {k.payDay ? <Row icon="calendar" title="Pay day" sub={`The ${ordinalDay(k.payDay)} of the month`} /> : null}
+        {k.rent ? <Row icon="home" title="Rent" sub={`${show(k.rent.amount, 2)} a month`} /> : null}
+        {k.bills.map(b => <Row key={b.id} lead={<Letter ch={b.name.charAt(0)} />} title={b.name} sub={`${counted(b)}${b.dueDay ? ` · due the ${ordinalDay(b.dueDay)}` : ''}`} />)}
+        {k.subscriptions.length ? <Row icon="repeat" title="Subscriptions" sub={`${k.subscriptions.length} · ${show(subsMonthly, 2)} a month`} onPress={() => nav.go('subs')} /> : null}
+      </RowsCard>
+      <SectionHead title="More in Money" />
+      <RowsCard>
+        <Row icon="mic" title="Tell Life more" sub="Your pay day, a bill, a subscription" onPress={() => nav.go('talk')} />
+        <Row icon="shield" title="Connect your bank" sub={data.choices.bank ? `${data.choices.bank} chosen · read-only` : 'Read-only'} right={<Chip label="Preview" tone="q" />} onPress={() => nav.go('connectbank')} />
+      </RowsCard>
+      <Callout style={{ marginTop: space.md }}>Figures are the ones you’ve told Life. No bank is connected. Guidance, not advice.</Callout>
+    </Page>
+  );
+}
+
 /* ───────────────────────── Money: the hub ───────────────────────── */
 
 export function MoneyV26() {
+  return SHOW_SAMPLES ? <MoneySampleV26 /> : <MoneyRealV26 screen="money" title="Money" />;
+}
+
+/** A real account: Money from what it has told Life, or day one until it has told Life anything. */
+function MoneyRealV26({ screen, title }: { screen: ScreenKey; title?: string }) {
+  const known = useKnownMoney();
+  return known.any ? <MoneyKnownV26 screen={screen} known={known} /> : <MoneyNotYetV26 screen={screen} title={title} />;
+}
+
+function MoneySampleV26() {
   const nav = useNavigation(), { data, choose } = useSeed(), { show, hidden, eye } = useMoney(), subs = useSubscriptions();
   const f = seed.finance;
   const [whole, pence] = split(f.balance);
@@ -99,7 +211,7 @@ export function MoneyV26() {
         <Row icon="trend" title="Net worth" sub={`${show(netWorth)} · up ${show(f.netWorthGain)} this year`} onPress={() => nav.go('networth')} />
         <Row icon="shield" title="Connect your bank" sub={data.choices.bank ? `${data.choices.bank} chosen · read-only` : 'Read-only'} right={<Chip label="Preview" tone="q" />} onPress={() => nav.go('connectbank')} />
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Balances are the ones you’ve given life. No bank is connected. Guidance, not advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>Balances are the ones you’ve given Life. No bank is connected. Guidance, not advice.</Callout>
     </Page>
   );
 }
@@ -110,7 +222,8 @@ export function SubsV26() {
   const nav = useNavigation(), t = useTokens(), { data, set, flag } = useSeed(), { show } = useMoney(), s = useSubscriptions();
   const opened = (id: string) => !!data.flags[`cancel-opened-${id}`];
   const setCancelled = (id: string, cancelled: boolean) => {
-    set({ profile: { ...data.profile, subscriptions: s.all.map(x => x.id === id ? { ...x, cancelled } : x) } });
+    // Only what was already saved, and the one you changed, go onto the profile.
+    set({ profile: { ...data.profile, subscriptions: s.all.filter(x => x.id === id || (data.profile.subscriptions ?? []).some(p => p.id === x.id)).map(x => x.id === id ? { ...x, cancelled } : x) } });
     if (cancelled) feedback.cleared(); else feedback.select();
   };
   const cancel = (id: string) => {
@@ -119,15 +232,18 @@ export function SubsV26() {
   };
   const cancelled = s.all.filter(x => x.cancelled);
   return (
-    <Page screen="subs" bar={{ kind: 'push', title: 'Subscriptions', action: { kind: 'text', label: data.flags['subs-show-cancelled'] ? 'Hide cancelled' : 'Show cancelled', onPress: () => flag('subs-show-cancelled') } }}>
-      <Eyebrow>Checked every quarter</Eyebrow>
+    <Page screen="subs" bar={{ kind: 'push', title: 'Subscriptions', action: { kind: 'text', label: data.flags['subs-show-cancelled'] ? 'Active only' : 'Show all', onPress: () => flag('subs-show-cancelled') } }}>
+      <Eyebrow>{SHOW_SAMPLES ? 'Checked every quarter' : 'From what you’ve told Life'}</Eyebrow>
       {s.unused.length
         ? <Display s={`{${show(s.unusedMonthly * 12, 2)} a year} goes on ${word(s.unused.length).toLowerCase()} ${s.unused.length === 1 ? 'thing' : 'things'} you {haven’t used} in 60 days.`} />
-        : <Display s="{Everything you pay for,} you use." />}
+        : s.all.length && SHOW_SAMPLES ? <Display s="{Everything you pay for,} you use." />
+        // A real account: Life can't see what's used, so it only adds up what you pay.
+        : s.active.length ? <Display s={`{${show(s.monthly * 12, 2)} a year} goes on ${word(s.active.length).toLowerCase()} ${s.active.length === 1 ? 'subscription' : 'subscriptions'}.`} />
+        : <Display s="{Nothing here yet.} Subscriptions you tell Life about show here, with what each costs." />}
       <TintCard area="money" style={{ marginTop: space.xl }}>
         <Between><Text variant="title">Every month</Text><Text variant="title">{show(s.monthly, 2)}</Text></Between>
         <SplitBar style={{ marginTop: space.sm }} parts={[{ flex: Math.max(1, s.inUseMonthly), color: t.ink }, ...(s.unusedMonthly ? [{ flex: s.unusedMonthly, color: t.ember }] : [])]} />
-        <Between style={{ marginTop: space.xs }}><Text variant="callout" tone="ink2">{`In use ${show(s.inUseMonthly, 2)}`}</Text>{s.unusedMonthly ? <Text variant="callout" tone="ember">{`Not used ${show(s.unusedMonthly, 2)}`}</Text> : null}</Between>
+        <Between style={{ marginTop: space.xs }}><Text variant="callout" tone="ink2">{SHOW_SAMPLES ? `In use ${show(s.inUseMonthly, 2)}` : `${word(s.active.length)} you’ve told Life about`}</Text>{s.unusedMonthly ? <Text variant="callout" tone="ember">{`Not used ${show(s.unusedMonthly, 2)}`}</Text> : null}</Between>
       </TintCard>
       {s.unused.length ? <>
         <SectionHead title="Not being used" link={`${show(s.unusedMonthly, 2)} a month`} />
@@ -149,15 +265,15 @@ export function SubsV26() {
           </View>
         </Box>
       </> : null}
-      <SectionHead title="Still in use" link={`${show(s.inUseMonthly, 2)} a month`} />
+      <SectionHead title={SHOW_SAMPLES ? 'Still in use' : 'What you pay for'} link={`${show(s.inUseMonthly, 2)} a month`} />
       <RowsCard>
-        {s.inUse.map(x => <Row key={x.id} lead={<Letter ch={x.name.charAt(0)} />} title={x.name} sub={seedSubscriptionDetails[x.id] ?? 'Renews next month'} end={show(x.monthlyCost, 2)} endStrong onPress={() => { if (cancelPages[x.id]) void Linking.openURL(cancelPages[x.id]); }} />)}
+        {s.inUse.map(x => <Row key={x.id} lead={<Letter ch={x.name.charAt(0)} />} title={x.name} sub={seedSubscriptionDetails[x.id] ?? (SHOW_SAMPLES ? 'Renews next month' : 'You told Life about this')} end={show(x.monthlyCost, 2)} endStrong onPress={() => { if (cancelPages[x.id]) void Linking.openURL(cancelPages[x.id]); }} />)}
       </RowsCard>
       {cancelled.length && data.flags['subs-show-cancelled'] ? <>
         <SectionHead title="Cancelled" link={`${show(sum(cancelled.map(x => x.monthlyCost)) * 12, 2)} a year kept`} />
         <RowsCard>{cancelled.map(x => <Row key={x.id} lead={<Letter ch={x.name.charAt(0)} />} title={x.name} sub="Marked cancelled by you" right={<Chip label="Undo" onPress={() => setCancelled(x.id, false)} />} />)}</RowsCard>
       </> : null}
-      <Callout style={{ marginTop: space.md }}>life opens the provider’s cancel page. Nothing is cancelled without you.</Callout>
+      <Callout style={{ marginTop: space.md }}>{SHOW_SAMPLES ? 'Life opens the provider’s cancel page. Nothing is cancelled without you.' : 'Nothing is cancelled without you.'}</Callout>
     </Page>
   );
 }
@@ -165,6 +281,10 @@ export function SubsV26() {
 /* ───────────────────────── Area: Money ───────────────────────── */
 
 export function AreaMoneyV26() {
+  return SHOW_SAMPLES ? <AreaMoneySampleV26 /> : <MoneyRealV26 screen="area" />;
+}
+
+function AreaMoneySampleV26() {
   const nav = useNavigation(), t = useTokens(), { data, set } = useSeed(), { show } = useMoney(), subs = useSubscriptions(), accent = useAreaTint('money').accent;
   const f = seed.finance, cp = f.cashplan;
   const safe = cp.comingIn - cp.essentialBills - cp.taxSetAside;
@@ -187,7 +307,7 @@ export function AreaMoneyV26() {
         <Row icon="wallet" title="Money and ledger" sub={`${show(f.balance, 2)} across ${f.accounts.length} accounts`} onPress={() => nav.go('money')} />
         <Row icon="repeat" title="Subscriptions" sub={`${show(subs.monthly, 2)} a month`} onPress={() => nav.go('subs')} />
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Progress, not a score. life works it out from what you’ve told it.</Callout>
+      <Callout style={{ marginTop: space.md }}>Progress, not a score. Life works it out from what you’ve told it.</Callout>
     </Page>
   );
 }
@@ -196,7 +316,13 @@ export function AreaMoneyV26() {
 
 const CATEGORIES = ['Groceries', 'Eating out', 'Transport', 'Bills', 'Income', 'Subscriptions'] as const;
 
-export function TxnV26() {
+/* The pages behind Money are the sample life's too; a real account reaching one (a deep link) sees Money's day one. */
+export function TxnV26() { return SHOW_SAMPLES ? <TxnSampleV26 /> : <MoneyNotYetV26 screen="txn" title="Payment" />; }
+export function BillV26() { return SHOW_SAMPLES ? <BillSampleV26 /> : <MoneyNotYetV26 screen="bill" title="Bills" />; }
+export function BudgetV26() { return SHOW_SAMPLES ? <BudgetSampleV26 /> : <MoneyNotYetV26 screen="budget" title="Budget" />; }
+export function NetWorthV26() { return SHOW_SAMPLES ? <NetWorthSampleV26 /> : <MoneyNotYetV26 screen="networth" title="Net worth" />; }
+
+function TxnSampleV26() {
   const { data, choose, flag } = useSeed(), { show } = useMoney();
   const f = seed.finance;
   const i = data.choices.transaction !== undefined ? Number(data.choices.transaction) : -1;
@@ -230,14 +356,14 @@ export function TxnV26() {
         {isShop ? <PickRow label="Repeats" value="About weekly" set /> : <PickRow label="Recorded as" value={x.detail} set />}
       </View>
       {data.flags['txn-category-edit'] ? <FilterChips wrap options={CATEGORIES.map(v => ({ value: v, label: v }))} value={category as (typeof CATEGORIES)[number]} onChange={v => { choose(`category-${x.name}`, v); flag('txn-category-edit', false); feedback.select(); }} style={{ marginTop: space.sm }} /> : null}
-      <Callout center style={{ marginTop: space.sm }}>{split2 ? 'Split saved on this phone. Nothing is sent to Sam.' : 'Change the category once and life remembers.'}</Callout>
+      <Callout center style={{ marginTop: space.sm }}>{split2 ? 'Split saved on this phone. Nothing is sent to Sam.' : 'Change the category once and Life remembers.'}</Callout>
     </Page>
   );
 }
 
 /* ───────────────────────── A bill ───────────────────────── */
 
-export function BillV26() {
+function BillSampleV26() {
   const nav = useNavigation(), { data, set } = useSeed(), { show, hidden } = useMoney();
   const f = seed.finance;
   const alone = data.profile.householdSize === 1;
@@ -253,7 +379,7 @@ export function BillV26() {
         <Chip label={alone ? `You could pay ${show(saving)} less a month` : 'Check your household discount'} tone="live" />
         <Statement s={alone ? 'You live alone, so the {25% single person discount} applies.' : 'You share your home, so the {single person discount} may not apply.'} style={{ marginTop: space.sm }} />
         <LifeSays style={{ marginTop: space.md }}>I’ll fill in the council’s form, show it to you, then send it and watch for the reply.</LifeSays>
-        <Btn label={alone ? 'Claim it for me' : 'Check with life'} onPress={() => { set({ selectedMission: 'uk-single-person-council' }); nav.go('mission'); }} style={{ marginTop: space.md }} />
+        <Btn label={alone ? 'Claim it for me' : 'Check with Life'} onPress={() => { set({ selectedMission: 'uk-single-person-council' }); nav.go('mission'); }} style={{ marginTop: space.md }} />
         <Callout center style={{ marginTop: space.sm }}>{`About ${show(f.councilTaxMonthly - saving)} a month if the council agrees. Nothing is sent without your OK.`}</Callout>
       </Box>
       <Box style={{ marginTop: space.sm }}>
@@ -261,14 +387,14 @@ export function BillV26() {
         <DotGrid cells={Array(12).fill('on') as DotCell[]} columns={12} style={{ marginTop: space.md }} label="12 payments made, one each month" />
         <View style={[styles.months, { marginTop: space.xs }]}>{'DJFMAMJJASON'.split('').map((m, k) => <Text key={k} variant="micro" tone="ink2" style={{ flex: 1, textAlign: 'center' }}>{m}</Text>)}</View>
       </Box>
-      <Callout style={{ marginTop: space.md }}>An estimate from what you’ve told life. Your council decides. Guidance, not advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>An estimate from what you’ve told Life. Your council decides. Guidance, not advice.</Callout>
     </Page>
   );
 }
 
 /* ───────────────────────── Budget ───────────────────────── */
 
-export function BudgetV26() {
+function BudgetSampleV26() {
   const { data, flag, choose } = useSeed(), { show } = useMoney(), t = useTokens();
   const f = seed.finance;
   const editing = !!data.flags['budget-edit'];
@@ -302,14 +428,14 @@ export function BudgetV26() {
       <RowsCard>
         {covered.map(b => <Row key={b.name} photo={b.name === 'Rent' ? photos.terrace : photos.payslip} title={b.name} sub={`${show(b.spent)} of ${show(b.limit)}`} right={<Chip label={b.spent >= b.limit ? 'Covered' : 'Filling'} tone={b.spent >= b.limit ? 'done' : 'q'} />} />)}
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Worked out from the payments you’ve given life. Guidance, not advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>Worked out from the payments you’ve given Life. Guidance, not advice.</Callout>
     </Page>
   );
 }
 
 /* ───────────────────────── Net worth ───────────────────────── */
 
-export function NetWorthV26() {
+function NetWorthSampleV26() {
   const t = useTokens(), { show, eye } = useMoney(), accent = useAreaTint('money').accent;
   const f = seed.finance;
   const total = sum(f.netWorth.map(n => n.amount));
@@ -340,7 +466,7 @@ export function NetWorthV26() {
         </View>
         {owe.some(n => /student/i.test(n.name)) ? <Callout style={{ marginTop: 2 }}>The student loan doesn’t act like debt. Repayments move with what you earn.</Callout> : null}
       </Box>
-      <Callout style={{ marginTop: space.md }}>Pensions and property count. Values are the last ones you gave life. Guidance, not advice.</Callout>
+      <Callout style={{ marginTop: space.md }}>Pensions and property count. Values are the last ones you gave Life. Guidance, not advice.</Callout>
     </Page>
   );
 }
@@ -358,9 +484,9 @@ export function ConnectBankV26() {
       </>}>
       <View style={[styles.shield, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><Icon name="shield" size={24} color={t.ink} /></View>
       <Display s="See {all your money} in one place." style={{ marginTop: space.md }} />
-      <Body s="Read-only, through a regulated Open Banking provider. {This is a preview:} connecting isn’t switched on yet. life keeps your choice and asks when it is." style={{ marginTop: space.xs }} />
+      <Body s="Read-only, through a regulated Open Banking provider. {This is a preview:} connecting isn’t switched on yet. Life keeps your choice and asks when it is." style={{ marginTop: space.xs }} />
       <RowsCard style={{ marginTop: space.lg }}>
-        <Row icon="eye" title="Read-only" sub="life can’t move money" />
+        <Row icon="eye" title="Read-only" sub="Life can’t move money" />
         <Row icon="shield" title="Your login stays with your bank" sub="You approve in your bank’s app" />
         <Row icon="clock" title="Ends after 90 days" sub="Renew in one tap" />
       </RowsCard>
@@ -400,7 +526,7 @@ export function VaultV26() {
   return (
     <Page screen="vault" bar={{ kind: 'push', action: { kind: 'node', node: <View style={styles.acts}><RoundButton icon="search" label="Search documents" onPress={() => nav.go('search')} /><RoundButton icon="add" label="Add a document" onPress={() => nav.go('scan')} /></View> } }}>
       <Eyebrow>Documents and renewals</Eyebrow>
-      <Display s={`{${word(act.length)}} to act on. {${word(sorted.length)}} sorted.`} />
+      <Display s={docs.length ? `{${act.length ? word(act.length) : 'Nothing'}} to act on. {${sorted.length ? word(sorted.length) : 'Nothing'}} sorted.` : '{Nothing here yet.} Your documents and renewals, with their dates.'} />
       {front ? (
         <PeekStack style={{ marginTop: space.xl }} peeks={soon.slice(0, 2).map((d, k) => ({ left: `${d.name} · ${d.summary.charAt(0).toLowerCase()}${d.summary.slice(1)}`, right: String(3 - k), onPress: () => open(d.id) }))}>
           <Box pad={0} style={{ overflow: 'hidden' }}>
@@ -413,7 +539,7 @@ export function VaultV26() {
             </View>
           </Box>
         </PeekStack>
-      ) : <Callout style={{ marginTop: space.lg }}>Nothing to act on. Scan a letter or a document and life keeps its dates for you.</Callout>}
+      ) : <Callout style={{ marginTop: space.lg }}>Nothing to act on. Scan a letter or a document and Life keeps its dates for you.</Callout>}
       {sorted.length ? <SectionHead title="Filed" link={`${sorted.length} sorted`} /> : null}
       {passport ? <PhotoCard source={photos.passport} focal={{ y: 0.83 }} height={170} size="md" chips={[`In ${monthsTo(docDates.passport)} months`]} chipRight={{ label: 'Copy saved', icon: 'check' }} title="Passport" sub={passport.summary} onPress={() => open('passport')} /> : null}
       {others.length ? <RowsCard style={{ marginTop: space.sm }}>
@@ -427,7 +553,24 @@ export function VaultV26() {
   );
 }
 
-export function DocDetailV26() {
+/**
+ * A real account's document or renewal (fix F-64). Documents start empty, so these pages are only reached from a link
+ * elsewhere; they show the day-one shape, never the sample's passport or car insurance.
+ */
+function DocsNotYetV26({ screen, title }: { screen: ScreenKey; title: string }) {
+  const nav = useNavigation();
+  return (
+    <NotYetV26 screen={screen} title={title} eyebrow="Documents · day one" line="Life keeps the dates on your documents and renewals once you tell it about them."
+      source="letter" focal={{ y: 0.6 }} ask="Tell Life about a document" examples="Your passport’s expiry, a renewal letter, your MOT.">
+      <Btn label="Scan a document" icon="camera" ghost onPress={() => nav.go('scan')} style={{ marginTop: space.md }} />
+    </NotYetV26>
+  );
+}
+
+export function DocDetailV26() { return SHOW_SAMPLES ? <DocDetailSampleV26 /> : <DocsNotYetV26 screen="docdetail" title="Document" />; }
+export function RenewalV26() { return SHOW_SAMPLES ? <RenewalSampleV26 /> : <DocsNotYetV26 screen="renewal" title="Renewal" />; }
+
+function DocDetailSampleV26() {
   const nav = useNavigation(), t = useTokens(), { data, flag } = useSeed();
   const doc = seedDocuments.find(d => d.id === data.choices.document) ?? seedDocuments.find(d => d.id === 'passport')!;
   const passport = doc.id === 'passport';
@@ -443,7 +586,7 @@ export function DocDetailV26() {
       removed ? { label: 'Undo removal', icon: 'repeat', onPress: () => flag(`document-removed-${doc.id}`, false) } : { label: 'Remove this copy', icon: 'trash', destructive: true, onPress: () => flag(`document-removed-${doc.id}`, true) },
     ] } }}>
       <BigPhoto source={passport ? photos.passport : photos.letter} focal={{ y: passport ? 1 : 0.6 }} height={300} chip={`Expires ${doc.expires}`} chipRight={removed ? undefined : { label: 'Copy saved', icon: 'check' }}
-        figure={months !== undefined ? `${months} months` : doc.expires} sub={months !== undefined ? `left on your ${doc.name.toLowerCase()}. ${months > renewMonths ? 'Nothing to do yet.' : 'Time to renew.'}` : 'The date life keeps for you.'} style={{ marginTop: space.xxs }} />
+        figure={months !== undefined ? `${months} months` : doc.expires} sub={months !== undefined ? `left on your ${doc.name.toLowerCase()}. ${months > renewMonths ? 'Nothing to do yet.' : 'Time to renew.'}` : 'The date Life keeps for you.'} style={{ marginTop: space.xxs }} />
       {months !== undefined ? <Box style={{ marginTop: space.sm }}>
         <Between><Text variant="title">The countdown</Text><Text variant="callout" tone="ink2">one dot a month</Text></Between>
         <DotGrid cells={cells} columns={Math.max(cells.length, 12)} style={{ marginTop: space.md }} label={`${months} months left, renew in the last ${renewMonths}`} />
@@ -452,7 +595,7 @@ export function DocDetailV26() {
       <SectionHead title="When to act" />
       <Timeline items={[
         { when: 'YOUR COPY', text: removed ? 'Copy removed from this phone.' : passport ? 'Photo page saved on this phone.' : 'Saved on this phone.', state: 'done' },
-        { when: doc.actFrom.toUpperCase(), text: reminder ? 'life will remind you.' : 'No reminder. You’ll keep track.', state: 'now', children: (
+        { when: doc.actFrom.toUpperCase(), text: reminder ? 'Life will remind you.' : 'No reminder. You’ll keep track.', state: 'now', children: (
           <Box pad={space.md} style={{ marginTop: space.sm }}>
             <Between><Text variant="title">{reminder ? 'Reminder set' : 'Reminder off'}</Text><SwitchV26 value={reminder} onChange={v => { flag(`document-reminder-${doc.id}`, v); feedback.select(); }} accessibilityLabel={`Remind me in ${doc.actFrom}`} /></Between>
             <Callout style={{ marginTop: space.xs }}>{passport ? 'Six months before expiry, with time to spare for summer travel.' : 'With time to compare and book.'}</Callout>
@@ -466,7 +609,7 @@ export function DocDetailV26() {
   );
 }
 
-export function RenewalV26() {
+function RenewalSampleV26() {
   const nav = useNavigation(), { data, flag } = useSeed(), { show } = useMoney();
   const steps = [
     { key: 'renew-compare', label: 'Compare quotes', sub: 'From 22 January' },
@@ -477,7 +620,7 @@ export function RenewalV26() {
   return (
     <Page screen="renewal" bar={{ kind: 'push', action: { kind: 'icon', icon: 'info', label: 'Why this shows here', onPress: () => nav.go('why') } }}
       footer={<>
-        <Btn label={looking ? 'life looks from 22 Jan' : 'Compare quotes'} icon={looking ? 'check' : 'search'} onPress={() => { flag('renew-look'); feedback.select(); }} />
+        <Btn label={looking ? 'Life looks from 22 Jan' : 'Compare quotes'} icon={looking ? 'check' : 'search'} onPress={() => { flag('renew-look'); feedback.select(); }} />
         <Callout center>Guidance, not advice. Nothing switches without you.</Callout>
       </>}>
       <Eyebrow right={<Chip label="Best window" tone="live" />}>Car insurance · renews 14 February</Eyebrow>
@@ -488,7 +631,7 @@ export function RenewalV26() {
           <Text variant="callout" tone="ink2">A better quote</Text>
           <View style={{ marginTop: 22 }}><LifeOrb size={44} state={looking ? 'searching' : 'ring'} /></View>
           <View style={{ flex: 1 }} />
-          <Text variant="callout" tone="ink2">{looking ? 'life starts looking on 22 Jan and shows you what it finds. You choose.' : 'Not found yet. life looks from 22 Jan, when you say. You choose.'}</Text>
+          <Text variant="callout" tone="ink2">{looking ? 'Life starts looking on 22 Jan and shows you what it finds. You choose.' : 'Not found yet. Life looks from 22 Jan, when you say. You choose.'}</Text>
         </TintCard>
       </PhotoGrid>
       <Callout style={{ marginTop: space.sm }}>Prices are usually lowest around three weeks before renewal.</Callout>

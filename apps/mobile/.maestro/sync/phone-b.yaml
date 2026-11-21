@@ -1,0 +1,23 @@
+# Two-phone sync, phone B: set up, sign in to the same account, and find the person phone A added.
+appId: app.life.os
+name: Sync, phone B
+---
+- launchApp:
+    clearState: true
+- runFlow: ../common/setup-to-signin.yaml
+- runFlow: ../common/sign-in-email.yaml
+- runFlow: ../common/finish-setup.yaml
+- tapOn: "You"
+- scrollUntilVisible:
+    element:
+      text: "People and dates.*"
+- tapOn: "People and dates.*"
+- runFlow:
+    when:
+      visible: "See all \\d+"
+    commands:
+      - tapOn: "See all \\d+"
+- scrollUntilVisible:
+    element:
+      text: "${PERSON}.*"
+    timeout: 30000
