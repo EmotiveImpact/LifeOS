@@ -8,8 +8,8 @@ import { useCalmMotion, useTokens } from '../theme';
  * Original ring, Fibonacci sphere, clockwork, searching web, voice and spring gather.
  * Geometry and animation run on Reanimated's UI thread; no JS animation timer. */
 /** `news` and `rest` belong to the orb in the top bar (Edem, 21 Nov 2026). Both hold the ring still with the first
- * dot at the top, so each dot keeps its area's place. `rest` breathes slowly. `news` stays still while the dots of the
- * areas with something new light up red and pulse one after another. */
+ * dot at the top, so each dot keeps its area's place, and both breathe slowly. In `news` the dots of the areas with
+ * something new also light up red and pulse one after another. */
 export type OrbState = 'ring' | 'thinking' | 'working' | 'searching' | 'listening' | 'done' | 'voice' | 'news' | 'rest';
 type Point = { x: number; y: number; z: number; alpha: number; scale: number };
 const STATES = ['ring', 'thinking', 'working', 'searching', 'listening', 'done', 'news', 'rest'] as const;
@@ -38,17 +38,15 @@ function target(state: number, k: number, r: number, t: number, spin: number, vo
   const ring = { x: Math.cos(a) * r, y: Math.sin(a) * r, z: .5, alpha: k < 10 ? tail : 0, scale: 1 };
   if (state === 0 || state === 5) return ring;
   if (state === 6 || state === 7) {
-    // The top bar: still, first dot at twelve o'clock, so a dot's place is its area.
+    // The top bar: still, first dot at twelve o'clock, so a dot's place is its area. Both states breathe; with
+    // something new, the lit dots also pulse red one after another on top of the breath (Edem, 21 Nov).
     const b = i / 10 * Math.PI * 2 - Math.PI / 2;
-    if (state === 7) {
-      const breath = .5 - .5 * Math.cos(t / BREATH_S * Math.PI * 2), rr = r * (.84 + .16 * breath);
-      return { x: Math.cos(b) * rr, y: Math.sin(b) * rr, z: .5, alpha: k < 10 ? .4 + .32 * breath : 0, scale: .9 + .1 * breath };
-    }
-    const at = k < 10 ? marks.indexOf(i) : -1;
-    if (at < 0) return { x: Math.cos(b) * r, y: Math.sin(b) * r, z: .5, alpha: k < 10 ? .42 : 0, scale: .92 };
+    const breath = .5 - .5 * Math.cos(t / BREATH_S * Math.PI * 2), rr = r * (.84 + .16 * breath);
+    const at = state === 6 && k < 10 ? marks.indexOf(i) : -1;
+    if (at < 0) return { x: Math.cos(b) * rr, y: Math.sin(b) * rr, z: .5, alpha: k < 10 ? .4 + .32 * breath : 0, scale: .9 + .1 * breath };
     const cycle = marks.length * PULSE_S + PAUSE_S, inCycle = t % cycle, turn = Math.floor(inCycle / PULSE_S);
     const env = turn === at ? Math.pow(Math.sin((inCycle - at * PULSE_S) / PULSE_S * Math.PI), 2) : 0;
-    return { x: Math.cos(b) * r, y: Math.sin(b) * r, z: 1, alpha: .9 + .1 * env, scale: 1.18 + .6 * env };
+    return { x: Math.cos(b) * rr, y: Math.sin(b) * rr, z: 1, alpha: .9 + .1 * env, scale: 1.12 + .06 * breath + .6 * env };
   }
   if (state === 2) {
     if (k < 10) { const b = a + t / 12 * Math.PI * 2 * 1.2; return { ...ring, x: Math.cos(b) * r, y: Math.sin(b) * r }; }

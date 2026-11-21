@@ -403,7 +403,7 @@ export function OrbV26() {
         ))}
       </View>
       <OrbAreas />
-      <Callout style={{ marginTop: space.sm }}>The everyday ring takes 12 seconds a lap. In the top bar the ring holds still, first dot at the top. With Reduce Motion nothing pulses; the red dots simply stay lit.</Callout>
+      <Callout style={{ marginTop: space.sm }}>The everyday ring takes 12 seconds a lap. In the top bar the ring holds its place, first dot at the top, and breathes. With Reduce Motion nothing pulses; the red dots simply stay lit.</Callout>
     </Page>
   );
 }
