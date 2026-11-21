@@ -277,7 +277,6 @@ export type PageProps = {
   /** Centre the content in the space between bar and foot (focus, states). */
   center?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
-  onPull?: () => void;
   /** Dark status bar text over a light photograph (board `status('lt-ink')`). */
   statusInk?: boolean;
   /** Called as you scroll near the bottom, so a long list (`useLongList`) can draw its next page. */
@@ -288,7 +287,7 @@ export type PageProps = {
  * One V26 screen: the bar fixed outside the scroll, content with the board's 4/20/28 padding and no automatic gaps
  * (each block sets its own space above, as the board does), then the foot.
  */
-export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, onPull, statusInk, onEnd }: PageProps) {
+export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, statusInk, onEnd }: PageProps) {
   const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets(), calm = useCalmMotion();
   const meta = screens[screen];
   const web = Platform.OS === 'web';
@@ -340,10 +339,9 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
   const content = <Depth.Provider value={meta.kind === 'Tab' ? 'root' : meta.kind === 'Push' || sheet ? 'detail' : 'moment'}>{children}</Depth.Provider>;
   const body = scroll
     ? <ScrollView style={fits && fit.web ? { flexGrow: 0, flexShrink: 1, minHeight: 0 } : { flex: 1, minHeight: 0 }} contentInsetAdjustmentBehavior="never" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
-        onScroll={onPull || onEnd ? e => {
+        onScroll={onEnd ? e => {
           const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
-          if (onPull && contentOffset.y < -60) onPull();
-          if (onEnd && contentOffset.y + layoutMeasurement.height > contentSize.height - END_REACH) onEnd();
+          if (contentOffset.y + layoutMeasurement.height > contentSize.height - END_REACH) onEnd();
         } : undefined} scrollEventThrottle={16}
         onContentSizeChange={fits ? (_w, h) => fit.part('body', h) : undefined}
         contentContainerStyle={[pad, center ? { flexGrow: 1, justifyContent: 'center' } : null, contentStyle]}>{content}</ScrollView>

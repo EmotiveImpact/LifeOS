@@ -180,7 +180,7 @@ export function TodayV26() {
   const aimPct = Math.round(seed.finance.deposit / seed.finance.depositGoal * 100);
 
   return (
-    <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions: todayActions(() => setSearching(true)) }} onPull={() => setSearching(true)}>
+    <Page screen="today" bar={{ kind: 'root', title: 'Today', sub: shortDate(now), actions: todayActions(() => setSearching(true)) }}>
       <Between>
         <Text variant="callout" tone="ink2" numberOfLines={1} style={{ flexShrink: 1 }}>{`${greeting}, ${data.profile.name}`}</Text>
         <Chip label={`Level ${level} · ${levelName}`} onPress={() => nav.go('levels')} />

@@ -731,7 +731,7 @@ Reduce Motion: springs become 160ms fades, drift and particles stop, and shared 
 ## 46. The top bar (final): it never moves
 - **The header is fixed.** Same place and same height on every screen of its kind. Only the content scrolls underneath. No collapsing large titles, no titles fading in, no bar sliding away, no hairline appearing on scroll. (`TopBar.tsx`, sits outside the ScrollView.)
 - **Which bar is decided by how the screen opened:**
-  - **Root** (Today, Plan, You): eyebrow + large title on the left, at most two icon buttons on the right. Today: search, From life (bell). Plan: add. You: your avatar, settings.
+  - **Root** (Today, Plan, You): eyebrow + large title on the left, at most two icon buttons on the right. Today: search, From life (bell). Plan: add. You: your avatar, settings. Search opens only from its button, never by pulling down or scrolling the page (Edem, 21 Nov 2026).
   - **Push**: back · centred title · **one** smart action or nothing. Edit on a person or profile, ⓘ on any score, + on a list, Share on a recap, ⋯ only for objects with several actions (mission, bill, chat, document).
   - **Sheet**: grabber, title on the left, close (or one text action like Done) on the right.
   - **Full-screen flow**: close · progress · step count (onboarding, lessons, tests, focus).
