@@ -23,6 +23,13 @@ const SHOTS = [
   { name: '7-plan', path: '/plan', caption: 'An Aim, and the steps to it' },
   { name: '8-privacy', path: '/you/settings/privacy', caption: 'Your data stays yours' },
 ];
+// The phone's clock in the shots: 08:10 this morning in London, so the meal reads as breakfast and Today as morning
+// whatever time the shots are taken (Phase 31's set said "Breakfast · 00:56").
+function morningInLondon(now = new Date()) {
+  const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(now);
+  const noon = Number(new Date(`${day}T12:00:00Z`).toLocaleString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', hourCycle: 'h23' }));
+  return new Date(Date.parse(`${day}T08:10:00Z`) - (noon - 12) * 3600000);
+}
 const STATE = { onboardingDone: true, choices: { appearance: 'System' }, prefs: { dark: false }, flags: { 'memory-hint-seen': true } };
 // The app's light tokens (src/design/tokens.ts) and its typeface.
 const INK = '#0D0E10', INK2 = '#5C6068', CANVAS = '#F7F7F8', EMBER = '#E5532B';
@@ -55,6 +62,7 @@ function feature() {
   const browser = await chromium.launch();
   const app = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, colorScheme: 'light', reducedMotion: 'reduce', timezoneId: 'Europe/London', locale: 'en-GB' });
   await app.addInitScript(state => { try { localStorage.setItem('life_track_a_v17', JSON.stringify(state)); } catch {} }, STATE);
+  await app.clock.setFixedTime(morningInLondon());
   const raws = {};
   for (const shot of SHOTS) {
     const page = await app.newPage();

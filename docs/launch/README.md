@@ -28,4 +28,4 @@ The privacy policy, terms and support page are written once, here. `bun apps/sit
 
 ## Store screenshots
 
-`apps/mobile/scripts/store-shots.cjs` captures the app's own screens from the release web build with the sample life and frames them at App Store and Play sizes. The current set is in `review/phase-31/store/`.
+`apps/mobile/scripts/store-shots.cjs` captures the app's own screens from the release web build with the sample life and frames them at App Store and Play sizes. The current set is in `review/phase-31/store/` (retaken on 21 November with the clock fixed at 08:10, see `review/fix-store-shots/NOTES.md`).
