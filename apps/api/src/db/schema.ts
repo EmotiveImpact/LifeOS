@@ -211,4 +211,26 @@ export const authLimits = pgTable('auth_limits', {
   window_start: timestamp('window_start', { withTimezone: true }).notNull().defaultNow(),
 }, t => [index('auth_limits_window').on(t.window_start)]);
 
+/**
+ * Life's own record of each person's subscription (fix F-20), kept from RevenueCat's webhook. It holds the store, the
+ * product and dates, never a price, receipt, card or country. No row-level security, like `account_closures`: the
+ * webhook writes it for whoever RevenueCat names, with no session. Deleting the account deletes the row.
+ */
+export const subscriptions = pgTable('subscriptions', {
+  user_id: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  product: text('product').notNull(),
+  /** RevenueCat's period type: TRIAL, INTRO, NORMAL, PROMOTIONAL or PREPAID. */
+  period: text('period').notNull(),
+  /** APP_STORE, PLAY_STORE and so on. */
+  store: text('store').notNull(),
+  sandbox: boolean('sandbox').notNull().default(false),
+  /** When access ends; null only for a purchase that never expires. */
+  expires_at: timestamp('expires_at', { withTimezone: true }),
+  renews: boolean('renews').notNull().default(true),
+  billing_issue: boolean('billing_issue').notNull().default(false),
+  /** The newest event applied, so an older one arriving late can't undo it. */
+  event_at: timestamp('event_at', { withTimezone: true }).notNull(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const userTables = [...Object.keys(phoneTables), 'devices', 'sync_ops', 'oauth_tokens', 'ai_usage', 'files'] as const;

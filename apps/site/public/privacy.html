@@ -93,7 +93,7 @@
     <li><strong>Notifications.</strong> If you allow them, Life sends at most one nudge a day, plus deadlines you ask for. To reach your phone, our server sends the nudge through Expo's notification service to Apple or Google. A nudge never names a money or health matter, so what shows on a locked screen stays general.</li>
     </ul>
     <h2>Payments</h2>
-    <p>[When billing is built:] Life is a paid app with a free trial. Apple or Google takes the payment, and we never see your card. We use RevenueCat to check that your subscription is active. RevenueCat receives an anonymous number for your account and the receipt from Apple or Google, and keeps a history of your purchases. Apple and Google handle payments under their own privacy policies.</p>
+    <p>[When billing is built:] Life is a paid app with a free trial. Apple or Google takes the payment, and we never see your card. We use RevenueCat to check that your subscription is active. RevenueCat receives a random number that stands for your account (never your name or email) and the receipt from Apple or Google, and keeps a history of your purchases. RevenueCat then tells our server what changed, and our server keeps a short record so it knows whether your trial or subscription is active: the plan, the store, when it ends and whether it renews. That record holds no price, card or receipt. Apple and Google handle payments under their own privacy policies.</p>
     <h2>Why we are allowed to use your data</h2>
     <p>UK data protection law says we must have a lawful basis for each use. Ours are:</p>
     <table>
@@ -150,6 +150,7 @@
     <tr><td>Photos only needed for reading</td><td>Deleted once read, and within a day at most</td></tr>
     <tr><td>Kept letters and documents</td><td>Until you delete them or your account</td></tr>
     <tr><td>The cost ledger for AI requests</td><td>While your account is open</td></tr>
+    <tr><td>Your subscription record (plan, store, when it ends)</td><td>While your account is open</td></tr>
     <tr><td>Wearable access keys</td><td>Until you disconnect, or delete your account</td></tr>
     <tr><td>Crash reports</td><td>[90] days</td></tr>
     <tr><td>Emails to support</td><td>[Two years] after we last hear from you</td></tr>

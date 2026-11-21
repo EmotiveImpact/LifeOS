@@ -424,7 +424,7 @@ export const privacyPolicy: LegalDoc = {
     },
     {
       "kind": "text",
-      "text": "[When billing is built:] Life is a paid app with a free trial. Apple or Google takes the payment, and we never see your card. We use RevenueCat to check that your subscription is active. RevenueCat receives an anonymous number for your account and the receipt from Apple or Google, and keeps a history of your purchases. Apple and Google handle payments under their own privacy policies."
+      "text": "[When billing is built:] Life is a paid app with a free trial. Apple or Google takes the payment, and we never see your card. We use RevenueCat to check that your subscription is active. RevenueCat receives a random number that stands for your account (never your name or email) and the receipt from Apple or Google, and keeps a history of your purchases. RevenueCat then tells our server what changed, and our server keeps a short record so it knows whether your trial or subscription is active: the plan, the store, when it ends and whether it renews. That record holds no price, card or receipt. Apple and Google handle payments under their own privacy policies."
     },
     {
       "kind": "heading",
@@ -608,6 +608,10 @@ export const privacyPolicy: LegalDoc = {
         ],
         [
           "The cost ledger for AI requests",
+          "While your account is open"
+        ],
+        [
+          "Your subscription record (plan, store, when it ends)",
           "While your account is open"
         ],
         [

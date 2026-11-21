@@ -43,6 +43,14 @@ const schema = z.object({
   OURA_CLIENT_SECRET: unsetIfBlank(z.string().min(1).optional()),
   /** The API's public address for wearable sign-in redirects; BETTER_AUTH_URL when unset. */
   PUBLIC_URL: unsetIfBlank(z.string().url().optional()),
+  /** RevenueCat's webhook signing secret (fix F-20). Without it the webhook answers 503 and nothing needs a subscription. */
+  REVENUECAT_WEBHOOK_SECRET: unsetIfBlank(z.string().min(16, 'at least 16 characters').optional()),
+  /** The RevenueCat entitlement that unlocks Life; `life` when unset. */
+  REVENUECAT_ENTITLEMENT: unsetIfBlank(z.string().min(1).optional()),
+  /** `1` once the stores and RevenueCat are live: the routes that cost money then need a trial or a subscription. */
+  BILLING_ENFORCED: unsetIfBlank(z.enum(['0', '1']).default('0')),
+  /** `1` to count sandbox purchases (TestFlight, Play's internal testing). Never in production. */
+  BILLING_SANDBOX: unsetIfBlank(z.enum(['0', '1']).default('0')),
   PORT: z.coerce.number().int().positive().default(8787),
 });
 
@@ -62,5 +70,15 @@ export function wearableApps(env: Env) {
   return {
     ...(env.WHOOP_CLIENT_ID && env.WHOOP_CLIENT_SECRET ? { whoop: { clientId: env.WHOOP_CLIENT_ID, clientSecret: env.WHOOP_CLIENT_SECRET } } : {}),
     ...(env.OURA_CLIENT_ID && env.OURA_CLIENT_SECRET ? { oura: { clientId: env.OURA_CLIENT_ID, clientSecret: env.OURA_CLIENT_SECRET } } : {}),
+  };
+}
+
+/** RevenueCat's webhook and the subscription check (`src/billing.ts`). */
+export function billingFromEnv(env: Env) {
+  return {
+    webhookSecret: env.REVENUECAT_WEBHOOK_SECRET,
+    entitlement: env.REVENUECAT_ENTITLEMENT,
+    enforce: env.BILLING_ENFORCED === '1',
+    sandbox: env.BILLING_SANDBOX === '1',
   };
 }

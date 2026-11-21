@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DeleteBody, FileIdBody, PushBody, SignBody, closeAccount, deleteFile, exportAccount, purgeClosedAccounts, registerPush, sameSecret, signFile, tidyFiles } from './account';
+import { PAID_ROUTES, handleWebhook, subscriptionState, type BillingOptions } from './billing';
 import { pruneLimits } from './limits';
 import type { Auth, Principal } from './auth';
 import type { Db } from './db/client';
@@ -63,14 +64,17 @@ export type ApiOptions = {
   ai?: AiOptions;
   /** WHOOP and Oura (`src/wearables.ts`). Without it, `/wearables/*` answers 503. */
   wearables?: WearableOptions;
+  /** RevenueCat's webhook and the subscription check (`src/billing.ts`). Without it, nothing needs a subscription. */
+  billing?: BillingOptions;
 };
 
 export function createApi(options: ApiOptions): (request: Request) => Promise<Response> {
-  const { db, auth, now = Date.now, storage = null, graceDays = 30, jobsSecret, ai, wearables } = options;
+  const { db, auth, now = Date.now, storage = null, graceDays = 30, jobsSecret, ai, wearables, billing } = options;
   const cors = new Set(options.corsOrigins ?? []);
   const readJson = async (request: Request): Promise<unknown> => request.json().catch(() => null);
   const routes: Record<string, Route> = {
     'GET /me': async (_request, principal) => json({ userId: principal.userId }),
+    'GET /billing/status': async (_request, principal) => json({ ...await subscriptionState(db, principal.userId, now(), billing), enforced: !!billing?.enforce }),
     'POST /devices': async (request, principal) => {
       const parsed = DeviceBody.safeParse(await request.json().catch(() => null));
       if (!parsed.success) return fail(400, 'BAD_REQUEST');
@@ -185,6 +189,11 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
         const limits = await pruneLimits(db.db, now()).catch(error => { console.error('limit prune failed', error instanceof Error ? error.message : error); return 0; });
         return json({ ...swept, limits });
       }
+      // RevenueCat tells Life what changed in a subscription, signed with its own secret and with no session (fix F-20).
+      if (pathname === '/billing/revenuecat' && request.method === 'POST') {
+        const reply = await handleWebhook(db, request, billing, now());
+        return json(reply.body, reply.status);
+      }
       // A wearable's sign-in page sends the browser back here, with no session: the signed, single-use state says who.
       const callback = /^\/wearables\/([a-z]+)\/callback$/.exec(pathname);
       if (callback && request.method === 'GET' && isProvider(callback[1])) {
@@ -193,8 +202,11 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       }
       const principal = await auth.getPrincipal(request);
       if (!principal) return fail(401, 'UNAUTHENTICATED');
-      const route = routes[`${request.method} ${pathname}`];
-      return route ? await route(request, principal) : fail(404, 'NOT_FOUND');
+      const key = `${request.method} ${pathname}`, route = routes[key];
+      if (!route) return fail(404, 'NOT_FOUND');
+      // Paid only (Edem, 20 Nov 2026): once billing is live, the routes that cost money need a trial or a subscription.
+      if (billing?.enforce && PAID_ROUTES.has(key) && !(await subscriptionState(db, principal.userId, now(), billing)).active) return fail(402, 'SUBSCRIPTION_REQUIRED');
+      return await route(request, principal);
     } catch (error) {
       // Row-level security refused the write: the row belongs to someone else.
       if (refusedByPolicy(error)) return fail(403, 'FORBIDDEN');

@@ -2,7 +2,7 @@ import { and, eq, isNotNull, lte } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import type { Db } from './db/client';
-import { accountClosures, accounts, aiUsage, devices, files, oauthTokens, phoneTables, sessions, users } from './db/schema';
+import { accountClosures, accounts, aiUsage, devices, files, oauthTokens, phoneTables, sessions, subscriptions, users } from './db/schema';
 import type { Storage } from './storage';
 
 /**
@@ -82,6 +82,7 @@ export async function exportAccount(db: Db, userId: string, now: number) {
   const [account] = await db.db.select({ id: users.id, name: users.name, email: users.email, emailVerified: users.emailVerified, createdAt: users.createdAt }).from(users).where(eq(users.id, userId));
   const signIns = await db.db.select({ provider: accounts.providerId, since: accounts.createdAt }).from(accounts).where(eq(accounts.userId, userId));
   const [closing] = await db.db.select({ requestedAt: accountClosures.requested_at, deleteAfter: accountClosures.delete_after }).from(accountClosures).where(eq(accountClosures.user_id, userId));
+  const [subscription] = await db.db.select({ product: subscriptions.product, period: subscriptions.period, store: subscriptions.store, sandbox: subscriptions.sandbox, expiresAt: subscriptions.expires_at, renews: subscriptions.renews, billingIssue: subscriptions.billing_issue, updatedAt: subscriptions.updated_at }).from(subscriptions).where(eq(subscriptions.user_id, userId));
   const held = await db.withUser(userId, async tx => {
     const tables: Record<string, Record<string, unknown>[]> = {};
     for (const [name, table] of Object.entries(phoneTables)) tables[name] = withoutOwner(await tx.select().from(table as unknown as PgTable) as Record<string, unknown>[]);
@@ -98,6 +99,7 @@ export async function exportAccount(db: Db, userId: string, now: number) {
     account: account ?? null,
     signIns,
     closing: closing ?? null,
+    subscription: subscription ?? null,
     ...held,
     about: 'Everything life’s server holds for you. Files themselves are not inside: ask for each one from the app while it is kept. Tokens for connected services are never exported.',
   };
