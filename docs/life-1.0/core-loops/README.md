@@ -100,7 +100,7 @@ Read [SPEC](../../../SPEC.md), [BUILD_PLAN](../../../BUILD_PLAN.md), [AGENTS](..
 
 Written 20 November 2026, after building the slice. Nothing here has been merged or uploaded.
 
-- **Current working branch / commit:** `claude/project-thread-txkwqs`, branched from `master` at `4f786b3` (master had not moved when this was written). The commit that adds this section carries the whole slice.
+- **Current working branch / commit:** `claude/project-thread-txkwqs`, first branched from `master` at `4f786b3`; joined into `v26-integration` (merge 416f647), and the quick prompt for Get unstuck was built on top of that.
 
 - **Already working before this change (checked in the code, not the board):**
   - Today is `/(tabs)/today` (`screens/v26/today.tsx`); `TodayHome.tsx`, named in §3, no longer exists.
@@ -123,7 +123,7 @@ Written 20 November 2026, after building the slice. Nothing here has been merged
   - *Storage:* `loops` joins the existing local store (`SeedData`) and syncs with the other settings in the prefs row. A mission step and a plan step share the same key, so one tick counts in both places. `tests/data/local-store.test.ts` now saves loops, reopens the database and checks they come back.
   - *Plan ahead:* Close the day asks **“What’s most important to you tomorrow?”** in the evening and “today” in the morning (`?for=` overrides). You can pick several, type your own, reorder or remove them. Ideas are what's still going from the last list, missions you've started, then three plain starting points. “Not tonight” skips the question without hiding planning.
   - *Today:* a resume card (“Pick up where you left off · started 09:00”, with Carry on and Done), What matters today with progress per priority, a calendar line, the question when your check-in style allows it, and rows for planning and what moved forward. The day-one Today for real users has these too.
-  - *Get unstuck:* the nudge offers one step that fits the time you pick, and explains why (where it is on your list, how long it takes, the time you said or the sample calendar gap). Start opens where the step happens. You can also choose Later or Something else, and when nothing else fits it says so and offers the first step again. A started step comes back first. If nothing fits, it says so and helps you size a step or write a first step for your own priority. It never invents one.
+  - *Get unstuck:* a quick prompt that slides up over Today (also Today `?nudge=1`). It asks “How much time do you have?” first (2, 5, 10 or 20 minutes, with the calendar's free slot suggested when there is one), then shows one step that fits in the same sheet, with why (where it is on your list, how long it takes, the time you said or the sample calendar gap). Start opens where the step happens; Later and Something else stay in the sheet, and when nothing else fits it says so and offers the first step again. A started step, nothing planned or everything done skip the question. If nothing fits, it says so and points to more time, a smaller step or a first step, never an invented one. The whole list, sizing and first steps are on the full Nudge page, one tap away (“See my whole list”). Changed after Edem's review on 20 November: the time chips used to sit on a full page.
   - *See what's changing:* the Weekly recap has a Step by step section showing ticked steps, part-way priorities and an optional “What counts for you” choice, plus a link to how life checks in. Notifications now offers Regular, When needed or Off instead of a count; Off removes the prompt and nothing else.
   - The screens reuse the V26 kit as it is (Page, Btn, Row, RowsCard, Chip, Callout, Display, Statement, ReorderRow, the drawer photo pattern). No new screens, routes or styles.
 
@@ -140,7 +140,7 @@ Written 20 November 2026, after building the slice. Nothing here has been merged
 - **What was actually tested:**
   - `bun test`: 545 pass, including the 30 new engine tests and the SQLite save and reopen test.
   - `tsc` is clean. The iOS and Android `expo export` bundles both build.
-  - Playwright drove the exported **browser** build at 390×844 with a fixed clock in Europe/London. 54 of 54 checks passed on the sample build and 20 of 20 on a real (no sample) build. They covered:
+  - Playwright drove the exported **browser** build at 390×844 with a fixed clock in Europe/London. After the quick prompt, 60 of 60 checks pass on the sample build and 25 of 25 on a real (no sample) build. They covered:
     - a fresh install (empty storage) and a relaunch (reload with storage kept), checked separately;
     - planning on Friday at 20:30 and seeing the plan on Saturday at 09:00;
     - the 10-minute offer “Gather two documents you’ll need” and the 2-minute offer “Sign in to Government Gateway”;

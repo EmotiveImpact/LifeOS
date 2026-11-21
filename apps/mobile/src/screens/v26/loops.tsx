@@ -2,23 +2,23 @@
  * The three core loops in the V26 language (Life 1.0, `docs/life-1.0/core-loops/README.md`), built into existing
  * screens rather than new ones:
  * - **Plan ahead** is Close the day (`evening`): "What's most important to you tomorrow?", several picks or your own words.
- * - **Get unstuck** is the Nudge (Today `?nudge=1`): one step that fits the time you have, why it fits, now, later or
- *   something else, and resume where you stopped.
+ * - **Get unstuck** is a quick prompt over Today (also Today `?nudge=1`): how much time do you have, then one step that
+ *   fits, why, now, later or something else, and resume where you stopped. The whole list lives on the Nudge page.
  * - **See what's changing** is on Today (what moved forward), in Weekly recap (step by step, and what counts for you),
  *   and the check-in style is in Notifications.
  * Rules and storage: `state/loops.ts` and `packages/core/src/day/loops.ts`.
  */
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { PhotoFill, ReorderRow, RoundButton, SectionHead, Text, cardShadow, feedback, fonts, photo, photoScrims, photos, radius, space, useTokens } from '@/design';
+import { Appear, Press, PhotoFill, ReorderRow, RoundButton, SectionHead, Text, cardShadow, feedback, fonts, photo, photoScrims, photos, radius, sheetShadow, space, useTokens } from '@/design';
 import { STEP_SIZES, type PlanStep, type Priority } from '@life/core';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
 import { CHECK_IN_WORDS, SAMPLE_CALENDAR, WIN_AREAS, calendarGap, stepRoute, useLoops, whenStarted } from '@/state/loops';
-import { Body, Btn, Callout, Chip, Display, Duo, Eyebrow, Micro, NumWell, Page, QuietLink, Row, RowsCard, Statement, Tick, drawerStyle, useDrawerPhoto } from './kit';
+import { Body, Btn, Callout, Chip, Display, Duo, Eyebrow, Micro, NumWell, Page, QuietLink, Row, RowsCard, SheetHandle, Statement, Tick, drawerStyle, useDrawerPhoto } from './kit';
 
 const weekday = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long' });
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -62,6 +62,8 @@ const statusOf = (p: { done: number; total: number; started: boolean; complete: 
  */
 export function TodayLoops() {
   const nav = useNavigation(), surface = useSurface(), L = useLoops();
+  // The nudge link (`?nudge=1`, from a notification) opens the same prompt, on day one as well as on a full Today.
+  const linked = useLocalSearchParams<{ nudge?: string }>().nudge === '1';
   const [unstuck, setUnstuck] = useState(false);
   const onUnstuck = () => setUnstuck(true);
   const openStep = useOpenStep(), fromKey = useStepFromKey();
@@ -112,11 +114,144 @@ export function TodayLoops() {
         ) : null}
         <Row icon="chart" title="What moved forward" sub={n ? `${plural(n, 'step')} this week${L.loops.wins.length && wins < n ? ` · ${wins} that ${wins === 1 ? 'counts' : 'count'} for you` : ''}` : 'Nothing ticked yet this week'} onPress={() => nav.go('recap')} />
       </RowsCard>
-      <Modal visible={unstuck} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setUnstuck(false)}>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}><NudgeV26 onClose={() => setUnstuck(false)} /></SafeAreaProvider>
-      </Modal>
+      <UnstuckSheet visible={unstuck || linked} onClose={() => { setUnstuck(false); if (linked) nav.replace('today'); }} />
     </>
   );
+}
+
+/* ───────────────────────── Get unstuck (the quick prompt) ───────────────────────── */
+
+/**
+ * Get unstuck as a quick prompt over Today: "How much time do you have?", then one step that fits, in the same sheet.
+ * A step you started comes back without the question, and so does a day with nothing planned or everything done. The
+ * rest of the list, sizing steps and first steps are on the full Nudge page, one tap away. The sheet is only as tall
+ * as what it says.
+ */
+export function UnstuckSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>{visible ? <UnstuckBody onClose={onClose} /> : null}</SafeAreaProvider>
+    </Modal>
+  );
+}
+
+function UnstuckBody({ onClose }: { onClose: () => void }) {
+  const t = useTokens(), insets = useSafeAreaInsets(), nav = useNavigation(), L = useLoops(), { choose } = useSeed();
+  const openStep = useOpenStep(), fromKey = useStepFromKey();
+  const [full, setFull] = useState(false);
+  const [minutes, setMinutes] = useState<number | null>(null);
+  const [skip, setSkip] = useState<string[]>([]);
+  const [ticked, setTicked] = useState<string | null>(null);
+  if (full) return <NudgeV26 onClose={onClose} />;
+
+  const gap = calendarGap(L.now);
+  const gapSize = gap ? [...STEP_SIZES].reverse().find(s => s <= gap.minutes) ?? 2 : null;
+  const time = gap && minutes === gapSize ? { kind: 'calendar' as const, at: gap.at, sample: true } : { kind: 'manual' as const };
+  const go = (to: () => void) => { onClose(); to(); };
+  const finish = (step: PlanStep, priority: Priority) => { L.finish(step, priority); setTicked(step.title); feedback.complete(); };
+  const pick = (m: number) => { setMinutes(m); setSkip(s => s.filter(k => k === L.active?.key)); setTicked(null); choose('unstuck-minutes', String(m)); feedback.select(); };
+  const changeTime = <QuietLink label={minutes ? `Change time · ${minutes} min` : 'Change time'} onPress={() => setMinutes(null)} />;
+  const wholeList = <QuietLink label="See my whole list" onPress={() => setFull(true)} />;
+
+  const active = L.active && !skip.includes(L.active.key) ? fromKey(L.active.key) : null;
+  const probe = L.offer(STEP_SIZES[STEP_SIZES.length - 1], [], { kind: 'manual' });
+  const offer = minutes ? L.offer(minutes, skip, time) : null;
+
+  let body: ReactNode;
+  if (active && L.active) {
+    // A step you started: no question, straight back to it.
+    const routed = !!stepRoute(active.step), key = L.active.key;
+    body = <>
+      <Micro sig style={{ marginTop: space.sm }}>{`Pick up where you left off · started ${whenStarted(L.active.mark.at, L.now)}`}</Micro>
+      <Text variant="headline" style={{ marginTop: space.tile }}>{active.step.title}</Text>
+      <Text variant="callout" tone="ink2">{`For “${L.active.mark.priority}”${active.step.minutes ? ` · about ${active.step.minutes} min` : ''}${routed ? '' : ' · you do this one, then tick it'}`}</Text>
+      {routed
+        ? <Btn label="Carry on" icon="arrow" trail onPress={() => go(() => openStep(active.step))} style={{ marginTop: space.lg }} />
+        : <Btn label="Done" icon="check" onPress={() => finish(active.step, active.priority)} style={{ marginTop: space.lg }} />}
+      <Duo style={{ marginTop: space.xs }}>
+        {routed
+          ? <Btn label="Done" ghost sm icon="check" onPress={() => finish(active.step, active.priority)} />
+          : <Btn label="Not started after all" ghost sm onPress={() => L.undo(key)} />}
+        <Btn label="Something else" ghost sm onPress={() => setSkip(s => [...s, key])} />
+      </Duo>
+    </>;
+  } else if (probe.kind === 'none' && probe.reason === 'nothing-planned') {
+    body = <>
+      <Statement s="Nothing planned for today. {That’s fine.}" style={{ marginTop: space.sm }} />
+      <Body s="Plan what matters, or just ask life something. {Neither needs the other.}" style={{ marginTop: space.xxs }} />
+      <Btn label="Plan today" icon="arrow" trail onPress={() => go(() => nav.go('evening', { for: 'today' }))} style={{ marginTop: space.lg }} />
+      <QuietLink label="Ask life instead" onPress={() => go(() => nav.go('chat'))} style={{ marginTop: space.xs }} />
+    </>;
+  } else if (probe.kind === 'none' && probe.reason === 'all-done') {
+    body = <>
+      {ticked ? <Callout style={{ marginTop: space.sm }}>{`Ticked “${ticked}”.`}</Callout> : null}
+      <Statement s="Everything on today’s list {is done}." style={{ marginTop: space.sm }} />
+      <Btn label="See what moved" onPress={() => go(() => nav.go('recap'))} style={{ marginTop: space.lg }} />
+    </>;
+  } else if (!offer) {
+    // The question, one at a time. The calendar's free slot is the suggested answer when there is one.
+    const sizes = STEP_SIZES.map(m => <Btn key={m} label={`${m} min`} ghost={m !== gapSize} onPress={() => pick(m)} />);
+    body = <>
+      {ticked ? <Callout style={{ marginTop: space.sm }}>{`Ticked “${ticked}”. Got a few more minutes?`}</Callout> : null}
+      <Statement s="How much time {do you have}?" style={{ marginTop: space.sm }} />
+      <Body s={gap ? `The sample calendar shows {${gap.minutes} minutes free from ${gap.at}}.` : 'Roughly is fine. life finds {one step} that fits.'} style={{ marginTop: space.xxs }} />
+      <Duo style={{ marginTop: space.lg }}>{sizes.slice(0, 2)}</Duo>
+      <Duo style={{ marginTop: space.xs }}>{sizes.slice(2)}</Duo>
+      <QuietLink label="Ask life instead" onPress={() => go(() => nav.go('chat'))} style={{ marginTop: space.sm }} />
+    </>;
+  } else if (offer.kind === 'step') {
+    body = <>
+      {ticked ? <Callout style={{ marginTop: space.sm }}>{`Ticked “${ticked}”. Here’s the next one.`}</Callout> : null}
+      <Micro sig style={{ marginTop: space.sm }}>{`For “${offer.priority.text}” · step ${offer.index + 1} of ${offer.total}`}</Micro>
+      <Text variant="headline" style={{ marginTop: space.tile }}>{offer.step.title}</Text>
+      <Text variant="callout" tone="ink2">{`About ${offer.step.minutes} min${offer.step.mission ? ' · opens the mission' : offer.step.to ? '' : ' · you do this one, then tick it'}`}</Text>
+      <Micro style={{ marginTop: space.md }}>WHY THIS?</Micro>
+      {offer.why.map(w => <Body key={w} s={w} style={{ marginTop: space.xxs }} />)}
+      <Btn label="Start" icon="arrow" trail style={{ marginTop: space.lg }} onPress={() => {
+        L.start(offer.step, offer.priority); feedback.select();
+        if (stepRoute(offer.step)) go(() => openStep(offer.step));
+      }} />
+      <Duo style={{ marginTop: space.xs }}>
+        <Btn label="Later" ghost sm onPress={onClose} />
+        <Btn label="Something else" ghost sm onPress={() => setSkip(s => [...s, offer.step.key])} />
+      </Duo>
+      <Duo style={{ marginTop: space.sm }}>{changeTime}{wholeList}</Duo>
+    </>;
+  } else if (skip.some(k => k !== L.active?.key)) {
+    body = <>
+      <Statement s={`That’s everything that fits {${minutes} minutes} for now.`} style={{ marginTop: space.sm }} />
+      <Btn label="Back to the first one" onPress={() => setSkip(s => s.filter(k => k === L.active?.key))} style={{ marginTop: space.lg }} />
+      <Duo style={{ marginTop: space.sm }}>{changeTime}{wholeList}</Duo>
+    </>;
+  } else {
+    // Nothing fits: say so, and point to the honest fixes (more time, or a smaller or first step), never an invented one.
+    const first = offer.needsSteps[0];
+    const needs = offer.reason === 'no-steps' ? (offer.unsized.length ? 'Your next steps need {a rough time} before life can offer one.' : first ? `“${first.text}” needs {a first step}.` : 'Nothing on your list {has a next step}.') : null;
+    body = <>
+      <Statement s={needs ?? `Nothing on your list fits {${minutes} minutes} yet.`} style={{ marginTop: space.sm }} />
+      {!needs && offer.smallest ? <Body s={`The smallest next step needs about {${offer.smallest} minutes}.`} style={{ marginTop: space.xxs }} /> : null}
+      {needs
+        ? <Btn label={offer.unsized.length ? 'Size my steps' : 'Add a first step'} icon="arrow" trail onPress={() => setFull(true)} style={{ marginTop: space.lg }} />
+        : <Btn label="Pick more time" onPress={() => setMinutes(null)} style={{ marginTop: space.lg }} />}
+      <QuietLink label={needs ? 'Change time' : 'Add a smaller step'} onPress={needs ? () => setMinutes(null) : () => setFull(true)} style={{ marginTop: space.xs }} />
+    </>;
+  }
+
+  return <>
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: t.scrim }]} />
+    <Press haptic={null} accessibilityLabel="Close" onPress={onClose} style={{ flex: 1 }} />
+    {/* The scrim fades; the sheet rises from the bottom edge, as tall as its words. */}
+    <Appear rise={120}>
+      <View style={[styles.unstuck, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.lg) + space.xs, ...sheetShadow }]}>
+        <SheetHandle />
+        <View style={styles.head}>
+          <Eyebrow orb>life · one step</Eyebrow>
+          <RoundButton icon="close" size="sm" label="Not now" onPress={onClose} />
+        </View>
+        {body}
+      </View>
+    </Appear>
+  </>;
 }
 
 /* ───────────────────────── Plan ahead (Close the day) ───────────────────────── */
@@ -355,6 +490,8 @@ export function WeekSteps() {
 
 const styles = StyleSheet.create({
   card: { borderRadius: radius.lg, padding: space.cardPad },
+  unstuck: { borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: space.lg },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   words: { paddingHorizontal: space.gutter, paddingTop: space.sm },

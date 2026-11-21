@@ -25,7 +25,7 @@ import {
 } from './kit';
 import { BirthdayMoveV26, birthdayBrief, useBirthdayNudge } from './people';
 import { levelPlan } from '@/state/you';
-import { NudgeV26, TodayLoops } from './loops';
+import { TodayLoops } from './loops';
 import { SearchModal } from './search';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { CalendarRealV26, WhyRealV26, moveCard, useComingUp, useRealMoves } from './dayengine';
@@ -277,9 +277,6 @@ export function TodayV26() {
           {/* The scrim fades; the drawer rises from the bottom edge like a native sheet. */}
           <Appear rise={120}><FeelingDrawer initial={mood ?? 'calm'} onClose={() => { if (!mood) choose('pulse-skipped-day', day); setDrawer(false); }} onSet={m => { logMood(m); decide(''); setDrawer(false); }} /></Appear>
         </SafeAreaProvider>
-      </Modal>
-      <Modal visible={params.nudge === '1'} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => nav.replace('today')}>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}><NudgeV26 onClose={() => nav.replace('today')} /></SafeAreaProvider>
       </Modal>
       <SearchModal visible={searching} onClose={() => setSearching(false)} />
     </Page>
