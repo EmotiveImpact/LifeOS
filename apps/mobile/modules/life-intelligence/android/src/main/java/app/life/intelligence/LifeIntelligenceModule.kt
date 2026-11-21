@@ -23,7 +23,11 @@ class LifeIntelligenceModule : Module() {
   private var text = ""
   override fun definition() = ModuleDefinition {
     Name("LifeIntelligence")
-    Events("transcript")
+    Events("transcript", "healthRationale")
+    // Health Connect opens Life to show why it reads health data (fix F-25): with the rationale action through
+    // Android 13, and through the permission-usage alias from Android 14. Life answers with its privacy policy.
+    Function("launchedForHealthRationale") { isHealthRationale(appContext.currentActivity?.intent) }
+    OnNewIntent { intent -> if (isHealthRationale(intent)) sendEvent("healthRationale", mapOf("action" to intent.action)) }
     // No Android language model is claimed until a supported built-in/download
     // adapter is installed and evaluated. Rules and confirmed memory still work.
     AsyncFunction("available") { false }
@@ -81,6 +85,8 @@ class LifeIntelligenceModule : Module() {
     OnDestroy { appContext.reactContext?.runOnUiQueueThread { release() } }
   }
   private fun unavailableModel(): String = throw IllegalStateException("No on-device language model is installed.")
+  private fun isHealthRationale(intent: Intent?): Boolean =
+    intent?.action == "androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" || intent?.action == "android.intent.action.VIEW_PERMISSION_USAGE"
   private fun update(results: Bundle?, final: Boolean) {
     results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { text = it }
     sendEvent("transcript", mapOf("text" to text, "final" to final))

@@ -685,8 +685,10 @@ function LegalText({ doc }: { doc: LegalDoc }) {
 
 export function LegalV26() {
   const t = useTokens(), nav = useNavigation();
+  // Health Connect's "why does Life read this?" arrives with the privacy policy open (fix F-25).
+  const { open: start } = useLocalSearchParams<{ open?: string }>();
   // Which text is open under the rows. One at a time, so the page stays readable.
-  const [open, setOpen] = useState<'terms' | 'privacy' | 'notices' | null>(null);
+  const [open, setOpen] = useState<'terms' | 'privacy' | 'notices' | null>(start === 'privacy' ? 'privacy' : null);
   const toggle = (k: 'terms' | 'privacy' | 'notices') => setOpen(o => (o === k ? null : k));
   return (
     <Page screen="legal" bar={{ kind: 'push', title: 'About' }}>

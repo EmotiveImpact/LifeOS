@@ -15,6 +15,8 @@ import { CRASH_REPORTS_KEY, setCrashReports } from '@/services/crashes';
 // Defines the background task at start-up, as the phone needs it defined before it can run it (Phase 29).
 import { setBackgroundWork } from '@/services/background';
 import { consentFrom } from '@/services/health/consent';
+import { HEALTH_RATIONALE_TARGET, onHealthRationale } from '@/services/healthRationale';
+import { useNavigation } from '@/navigation/useNavigation';
 import '../global.css';
 
 void SplashScreen.preventAutoHideAsync();
@@ -42,8 +44,10 @@ function HealthRunner() { useHealthRunner(); return null; }
  * finished moves, only once the person has switched that on (services/moves.ts).
  */
 function DayRunner() {
-  const { data } = useSeed();
+  const { data } = useSeed(), nav = useNavigation();
   useNudgeRunner();
+  // Health Connect asking why Life reads health data opens the privacy policy, not Today (fix F-25).
+  useEffect(() => onHealthRationale(() => nav.go(HEALTH_RATIONALE_TARGET.screen, { ...HEALTH_RATIONALE_TARGET.params })), []); // eslint-disable-line react-hooks/exhaustive-deps
   useMovesCounter();
   // Crash reports start once the stored choice is known, so a no is never overridden (services/crashes.native.ts).
   const crashes = data.choices[CRASH_REPORTS_KEY] !== 'off';
