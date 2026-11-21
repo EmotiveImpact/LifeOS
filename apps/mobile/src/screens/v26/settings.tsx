@@ -18,6 +18,7 @@ import { CHECK_IN_WORDS, useLoops } from '@/state/loops';
 import { CHECK_IN_STYLES } from '@life/core';
 import { money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
+import { openSupport, supportAddress, type SupportKind, type SupportResult } from '@/services/support';
 import { ai } from '@/services/ai';
 import { closeAccount, exportAccount, isSignedIn, type AccountDataProblem } from '@/services/account';
 import { sharesMoves, withMovesSharing } from '@/services/moves';
@@ -623,8 +624,18 @@ export function PlussuccessV26() {
 /* ───────────────────────── Help ───────────────────────── */
 
 export function HelpV26() {
-  const nav = useNavigation(), { data, flag } = useSeed(), [q, setQ] = useState('');
-  const reported = !!data.flags['support-report'];
+  const nav = useNavigation(), [q, setQ] = useState('');
+  // What happened when "Email us" or "Report a number" was tapped (fix F-10). Nothing is remembered: each tap opens mail.
+  const [support, setSupport] = useState<{ kind: SupportKind; result: SupportResult } | null>(null);
+  const write = async (kind: SupportKind) => {
+    const result = await openSupport(kind);
+    setSupport({ kind, result });
+    // The button already gave its tap; only a message that couldn't start adds a warning.
+    if (result !== 'opened') feedback.warn();
+  };
+  const note = support && support.result !== 'opened'
+    ? <Callout style={{ marginTop: space.sm }}>{support.result === 'not-set' ? 'Support isn’t connected in this build yet, so nothing was sent.' : `This phone has no mail app set up. Write to ${supportAddress} from any email.`}</Callout>
+    : null;
   return (
     <Page screen="help" bar={{ kind: 'push', title: 'Help' }}>
       <View style={{ alignItems: 'center', paddingTop: space.sm }}><LifeOrb size={56} /></View>
@@ -638,26 +649,28 @@ export function HelpV26() {
         content: <View>
           <Body s={a.text} />
           {a.link && a.to ? <Press haptic="select" onPress={() => nav.go(a.to!)} accessibilityLabel={a.link} style={styles.link}><Text variant="buttonCompact">{a.link}</Text><LinkChevIcon /></Press> : null}
-          {a.button ? <Btn ghost sm fit label={reported ? 'Thanks, a person will look' : a.button} onPress={() => { flag('support-report', true); feedback.select(); }} style={{ marginTop: space.sm }} /> : null}
+          {a.button ? <Btn ghost sm fit label={a.button} onPress={() => { void write('number'); }} style={{ marginTop: space.sm }} /> : null}
+          {a.button && support?.kind === 'number' ? note : null}
         </View>,
       }))} />
-      <Press haptic="open" onPress={() => flag('support-email', true)} accessibilityLabel="Email us" pressScale={0.99} style={{ marginTop: space.sm }}>
-        <EmailCard sent={!!data.flags['support-email']} />
+      <Press haptic="open" onPress={() => { void write('question'); }} accessibilityLabel="Email us" pressScale={0.99} style={{ marginTop: space.sm }}>
+        <EmailCard />
       </Press>
+      {support?.kind === 'question' ? note : null}
     </Page>
   );
 }
 
 function LinkChevIcon() { const t = useTokens(); return <Icon name="chev" size={componentSize.iconXs} color={t.ink} />; }
 
-function EmailCard({ sent }: { sent: boolean }) {
+function EmailCard() {
   const t = useTokens();
   return (
     <View style={[styles.switchCard, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
       <View style={[styles.well, { backgroundColor: t.surface2 }]}><Icon name="people" size={componentSize.iconSm} color={t.ink} /></View>
       <View style={{ flex: 1 }}>
         <Text variant="title">Email us</Text>
-        <Text variant="callout" tone="ink2">{sent ? 'Opens your mail app once support is connected' : 'A person replies within a day'}</Text>
+        <Text variant="callout" tone="ink2">A person replies within a day</Text>
       </View>
       <Icon name="chev" size={componentSize.iconXs} color={t.inkQuiet} />
     </View>
