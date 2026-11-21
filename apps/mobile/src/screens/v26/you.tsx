@@ -10,13 +10,14 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import {
-  AccordionGroup, BecomingScale, CheckRows, CompactStepper, DotGrid, DotStrip, FEEL_MOODS, FilterChips, Field, Icon, InitialsAvatar, LifeSays, PhotoCard,
+  AccordionGroup, BecomingScale, CheckRows, CompactStepper, DotGrid, DotStrip, FEEL_MOODS, FilterChips, FaceAvatar, Field, Icon, InitialsAvatar, LifeSays, PhotoCard,
   PhotoFill, Press, Ruler, SectionHead, SegmentedV26, Text, TileGrid, TintCard, V26Tile, areaColors, cardShadow, componentSize, feedback, fonts, motion,
   photo, photoScrims, photos, radius, space, useAreaTint, useCalmMotion, useTokens, type DotCell, type FeelMoodId, durations
 } from '@/design';
 import type { Area } from '@/design/tokens';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
+import { chooseProfilePhoto, removeProfilePhoto, useProfilePhoto } from '@/services/profilePhoto';
 import { editMemory, liveMemory, purgeForgotten } from '@/services/memory';
 import { knowledgeLabels, money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
@@ -92,14 +93,14 @@ export function YouV26() {
   const t = useTokens(), nav = useNavigation(), { data, engine } = useSeed();
   const lv = engine.level, left = lv.toAdvance.filter(g => !g.done).length;
   const eyebrow = [data.profile.name, workTitle, data.profile.city].filter(Boolean).join(' · ');
-  const initial = data.profile.name.trim().slice(0, 1).toUpperCase() || 'Y';
+  const initial = data.profile.name.trim().slice(0, 1).toUpperCase() || 'Y', face = useProfilePhoto();
   const streakDays = data.profile.habitStreakDays ?? 0;
   const days = streak.days || '0'.repeat(14);
   const lean = becoming.marks.length ? (becoming.marks.reduce((a, b) => a + b, 0) / becoming.marks.length >= 50 ? 'lean yes' : 'lean no') : '';
   return (
     <Page screen="you" bar={{
       kind: 'root', title: 'You', actions: [
-        { kind: 'node', node: <Press haptic="select" onPress={() => nav.go('profile')} accessibilityLabel="Your details" style={[styles.round, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}><Text variant="buttonCompact">{initial}</Text></Press> },
+        { kind: 'node', node: <Press haptic="select" onPress={() => nav.go('profile')} accessibilityLabel="Your details" style={{ borderRadius: 20 }}><FaceAvatar uri={face} initials={initial} size={40} /></Press> },
         { kind: 'icon', icon: 'gear', label: 'Settings', onPress: () => nav.go('settings') },
       ],
     }}>
@@ -509,6 +510,24 @@ function PhotoCardFlat() {
 
 /* ───────────────────────── Your details ───────────────────────── */
 
+/** Your photo for the You tab (Edem, 21 Nov 2026). It stays on this phone. */
+function YourPhoto({ initial }: { initial: string }) {
+  const t = useTokens(), face = useProfilePhoto();
+  const choose = () => { chooseProfilePhoto().then(done => { if (done) feedback.complete(); }).catch(() => Alert.alert('That photo didn’t load', 'Try another one.')); };
+  return (
+    <View style={[styles.photoRow, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+      <Press haptic="select" onPress={choose} accessibilityLabel={face ? 'Change your photo' : 'Add a photo'} style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, flex: 1, minWidth: 0 }}>
+        <FaceAvatar uri={face} initials={initial} size={56} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text variant="title">{face ? 'Change your photo' : 'Add a photo'}</Text>
+          <Text variant="callout" tone="ink2">Shows on the You tab. It stays on this phone.</Text>
+        </View>
+      </Press>
+      {face ? <QuietLink label="Remove" onPress={() => { removeProfilePhoto(); feedback.select(); }} /> : null}
+    </View>
+  );
+}
+
 export function ProfileV26() {
   const nav = useNavigation(), { data, set, flag, engine } = useSeed();
   const editing = !!data.flags['profile-edit'];
@@ -536,6 +555,7 @@ export function ProfileV26() {
   return (
     <Page screen="profile" bar={{ kind: 'push', title: 'Your details', action: { kind: 'node', node: <Chip label={editing ? 'Done' : 'Edit'} onPress={save} /> } }}>
       <PhotoCard source={SHOW_SAMPLES ? photos.desk : photos.aimdesk} height={200} chips={[`Level ${engine.level.currentLevel} · ${engine.level.levelName}`]} title={fullName} sub={born ? `Born ${born}` : undefined} style={{ marginTop: space.xxs }} />
+      <YourPhoto initial={(p.name.trim().slice(0, 1) || 'Y').toUpperCase()} />
       <Statement s={sentence} style={{ marginTop: space.lg }} />
       {editing ? <View style={{ gap: space.xs, marginTop: space.lg }}>
         <Field label="Name" value={name} onChangeText={setName} />
@@ -550,8 +570,8 @@ export function ProfileV26() {
 }
 
 const styles = StyleSheet.create({
+  photoRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.md, borderRadius: radius.lg, marginTop: space.tile },
   link: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', minHeight: 28 },
-  round: { width: componentSize.round, height: componentSize.round, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   ptiles: { flexDirection: 'row', gap: space.xs },
   ptile: { flex: 1, height: 140, borderRadius: radius.tile, overflow: 'hidden', justifyContent: 'flex-end' },
   crowd: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 2 },
