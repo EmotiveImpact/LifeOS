@@ -21,6 +21,8 @@ import { missionPriority, missionStepList } from '@/state/loops';
 import { finishStep, readLoops, undoStep } from '@life/core';
 import { money, seed, seedTaxClaim } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
+import { knownArea } from '@/state/areaKnown';
+import { dayKey } from '@/state/fuel';
 import { invoices, sampleCleared, sampleClearedTotal, TOOLS } from '@/state/plan';
 import { BigPhoto, Between, Body, Btn, Callout, Chip, Display, Eyebrow, Micro, NotYetV26, Page, PhotoBackdrop, PhotoRound, QuietLink, Row, RowsCard, Statement, Timeline } from './kit';
 import { SearchModal } from './search';
@@ -414,11 +416,42 @@ export function NewGoalV26() {
 
 /* ───────────────────────── Areas ───────────────────────── */
 
-/* A real account's areas: the sample life's deposit, invoices and appointments never show; Plan's day-one shape does. */
+/* A real account's areas: the sample life's deposit, invoices and appointments never show. Each shows what the person
+ * has told Life about it (F-38), or Plan's day-one shape until they've told it anything. */
+
+const inDays = (n: number) => n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`;
+
+/** Home, Work or Health from the records filed under it: the lead fact, what's coming up, and everything Life knows. */
+function AreaKnownV26({ screen, area, name, noun, callout, dayOne, children }: {
+  screen: ScreenKey; area: 'home' | 'work' | 'health'; name: string; noun: string; callout?: string; dayOne: ReactNode; children?: ReactNode;
+}) {
+  const nav = useNavigation(), { data } = useSeed();
+  const k = knownArea({ records: data.records, area, today: dayKey() });
+  if (!k.facts.length) return <>{dayOne}</>;
+  const n = k.facts.length, first = k.next[0];
+  const count = `{${n} ${n === 1 ? 'thing' : 'things'}} Life knows about your ${noun}.`;
+  const headline = k.lead ? `{${k.lead}.} ${first ? `Next: ${first.title}, ${first.when}.` : `${n} ${n === 1 ? 'thing' : 'things'} Life knows.`}`
+    : first ? `{${first.title}} is next, ${first.inDays !== null ? inDays(first.inDays) : first.when}.` : count;
+  return (
+    <Page screen={screen} bar={{ kind: 'push', title: name, action: { kind: 'icon', icon: 'info', label: 'Why these show here', onPress: () => nav.go('why') } }}>
+      <Eyebrow star>{`${name} · from what you’ve told Life`}</Eyebrow>
+      <Display s={headline} />
+      {k.next.length ? <>
+        <SectionHead title="Coming up" />
+        <RowsCard>{k.next.map(c => <Row key={c.id} icon="calendar" title={c.title} sub={c.inDays !== null ? `${c.when} · ${inDays(c.inDays)}` : c.when} />)}</RowsCard>
+      </> : null}
+      {children}
+      <SectionHead title="What Life knows" link="Change" onLink={() => nav.go('knows')} />
+      <RowsCard>{k.facts.map(r => <Row key={r.id} icon="check" title={r.label} sub={r.source.excerpt ? `“${r.source.excerpt}”` : 'From what you told Life'} />)}</RowsCard>
+      <RowsCard style={{ marginTop: space.sm }}><Row icon="mic" title="Tell Life more" sub={`Anything about your ${noun}`} onPress={() => nav.go('talk')} /></RowsCard>
+      <Callout style={{ marginTop: space.md }}>{callout ?? 'From what you’ve told Life. Change or remove anything in What Life knows.'}</Callout>
+    </Page>
+  );
+}
 
 export function AreaHomeV26() {
-  if (!SHOW_SAMPLES) return <NotYetV26 screen="areahome" eyebrow="Home · day one" line="Life builds this from what you tell it about where you live."
-    source="movein" focal={{ y: 0.82 }} ask="Tell Life about your home" examples="Renting or owning, your council tax, a move coming up." />;
+  if (!SHOW_SAMPLES) return <AreaKnownV26 screen="areahome" area="home" name="Home" noun="home" dayOne={<NotYetV26 screen="areahome" eyebrow="Home · day one" line="Life builds this from what you tell it about where you live."
+    source="movein" focal={{ y: 0.82 }} ask="Tell Life about your home" examples="Renting or owning, your council tax, a move coming up." />} />;
   return <AreaHomeSampleV26 />;
 }
 
@@ -459,11 +492,15 @@ function ScrollArea({ children }: { children: ReactNode }) {
 
 export function AreaHealthV26() {
   const nav = useNavigation();
+  const body = (top: number) => <PhotoCard source={photos.run} focal={{ y: 0.52 }} height={176} title="Body" sub="How you feel day to day lives here." topRight={<View style={[styles.go, { backgroundColor: photo.onPhoto }]}><Icon name="arrow" size={18} color={photo.ink} /></View>} onPress={() => nav.go('body')} style={{ marginTop: top }} />;
   if (!SHOW_SAMPLES) return (
-    <NotYetV26 screen="areahealth" eyebrow="Health · day one" line="The admin of staying well: GP, prescriptions, dentist, tests."
-      source="walk" focal={{ y: 0.48 }} ask="Tell Life what’s due" examples="A check-up, a prescription, a test you’re waiting on.">
-      <PhotoCard source={photos.run} focal={{ y: 0.52 }} height={176} title="Body" sub="How you feel day to day lives here." topRight={<View style={[styles.go, { backgroundColor: photo.onPhoto }]}><Icon name="arrow" size={18} color={photo.ink} /></View>} onPress={() => nav.go('body')} style={{ marginTop: space.sm }} />
-    </NotYetV26>
+    <AreaKnownV26 screen="areahealth" area="health" name="Health" noun="health admin" callout="Wellness admin from what you’ve told Life, not medical advice." dayOne={
+      <NotYetV26 screen="areahealth" eyebrow="Health · day one" line="The admin of staying well: GP, prescriptions, dentist, tests."
+        source="walk" focal={{ y: 0.48 }} ask="Tell Life what’s due" examples="A check-up, a prescription, a test you’re waiting on.">
+        {body(space.sm)}
+      </NotYetV26>}>
+      {body(space.lg)}
+    </AreaKnownV26>
   );
   return <AreaHealthSampleV26 />;
 }
@@ -493,8 +530,8 @@ function AreaHealthSampleV26() {
 }
 
 export function AreaWorkV26() {
-  if (!SHOW_SAMPLES) return <NotYetV26 screen="areawork" eyebrow="Work · day one" line="Life builds this from what you tell it about your work."
-    source="areawork" focal={{ x: 0.42, y: 0.86 }} ask="Tell Life about your work" examples="Employed or your own boss, invoices, a deadline." />;
+  if (!SHOW_SAMPLES) return <AreaKnownV26 screen="areawork" area="work" name="Work" noun="work" dayOne={<NotYetV26 screen="areawork" eyebrow="Work · day one" line="Life builds this from what you tell it about your work."
+    source="areawork" focal={{ x: 0.42, y: 0.86 }} ask="Tell Life about your work" examples="Employed or your own boss, invoices, a deadline." />} />;
   return <AreaWorkSampleV26 />;
 }
 

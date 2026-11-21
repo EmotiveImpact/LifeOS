@@ -19,8 +19,9 @@ export function proposalRecord(proposal: Proposal, source: 'talk' | 'chat' | 'do
     profilePatch = cities[String(proposal.value)];
   }
   if (proposal.field === 'goal' && proposal.value === 'buy-home') profilePatch = { destination: 'buy-home' };
-  // Bills and subscriptions keep their payee, amount, how often and due day, so Money can add them up (F-37).
-  const details = proposal.details?.kind === 'bill' || proposal.details?.kind === 'subscription' ? { details: proposal.details } : {};
+  // The record kinds keep what was said beyond the label: bills their payee, amount, how often and due day, so Money
+  // can add them up (F-37); documents and appointments their date, so the areas can say what's coming up (F-38).
+  const details = proposal.details ? { details: proposal.details } : {};
   return { id: ids[proposal.field] || proposal.id, brainField: proposal.field, kind: proposal.field === 'goal' ? 'goal' : 'fact', area: proposal.area, label: proposal.field === 'income' || proposal.field === 'rent' ? `${proposal.label}: ${proposal.value}` : proposal.label, value: proposal.value, ...details, profilePatch, source: { type: source, at, excerpt: proposal.quote }, status: 'proposed' };
 }
 
