@@ -18,6 +18,8 @@ import type { Storage } from './storage';
  */
 
 export const LINK_SECONDS = 300;
+/** How long a file's link in your data export works: the longest a signed link can last (fix F-44). */
+export const EXPORT_LINK_SECONDS = 7 * 24 * 60 * 60;
 export const TEMPORARY_FILE_MS = 24 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -77,8 +79,11 @@ export async function registerPush(db: Db, userId: string, body: z.infer<typeof 
 
 const withoutOwner = (rows: Record<string, unknown>[]) => rows.map(({ user_id: _owner, ...row }) => row);
 
-/** Everything the server holds for one person. Row-level security means nobody else's rows can be read here. */
-export async function exportAccount(db: Db, userId: string, now: number) {
+/**
+ * Everything the server holds for one person. Row-level security means nobody else's rows can be read here. Each file
+ * still kept comes with a link to download it, for 7 days or until the file goes, whichever is sooner (fix F-44).
+ */
+export async function exportAccount(db: Db, storage: Storage | null, userId: string, now: number) {
   const [account] = await db.db.select({ id: users.id, name: users.name, email: users.email, emailVerified: users.emailVerified, createdAt: users.createdAt }).from(users).where(eq(users.id, userId));
   const signIns = await db.db.select({ provider: accounts.providerId, since: accounts.createdAt }).from(accounts).where(eq(accounts.userId, userId));
   const [closing] = await db.db.select({ requestedAt: accountClosures.requested_at, deleteAfter: accountClosures.delete_after }).from(accountClosures).where(eq(accountClosures.user_id, userId));
@@ -88,10 +93,16 @@ export async function exportAccount(db: Db, userId: string, now: number) {
     for (const [name, table] of Object.entries(phoneTables)) tables[name] = withoutOwner(await tx.select().from(table as unknown as PgTable) as Record<string, unknown>[]);
     const phones = await tx.select({ id: devices.id, platform: devices.platform, name: devices.name, created_at: devices.created_at, last_seen_at: devices.last_seen_at, push_token: devices.push_token }).from(devices);
     const connections = await tx.select({ provider: oauthTokens.provider, scope: oauthTokens.scope, expires_at: oauthTokens.expires_at, created_at: oauthTokens.created_at, updated_at: oauthTokens.updated_at }).from(oauthTokens);
-    const stored = await tx.select({ id: files.id, kind: files.kind, content_type: files.content_type, keep: files.keep, delete_after: files.delete_after, created_at: files.created_at }).from(files);
+    const stored = await tx.select({ id: files.id, key: files.key, kind: files.kind, content_type: files.content_type, keep: files.keep, delete_after: files.delete_after, created_at: files.created_at }).from(files);
     const usage = withoutOwner(await tx.select().from(aiUsage));
     return { tables, devices: phones.map(({ push_token, ...p }) => ({ ...p, push: push_token !== null })), connections: connections.filter(c => !c.provider.startsWith('pending:')), files: stored, aiUsage: usage };
   });
+  const withLinks = await Promise.all(held.files.map(async ({ key, ...file }) => {
+    const left = file.delete_after ? Math.floor((file.delete_after.getTime() - now) / 1000) : EXPORT_LINK_SECONDS;
+    if (!storage || left < 1) return { ...file, download: null, downloadUntil: null };
+    const seconds = Math.min(left, EXPORT_LINK_SECONDS);
+    return { ...file, download: await storage.sign('GET', key, { expiresIn: seconds }), downloadUntil: new Date(now + seconds * 1000).toISOString() };
+  }));
   return {
     format: 'life-export',
     version: 1,
@@ -101,7 +112,8 @@ export async function exportAccount(db: Db, userId: string, now: number) {
     closing: closing ?? null,
     subscription: subscription ?? null,
     ...held,
-    about: 'Everything life’s server holds for you. Files themselves are not inside: ask for each one from the app while it is kept. Tokens for connected services are never exported.',
+    files: withLinks,
+    about: 'Everything Life’s server holds for you. Each file still kept has a download link that works until the time beside it (7 days at most); export again for new links. Tokens for connected services are never exported.',
   };
 }
 

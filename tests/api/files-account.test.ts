@@ -203,6 +203,30 @@ describe.skipIf(!adminUrl)('files, push and your data through the API', () => {
     expect(body.devices.length).toBeGreaterThan(0);
   });
 
+  test('each file still kept comes with a download link in the export, for 7 days or until it goes (F-44)', async () => {
+    const { token } = await signIn('ama@example.com');
+    const kept = await upload(token, { keep: true }), passing = await upload(token);
+    type Listed = { id: string; download: string | null; downloadUntil: string | null; key?: unknown };
+    const exported = async () => (await (await call('/account/export', { token })).json() as { files: Listed[]; about: string });
+    const body = await exported();
+    const mine = (id: string) => body.files.find(f => f.id === id)!;
+    expect(await (await bucket.fetch(mine(kept.id).download!)).text()).toBe('a scanned letter');
+    expect(Date.parse(mine(kept.id).downloadUntil!) - now).toBe(7 * DAY);
+    // A file that goes after a day has a link that ends when it does.
+    expect(Date.parse(mine(passing.id).downloadUntil!) - now).toBeLessThanOrEqual(DAY);
+    expect(await (await bucket.fetch(mine(passing.id).download!)).text()).toBe('a scanned letter');
+    // Storage keys stay on the server, and the note says how the links work.
+    expect(body.files.every(f => f.key === undefined)).toBe(true);
+    expect(body.about).toContain('download link');
+    // After 7 days the link no longer works; exporting again gives a new one.
+    now += 7 * DAY + MINUTE;
+    expect((await bucket.fetch(mine(kept.id).download!)).status).toBe(403);
+    const again = (await exported()).files.find(f => f.id === kept.id)!;
+    expect(await (await bucket.fetch(again.download!)).text()).toBe('a scanned letter');
+    // A file past its time has no link.
+    expect((await exported()).files.find(f => f.id === passing.id)?.download ?? null).toBeNull();
+  });
+
   test('delete removes rows, files and memories, and the session ends', async () => {
     const yaw = await signIn('yaw@example.com'), second = await signIn('yaw@example.com'), kofi = await signIn('kofi@example.com');
     await fillEveryTable(yaw.userId);

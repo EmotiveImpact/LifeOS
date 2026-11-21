@@ -120,7 +120,7 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       return await registerPush(db, principal.userId, parsed.data) ? json({ device: parsed.data.device }) : fail(404, 'DEVICE_NOT_FOUND');
     },
     'GET /account/export': async (_request, principal) => {
-      const at = now(), response = json(await exportAccount(db, principal.userId, at));
+      const at = now(), response = json(await exportAccount(db, storage, principal.userId, at));
       response.headers.set('content-disposition', `attachment; filename="life-export-${new Date(at).toISOString().slice(0, 10)}.json"`);
       return response;
     },
