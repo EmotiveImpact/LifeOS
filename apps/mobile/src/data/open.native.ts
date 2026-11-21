@@ -38,6 +38,17 @@ function nativeDriver(db: SQLite.SQLiteDatabase, onClose: () => void): SqlDriver
   };
 }
 
+/**
+ * Removes a local scope's database file and its key, for a review build starting from the beginning
+ * (`state/freshStart.ts`). Best effort: the fresh start moves to a new scope, which never reads the old file.
+ */
+export async function forgetLocalData(userId: string) {
+  if (!userId || open.has(userId)) return;
+  const scope = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, userId);
+  await SQLite.deleteDatabaseAsync(`life-${scope}.db`).catch(() => {});
+  await SecureStore.deleteItemAsync(`life.database.${scope}.v1`).catch(() => {});
+}
+
 export function openLocalData(userId: string) {
   if (!userId || userId.length > 200) return Promise.reject(new Error('A local user scope is required'));
   const existing = open.get(userId); if (existing) return existing;

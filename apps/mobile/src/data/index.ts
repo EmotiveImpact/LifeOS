@@ -1,4 +1,4 @@
-export { openLocalData } from './open';
+export { forgetLocalData, openLocalData } from './open';
 export { LifeDataStore } from './store';
 export type { Repository, WriteTransaction, OutboxOp, RemoteChange, SyncTransport } from './store';
 export type { SqlDriver, SqlExecutor, SqlValue } from './driver';

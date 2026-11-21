@@ -12,8 +12,10 @@ export default function TabsLayout() {
     <Tabs.Screen name="today" options={{ title: 'Today' }} />
     <Tabs.Screen name="plan" options={{ title: 'Plan' }} />
     <Tabs.Screen name="you" options={{ title: 'You' }} />
-    <Tabs.Screen name="index" options={{ href: null }} />
-    <Tabs.Screen name="discover" options={{ href: null }} />
-    <Tabs.Screen name="missions" options={{ href: null }} />
+    {/* Left visible to the router on purpose: the Dock above draws only its own four items, and a hidden tab (`href: null`)
+        is never shown, as the navigator sends it to Today instead. That kept the app from ever opening on the intro. */}
+    <Tabs.Screen name="index" />
+    <Tabs.Screen name="discover" />
+    <Tabs.Screen name="missions" />
   </Tabs>;
 }

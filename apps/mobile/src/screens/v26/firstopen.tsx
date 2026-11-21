@@ -6,7 +6,8 @@
  * Apple Health → nudges → your Aim → building your plan → save your progress → your first move.
  */
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Keyboard, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -16,7 +17,7 @@ import { settledTranscript } from '@life/brain';
 import {
   CompactStepper, Field, FilterChips, FullPhotoScreen, Icon, LifeOrb, PhotoCard, PhotoFill, PhotoGrid, PickRow, Press, RoundButton, SegmentedV26,
   SwitchV26, Text, TintCard, TwoTone, V26Tile, TileGrid, cardShadow, componentSize, feedback, floatLift, photo, photoScrims, photos, radius,
-  space, useCalmMotion, useTokens, Wordmark, type GlyphName,
+  space, useCalmMotion, useTokens, Wordmark, Appear, DashPager, durations, motion, type Focal, type GlyphName,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { SHOW_SAMPLES } from '@/state/sample';
@@ -98,17 +99,124 @@ function ChoiceDrawerBody<T extends string>({ title, options, value, onPick, onC
 
 /* ───────────────────────── Welcome ───────────────────────── */
 
+/**
+ * The intro: one sentence told across three photographs (Edem, 21 Nov 2026, "some form of animation on the intro").
+ * The first photograph rises out of the dark, the words arrive one after another, then the scenes move on by
+ * themselves: each photograph settles slowly as it shows, the next fades in over it, and the line changes with it.
+ */
+const INTRO: readonly { source: ImageSourcePropType; focal: Focal; line: string }[] = [
+  { source: photos.friends, focal: { x: 0.42 }, line: 'Life finds {what you’re owed}, from tax codes to refunds.' },
+  { source: photos.aimdesk, focal: { x: 0.62 }, line: 'It keeps {what’s due} in view, long before it’s late.' },
+  { source: photos.walk, focal: { x: 0.5 }, line: 'And lines up {what’s next}, one small step at a time.' },
+];
+/** How long each scene holds before the next one fades in. */
+const SCENE_MS = 4800;
+/** The photographs cross-fade slowly; the line swaps inside that, the old one leaving before the new one rises. */
+const PHOTO_FADE_MS = 1100, LINE_OUT_MS = 260, LINE_IN_DELAY_MS = 360;
+
 export function WelcomeV26() {
   const nav = useNavigation(), { set } = useSeed(), age = useAgeCheck();
+  const insets = useSafeAreaInsets(), calm = useCalmMotion(), reader = useScreenReader();
+  const [scene, setScene] = useState(0);
+  const next = () => setScene(s => (s + 1) % INTRO.length);
+  // The scenes move on by themselves. A screen reader holds them still, as words changing under it would be lost.
+  useEffect(() => {
+    if (reader) return;
+    const timer = setTimeout(next, SCENE_MS);
+    return () => clearTimeout(timer);
+  }, [scene, reader]); // eslint-disable-line react-hooks/exhaustive-deps
   const start = () => nav.go(age.passed ? 'question' : 'agecheck');
   // Skip leaves setup for later, but never the age check.
   const skip = () => { if (age.passed) { set({ onboardingDone: true }); nav.home(); } else nav.go('agecheck', { next: 'today' }); };
   return (
-    <View nativeID="screen-welcome" style={{ flex: 1, backgroundColor: photo.ink }}>
+    <View nativeID="screen-welcome" style={styles.intro}>
       <PhotoStatus />
-      <FullPhotoScreen source={photos.friends} focal={{ x: 0.42 }} title="Life, handled." statement={two('Life finds {what you’re owed}, {what’s due} and {what’s next}.')}
-        pager={{ count: 3, index: 0 }} onNext={start} nextLabel="Get started" onSkip={skip} />
+      {INTRO.map((s, i) => <IntroPhoto key={i} source={s.source} focal={s.focal} on={i === scene} calm={calm} />)}
+      <LinearGradient pointerEvents="none" colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={[StyleSheet.absoluteFill, { zIndex: 2 }]} />
+      {/* A tap on the photograph moves on at once, as a story does. */}
+      <Pressable accessible={false} onPress={next} style={[StyleSheet.absoluteFill, { zIndex: 2 }]} />
+      <Appear from="none" delay={150} style={[styles.introBar, { marginTop: insets.top }]}>
+        <Wordmark variant="headline" color={photo.onPhoto} />
+        <Press haptic="select" onPress={skip} accessibilityLabel="Skip" hitSlop={12}><Text variant="button" tone="paper">Skip</Text></Press>
+      </Appear>
+      <View pointerEvents="none" style={{ flex: 1 }} />
+      <View style={[styles.introCopy, { paddingBottom: Math.max(insets.bottom, space.lg) + space.sm }]}>
+        <Appear delay={320} rise={14}><Text variant="welcome" tone="paper" accessibilityRole="header">Life, handled.</Text></Appear>
+        <Appear delay={480} rise={12}><IntroLines scene={scene} calm={calm} /></Appear>
+        <Appear delay={680} style={[styles.introRow, { marginTop: space.xxl }]}>
+          <DashPager count={INTRO.length} index={scene} />
+          <RoundButton icon="arrow" size="lg" onPhoto label="Get started" onPress={start} haptic="primary" />
+        </Appear>
+      </View>
     </View>
+  );
+}
+
+/** Whether VoiceOver or TalkBack is on, kept up to date while the screen is open. Browsers can't tell (react-native-web
+ * always answers yes), so the web preview counts it as off. */
+function useScreenReader() {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    let live = true;
+    void AccessibilityInfo.isScreenReaderEnabled().then(value => { if (live) setOn(value); }).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('screenReaderChanged', setOn);
+    return () => { live = false; sub.remove(); };
+  }, []);
+  return on;
+}
+
+/**
+ * One scene's photograph. The scene coming in sits above the one going and fades in over it, so the screen never dips
+ * to dark between them; the one going drops away once covered. While it shows it settles from 106% to 100%, slowly.
+ * With Reduce Motion it only cross-fades.
+ */
+function IntroPhoto({ source, focal, on, calm }: { source: ImageSourcePropType; focal: Focal; on: boolean; calm: boolean }) {
+  const shown = useSharedValue(0), scale = useSharedValue(1);
+  useEffect(() => {
+    if (on) {
+      shown.value = withTiming(1, { duration: calm ? 400 : PHOTO_FADE_MS, easing: Easing.inOut(Easing.cubic) });
+      scale.value = calm ? 1 : withSequence(withTiming(1.06, { duration: 0 }), withTiming(1, { duration: SCENE_MS + PHOTO_FADE_MS * 2, easing: Easing.out(Easing.quad) }));
+    } else {
+      shown.value = withDelay(calm ? 400 : PHOTO_FADE_MS, withTiming(0, { duration: 0 }));
+    }
+  }, [on, calm, shown, scale]);
+  const anim = useAnimatedStyle(() => ({ opacity: shown.value, transform: [{ scale: scale.value }] }));
+  return (
+    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: on ? 1 : 0 }, anim]}>
+      <PhotoFill source={source} focal={focal} />
+    </Animated.View>
+  );
+}
+
+/** The scene's line. Every line is laid out, so the block holds the tallest one's height and nothing below it jumps. */
+function IntroLines({ scene, calm }: { scene: number; calm: boolean }) {
+  const [heights, setHeights] = useState<number[]>([]);
+  const tallest = Math.max(0, ...heights.filter(Boolean));
+  const measured = (i: number, h: number) => setHeights(prev => { if (prev[i] === h) return prev; const next = [...prev]; next[i] = h; return next; });
+  return (
+    <View style={{ marginTop: space.sm, height: tallest || undefined }}>
+      {INTRO.map((s, i) => <IntroLine key={i} line={s.line} on={i === scene} calm={calm} onHeight={h => measured(i, h)} />)}
+    </View>
+  );
+}
+
+function IntroLine({ line, on, calm, onHeight }: { line: string; on: boolean; calm: boolean; onHeight: (h: number) => void }) {
+  const p = useSharedValue(on ? 1 : 0), travel = useSharedValue(10);
+  useEffect(() => {
+    if (on) {
+      travel.value = 10;
+      p.value = withDelay(calm ? 0 : LINE_IN_DELAY_MS, withSpring(1, motion.smooth));
+    } else {
+      travel.value = -6;
+      p.value = withTiming(0, { duration: calm ? durations.quick : LINE_OUT_MS, easing: Easing.out(Easing.quad) });
+    }
+  }, [on, calm, p, travel]);
+  const anim = useAnimatedStyle(() => calm ? { opacity: p.value } : { opacity: p.value, transform: [{ translateY: (1 - p.value) * travel.value }] });
+  return (
+    <Animated.View onLayout={e => onHeight(e.nativeEvent.layout.height)} aria-hidden={!on} importantForAccessibility={on ? 'auto' : 'no-hide-descendants'} accessibilityElementsHidden={!on} style={[styles.introLine, anim]}>
+      <TwoTone size="welcomeStatement" onAtmosphere segments={two(line)} />
+    </Animated.View>
   );
 }
 
@@ -771,6 +879,11 @@ export function SigninV26() {
 
 
 const styles = StyleSheet.create({
+  intro: { flex: 1, backgroundColor: photo.ink, overflow: 'hidden' },
+  introBar: { height: componentSize.topBarV26, paddingHorizontal: space.gutter, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 3 },
+  introCopy: { paddingHorizontal: space.gutter, zIndex: 3 },
+  introRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  introLine: { position: 'absolute', top: 0, left: 0, right: 0 },
   tile: { width: componentSize.roundXl, height: componentSize.roundXl, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   pick: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   centre: { flex: 1, minHeight: 240, alignItems: 'center', justifyContent: 'center', gap: 6, paddingBottom: space.lg },

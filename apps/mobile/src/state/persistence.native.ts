@@ -1,14 +1,31 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
-import { openLocalData } from '../data';
+import { forgetLocalData, openLocalData } from '../data';
 import { LEGACY_STATE_KEY, type ProjectionStorage } from './persistence.types';
+import { FRESH_START, FRESH_START_KEY } from './freshStart';
 
 const LOCAL_USER_KEY = 'life.local-user-id';
+
+/**
+ * A review build ticked "Start from the beginning" opens on a new, empty local scope the first time it runs, and
+ * removes the old one, whatever shape an older build left it in (`state/freshStart.ts`). Never in a real build.
+ */
+async function startFreshOnce(token: string) {
+  if (await AsyncStorage.getItem(FRESH_START_KEY) === token) return;
+  const previous = await SecureStore.getItemAsync(LOCAL_USER_KEY);
+  if (previous) {
+    await forgetLocalData(previous).catch(() => {});
+    await SecureStore.deleteItemAsync(LOCAL_USER_KEY);
+  }
+  await AsyncStorage.removeItem(LEGACY_STATE_KEY);
+  await AsyncStorage.setItem(FRESH_START_KEY, token);
+}
 
 /** Native data is encrypted SQLite. Initialization failures are deliberately
  * propagated: continuing with a plaintext store would violate the data boundary. */
 export async function openProjectionStorage(): Promise<ProjectionStorage> {
+  if (FRESH_START) await startFreshOnce(FRESH_START);
   let userId = await SecureStore.getItemAsync(LOCAL_USER_KEY);
   if (!userId) {
     userId = Crypto.randomUUID();
