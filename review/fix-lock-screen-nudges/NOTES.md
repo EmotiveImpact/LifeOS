@@ -59,3 +59,7 @@ Nothing to decide. If you'd rather every nudge stayed general, whatever it's abo
 
 - **A medicine's own name isn't recognised.** A habit called "Take metformin" passes the word check. Android's private channel still hides it on a secure lock screen; on an iPhone with previews set to always show, it would show.
 - **Deadlines have no source yet** (F-50), so no deadline nudge is sent today. The template is ready for when they do.
+
+## Also on this branch
+
+**Erasing your data removes your photo too.** The You tab's new photo lives on the phone outside the database, so "Erase" in Settings left it behind. The erase now removes it with everything else. `tests/launch/empty-life.test.ts` checks it.
