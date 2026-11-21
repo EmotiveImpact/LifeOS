@@ -360,10 +360,10 @@ export function HealthconsentV26() {
       </RowsCard>
       <Micro style={{ marginTop: space.lg }}>WHAT LIFE PROMISES</Micro>
       <RowsCard style={{ marginTop: space.sm }}>
-        <Row icon="shield" title="Kept on this phone, encrypted" sub="Never in iCloud, never for ads, never sold" />
+        <Row icon="shield" title="Encrypted, on this phone first" sub="Readings stay on it. Body numbers and meals back up only if you sign in" />
         <Row icon="eyeOff" title="Yours to take back" sub="Withdraw here or in Settings, and Life stops at once" />
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Wellness guidance from your own readings, not a diagnosis. Life keeps a note of your answer and the date, so you can see it here later.</Callout>
+      <Callout style={{ marginTop: space.md }}>Never in iCloud, never for ads, never sold. Wellness guidance from your own readings, not a diagnosis. Life keeps a note of your answer and the date, so you can see it here later.</Callout>
     </Page>
   );
 }
@@ -730,7 +730,7 @@ export function SigninV26() {
       </> : <>
         <Wordmark variant="callout" tone="ink2" style={{ marginBottom: space.xs }} />
         <Statement s="{Keep your plan safe.} Sign in so it survives a new phone." />
-        <Body s="Life never posts anything and never sells your data." style={{ marginTop: space.xs }} />
+        <Body s="Life backs up your plan, body numbers and meals, encrypted. Readings stay on this phone, and Life never sells your data." style={{ marginTop: space.xs }} />
         {step === 'email' ? <>
           <Field label="Your email" testID="signin-email" value={email} placeholder="you@example.com" onChangeText={setEmail} keyboardType="email-address" autoComplete="email" style={{ marginTop: space.lg }} />
           <Btn label="Send me a code" disabled={busy || !emailOk} onPress={() => { void askCode(); }} style={{ marginTop: space.sm }} />

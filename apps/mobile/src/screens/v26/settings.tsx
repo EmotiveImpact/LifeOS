@@ -21,6 +21,7 @@ import { SHOW_SAMPLES } from '@/state/sample';
 import { ai } from '@/services/ai';
 import { closeAccount, exportAccount, isSignedIn, type AccountDataProblem } from '@/services/account';
 import { sharesMoves, withMovesSharing } from '@/services/moves';
+import { privacyPolicy, terms, type LegalDoc } from '@/content/legal';
 import { CRASH_REPORTS_KEY, crashReportsAvailable } from '@/services/crashes';
 import { voice } from '@/services/voice';
 import { askNotifications, notificationPermission, notificationsSupported, type NotificationPermission } from '@/services/notifications';
@@ -665,8 +666,28 @@ function EmailCard({ sent }: { sent: boolean }) {
 
 /* ───────────────────────── About life ───────────────────────── */
 
+/** One legal document, block by block (`content/legal.ts`, generated from docs/launch). Tables read as one line per row. */
+function LegalText({ doc }: { doc: LegalDoc }) {
+  const plain = (s: string) => s.replace(/[{}]/g, '');
+  return (
+    <View style={{ marginTop: space.md }}>
+      <Text variant="title" accessibilityRole="header">{doc.title}</Text>
+      {doc.blocks.map((b, i) => {
+        if (b.kind === 'heading') return <SectionHead key={i} title={plain(b.text)} />;
+        if (b.kind === 'subheading') return <Text key={i} variant="headline" accessibilityRole="header" style={{ marginTop: space.md }}>{plain(b.text)}</Text>;
+        if (b.kind === 'text') return <Body key={i} s={b.text} style={{ marginTop: space.xs }} />;
+        if (b.kind === 'list') return <View key={i} style={{ marginTop: space.xs, gap: space.xxs }}>{b.items.map((item, j) => <Body key={j} s={`•  ${item}`} />)}</View>;
+        return <View key={i} style={{ marginTop: space.xs, gap: space.xs }}>{b.rows.map((row, j) => <Body key={j} s={`{${plain(row[0])}}  ${row.slice(1).filter(Boolean).join(' · ')}`} />)}</View>;
+      })}
+    </View>
+  );
+}
+
 export function LegalV26() {
-  const t = useTokens(), nav = useNavigation(), { data, flag } = useSeed();
+  const t = useTokens(), nav = useNavigation();
+  // Which text is open under the rows. One at a time, so the page stays readable.
+  const [open, setOpen] = useState<'terms' | 'privacy' | 'notices' | null>(null);
+  const toggle = (k: 'terms' | 'privacy' | 'notices') => setOpen(o => (o === k ? null : k));
   return (
     <Page screen="legal" bar={{ kind: 'push', title: 'About' }}>
       <View style={{ alignItems: 'center', paddingTop: space.md }}>
@@ -677,12 +698,13 @@ export function LegalV26() {
       <Display center s="{@heart Wellness}, not medical. {@cash Guidance}, not advice." style={{ marginTop: space.xl }} />
       <Body align="center" s="Life helps you notice and decide. It doesn’t diagnose, and it isn’t a financial adviser." style={{ marginTop: space.sm }} />
       <RowsCard style={{ marginTop: space.xl }}>
-        <Row icon="doc" title="Terms" onPress={() => flag('legal-terms')} style={{ minHeight: 56 }} />
-        <Row icon="shield" title="Privacy policy" onPress={() => nav.go('privacy')} style={{ minHeight: 56 }} />
-        <Row icon="layers" title="Open-source notices" sub={`${openSource.count} libraries · ${openSource.licences}`} onPress={() => flag('legal-notices')} />
+        <Row icon="doc" title="Terms" onPress={() => toggle('terms')} style={{ minHeight: 56 }} />
+        <Row icon="shield" title="Privacy policy" onPress={() => toggle('privacy')} style={{ minHeight: 56 }} />
+        <Row icon="layers" title="Open-source notices" sub={`${openSource.count} libraries · ${openSource.licences}`} onPress={() => toggle('notices')} />
       </RowsCard>
-      {data.flags['legal-terms'] ? <Body s="Life is a wellness and life-admin app, not a medical service or a regulated financial adviser. {Full terms are published before launch.}" style={{ marginTop: space.md }} /> : null}
-      {data.flags['legal-notices'] ? <Body s="Expo, React, React Native, Reanimated, Gesture Handler and SVG: MIT. Atria and Cal-AI: MIT. Fenny teaching references: the owner’s code, reused with permission. {Every notice is kept in THIRD_PARTY_NOTICES.md.}" style={{ marginTop: space.md }} /> : null}
+      {open === 'terms' ? <LegalText doc={terms} /> : null}
+      {open === 'privacy' ? <><LegalText doc={privacyPolicy} /><QuietLink label="See and manage your data" onPress={() => nav.go('privacy')} style={{ marginTop: space.md }} /></> : null}
+      {open === 'notices' ? <Body s="Expo, React, React Native, Reanimated, Gesture Handler and SVG: MIT. Atria and Cal-AI: MIT. Fenny teaching references: the owner’s code, reused with permission. Food facts © Open Food Facts contributors, under the Open Database Licence. {Every notice is kept in THIRD_PARTY_NOTICES.md.}" style={{ marginTop: space.md }} /> : null}
     </Page>
   );
 }

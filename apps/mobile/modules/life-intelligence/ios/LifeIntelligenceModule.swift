@@ -11,6 +11,12 @@ public final class LifeIntelligenceModule: Module {
   private var speech: LocalSpeech?
   public func definition() -> ModuleDefinition {
     Name("LifeIntelligence")
+    // The encrypted database's key lives in the Keychain for this phone only, so a backup of the database alone could
+    // never be opened, and health readings shouldn't sit in iCloud. Keep the database folder (expo-sqlite's
+    // Documents/SQLite) out of iCloud and computer backups; signing in restores a new phone instead.
+    OnCreate {
+      excludeDatabasesFromBackup()
+    }
     Events("transcript")
     AsyncFunction("available") { () async -> Bool in
       #if canImport(FoundationModels)
@@ -70,6 +76,16 @@ public final class LifeIntelligenceModule: Module {
       Task { @MainActor in self.speech?.stop(); self.speech = nil }
     }
   }
+}
+
+private func excludeDatabasesFromBackup() {
+  let files = FileManager.default
+  guard let documents = files.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+  var folder = documents.appendingPathComponent("SQLite", isDirectory: true)
+  try? files.createDirectory(at: folder, withIntermediateDirectories: true)
+  var values = URLResourceValues()
+  values.isExcludedFromBackup = true
+  try? folder.setResourceValues(values)
 }
 
 private struct LocalError: LocalizedError {
