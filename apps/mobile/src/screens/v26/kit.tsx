@@ -51,12 +51,12 @@ const Depth = createContext<'root' | 'detail' | 'moment'>('root');
  */
 export function Display({ s, onPhoto, flush, center, style }: { s: string; onPhoto?: boolean; flush?: boolean; center?: boolean; style?: StyleProp<ViewStyle> }) {
   const depth = useContext(Depth);
-  return <TwoTone size={depth === 'detail' && !onPhoto ? 'statement' : 'display'} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={[flush ? null : { marginTop: space.tile }, style]} />;
+  return <TwoTone header size={depth === 'detail' && !onPhoto ? 'statement' : 'display'} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={[flush ? null : { marginTop: space.tile }, style]} />;
 }
 
 /** The 24pt two-tone sentence (board `.statement`). */
-export function Statement({ s, onPhoto, size = 'statement', center, style }: { s: string; onPhoto?: boolean; size?: 'statement' | 'lead' | 'headline'; center?: boolean; style?: StyleProp<ViewStyle> }) {
-  return <TwoTone size={size} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={style} />;
+export function Statement({ s, onPhoto, size = 'statement', center, header, style }: { s: string; onPhoto?: boolean; size?: 'statement' | 'lead' | 'headline'; center?: boolean; /** When the sentence is the screen's title, so screen readers can jump to it. */ header?: boolean; style?: StyleProp<ViewStyle> }) {
+  return <TwoTone header={header} size={size} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={style} />;
 }
 
 /** Quiet copy with the braced words in ink (board `.body`, `.callout`). */
@@ -78,7 +78,8 @@ export function Eyebrow({ children, orb, star, icon, right, onPhoto, style }: { 
       {orb ? <LifeOrb size={18} color={onPhoto ? photo.onPhoto : t.ink} /> : null}
       {star ? <View style={[styles.dot, { backgroundColor: t.ember }]} /> : null}
       {icon ? <Icon name={icon} size={componentSize.iconXs - 2} color={color} /> : null}
-      <Text variant="callout" style={{ color, flexShrink: 1 }}>{children}</Text>
+      {/* The label above a screen's opening sentence: read as a heading, so it can be jumped to. */}
+      <Text variant="callout" accessibilityRole="header" style={{ color, flexShrink: 1 }}>{children}</Text>
     </View>
   );
   if (!right) return <View style={style}>{label}</View>;
@@ -275,13 +276,15 @@ export type PageProps = {
   onPull?: () => void;
   /** Dark status bar text over a light photograph (board `status('lt-ink')`). */
   statusInk?: boolean;
+  /** Called as you scroll near the bottom, so a long list (`useLongList`) can draw its next page. */
+  onEnd?: () => void;
 };
 
 /**
  * One V26 screen: the bar fixed outside the scroll, content with the board's 4/20/28 padding and no automatic gaps
  * (each block sets its own space above, as the board does), then the foot.
  */
-export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, onPull, statusInk }: PageProps) {
+export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, onPull, statusInk, onEnd }: PageProps) {
   const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets(), calm = useCalmMotion();
   const meta = screens[screen];
   const web = Platform.OS === 'web';
@@ -333,7 +336,11 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
   const content = <Depth.Provider value={meta.kind === 'Tab' ? 'root' : meta.kind === 'Push' || sheet ? 'detail' : 'moment'}>{children}</Depth.Provider>;
   const body = scroll
     ? <ScrollView style={fits && fit.web ? { flexGrow: 0, flexShrink: 1, minHeight: 0 } : { flex: 1, minHeight: 0 }} contentInsetAdjustmentBehavior="never" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
-        onScroll={onPull ? e => { if (e.nativeEvent.contentOffset.y < -60) onPull(); } : undefined} scrollEventThrottle={16}
+        onScroll={onPull || onEnd ? e => {
+          const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+          if (onPull && contentOffset.y < -60) onPull();
+          if (onEnd && contentOffset.y + layoutMeasurement.height > contentSize.height - END_REACH) onEnd();
+        } : undefined} scrollEventThrottle={16}
         onContentSizeChange={fits ? (_w, h) => fit.part('body', h) : undefined}
         contentContainerStyle={[pad, center ? { flexGrow: 1, justifyContent: 'center' } : null, contentStyle]}>{content}</ScrollView>
     : <View style={[{ flex: 1, minHeight: 0 }, pad, center ? { justifyContent: 'center' } : null, contentStyle]}>{content}</View>;
@@ -381,6 +388,31 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
       <Appear from={meta.kind === 'Push' ? 'right' : 'below'} rise={meta.kind === 'Push' ? 36 : 40} style={{ flex: 1, minHeight: 0 }}>{page}</Appear>
     </Animated.View>
   );
+}
+
+/** How close to the bottom (pt) a long list starts drawing its next page: about a screen and a half ahead. */
+const END_REACH = 1200;
+/** Rows a long list draws at a time. */
+export const LONG_LIST_PAGE = 40;
+
+/**
+ * A long list (what Life remembers, what it knows, your people, a conversation) draws a page of rows at a time and
+ * the next as you scroll near the end (`Page`'s `onEnd`), so a year of records never builds hundreds of rows at
+ * once. `from: 'end'` keeps the newest rows, for a conversation. The rows stay inside their card, as on the board.
+ */
+export function useLongList<T>(items: T[], { page = LONG_LIST_PAGE, from = 'start' }: { page?: number; from?: 'start' | 'end' } = {}) {
+  const [shown, setShown] = useState(page);
+  const visible = items.length <= shown ? items : from === 'end' ? items.slice(items.length - shown) : items.slice(0, shown);
+  const more = items.length - visible.length;
+  const showMore = useCallback(() => setShown(n => (n < items.length ? n + page : n)), [items.length, page]);
+  return { visible, more, showMore };
+}
+
+/** The way to the rest of a long list for anyone not scrolling: VoiceOver, TalkBack, a keyboard. */
+export function MoreRows({ more, onPress, earlier, style }: { more: number; onPress: () => void; earlier?: boolean; style?: StyleProp<ViewStyle> }) {
+  if (more <= 0) return null;
+  const n = Math.min(more, LONG_LIST_PAGE);
+  return <QuietLink label={earlier ? `Show ${n} earlier` : `Show ${n} more`} onPress={onPress} style={[{ marginTop: space.sm }, style]} />;
 }
 
 /** How a page leaves in the web preview: short, moving at once and easing to a stop, so the page underneath shows

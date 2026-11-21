@@ -1,0 +1,24 @@
+# On "Save your progress": sign in by email with a six-digit code. The code is read from the local API's log by
+# sync/codes.js (started by sync/run.sh), so this needs EMAIL and CODES_URL.
+appId: app.life.os
+---
+- tapOn: "Email"
+- tapOn:
+    id: "signin-email"
+- inputText: ${EMAIL}
+- tapOn: "Send me a code"
+- extendedWaitUntil:
+    visible: "Send a new code"
+    timeout: 15000
+- runScript:
+    file: read-code.js
+    env:
+      EMAIL: ${EMAIL}
+      CODES_URL: ${CODES_URL}
+- tapOn:
+    id: "signin-code"
+- inputText: ${output.code}
+- tapOn: "Sign in"
+- extendedWaitUntil:
+    notVisible: "Save your progress"
+    timeout: 20000

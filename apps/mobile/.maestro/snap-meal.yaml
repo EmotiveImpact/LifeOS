@@ -1,0 +1,50 @@
+# Snap a meal: from Fuel, choose a photo of a plate, check what Life saw, log it.
+appId: app.life.os
+name: Snap a meal
+tags:
+  - core
+---
+- launchApp:
+    clearState: true
+    permissions:
+      camera: allow
+      photos: allow
+      medialibrary: allow
+- addMedia:
+    - media/meal.jpg
+- runFlow: common/setup.yaml
+- tapOn: "Fuel.*"
+- tapOn: "Snap a meal"
+- runFlow:
+    when:
+      visible: "Allow the camera"
+    commands:
+      - tapOn: "Allow the camera"
+- extendedWaitUntil:
+    visible: "Choose a photo"
+    timeout: 15000
+- tapOn: "Choose a photo"
+# The phone's own photo picker: the newest photo is the one addMedia put there.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn:
+          text: "Photo, .*"
+          index: 0
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn:
+          text: "Photo taken on .*"
+          index: 0
+- extendedWaitUntil:
+    visible: "Log meal"
+    timeout: 20000
+- assertVisible: ".* grams\\. Change portion"
+- tapOn: "Log meal"
+- extendedWaitUntil:
+    visible: "Done"
+    timeout: 10000
+- tapOn: "Done"

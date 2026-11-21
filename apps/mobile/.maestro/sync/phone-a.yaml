@@ -1,0 +1,32 @@
+# Two-phone sync, phone A: set up, sign in, add someone. Run by sync/run.sh with EMAIL, PERSON and CODES_URL.
+appId: app.life.os
+name: Sync, phone A
+---
+- launchApp:
+    clearState: true
+- runFlow: ../common/setup-to-signin.yaml
+- runFlow: ../common/sign-in-email.yaml
+- runFlow: ../common/finish-setup.yaml
+- tapOn: "You"
+- scrollUntilVisible:
+    element:
+      text: "People and dates.*"
+- tapOn: "People and dates.*"
+- tapOn: "Add someone"
+- tapOn: "Type it in"
+- tapOn:
+    id: "person-name"
+- inputText: ${PERSON}
+- tapOn:
+    id: "person-relation"
+- inputText: "Friend"
+- hideKeyboard
+- tapOn: "Add this person"
+- runFlow:
+    when:
+      visible: "See all \\d+"
+    commands:
+      - tapOn: "See all \\d+"
+- scrollUntilVisible:
+    element:
+      text: "${PERSON}.*"

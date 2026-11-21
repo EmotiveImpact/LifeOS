@@ -355,7 +355,7 @@ export function RecallV26() {
     <Page screen="recall" bar={{ kind: 'sheet' }} footer={done ? <Btn label="Done" onPress={nav.close} /> : undefined}>
       <PhotoCard source={photos[idea.photo]} focal={{ y: 0.5 }} height={108} size="sm" chips={[{ label: 'Recall · 20 seconds', dot: t.ember }]} title={idea.title}
         topRight={<OnPhotoRound icon="close" label="Close" onPress={nav.close} />} />
-      <Statement s={recall.question} style={{ marginTop: space.md }} />
+      <Statement header s={recall.question} style={{ marginTop: space.md }} />
       <View style={{ gap: space.xs, marginTop: space.md }}>
         {recall.options.map(o => (
           <Option key={o.key} label={o.label} onPress={() => pick(o.key)}
@@ -471,13 +471,17 @@ export function TeachV26() {
         <View><Text variant="title">{idea.title}</Text><Text variant="callout" tone="ink2">{`${idea.by} · ${idea.topic}`}</Text></View>
       </View>
       <Display s={headline} style={{ marginTop: space.md }} />
-      <Press haptic={null} onPress={checked ? () => setChecked(false) : undefined} accessibilityLabel={checked ? 'Edit your explanation' : undefined}
-        style={[styles.paper, { backgroundColor: t.surface, marginTop: space.xl }, cardShadow(t.scheme)]}>
-        {checked ? <Marked text={text} /> : (
+      {/* Only the checked card is a button: around the text field, a button would hide the field from VoiceOver. */}
+      {checked ? (
+        <Press haptic={null} onPress={() => setChecked(false)} accessibilityLabel="Edit your explanation" style={[styles.paper, { backgroundColor: t.surface, marginTop: space.xl }, cardShadow(t.scheme)]}>
+          <Marked text={text} />
+        </Press>
+      ) : (
+        <View style={[styles.paper, { backgroundColor: t.surface, marginTop: space.xl }, cardShadow(t.scheme)]}>
           <TextInput maxFontSizeMultiplier={1.3} value={text} onChangeText={v => { setText(v); draft('barbell-explanation', v); }} multiline placeholder="In your own words…" placeholderTextColor={t.inkQuiet}
             selectionColor={t.ember} style={[styles.paperText, { color: t.ink, minHeight: 112 }]} accessibilityLabel="Your explanation" />
-        )}
-      </Press>
+        </View>
+      )}
       {checked ? <>
         <View style={[styles.tags, { marginTop: space.md }]}>
           {result.parts.map(p => <Chip key={p.label} label={p.label} icon={p.ok ? 'check' : undefined} tone={p.ok ? 'done' : 'q'} />)}

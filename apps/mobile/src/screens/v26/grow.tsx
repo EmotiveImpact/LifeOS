@@ -11,7 +11,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   DashPager, DotGrid, DotStrip, LifeOrb, LifeSays, PhotoFill, StatusPill, Text, TileGrid, V26Tile, cardShadow, feedback, motion, photo, photoScrims,
-  photos, radius, space, useCalmMotion, useTokens, type DotCell,
+  photos, radius, space, useCalmMotion, useTokens, type DotCell, durations
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
@@ -129,7 +129,7 @@ export function LevelupV26() {
   const scale = useSharedValue(calm ? 1 : 0.92), fade = useSharedValue(0);
   useEffect(() => {
     if (page === 0) feedback.cleared();
-    fade.value = 0; fade.value = withTiming(1, { duration: calm ? 200 : 320 });
+    fade.value = 0; fade.value = withTiming(1, { duration: calm ? durations.quick : durations.item });
     scale.value = calm ? 1 : 0.92; if (!calm) scale.value = withSpring(1, motion.smooth);
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
   const orb = useAnimatedStyle(() => ({ opacity: fade.value, transform: [{ scale: scale.value }] }));

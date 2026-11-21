@@ -224,7 +224,7 @@ export function FeelingDrawer({ initial = 'calm', onClose, onSet, onChange, fiel
   const body = <>
     {bare ? null : <View style={[styles.grabber, { backgroundColor: t.surface3 }]} />}
     <View style={styles.headRow}>
-      <TwoTone size="statement" segments={[{ text: 'How are you ', tone: 'quiet' }, { text: 'arriving?' }]} style={{ flex: 1 }} />
+      <TwoTone header size="statement" segments={[{ text: 'How are you ', tone: 'quiet' }, { text: 'arriving?' }]} style={{ flex: 1 }} />
       <RoundButton icon="close" size="sm" label="Not now" onPress={onClose} />
     </View>
     <FeelField initial={initial} height={fieldHeight} onChange={id => { setMood(id); onChange?.(id); }} style={{ marginTop: space.sm }} />

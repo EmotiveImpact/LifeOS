@@ -45,6 +45,11 @@ const initial: SeedData = {
 };
 type SeedContextValue = {
   data: SeedData; hydrated: boolean; storageError: boolean; storageMode: ProjectionStorage['mode'] | null;
+  /**
+   * Goes up each time `data` is read back from storage (opening, what sync or background work brought in, a reset)
+   * rather than changed on this phone, so anything that watches for changes made here can tell the two apart.
+   */
+  loads: number;
   retryStorage: () => void; exportEverything: () => Promise<unknown>;
   /** Erases this life. `thisPhoneOnly` once the account has been closed on the server, so nothing is queued for it. */
   reset: (options?: { thisPhoneOnly?: boolean }) => Promise<boolean>;
@@ -73,7 +78,7 @@ const Context = createContext<SeedContextValue | null>(null);
 
 export function SeedProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
-  const [data, setData] = useState(initial), [hydrated, setHydrated] = useState(false);
+  const [data, setData] = useState(initial), [hydrated, setHydrated] = useState(false), [loads, setLoads] = useState(0);
   const [storageError, setStorageError] = useState(false), [storageMode, setStorageMode] = useState<ProjectionStorage['mode'] | null>(null), [retry, setRetry] = useState(0);
   const storage = useRef<ProjectionStorage | null>(null), writes = useRef<Promise<void>>(Promise.resolve());
   const latest = useRef(data), lastQueued = useRef(''), revision = useRef(0), committed = useRef(0);
@@ -100,7 +105,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
       const next = hydrate(await opened.load());
       if (!active) return;
       lastQueued.current = JSON.stringify(next);
-      latest.current = next; setData(next); setStorageMode(opened.mode); setHydrated(true);
+      latest.current = next; setData(next); setLoads(n => n + 1); setStorageMode(opened.mode); setHydrated(true);
       void syncNow();
     })().catch(() => { if (active) setStorageError(true); });
     return () => {
@@ -146,7 +151,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
     needsReload.current = false;
     const next = hydrate(await target.load());
     if (storage.current !== target) return;
-    latest.current = next; setData(next);
+    latest.current = next; setData(next); setLoads(n => n + 1);
   }
   /** Background work saved while the app was away: show what it brought in rather than writing over it. */
   async function reloadAfterBackground() {
@@ -169,7 +174,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
 
   const engine = useMemo(() => engineSnapshot(data.profile, data.completed), [data.profile, data.completed]);
   const value: SeedContextValue = {
-    data, hydrated, storageError, storageMode, engine,
+    data, hydrated, storageError, storageMode, engine, loads,
     retryStorage: () => setRetry(value => value + 1),
     exportEverything: async () => { await writes.current; if (!storage.current) throw new Error('Local data unavailable'); return storage.current.exportEverything(); },
     set: patch => setData(current => {
@@ -209,7 +214,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
         await storage.current.clear(options?.thisPhoneOnly ? 'this-phone' : 'everywhere');
         const next = { ...initial, onboardingDone: false };
         lastQueued.current = JSON.stringify(next); revision.current = 0; committed.current = 0;
-        resetting.current = next; latest.current = next; setData(next);
+        resetting.current = next; latest.current = next; setData(next); setLoads(n => n + 1);
         return true;
       } catch { resetting.current = null; setStorageError(true); return false; }
     },

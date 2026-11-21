@@ -277,7 +277,7 @@ export function FuelplanV26() {
       backdrop={<View pointerEvents="none" style={StyleSheet.absoluteFill}><PhotoFill source={photos.sky} focal={{ x: .37, y: 0, zoom: 2.9 }} settle /><LinearGradient colors={photoScrims.fade.colors} locations={photoScrims.fade.locations} style={StyleSheet.absoluteFill} /></View>}
       footer={<View style={{ flexDirection: 'row', gap: space.xs }}><Btn label="Adjust" ghost fit onPhoto onPress={nav.close} /><View style={{ flex: 1 }}><Btn label="Start" onPhoto onPress={() => { choose('fuel-kcal', String(plan.daily)); flag('food-plan-set', true); feedback.complete(); nav.replace('fuel'); }} /></View></View>}>
       <LifeOrb size={56} state="done" color={photo.onPhoto} />
-      <Text style={[styles.moment, { color: photo.onPhoto }]}>Your plan is ready.</Text>
+      <Text variant="welcome" style={{ color: photo.onPhoto, marginTop: space.lg }}>Your plan is ready.</Text>
       <Statement onPhoto s={keep ? `You’ll keep about {${plan.kg.toFixed(1)} kg}, eating about what your body uses.` : `At ${paceWords} a week you’d reach {${plan.target} kg} around {${longDate(plan.reach)}}.`} style={{ marginTop: space.sm }} />
       {keep ? null : <Measure height={76} style={{ marginTop: space.xl }} label={`${plan.weeks} weeks from today to ${plan.target} kg, around ${longDate(plan.reach)}`}>{w => <WeekDots w={w} count={plan.weeks} end={`${shortDate(plan.reach)} · ${plan.target} kg`} />}</Measure>}
       <View style={[styles.fields, { marginTop: space.lg }]}>
@@ -736,7 +736,6 @@ const styles = StyleSheet.create({
   dayCol: { width: 148, borderRadius: radius.lg, paddingTop: 14, paddingHorizontal: 14, paddingBottom: space.md },
   stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.lg, marginTop: space.xs },
   sum: { flexDirection: 'row', alignItems: 'flex-start' },
-  moment: { fontFamily: fonts.sansSemibold, fontSize: 46, lineHeight: 48, letterSpacing: -2.07, marginTop: space.lg },
   fields: { flexDirection: 'row', gap: space.sm },
   field: { flex: 1, borderRadius: radius.md, paddingVertical: space.tile, paddingHorizontal: space.sm },
   legend: { flexDirection: 'row', alignItems: 'center', gap: 6 },

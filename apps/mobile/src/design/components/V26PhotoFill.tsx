@@ -36,9 +36,10 @@ export function PhotoFill({ source, focal, settle }: { source: ImageSourcePropTy
   useEffect(() => { if (settle && !calm) scale.value = withSpring(1, motion.imageEnter); }, [settle, calm, source, scale]);
   const anim = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
-    <View pointerEvents="none" onLayout={e => { const { width, height } = e.nativeEvent.layout; setFrame(f => f.width === width && f.height === height ? f : { width, height }); }} style={[StyleSheet.absoluteFill, { backgroundColor: t.surface2, overflow: 'hidden' }]}>
+    // A photograph sets the scene; the card or screen around it says what it shows, so screen readers skip it.
+    <View aria-hidden pointerEvents="none" onLayout={e => { const { width, height } = e.nativeEvent.layout; setFrame(f => f.width === width && f.height === height ? f : { width, height }); }} style={[StyleSheet.absoluteFill, { backgroundColor: t.surface2, overflow: 'hidden' }]}>
       <Animated.View style={[StyleSheet.absoluteFill, anim]}>
-        <Image source={source} resizeMode="cover" accessibilityIgnoresInvertColors fadeDuration={calm ? 0 : motion.imageFade.duration} style={crop ?? StyleSheet.absoluteFill} />
+        <Image source={source} resizeMode="cover" resizeMethod="resize" accessibilityIgnoresInvertColors fadeDuration={calm ? 0 : motion.imageFade.duration} style={crop ?? StyleSheet.absoluteFill} />
       </Animated.View>
     </View>
   );

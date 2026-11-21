@@ -406,7 +406,7 @@ export function SyncIssueV26() {
   return (
     <Page screen="syncissue" bar={{ kind: 'sheet' }}>
       <Between style={{ alignItems: 'flex-start' }}>
-        <Statement s={`Which {@calendar ${syncConflict.label}} is right?`} style={{ flex: 1, minWidth: 0 }} />
+        <Statement header s={`Which {@calendar ${syncConflict.label}} is right?`} style={{ flex: 1, minWidth: 0 }} />
         <RoundButton icon="close" size="sm" label="Decide later" onPress={nav.close} />
       </Between>
       <Body s={`You changed it on two phones while offline: the ${syncConflict.here}th here, the ${syncConflict.there}th on ${syncConflict.where}.`} style={{ marginTop: space.xs }} />

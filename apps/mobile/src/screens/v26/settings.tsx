@@ -20,6 +20,8 @@ import { money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { ai } from '@/services/ai';
 import { closeAccount, exportAccount, isSignedIn, type AccountDataProblem } from '@/services/account';
+import { sharesMoves, withMovesSharing } from '@/services/moves';
+import { CRASH_REPORTS_KEY, crashReportsAvailable } from '@/services/crashes';
 import { voice } from '@/services/voice';
 import { askNotifications, notificationPermission, notificationsSupported, type NotificationPermission } from '@/services/notifications';
 import { faces } from '@/state/people';
@@ -422,7 +424,7 @@ export function ServicesV26() {
 /* ───────────────────────── Your data ───────────────────────── */
 
 export function PrivacyV26() {
-  const nav = useNavigation(), { data } = useSeed(), exportData = useExport(), health = useHealthConsent();
+  const nav = useNavigation(), { data, update, choose } = useSeed(), exportData = useExport(), health = useHealthConsent();
   // The recorded health-data yes (Phase 20's consent step). Withdrawing happens on that same screen.
   const healthLine = health.consent ? `You said yes on ${longDate(health.consent.at)}`
     : health.withdrawnAt ? 'You took your yes back · off' : health.declined ? 'Off · you said not now' : 'Not asked yet';
@@ -447,6 +449,9 @@ export function PrivacyV26() {
         <Row icon="pulse" title="Health data" sub={healthLine} onPress={() => nav.go('healthconsent', { next: 'settings' })} />
         <Row icon="shield" title="Backed up" sub="Encrypted, in the UK and EU" />
         <Row icon="people" title="Who helps run Life" sub="Hosting, AI, email · 4 companies" onPress={() => nav.go('legal')} />
+        {/* Off until the person says yes (services/moves.ts). Off again forgets every count. */}
+        <SwitchRow icon="chart" title="Share how much gets done" sub="One number a week, never who it’s from" value={sharesMoves(data.choices)} onChange={v => update(d => withMovesSharing(d, v))} />
+        {crashReportsAvailable() || SHOW_SAMPLES ? <SwitchRow icon="info" title="Send crash reports" sub="What broke and where, never who or what you wrote" value={data.choices[CRASH_REPORTS_KEY] !== 'off'} onChange={v => choose(CRASH_REPORTS_KEY, v ? 'on' : 'off')} /> : null}
       </RowsCard>
       <Row icon="trash" title="Delete my account" sub="30 days to change your mind" onPress={() => nav.go('deleteacct')} style={{ marginTop: space.xl }} />
     </Page>

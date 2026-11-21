@@ -5,7 +5,7 @@ import { Icon as Ionicons, type GlyphName } from '../Icon';
 import { Press } from '../Press';
 import { Callout, Mono, Text, Title } from '../Text';
 import { useTokens } from '../theme';
-import { areaColors, cardShadow, componentSize, fonts, radius, space, touch, type Area } from '../tokens';
+import { areaColors, cardShadow, componentSize, durations, fonts, radius, space, touch, type Area } from '../tokens';
 import { Slider } from './Controls';
 import { CapsuleBars } from './V26Data';
 import { CheckRows, V26Row, type V26RowProps } from './V26Lists';
@@ -393,7 +393,7 @@ function MetricTileV23({ label, value, unit, meaning, children, onPress }: Extra
       </Text>
       {children}
       {meaning ? (
-        <Animated.View entering={FadeIn}>
+        <Animated.View entering={FadeIn.duration(durations.quick)}>
           <Callout tone="ink2">{meaning}</Callout>
         </Animated.View>
       ) : null}

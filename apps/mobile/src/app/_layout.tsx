@@ -10,6 +10,8 @@ import { SeedProvider, useSeed } from '@/state/SeedProvider';
 import { useAiQueueRunner } from '@/services/useAiQueue';
 import { useHealthRunner } from '@/services/health/useHealthRunner';
 import { useNudgeRunner } from '@/services/nudges';
+import { useMovesCounter } from '@/services/moves';
+import { CRASH_REPORTS_KEY, setCrashReports } from '@/services/crashes';
 // Defines the background task at start-up, as the phone needs it defined before it can run it (Phase 29).
 import { setBackgroundWork } from '@/services/background';
 import { consentFrom } from '@/services/health/consent';
@@ -35,10 +37,17 @@ function AppShell() {
 /** Sends AI requests that waited for a connection, whichever screen is open (services/useAiQueue.ts). */
 function AiQueueRunner() { useAiQueueRunner(); return null; }
 function HealthRunner() { useHealthRunner(); return null; }
-/** Plans the phone's nudges and keeps background work registered while nudges or health reading are on. */
+/**
+ * Plans the phone's nudges and keeps background work registered while nudges or health reading are on. Also counts
+ * finished moves, only once the person has switched that on (services/moves.ts).
+ */
 function DayRunner() {
   const { data } = useSeed();
   useNudgeRunner();
+  useMovesCounter();
+  // Crash reports start once the stored choice is known, so a no is never overridden (services/crashes.native.ts).
+  const crashes = data.choices[CRASH_REPORTS_KEY] !== 'off';
+  useEffect(() => { setCrashReports(crashes); }, [crashes]);
   const wanted = data.prefs.notifications || consentFrom(data.choices) !== null;
   useEffect(() => { void setBackgroundWork(wanted); }, [wanted]);
   return null;

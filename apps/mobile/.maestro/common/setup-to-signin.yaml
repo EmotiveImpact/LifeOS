@@ -1,0 +1,44 @@
+# First open, up to "Save your progress": the age check, the first question, where you live, health and nudges both
+# left for later, an Aim from Life's suggestions, then the plan being built.
+appId: app.life.os
+---
+- extendedWaitUntil:
+    visible: "Get started"
+    timeout: 30000
+- tapOn: "Get started"
+- tapOn:
+    id: "age-day"
+- inputText: "12"
+- tapOn:
+    id: "age-month"
+- inputText: "5"
+- tapOn:
+    id: "age-year"
+- inputText: "1990"
+- hideKeyboard
+- tapOn: "Continue"
+- tapOn: "Next: where you live"
+- tapOn: "London"
+- tapOn: "Next: your body"
+- tapOn: "Not now, skip the health parts"
+- extendedWaitUntil:
+    visible: "Turn on nudges"
+    timeout: 10000
+- tapOn: "Not now"
+# The Aim, one question at a time. Each "Suggest:" fills the answer from what Life already knows.
+- tapOn: "Suggest:.*"
+- tapOn: "Next: by when\\?"
+- tapOn: "Suggest:.*"
+- tapOn: "Next: what you’ll give"
+- tapOn: "Suggest:.*"
+- tapOn: "Next: your first plan"
+- tapOn: "Suggest:.*"
+- tapOn: "Save my Aim"
+# The plan is ready when the monthly costs read "Mapped".
+- extendedWaitUntil:
+    visible: "Rent, bills, subscriptions · Mapped"
+    timeout: 20000
+- tapOn: "See my plan"
+- extendedWaitUntil:
+    visible: "Save your progress"
+    timeout: 10000

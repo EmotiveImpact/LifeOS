@@ -23,7 +23,7 @@ import { useBrainJob } from '@/services/useBrainJob';
 import { proposalRecord } from '@/services/brainState';
 import { pickAttachment, removeAttachmentCopy } from '@/services/attachments';
 import { ConversationAttachments } from '../ConversationAttachments';
-import { Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, QuietLink, Row, RowsCard, Statement, Between } from './kit';
+import { Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, QuietLink, Row, RowsCard, Statement, Between, MoreRows, useLongList } from './kit';
 
 const AREAS: [Area, string][] = [['you', 'You'], ['home', 'Home'], ['work', 'Work'], ['money', 'Money'], ['health', 'Health'], ['goal', 'Goals']];
 const areaName = (a: Area) => AREAS.find(x => x[0] === a)?.[1] ?? a;
@@ -424,6 +424,7 @@ export function ChatV26() {
   const ask = async (q: string) => { if (!q.trim() || conversation.thinking || conversation.pending) return; setText(''); await conversation.send(q); };
   useEffect(() => { if (params.question && !first.current) { first.current = true; void ask(params.question); } }, [params.question]); // eslint-disable-line react-hooks/exhaustive-deps
   const messages = conversation.current?.messages ?? [];
+  const long = useLongList(messages, { from: 'end' });
   const title = (
     <Press haptic="select" onPress={() => nav.go('chathistory')} accessibilityLabel="Life, your conversations" style={styles.chatTitle}>
       <LifeOrb size={18} state={conversation.thinking ? 'thinking' : 'ring'} /><Text variant="title">Life</Text>
@@ -447,7 +448,7 @@ export function ChatV26() {
       </>}>
       <View style={{ gap: 14 }}>
         {messages.length
-          ? messages.map(m => <ChatMessage key={m.id} message={m} onReview={() => { conversation.review(m.proposals ?? []); flag('records-confirmed', false); nav.go('understood'); }} />)
+          ? <><MoreRows earlier more={long.more} onPress={long.showMore} style={{ marginTop: 0 }} />{long.visible.map(m => <ChatMessage key={m.id} message={m} onReview={() => { conversation.review(m.proposals ?? []); flag('records-confirmed', false); nav.go('understood'); }} />)}</>
           : SHOW_SAMPLES ? <SampleThread /> : <>
             <Text variant="titleSerif" style={{ marginTop: space.md }}>What’s on your mind?</Text>
             <Body s="Ask about your plan, tell Life something to remember, or attach a document. {Nothing is saved until you say so.}" />
@@ -554,8 +555,9 @@ export function ChatHistoryV26() {
   const filedTotal = useSamples ? 12 : threads.reduce((n, c) => n + filedCount(c), 0);
   const when = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   const open = (id: string) => { conversation.openThread(id); nav.go('chat'); };
+  const long = useLongList(threads.slice(1));
   return (
-    <Page screen="chathistory" bar={{ kind: 'push', action: { kind: 'icon', icon: searching ? 'close' : 'search', label: searching ? 'Close search' : 'Search conversations', onPress: () => { setSearching(s => !s); setQuery(''); } } }}>
+    <Page screen="chathistory" onEnd={long.showMore} bar={{ kind: 'push', action: { kind: 'icon', icon: searching ? 'close' : 'search', label: searching ? 'Close search' : 'Search conversations', onPress: () => { setSearching(s => !s); setQuery(''); } } }}>
       <Eyebrow>Talk · your conversations</Eyebrow>
       {searching
         ? <TextInput maxFontSizeMultiplier={1.3} autoFocus value={query} onChangeText={setQuery} placeholder="Search conversations" placeholderTextColor={t.ink2} accessibilityLabel="Search conversations" selectionColor={t.ember}
@@ -570,8 +572,9 @@ export function ChatHistoryV26() {
       </> : threads.length && (filter === 'All' || filter === 'Chat') ? <>
         <PhotoCard source={photos[THREAD_PHOTOS[0]]} focal={{ x: 0.78 }} height={176} chips={[`Latest · Chat · ${when(threads[0].updatedAt)}`]} chipRight={`Filed ${filedCount(threads[0])}`} title={threads[0].title} sub={`“${threads[0].messages.find(m => m.role === 'user')?.text ?? ''}”`} onPress={() => open(threads[0].id)} style={{ marginTop: space.md }} />
         <PhotoGrid style={{ marginTop: space.tile }}>
-          {threads.slice(1).map((c, i) => <PhotoCard key={c.id} source={photos[THREAD_PHOTOS[(i + 1) % THREAD_PHOTOS.length]]} height={150} size="sm" chips={[`Chat · ${when(c.updatedAt)}`]} title={c.title} sub={`Filed ${filedCount(c)}`} onPress={() => open(c.id)} />)}
+          {long.visible.map((c, i) => <PhotoCard key={c.id} source={photos[THREAD_PHOTOS[(i + 1) % THREAD_PHOTOS.length]]} height={150} size="sm" chips={[`Chat · ${when(c.updatedAt)}`]} title={c.title} sub={`Filed ${filedCount(c)}`} onPress={() => open(c.id)} />)}
         </PhotoGrid>
+        <MoreRows more={long.more} onPress={long.showMore} />
       </> : null}
       <Btn label="New conversation" ghost onPress={() => { conversation.newThread(); nav.go('chat'); }} style={{ marginTop: space.lg }} />
       <Callout style={{ marginTop: space.md }}>Nothing here is needed to use Life. Everything useful is already filed in its place.</Callout>

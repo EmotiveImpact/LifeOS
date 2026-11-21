@@ -174,6 +174,20 @@ export async function registerPushToken(token: string | null): Promise<boolean> 
   return response?.ok === true;
 }
 
+/**
+ * One finished week's count of moves, for Life's north star (Phase 30 `POST /metrics/moves`). Only the week, the
+ * count and the kind of phone go. The session only keeps strangers out: the server adds the count to a tally and
+ * keeps nothing that says whose it was. `later` means try again on the next run; `refused` means drop this week.
+ */
+export async function reportMoves(week: string, moves: number): Promise<'sent' | 'refused' | 'later'> {
+  const session = await sessionToken();
+  if (!accountsLive() || !session) return 'later';
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') return 'refused';
+  const response = await call('/metrics/moves', { week, moves, platform: Platform.OS }, session);
+  if (!response || response.status === 401 || response.status === 429 || response.status >= 500) return 'later';
+  return response.ok ? 'sent' : 'refused';
+}
+
 /** Words for each problem, for the sheet. */
 export const problemWords: Record<AccountProblem, string> = {
   offline: 'Life couldn’t reach the internet. Check your connection and try again.',

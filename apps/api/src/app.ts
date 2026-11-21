@@ -4,6 +4,7 @@ import type { Auth, Principal } from './auth';
 import type { Db } from './db/client';
 import { devices } from './db/schema';
 import { SearchBody, listMemories, searchMemories } from './memory';
+import { MovesBody, countWeek, reportableWeeks } from './metrics';
 import { aiCapabilities, runAi, type AiOptions } from './router';
 import type { Storage } from './storage';
 import { MAX_PULL, MAX_PUSH, forget, forgettable, isTable, pull, push, refusedByPolicy } from './sync';
@@ -136,6 +137,13 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       const parsed = SearchBody.safeParse(await readJson(request));
       if (!parsed.success) return fail(400, 'BAD_REQUEST');
       return json(await searchMemories(db, principal.userId, parsed.data, now()));
+    },
+    'POST /metrics/moves': async request => {
+      // One week's count of finished moves, shared by choice. Only the week, platform and count are read and kept.
+      const parsed = MovesBody.safeParse(await readJson(request));
+      if (!parsed.success || !reportableWeeks(now()).has(parsed.data.week)) return fail(400, 'BAD_REQUEST');
+      await countWeek(db, parsed.data);
+      return new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } });
     },
     'GET /wearables': async (_request, principal) => (wearables ? json(await listConnections(db, wearables, principal.userId)) : json({ available: [], connections: [] })),
     'GET /wearables/samples': async (request, principal) => {

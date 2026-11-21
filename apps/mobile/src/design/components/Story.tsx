@@ -26,7 +26,7 @@ export type TwoToneSegment = {
  * DESIGN.md §6.2: the signature sentence. Quiet context in `ink-quiet`, what matters in full ink.
  * Write segments with their own spacing, e.g. [{text:'Nothing urgent — ', tone:'quiet'}, {text:'one form'}].
  */
-export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, align, style }: { segments: TwoToneSegment[]; /** V26: centred lines (Children, Help, About). */ align?: 'center'; /** V26: `display` is Today's 34pt briefing, `lead` the 20pt medium line ("I’m arriving calm."). */ size?: 'statement' | 'headline' | 'welcomeStatement' | 'display' | 'lead'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
+export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, align, header, style }: { segments: TwoToneSegment[]; /** The screen's opening sentence: read as a heading, so VoiceOver and TalkBack can jump to it. */ header?: boolean; /** V26: centred lines (Children, Help, About). */ align?: 'center'; /** V26: `display` is Today's 34pt briefing, `lead` the 20pt medium line ("I’m arriving calm."). */ size?: 'statement' | 'headline' | 'welcomeStatement' | 'display' | 'lead'; onAtmosphere?: boolean; style?: StyleProp<ViewStyle> }) {
   const t = useTokens();
   const showIcons = useSentenceIcons();
   const quiet = onAtmos ? onAtmosphere.text2 : t.ink2;
@@ -37,7 +37,7 @@ export function TwoTone({ segments, size = 'statement', onAtmosphere: onAtmos, a
   const stroke = size === 'display' || size === 'statement' ? 2 : undefined;
   return (
     <View style={style}>
-      <Text variant={variant} accessibilityRole="text" align={align}>
+      <Text variant={variant} accessibilityRole={header ? 'header' : 'text'} align={align}>
         {(showIcons ? segments : segments.map(s => (s.icon ? { ...s, icon: undefined } : s))).map((s, i) => (
           <Text key={i} variant={variant} style={[{ color: s.tone === 'quiet' ? quiet : ink }, s.icon && size === 'display' ? keepTogether : null]}>
             {s.avatar ? (
@@ -172,6 +172,8 @@ function PeekCard({ item, pos, count, gap, onMeasure, onBringFront, onSendBack }
         haptic={isFront ? (item.onPressFront ? 'open' : null) : 'select'}
         onPress={isFront ? item.onPressFront : onBringFront}
         accessibilityLabel={isFront ? undefined : 'Bring card to front'}
+        accessibilityActions={isFront && count > 1 ? [{ name: 'back', label: 'Send to the back' }] : undefined}
+        onAccessibilityAction={isFront ? (e) => { if (e.nativeEvent.actionName === 'back') onSendBack(); } : undefined}
         pressScale={0.985}
         style={{ backgroundColor: bg, borderRadius: 24, padding: 18, overflow: 'hidden' }}
       >
@@ -457,6 +459,12 @@ export function NudgeCard({ timestamp, title, media, variant = 'default', heroCo
       <Press
         haptic="open"
         onPress={onPress}
+        // The swipes, offered to VoiceOver and TalkBack as actions.
+        accessibilityActions={[...(onComplete ? [{ name: 'complete', label: 'Done' }] : []), ...(onSnooze ? [{ name: 'snooze', label: 'Tomorrow' }] : [])]}
+        onAccessibilityAction={(e) => {
+          if (e.nativeEvent.actionName === 'complete' && onComplete) { feedback.complete(); onComplete(); }
+          if (e.nativeEvent.actionName === 'snooze' && onSnooze) { feedback.select(); onSnooze(); }
+        }}
         style={{ borderRadius: 24, padding: 18, minHeight: hero ? 170 : 120, flexDirection: 'row', alignItems: 'flex-end', gap: 14, backgroundColor: t.surface, overflow: 'hidden' }}
       >
         {hero ? <LinearGradient colors={heroColors ?? ['#5B3B8C', '#C2457A', '#F0612D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} /> : null}

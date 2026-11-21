@@ -53,3 +53,6 @@ Add each installed MIT / Apache-2.0 library here with its copyright line when it
 
 ## The day engine (Phase 29)
 - **expo-notifications 58.1.9, expo-background-task 58.0.13, expo-task-manager 58.0.14, expo-calendar 58.0.8 and expo-device 58.0.5 (MIT).** Copyright (c) 2015-present 650 Industries, Inc. (aka Expo). https://github.com/expo/expo . Local nudges, background work, reading busy times from the phone's calendars, and telling a phone from a simulator for push tokens. Installed as dependencies, not copied source.
+
+## Quality (Phase 30)
+- **Sentry React Native SDK 8.28.0 (MIT).** Copyright (c) Functional Software, Inc. dba Sentry. https://github.com/getsentry/sentry-react-native . Crash reports, started only when the build carries the owner's DSN and the person hasn't switched them off. Installed as a dependency with its own Sentry JavaScript and native SDK dependencies (MIT), not copied source.

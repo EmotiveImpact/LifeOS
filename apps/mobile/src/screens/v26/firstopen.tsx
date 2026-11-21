@@ -137,9 +137,9 @@ export function AgecheckV26() {
       <Display s="{When were you born?}" style={{ marginTop: space.xxs }} />
       <Body s="Life asks once. Your date of birth sets {age rules}, like pensions and the Lifetime ISA, and it stays {on this phone}." style={{ marginTop: space.xs }} />
       <View style={styles.dob}>
-        <Field label="Day" value={d} placeholder="DD" onChangeText={v => setD(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
-        <Field label="Month" value={m} placeholder="MM" onChangeText={v => setM(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
-        <Field label="Year" value={y} placeholder="YYYY" onChangeText={v => setY(digits(v, 4))} keyboardType="numeric" style={{ flex: 1.5 }} />
+        <Field label="Day" testID="age-day" value={d} placeholder="DD" onChangeText={v => setD(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
+        <Field label="Month" testID="age-month" value={m} placeholder="MM" onChangeText={v => setM(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
+        <Field label="Year" testID="age-year" value={y} placeholder="YYYY" onChangeText={v => setY(digits(v, 4))} keyboardType="numeric" style={{ flex: 1.5 }} />
       </View>
       <Callout tone={problem ? 'ink' : 'ink2'} style={{ marginTop: space.sm }}>{problem ?? 'For example, 14 3 1999'}</Callout>
     </Page>
@@ -720,7 +720,7 @@ export function SigninV26() {
     <Page screen="signin" bar={{ kind: 'sheet', title: 'Save your progress' }}>
       {step === 'code' ? <>
         <Statement s={`{Check your email.} We sent a six-digit code to ${email.trim()}.`} />
-        <Field label="Code" value={code} placeholder="123456" onChangeText={text => setCode(text.replace(/\D/g, '').slice(0, 6))} keyboardType="numeric" autoComplete="one-time-code" maxLength={6} style={{ marginTop: space.lg }} />
+        <Field label="Code" testID="signin-code" value={code} placeholder="123456" onChangeText={text => setCode(text.replace(/\D/g, '').slice(0, 6))} keyboardType="numeric" autoComplete="one-time-code" maxLength={6} style={{ marginTop: space.lg }} />
         <Btn label="Sign in" disabled={busy || code.length !== 6} onPress={() => { void checkCode(); }} style={{ marginTop: space.sm }} />
         {note}
         <View style={[styles.inline, { justifyContent: 'center', gap: space.lg, marginTop: space.sm }]}>
@@ -732,7 +732,7 @@ export function SigninV26() {
         <Statement s="{Keep your plan safe.} Sign in so it survives a new phone." />
         <Body s="Life never posts anything and never sells your data." style={{ marginTop: space.xs }} />
         {step === 'email' ? <>
-          <Field label="Your email" value={email} placeholder="you@example.com" onChangeText={setEmail} keyboardType="email-address" autoComplete="email" style={{ marginTop: space.lg }} />
+          <Field label="Your email" testID="signin-email" value={email} placeholder="you@example.com" onChangeText={setEmail} keyboardType="email-address" autoComplete="email" style={{ marginTop: space.lg }} />
           <Btn label="Send me a code" disabled={busy || !emailOk} onPress={() => { void askCode(); }} style={{ marginTop: space.sm }} />
           {note}
           <QuietLink label="Back to other ways" onPress={() => go('ways')} style={{ marginTop: space.sm }} />
