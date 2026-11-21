@@ -131,6 +131,9 @@ if relative:
         path.write_bytes(plistlib.dumps(wanted))
         print(f"::warning title=Signed without {names}::The App Store profile doesn't include {names}, so this "
               f"sample-life build leaves them out. To include them, {fix}.")
+    signed = sorted({'Push Notifications' if key == 'aps-environment'
+                     else 'HealthKit' if key.startswith('com.apple.developer.healthkit') else key for key in wanted})
+    print(f"::notice title=Capabilities::Signed with {', '.join(signed) or 'no extra capabilities'}.")
 PY
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "ios/$PROJECT_NAME/Info.plist"
 # No account login, secrets in app code, or provisioning changes are performed here.
