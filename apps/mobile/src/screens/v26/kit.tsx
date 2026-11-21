@@ -13,13 +13,14 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Appear, Button, Card, Footer, Icon, LifeOrb, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
-  cardShadow, componentSize, motion, photo, photoScrims, radius, space, useCalmMotion, useTokens,
+  Appear, Button, Card, Footer, Icon, LifeOrb, PhotoCard, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
+  cardShadow, componentSize, motion, photo, photos, photoScrims, radius, space, useCalmMotion, useTokens,
   type Focal, type GlyphName, type OrbArea, type SpineItem, type StatusKind, type Tone, type TopBarAction, type TwoToneSegment, type TypeStyle, type V26RowProps,
 } from '@/design';
 import { screens, type ScreenKey } from '@/navigation/screens';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
+import { SHOW_SAMPLES } from '@/state/sample';
 import { setWebExit, takeReturn } from '@/navigation/webExit';
 
 /* ───────────────────────── Copy ───────────────────────── */
@@ -241,8 +242,9 @@ export function PhotoRound({ icon, label, onPress }: { icon: GlyphName; label: s
 function RootBar({ bar, onImage }: { bar: Extract<Bar, { kind: 'root' }>; onImage: boolean }) {
   const nav = useNavigation(), { data } = useSeed();
   // From Life's two new notes in the sample: the tax rebate (Money) and the nudge to finish the P87 (Admin). The day
-  // engine hands over real notes with their areas later.
-  const orb = bar.orb === false ? undefined : { onPress: () => nav.go('inbox'), unread: !data.flags['inbox-read'], areas: ['money', 'admin'] as OrbArea[] };
+  // engine hands over real notes with their areas later. Only the sample life has notes waiting; a real account's orb
+  // rests until something real arrives.
+  const orb = bar.orb === false ? undefined : { onPress: () => nav.go('inbox'), unread: SHOW_SAMPLES && !data.flags['inbox-read'], areas: ['money', 'admin'] as OrbArea[] };
   return <TopBar look="v26" kind="root" title={bar.title} sub={bar.sub} actions={bar.actions} orb={orb} onImage={onImage} />;
 }
 
@@ -591,3 +593,32 @@ const styles = StyleSheet.create({
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   ptile: { borderRadius: radius.tile, overflow: 'hidden', justifyContent: 'flex-end' },
 });
+
+/* ───────────────────────── Not yet: a part of life Life hasn't heard about ───────────────────────── */
+
+/**
+ * A real account (no sample life) on a screen whose figures would otherwise be the sample life's, until Life has heard
+ * about that part of life: Plan's day-one shape (board `emptyplan`) with one way in, never a stranger's figures and
+ * never a zero dressed up as a reading. `children` holds anything that is already true (a preview row, a calculator).
+ */
+export function NotYetV26({ screen, title, eyebrow, line, source, focal, ask, examples, children }: {
+  screen: ScreenKey; title?: string; eyebrow: string; line: string; source: keyof typeof photos; focal?: { x?: number; y?: number };
+  /** The photograph's title: what to tell Life. */
+  ask: string;
+  /** Its line: a few examples. */
+  examples: string;
+  children?: ReactNode;
+}) {
+  const nav = useNavigation();
+  return (
+    <Page screen={screen} bar={{ kind: 'push', title }}>
+      <Eyebrow star>{eyebrow}</Eyebrow>
+      <Display s={`{Nothing here yet.} ${line}`} />
+      <PhotoCard source={photos[source]} focal={focal} height={250} chips={['Your first move · about a minute']} title={ask} sub={examples} style={{ marginTop: space.lg }}>
+        <Btn label="Talk to Life" icon="mic" onPhoto onPress={() => nav.go('talk')} style={{ marginTop: space.md }} />
+      </PhotoCard>
+      {children}
+      <Callout center style={{ marginTop: space.md }}>Nothing is saved until you say so.</Callout>
+    </Page>
+  );
+}

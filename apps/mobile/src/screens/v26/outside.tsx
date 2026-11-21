@@ -17,7 +17,7 @@ import { useSeed } from '@/state/SeedProvider';
 import { money, seed, seedTaxClaim } from '@/state/seed';
 import { councilTax } from '@/state/today';
 import { platform } from '@/services/platform';
-import { isoWeek, shareWeek } from '@/state/firstopen';
+import { isoWeek, shareWeekOf } from '@/state/firstopen';
 import { PhotoStatus } from './firstopen';
 import { Between, Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, Statement, two } from './kit';
 
@@ -178,10 +178,14 @@ export function WidgetsV26({ lock: startLock = false }: { lock?: boolean }) {
 export function ShareCardV26() {
   const t = useTokens(), { data, choose } = useSeed();
   const hidden = data.choices['share-hide-numbers'] === '1';
-  const nights = shareWeek.nights.split('').map(b => b === '1');
-  const sentence = hidden
-    ? 'I cleared {missions}, slept {well} most nights and kept {my habits}.'
-    : `I cleared {${shareWeek.missions} missions}, slept {7h+} ${nights.filter(Boolean).length} nights and kept {${shareWeek.habits} habits}.`;
+  const week = shareWeekOf(data), nights = week.nights.split('').map(b => b === '1'), slept = nights.filter(Boolean).length;
+  // Only what happened goes on the card: a real first week with nothing yet says so.
+  const parts = [
+    week.missions ? (hidden ? 'cleared {missions}' : `cleared {${week.missions} mission${week.missions === 1 ? '' : 's'}}`) : '',
+    slept ? (hidden ? 'slept {well} most nights' : `slept {7h+} ${slept} night${slept === 1 ? '' : 's'}`) : '',
+    week.habits ? (hidden ? 'kept {my habits}' : `kept {${week.habits} habits}`) : '',
+  ].filter(Boolean);
+  const sentence = parts.length ? `I ${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0]}.` : 'My first week with {Life}.';
   const plain = sentence.replace(/[{}]/g, '');
   const share = () => { feedback.primary(); void Share.share({ message: `${plain} Made with Life.` }); };
   return (
@@ -195,7 +199,7 @@ export function ShareCardV26() {
         <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
         <Between>
           <StatusPill size="chip" onPhoto label={`Week ${isoWeek()}`} />
-          {hidden ? null : <View style={styles.week} accessible accessibilityLabel={`Slept 7 hours or more on ${nights.filter(Boolean).length} of 7 nights`}>{nights.map((on, i) => <View key={i} style={[styles.night, { backgroundColor: on ? photo.onPhoto : photo.fill }]} />)}</View>}
+          {hidden || !slept ? null : <View style={styles.week} accessible accessibilityLabel={`Slept 7 hours or more on ${slept} of 7 nights`}>{nights.map((on, i) => <View key={i} style={[styles.night, { backgroundColor: on ? photo.onPhoto : photo.fill }]} />)}</View>}
         </Between>
         <Text variant="titleSerif" style={{ marginTop: 14, color: photo.onPhoto2 }} accessibilityLabel={plain}>
           {two(sentence).map((s, i) => <Text key={i} variant="titleSerif" style={{ color: s.tone === 'quiet' ? photo.onPhoto2 : photo.onPhoto }}>{s.text}</Text>)}

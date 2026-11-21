@@ -18,10 +18,15 @@ import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { money, moneyCompact, rentBuyInputs, seed, seedLabResults, seedTaxClaim } from '@/state/seed';
 import { bloodTiles, bufferMonths, cashWeeks, niYears, TOOLS } from '@/state/plan';
-import { BigPhoto, Between, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Figure, Hero, Legend, Micro, Page, PeekStack, PhotoTile, Row, RowsCard, Shelf, Statement, Tick } from './kit';
+import { BigPhoto, Between, Body, Box, Btn, Callout, Chip, Cols, Display, Eyebrow, Figure, Hero, Legend, Micro, NotYetV26, Page, PeekStack, PhotoTile, Row, RowsCard, Shelf, Statement, Tick } from './kit';
+import { SHOW_SAMPLES } from '@/state/sample';
 import { useOpenTool } from './plan';
+import { MoneyNotYetV26 } from './money';
 
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+/** Where Income and structure's slider starts: the figure you last tried, your own income, or the board's example. */
+export const structureProfit = (data: { choices: Record<string, string>; profile: { annualIncome: number } }) =>
+  Number(data.choices['structure-profit'] ?? (SHOW_SAMPLES ? seed.finance.structureProfit : data.profile.annualIncome || seed.finance.structureProfit));
 const info = (label: string, onPress: () => void) => ({ kind: 'icon' as const, icon: 'info' as const, label, onPress });
 
 function useShow() {
@@ -40,6 +45,13 @@ function useToolState() {
 /* ───────────────────────── 30-day cash plan ───────────────────────── */
 
 export function CashplanV26() {
+  // The balance, bills and weeks are the sample life's; a real account starts by telling Life about its money.
+  if (!SHOW_SAMPLES) return <NotYetV26 screen="cashplan" title="30-day cash plan" eyebrow="Your 30-day cash plan" line="Life works out what’s safe to spend from your pay, bills and balance."
+    source="payslip" focal={{ y: 0.85 }} ask="Tell Life about your money" examples="Your pay day, your rent, what’s in your account." />;
+  return <CashplanSampleV26 />;
+}
+
+function CashplanSampleV26() {
   const t = useTokens(), { data, set, choose, flag } = useSeed(), show = useShow();
   const cp = seed.finance.cashplan;
   const [coming, setComing] = useState(Number(data.choices['cashplan-income'] ?? cp.comingIn));
@@ -79,6 +91,13 @@ export function CashplanV26() {
 /* ───────────────────────── Tax and NI ───────────────────────── */
 
 export function TaxcheckV26() {
+  // The P800, the refund and the NI record are the sample life's. A real account starts by telling Life about its pay.
+  if (!SHOW_SAMPLES) return <NotYetV26 screen="taxcheck" title="Tax & NI" eyebrow="Find money you’re owed" line="Life checks your tax from your payslips and what you tell it."
+    source="payslip" focal={{ y: 0.86 }} ask="Tell Life about your pay" examples="Your job, your tax code, work costs you paid yourself." />;
+  return <TaxcheckSampleV26 />;
+}
+
+function TaxcheckSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, set, flag } = useSeed(), show = useShow();
   const ni = seed.finance.niRecord;
   const years = [{ y: '2022/23', b: 'OK', s: 'Settled' }, { y: '2023/24', b: 'OK', s: 'Settled' }, { y: '2024/25', b: show(seedTaxClaim.refund), s: 'P800 · overpaid', now: true }];
@@ -111,7 +130,7 @@ export function TaxcheckV26() {
 
 export function IncomeV26() {
   const nav = useNavigation(), { data, choose, flag, engine } = useSeed(), show = useShow();
-  const [profit, setProfit] = useState(Number(data.choices['structure-profit'] ?? seed.finance.structureProfit));
+  const [profit, setProfit] = useState(structureProfit(data));
   const s = compareUKBusinessStructures({ ...data.profile, annualIncome: profit });
   const sole = s.soleTrader.netTakeHomeAnnual, company = s.director.netTakeHomeAnnual, fees = seed.finance.accountantFees;
   const edge = sole - (company - fees);
@@ -133,7 +152,18 @@ export function IncomeV26() {
 
 /* ───────────────────────── Rent vs buy ───────────────────────── */
 
-export function RentbuyV26() {
+/* Tools built on the sample life's savings, home and blood test: a real account (a deep link) sees a day one instead. */
+const HomeNotYet = ({ screen, title }: { screen: ScreenKey; title: string }) => <NotYetV26 screen={screen} title={title} eyebrow="Home · day one" line="Life builds this from what you tell it about where you live and what you save."
+  source="movein" focal={{ y: 0.82 }} ask="Tell Life about your home" examples="Your rent, what you’ve saved, where you’d like to live." />;
+export function RentbuyV26() { return SHOW_SAMPLES ? <RentbuySampleV26 /> : <HomeNotYet screen="rentbuy" title="Rent vs buy" />; }
+export function BedroomsV26() { return SHOW_SAMPLES ? <BedroomsSampleV26 /> : <HomeNotYet screen="bedrooms" title="Your next home" />; }
+export function BufferV26() { return SHOW_SAMPLES ? <BufferSampleV26 /> : <MoneyNotYetV26 screen="buffer" title="How big a buffer?" />; }
+export function BloodV26() {
+  return SHOW_SAMPLES ? <BloodSampleV26 /> : <NotYetV26 screen="blood" title="Bloodwork" eyebrow="Bloodwork reader" line="Life explains your results once you add them."
+    source="walk" focal={{ y: 0.48 }} ask="Tell Life about a blood test" examples="The test, the date, the numbers on the letter." />;
+}
+
+function RentbuySampleV26() {
   const nav = useNavigation(), { data, flag } = useSeed(), show = useShow();
   const bedrooms = Number(data.choices.bedrooms ?? 2);
   const price = rentBuyInputs.price * bedrooms / 2;
@@ -179,7 +209,7 @@ function RangeDot({ pos, flag }: { pos: number; flag?: boolean }) {
   );
 }
 
-export function BloodV26() {
+function BloodSampleV26() {
   const { data, set, flag } = useSeed();
   const health = data.profile.health ?? {};
   const labs: Partial<Record<LabMarkerId, LabResult>> = { ...seedLabResults, ...data.profile.health?.labResults };
@@ -305,7 +335,7 @@ export function GrowthV26() {
 
 /* ───────────────────────── Your next home: bedrooms ───────────────────────── */
 
-export function BedroomsV26() {
+function BedroomsSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, choose } = useSeed();
   const [n, setN] = useState(Number(data.choices.bedrooms ?? 2));
   const price = rentBuyInputs.price * n / 2;
@@ -326,7 +356,7 @@ export function BedroomsV26() {
 
 /* ───────────────────────── How big a buffer? ───────────────────────── */
 
-export function BufferV26() {
+function BufferSampleV26() {
   const nav = useNavigation(), { data, choose } = useSeed(), show = useShow();
   const [months, setMonths] = useState(Number(data.choices['buffer-months'] ?? seed.finance.bufferMonths));
   const essentials = seed.finance.cashplan.essentialBills, sweep = seed.finance.bufferSavingMonthly, balance = seed.finance.balance;

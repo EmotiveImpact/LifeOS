@@ -163,7 +163,7 @@ function UnderAge() {
 export function QuestionV26() {
   const nav = useNavigation(), { data, set, choose } = useSeed();
   const [open, setOpen] = useState<null | 'want' | 'live' | 'work'>(null);
-  const dest = DESTINATIONS.find(x => x.value === data.profile.destination);
+  const dest = DESTINATIONS.find(x => x.value === data.choices['setup-want']);
   const city = data.choices['setup-city'];
   const work = WORK.find(w => w.value === data.choices['setup-work']);
   return (
@@ -180,7 +180,7 @@ export function QuestionV26() {
         <PickRow label="My work is" value={work?.label ?? 'Select'} set={!!work} onPress={() => setOpen('work')} />
       </View>
       <ChoiceDrawer visible={open === 'want'} title="I want to" options={DESTINATIONS} value={dest?.value ?? null} onClose={() => setOpen(null)}
-        onPick={v => set({ profile: { ...data.profile, destination: v } })} />
+        onPick={v => { set({ profile: { ...data.profile, destination: v } }); choose('setup-want', v); }} />
       <ChoiceDrawer visible={open === 'live'} title="I live in" options={CITIES.map(c => ({ value: c, label: c }))} value={(city as (typeof CITIES)[number]) ?? null} onClose={() => setOpen(null)}
         onPick={v => { set({ profile: { ...data.profile, city: v } }); choose('setup-city', v); }} />
       <ChoiceDrawer visible={open === 'work'} title="My work is" options={WORK} value={work?.value ?? null} onClose={() => setOpen(null)}
@@ -631,15 +631,21 @@ function PhotoBackdropFull() {
 type Measure = 'h' | 'w' | 's';
 const ORDER: Measure[] = ['h', 'w', 's'];
 const NAMES: Record<Measure, string> = { h: 'Height', w: 'Weight', s: 'Waist' };
+/** Where each stepper starts before a number is given (cm, kg, cm). Never saved unless the person keeps it. */
+const START: Record<Measure, number> = { h: 170, w: 70, s: 85 };
 
 export function MeasuresetupV26() {
   const nav = useNavigation(), t = useTokens(), { data, set, choose } = useSeed();
   const [active, setActive] = useState<Measure>('h');
   const imperial = data.choices.units === 'Imperial';
+  // A real account starts with no body numbers (0): the steppers start from a typical figure until one is given.
+  const given = (m: Measure) => (m === 'h' ? data.heightCm : m === 'w' ? data.weightKg : data.waistCm) > 0;
+  const metric = (m: Measure) => (m === 'h' ? data.heightCm : m === 'w' ? data.weightKg : data.waistCm) || START[m];
   const shown = (m: Measure) => {
-    if (m === 'h') return imperial ? { value: Math.round(data.heightCm / 2.54), unit: 'in', min: 48, max: 90, fmt: (n: number) => `${Math.floor(n / 12)}ft ${n % 12}` } : { value: Math.round(data.heightCm), unit: 'cm', min: 120, max: 230, fmt: String };
-    if (m === 'w') return imperial ? { value: Math.round(data.weightKg * 2.20462), unit: 'lb', min: 66, max: 550, fmt: (n: number) => `${Math.floor(n / 14)}st ${n % 14}` } : { value: Math.round(data.weightKg), unit: 'kg', min: 30, max: 250, fmt: String };
-    return imperial ? { value: Math.round(data.waistCm / 2.54), unit: 'in', min: 20, max: 70, fmt: String } : { value: Math.round(data.waistCm), unit: 'cm', min: 50, max: 180, fmt: String };
+    const v = metric(m);
+    if (m === 'h') return imperial ? { value: Math.round(v / 2.54), unit: 'in', min: 48, max: 90, fmt: (n: number) => `${Math.floor(n / 12)}ft ${n % 12}` } : { value: Math.round(v), unit: 'cm', min: 120, max: 230, fmt: String };
+    if (m === 'w') return imperial ? { value: Math.round(v * 2.20462), unit: 'lb', min: 66, max: 550, fmt: (n: number) => `${Math.floor(n / 14)}st ${n % 14}` } : { value: Math.round(v), unit: 'kg', min: 30, max: 250, fmt: String };
+    return imperial ? { value: Math.round(v / 2.54), unit: 'in', min: 20, max: 70, fmt: String } : { value: Math.round(v), unit: 'cm', min: 50, max: 180, fmt: String };
   };
   const change = (m: Measure, n: number) => {
     if (m === 'h') set({ heightCm: imperial ? n * 2.54 : n });
@@ -647,7 +653,11 @@ export function MeasuresetupV26() {
     else set({ waistCm: imperial ? n * 2.54 : n });
   };
   const now = shown(active);
-  const next = () => { const i = ORDER.indexOf(active); if (i < ORDER.length - 1) setActive(ORDER[i + 1]); else nav.go('devicesetup'); };
+  const next = () => {
+    // Continue keeps the height and weight on screen; the waist is optional, so only a changed one is kept.
+    if (!given(active) && active !== 's') change(active, now.value);
+    const i = ORDER.indexOf(active); if (i < ORDER.length - 1) setActive(ORDER[i + 1]); else nav.go('devicesetup');
+  };
   return (
     <Page screen="measuresetup" bar={{ kind: 'flow', left: 'Back', action: { kind: 'text', label: 'Skip', onPress: () => nav.go('devicesetup') } }} footer={<Btn label="Continue" onPress={next} />}>
       <Eyebrow>Your body</Eyebrow>
@@ -669,7 +679,7 @@ export function MeasuresetupV26() {
       <TileGrid style={{ marginTop: 10 }}>
         {ORDER.filter(m => m !== active).map(m => {
           const s = shown(m);
-          return <V26Tile key={m} label={NAMES[m]} scale={m === 's' ? 'optional' : undefined} value={s.fmt(s.value)} unit={s.unit} onPress={() => setActive(m)} style={{ minHeight: 0 }} />;
+          return <V26Tile key={m} label={NAMES[m]} scale={m === 's' ? 'optional' : undefined} value={given(m) ? s.fmt(s.value) : 'Add'} unit={given(m) ? s.unit : undefined} onPress={() => setActive(m)} style={{ minHeight: 0 }} />;
         })}
       </TileGrid>
     </Page>

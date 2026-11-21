@@ -257,6 +257,13 @@ export const syncConflict = { label: 'pay day', here: 28, there: 25, where: 'you
 
 /** The week on the share card: nothing personal, no £ unless chosen. Sample week until the recap engine lands (Phase 27). */
 export const shareWeek = { missions: 3, nights: '1101110', habits: 3 };
+/** The week on the share card: the board's week for the sample life, a real account's own (missions, nights of 7h+). */
+export function shareWeekOf(data: Pick<SeedData, 'completed' | 'health'>): typeof shareWeek {
+  if (SHOW_SAMPLES) return shareWeek;
+  const days = data.health.days.slice(-7);
+  const nights = Array.from({ length: 7 }, (_, i) => { const sleep = days[days.length - 7 + i]?.sleep; return sleep && sleep.asleepMinutes >= 420 ? '1' : '0'; }).join('');
+  return { missions: data.completed.length, nights, habits: 0 };
+}
 
 /** ISO week number, for "Week 46" on the share card. */
 export function isoWeek(d = new Date()): number {

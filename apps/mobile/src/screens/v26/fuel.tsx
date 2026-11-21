@@ -716,6 +716,9 @@ export function QuicklogV26() {
   const hour = new Date().getHours();
   const order = hour < 11 ? ['Usual breakfast', 'Salmon rice bowl'] : hour < 16 ? ['Salmon rice bowl', 'Chicken wrap'] : ['Salmon rice bowl', 'Usual breakfast'];
   const usual = order.map(name => saved.find(s => s.name === name)).filter(Boolean) as typeof saved;
+  // Recent: the sample life's three, or a real account's own last few meals, newest first and each name once.
+  const recent: { name: string; brand?: string; kcal: number; items?: MealItem[] }[] = SHOW_SAMPLES ? quick.small
+    : [...new Map([...(data.meals as DiaryMeal[])].reverse().map(m => [m.name, { name: m.name, kcal: Math.round(mealTotals(m.items).kcal), items: m.items }])).values()].slice(0, 6);
   const add = (name: string, kcal: number, items?: MealItem[], from?: string) => { log({ name, items: items ?? savedItems(name, kcal), via: from ? 'saved' : 'quick', from }); setDone({ name, kcal }); };
   const card = (s: (typeof saved)[number]) => {
     const isDone = done?.name === s.name;
@@ -755,13 +758,14 @@ export function QuicklogV26() {
         <>
           <View style={[styles.micro, { marginTop: space.md }]}>
             {done ? <Icon name="check" size={14} color={t.gain} /> : null}
-            <Micro>{done ? `${done.name} logged${day.hide || !done.kcal ? '' : ` · ${n(done.kcal)} kcal`}` : 'Ordered for this time of day'}</Micro>
+            <Micro>{done ? `${done.name} logged${day.hide || !done.kcal ? '' : ` · ${n(done.kcal)} kcal`}` : SHOW_SAMPLES ? 'Ordered for this time of day' : 'Your recent meals'}</Micro>
           </View>
           <PhotoGrid style={{ marginTop: space.sm }}>{usual.slice(0, 2).map(card)}</PhotoGrid>
           <View style={[styles.wrapRow, { marginTop: space.sm }]}>
-            {quick.small.map(q => <SoftChip key={q.name} label={q.name} strong={day.hide ? undefined : `${q.brand ? `${q.brand} · ` : ''}${q.kcal}`}
-              onPress={() => { const f = foods.find(x => x.name === q.name || x.name.startsWith(q.name)); add(q.name, q.kcal, [{ name: q.name, grams: f?.grams ?? 100, kcal: q.kcal, protein: f?.protein ?? 0, carbs: 0, fat: 0, fibre: 0, confidence: .9 }]); }} />)}
+            {recent.map(q => <SoftChip key={q.name} label={q.name} strong={day.hide ? undefined : `${q.brand ? `${q.brand} · ` : ''}${n(q.kcal)}`}
+              onPress={() => { if (q.items) { add(q.name, q.kcal, q.items); return; } const f = foods.find(x => x.name === q.name || x.name.startsWith(q.name)); add(q.name, q.kcal, [{ name: q.name, grams: f?.grams ?? 100, kcal: q.kcal, protein: f?.protein ?? 0, carbs: 0, fat: 0, fibre: 0, confidence: .9 }]); }} />)}
           </View>
+          {!recent.length && !usual.length ? <Callout style={{ marginTop: space.sm }}>Nothing logged yet. Meals you log show here for next time.</Callout> : null}
           <QuietLink label="Back to today" onPress={nav.close} style={{ marginTop: space.lg }} />
         </>
       )}

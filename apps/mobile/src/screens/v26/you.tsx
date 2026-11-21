@@ -522,10 +522,10 @@ export function ProfileV26() {
   const living = others === 0 ? '{on your own}' : `with {${others} ${others === 1 ? 'other' : 'others'}}`;
   const sentence = SHOW_SAMPLES
     ? `You’re {${p.age}}, a {@briefcase ${details.work.toLowerCase()}} in {@home ${details.area}}, living ${living} and paid on the {@calendar ${details.payDay}}.`
-    : `You’re {${p.age}}, living in {@home ${p.city}}, ${living.replace('{on your own}', '{on your own}')}.`;
+    : `You’re {${p.age}}, ${p.city ? `living in {@home ${p.city}}, ` : 'living '}${living}.`;
   const save = () => { if (editing) set({ profile: { ...p, name: name.trim() || p.name, city: city.trim() || p.city } }); flag('profile-edit'); feedback.select(); };
   const rows: { photo: keyof typeof photos; title: string; sub: string; to?: Parameters<typeof nav.go>[0] }[] = [
-    { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: 'yourbirthday' },
+    { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: born ? 'yourbirthday' : undefined },
     { photo: 'terrace', title: `Lives in · ${SHOW_SAMPLES ? `${details.area}, ` : ''}${p.city}`, sub: 'Council tax, schemes' },
     { photo: 'work', title: `Work · ${work}`, sub: 'Tax and structure', to: 'income' },
     { photo: 'home', title: `Lives with · ${others === 0 ? 'Just me' : `${others} ${others === 1 ? 'other' : 'others'}`}`, sub: 'Discounts, benefits', to: 'household' },

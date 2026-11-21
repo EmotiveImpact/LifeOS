@@ -9,7 +9,6 @@ Version 1, 21 November 2026. Everything known that stands between Life and beta,
 
 | # | What | Who | Source |
 |---|---|---|---|
-| F-01 | **Real accounts start with Ama's sample life.** The app's starting state (`initial` in `SeedProvider.tsx`) is Ama's profile, Aim, records, people, habits, memories and body numbers, even in release builds. Beta testers would see a stranger's life. Release builds must start empty and show the board's empty states | Build | Plan gaps 1; Phase 27 and 29 limits |
 | F-02 | Accounts: Apple Developer and the App Store Connect app record, Google Play Console (check whether it is a personal or organisation account), Expo and the EAS project (`eas init`) | Edem | Section 0 |
 | F-03 | The server: the Neon project in London, the Vercel host, the production settings (`BETTER_AUTH_SECRET`, `TOKEN_KEY`, `JOBS_SECRET`, `TRUSTED_ORIGINS`), migrations, and a daily call to `/jobs/sweep` | Edem's card, then Build | Phase 21 and 23 |
 | F-04 | An email sender for sign-in codes, with the domain's SPF and DKIM records, and the sending domain registered with Apple's private email relay (so people who hide their email still get codes) | Edem chooses, Build wires `sendCode` | Phase 21; still open |
@@ -43,6 +42,9 @@ Version 1, 21 November 2026. Everything known that stands between Life and beta,
 | F-34 | Sentry's Expo plugin and source map upload, so crash reports are readable | Build, after F-13 | Phase 30 |
 | F-35 | Refresh the store screenshots if F-01 or F-20 changes a screen in them (`scripts/store-shots.cjs`) | Build | Phase 31 |
 | F-36 | The 2027/28 tax year starts on 6 April 2027. UK rules are fixed at 2026/27 in `packages/core/src/data/finance.ts` | Build, before April | Plan gaps 11 |
+| F-37 | **Money needs a real source.** The Money pages (balances, payments, budget, net worth, bills, the 30-day cash plan and the buffer) were built on the sample life's figures, so since F-01 a real account sees Money's day-one state. Start with what people tell Life (pay day, rent, bills as records), then read-only Open Banking | Build; Open Banking needs Edem's provider choice | F-01 |
+| F-38 | **Home, Work and Health need real figures too.** The same holds for those three areas and the tools behind them (rent vs buy, bedrooms, bloodwork, invoices): a real account sees each area's day-one state until Life has heard about it | Build | F-01 |
+| F-39 | Adding people from the phone's contacts needs a contacts library (`expo-contacts`), which isn't on the reference list. Until Edem decides, a real account types people in | Edem decides, then Build | F-01 |
 
 ## P2: soon after launch
 
@@ -65,6 +67,7 @@ Version 1, 21 November 2026. Everything known that stands between Life and beta,
 | F-54 | An optional Face ID or fingerprint lock for Life | DPIA risk 4 |
 | F-55 | Tell people by email when a new phone signs in to their account | DPIA risk 13 |
 | F-56 | An eating disorder screening question before food targets, with a gentler mode | DPIA risk 5 |
+| F-57 | Writing your Aim offers no suggestions in a real account (the board's were the sample life's). Suggest from what Life knows once it knows something | F-01 |
 
 ## P3: later
 
@@ -82,3 +85,7 @@ Version 1, 21 November 2026. Everything known that stands between Life and beta,
 - Permission prompts and the home screen name now write "Life" (they said "life").
 - Open Food Facts is credited in the open-source notices.
 - **Restoring a phone backup could lock people out**, because the database key stays on the phone that made it. The database is now left out of iCloud and computer backups on iPhone (the app's native module marks its folder at start-up) and Android's automatic backup is off, so signing in is the way to restore. Was F-24, from plan gaps 10. **Check on a device:** back up and restore an iPhone, and confirm Life opens to Welcome back rather than a storage error.
+
+## Fixed after Phase 31
+
+- **Real accounts start empty** (was F-01, P0). Release builds start with no profile, Aim, records, people, habits, memories or body numbers (`apps/mobile/src/state/empty.ts`), and erasing your data goes back to that, not to the sample. The store build sets `EXPO_PUBLIC_SAMPLE_DATA=0`; preview and e2e builds keep the sample life for reviews and automated flows. Screens made only of sample figures now show a day-one state with one way in (Talk to Life): Money, the Money, Home, Work and Health areas, the tax check behind Plan's first mission, and the 30-day cash plan. From Life, Routines and the share card show only what is real; missions use the engine's own steps; Body numbers show your own or a dash; Add people starts with typing; onboarding's body steppers start from a typical figure and save only what you keep.

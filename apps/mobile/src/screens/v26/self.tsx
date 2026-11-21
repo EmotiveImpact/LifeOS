@@ -275,8 +275,12 @@ function Ask({ name, changes, value, open, onPress, children }: { name: string; 
 export function MeasuresV26() {
   const nav = useNavigation(), { data, set, choose } = useSeed();
   const [open, setOpen] = useState<string | null>(null);
-  const b = seed.body, bmi = data.weightKg / ((data.heightCm / 100) ** 2);
-  const bp = data.choices.bp ?? b.bp, sex = data.choices['sex-at-birth'] ?? b.sexAtBirth;
+  // The sample life fills the device numbers; a real account shows its own, or "–" until a device or the person adds one.
+  const b = SHOW_SAMPLES ? seed.body : null;
+  const known = data.weightKg > 0 && data.heightCm > 0, bmi = known ? data.weightKg / ((data.heightCm / 100) ** 2) : null;
+  const restingHr = [...data.health.days].reverse().find(d => d.restingHr)?.restingHr;
+  const bp = data.choices.bp ?? b?.bp ?? '', sex = data.choices['sex-at-birth'] ?? b?.sexAtBirth ?? '';
+  const activity = data.choices.activity ?? b?.activity;
   const num = (k: 'heightCm' | 'waistCm') => (s: string) => { const v = Number(s); if (Number.isFinite(v) && v > 0) set({ [k]: v }); };
   const toggle = (k: string) => setOpen(o => (o === k ? null : k));
   return (
@@ -286,33 +290,33 @@ export function MeasuresV26() {
       <TintCard area="you" style={{ marginTop: space.xl }}>
         <Head icon="trend" title="Smart scale" right="updates itself" />
         <View style={styles.pair}>
-          <Num label="Weight · 7-day trend" value={data.weightKg.toFixed(1)} unit="kg" sub="Changes food targets, load, BMI" />
-          <Num label="Body fat" value={String(b.bodyFatPct)} unit="%" sub="Trend only; scales vary" />
+          <Num label={SHOW_SAMPLES ? 'Weight · 7-day trend' : 'Weight'} value={data.weightKg > 0 ? data.weightKg.toFixed(1) : '–'} unit={data.weightKg > 0 ? 'kg' : undefined} sub={data.weightKg > 0 ? 'Changes food targets, load, BMI' : 'Weigh in, or connect a scale'} />
+          <Num label="Body fat" value={b ? String(b.bodyFatPct) : '–'} unit={b ? '%' : undefined} sub={b ? 'Trend only; scales vary' : 'Needs a smart scale'} />
         </View>
       </TintCard>
       <TintCard area="health" style={{ marginTop: space.sm }}>
         <Head icon="watch" title="Apple Watch" right="updates itself" />
         <View style={styles.pair}>
-          <Num label="Resting heart rate" value={String(b.rhr)} unit="bpm" sub="Changes readiness, zones" />
-          <Num label="VO₂ max" value={String(b.vo2)} sub="Changes fitness age" />
+          <Num label="Resting heart rate" value={b ? String(b.rhr) : restingHr ? String(Math.round(restingHr)) : '–'} unit={b || restingHr ? 'bpm' : undefined} sub={b || restingHr ? 'Changes readiness, zones' : 'Needs a watch or ring'} />
+          <Num label="VO₂ max" value={b ? String(b.vo2) : '–'} sub={b ? 'Changes fitness age' : 'Needs a watch'} />
         </View>
       </TintCard>
       <TileGrid style={{ marginTop: space.sm }}>
-        <V26Tile label="BMI" scale="Calculated" value={bmi.toFixed(1)} sub="A rough screen only" onPress={() => nav.go('bmi')} />
-        <V26Tile label="Activity level" scale="Weekly" value={b.activity} sub="Measured. Changes food targets" />
+        <V26Tile label="BMI" scale="Calculated" value={bmi ? bmi.toFixed(1) : '–'} sub={bmi ? 'A rough screen only' : 'Needs your height and weight'} onPress={() => nav.go('bmi')} />
+        <V26Tile label="Activity level" scale="Weekly" value={activity ?? '–'} sub={activity ? 'Measured. Changes food targets' : 'Comes from your steps and workouts'} />
       </TileGrid>
       <SectionHead title="You tell Life" link="asked about once a month" />
       <View style={{ gap: space.xs }}>
-        <Ask name="Height" changes="Changes food targets, BMI, load" value={`${Math.round(data.heightCm)} cm`} open={open === 'height'} onPress={() => toggle('height')}>
-          <Field label="Height in cm" value={String(Math.round(data.heightCm))} onChangeText={num('heightCm')} keyboardType="numeric" />
+        <Ask name="Height" changes="Changes food targets, BMI, load" value={data.heightCm > 0 ? `${Math.round(data.heightCm)} cm` : 'Add'} open={open === 'height'} onPress={() => toggle('height')}>
+          <Field label="Height in cm" value={data.heightCm > 0 ? String(Math.round(data.heightCm)) : ''} placeholder="170" onChangeText={num('heightCm')} keyboardType="numeric" />
         </Ask>
-        <Ask name="Waist" changes="Waist-to-height, better than BMI" value={`${Math.round(data.waistCm)} cm`} open={open === 'waist'} onPress={() => toggle('waist')}>
-          <Field label="Waist in cm" value={String(Math.round(data.waistCm))} onChangeText={num('waistCm')} keyboardType="numeric" />
+        <Ask name="Waist" changes="Waist-to-height, better than BMI" value={data.waistCm > 0 ? `${Math.round(data.waistCm)} cm` : 'Add'} open={open === 'waist'} onPress={() => toggle('waist')}>
+          <Field label="Waist in cm" value={data.waistCm > 0 ? String(Math.round(data.waistCm)) : ''} placeholder="85" onChangeText={num('waistCm')} keyboardType="numeric" />
         </Ask>
-        <Ask name="Blood pressure" changes="You or a cuff. Health check-ins" value={bp} open={open === 'bp'} onPress={() => toggle('bp')}>
+        <Ask name="Blood pressure" changes="You or a cuff. Health check-ins" value={bp || 'Add'} open={open === 'bp'} onPress={() => toggle('bp')}>
           <Field label="Blood pressure" value={bp} placeholder="120 / 80" onChangeText={v => choose('bp', v)} />
         </Ask>
-        <Ask name="Sex at birth" changes="Cycle, ranges, food targets" value={sex} open={open === 'sex'} onPress={() => toggle('sex')}>
+        <Ask name="Sex at birth" changes="Cycle, ranges, food targets" value={sex || 'Add'} open={open === 'sex'} onPress={() => toggle('sex')}>
           <View style={{ flexDirection: 'row', gap: space.xs }}>{['Female', 'Male'].map(s => <Btn key={s} label={s} sm ghost={s !== sex} fit onPress={() => { choose('sex-at-birth', s); setOpen(null); }} />)}</View>
         </Ask>
       </View>
