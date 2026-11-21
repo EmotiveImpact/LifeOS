@@ -676,7 +676,7 @@ export function FocusV26() {
         <View style={[styles.row, { marginTop: space.xl, gap: space.tile }]} accessible accessibilityLabel="Block 2 of 3">
           {[t.ink, t.ember, t.surface3].map((c, k) => <View key={k} style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: c }} />)}
         </View>
-        <Text variant="title" style={{ marginTop: space.xl }}>Portfolio case study</Text>
+        <Text variant="title" style={{ marginTop: space.xl }} accessibilityRole="header">Portfolio case study</Text>
         <Chip label="Notifications quiet" tone="q" icon="moon" style={{ marginTop: space.tile, alignSelf: 'center' }} />
       </View>
     </Page>

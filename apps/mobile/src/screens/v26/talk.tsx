@@ -439,7 +439,7 @@ export function ChatV26() {
   const messages = conversation.current?.messages ?? [];
   const long = useLongList(messages, { from: 'end' });
   const title = (
-    <Press haptic="select" onPress={() => nav.go('chathistory')} accessibilityLabel="Life, your conversations" style={styles.chatTitle}>
+    <Press haptic="select" onPress={() => nav.go('chathistory')} accessibilityRole="header" accessibilityLabel="Life, your conversations" style={styles.chatTitle}>
       <LifeOrb size={18} state={conversation.thinking ? 'thinking' : 'ring'} /><Text variant="title">Life</Text>
     </Press>
   );

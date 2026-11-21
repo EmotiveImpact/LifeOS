@@ -132,7 +132,8 @@ function CamBar({ label }: { label: string }) {
   return (
     <View style={styles.camBar}>
       <OnRound icon="close" label="Close" solid onPress={nav.close} />
-      <View style={styles.orbChip}><LifeOrb size={16} state="searching" color={photo.ink} /><Text variant="buttonCompact" style={{ color: photo.ink }} numberOfLines={1}>{label}</Text></View>
+      {/* The camera screens have no title, so the bar's words are their heading (fix F-51). */}
+      <View style={styles.orbChip}><LifeOrb size={16} state="searching" color={photo.ink} /><Text variant="buttonCompact" style={{ color: photo.ink }} numberOfLines={1} accessibilityRole="header">{label}</Text></View>
       <OnRound icon="sun" label={light ? 'Light on' : 'Light'} on={light} onPress={() => { setLight(!light); feedback.select(); }} />
     </View>
   );

@@ -658,7 +658,7 @@ export function WorkoutV26() {
       backdrop={<View pointerEvents="none" style={[StyleSheet.absoluteFill, { bottom: undefined, height: drawer.height ?? 430 }]}><PhotoBackdrop source={photos.run} focal={{ y: 0.8 }} /></View>}
       bar={{ kind: 'photo', left: <StatusPill size="chip" onPhoto icon="fitness" label={w.kind} />, right: <StatusPill size="chip" onPhoto icon="pulse" label={`${w.strap} · Bluetooth`} /> }}>
       <View style={{ flex: 1, minHeight: 180, paddingHorizontal: space.gutter, paddingTop: space.xs, alignItems: 'flex-end' }}>
-        <Text variant="callout" style={{ color: photo.onPhoto2 }}>{running ? 'Moving time' : 'Paused'}</Text>
+        <Text variant="callout" style={{ color: photo.onPhoto2 }} accessibilityRole="header" accessibilityLabel={`${w.kind}, ${running ? 'moving time' : 'paused'}`}>{running ? 'Moving time' : 'Paused'}</Text>
         <Text variant="numeralXl" style={{ color: photo.onPhoto, marginTop: 2 }}>{mmss(secs)}</Text>
       </View>
       <View onLayout={drawer.onLayout} style={[drawerStyle, styles.sheet, { backgroundColor: t.surface, paddingTop: space.lg, paddingBottom: Math.max(insets.bottom, space.md) + space.sm }]}>

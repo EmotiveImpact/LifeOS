@@ -81,7 +81,7 @@ function Wallpaper({ source, focal, fade = true }: { source: number; focal?: { x
 function LockHead() {
   return (
     <View style={{ alignItems: 'center', paddingTop: 28 }}>
-      <Text variant="title" style={{ color: photo.onPhoto }}>{lockDate()}</Text>
+      <Text variant="title" style={{ color: photo.onPhoto }} accessibilityRole="header">{lockDate()}</Text>
       <Text variant="numeralXl" style={{ color: photo.onPhoto, marginTop: 2 }}>{PREVIEW_TIME}</Text>
     </View>
   );
