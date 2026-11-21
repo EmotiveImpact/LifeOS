@@ -15,6 +15,7 @@ import { emptyBrainState, type BrainState } from '@life/brain';
 import { emptyLoops, type LoopsState } from '@life/core';
 import { confirmBrainRecords } from '@/services/brainState';
 import { currentTransport } from '@/services/syncTransport';
+import { onConnectionBack } from '@/services/connection';
 import { lastBackgroundWrite } from '@/services/backgroundMark';
 import { SHOW_SAMPLES } from './sample';
 import { emptyLife, type LifeContent } from './empty';
@@ -150,10 +151,11 @@ export function SeedProvider({ children }: { children: ReactNode }) {
     syncTimer.current = setTimeout(() => { void syncNow(); }, SYNC_AFTER_CHANGE_MS);
   }, [data, hydrated, storageError]);
 
-  // Sync whenever the app comes back to the front.
+  // Sync whenever the app comes back to the front, and the moment the phone is back online (fix F-46).
   useEffect(() => {
     const subscription = AppState.addEventListener('change', state => { if (state === 'active') { void reloadAfterBackground(); void syncNow(); } });
-    return () => { subscription.remove(); if (syncTimer.current) clearTimeout(syncTimer.current); };
+    const stopWatching = onConnectionBack(() => { void syncNow(); });
+    return () => { subscription.remove(); stopWatching(); if (syncTimer.current) clearTimeout(syncTimer.current); };
   }, []);
 
   /** Shows what sync brought in. Waits if the person has unsaved changes, so nothing they just did is lost. */

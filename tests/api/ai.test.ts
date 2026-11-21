@@ -303,6 +303,49 @@ describe.skipIf(!adminUrl)('the brain through the API', () => {
     await clearUsage(ama);
   });
 
+  test('a question resent after its answer was lost is answered again without using the allowance twice (F-46)', async () => {
+    const calls: string[] = [];
+    const api = apiWith(trio(calls), { allowances: { fast: { calls: 1, per: 'day' }, strong: { calls: 5, per: 'day' }, top: { calls: 1, per: 'month' }, vision: { calls: 5, per: 'day' }, costMicrosPerMonth: 1_000_000 } });
+    const question = okd(ask('Tell me something kind'));
+    expect((await post(api, ama, question)).status).toBe(200);
+    // The answer never reached the phone, so it sends the same question again. The day's one fast call is used, but
+    // this is the same question, so it is answered, and marked as a resend in the ledger. No words are kept.
+    const resent = await post(api, ama, question);
+    expect(resent.status).toBe(200);
+    expect(await resent.json()).toEqual(good);
+    const rows = await usageOf(ama);
+    expect(rows.map(r => `${r.request_id}:${r.repeat}`).sort()).toEqual([`${question.id}:false`, `${question.id}:true`]);
+    // Only once: another resend counts like a new question, and so does a new question.
+    expect((await post(api, ama, question)).status).toBe(429);
+    expect((await post(api, ama, okd(ask('Tell me something else kind')))).status).toBe(429);
+    expect(calls).toEqual(['m-fast', 'm-fast']);
+    await clearUsage(ama);
+  });
+
+  test('a resend has to be the same question within a day, and still counts toward the spending cap', async () => {
+    const calls: string[] = [];
+    const roomy = { fast: { calls: 10, per: 'day' }, strong: { calls: 10, per: 'day' }, top: { calls: 10, per: 'month' }, vision: { calls: 10, per: 'day' } };
+    const api = apiWith(trio(calls), { allowances: { ...roomy, costMicrosPerMonth: 1_000_000 } });
+    const question = okd(ask('Tell me something kind'));
+    await post(api, ama, question);
+    // The same id for a different job is a different question.
+    await post(api, ama, okd({ ...question, job: 'coach' }));
+    expect((await usageOf(ama)).map(r => `${r.job}:${r.repeat}`).sort()).toEqual(['ask:false', 'coach:false']);
+    // A day later it is a new question too.
+    now += 25 * 60 * 60 * 1000;
+    await post(api, ama, question);
+    expect((await usageOf(ama)).filter(r => r.repeat)).toEqual([]);
+    now = NOW;
+    await clearUsage(ama);
+    // Each call costs 200 millionths of a dollar. A resend still costs money, so the cap counts it.
+    const capped = apiWith(trio(calls), { allowances: { ...roomy, costMicrosPerMonth: 400 } });
+    const again = okd(ask('Tell me something kind'));
+    expect((await post(capped, ama, again)).status).toBe(200);
+    expect((await post(capped, ama, again)).status).toBe(200);
+    expect((await post(capped, ama, okd(ask('One more kind thing')))).status).toBe(429);
+    await clearUsage(ama);
+  });
+
   test('capabilities show which tiers have a model and what is left, never a key', async () => {
     const api = apiWith(trio([]));
     await post(api, ama, okd(ask('Tell me something kind')));

@@ -1,4 +1,4 @@
-import { desc, gte, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   BASE_TIERS, BrainError, CONSENT_POLICY_VERSION, MAX_PHOTO_CHARS, TIERS, activeGrants, assertRequest, detectCrisis, parseTierTable, planRoute, runBrain,
@@ -25,6 +25,8 @@ import tiersFile from './tiers.json';
  * 6. The answer is checked by the brain's own rules (numbers only from facts, no claimed actions, proposals grounded
  *    in the person's words) and sent back unrendered, for the phone to check again.
  * 7. Every billed call is written to the ledger, including refused and rejected ones.
+ * 8. A question resent after its answer was lost on the way (same request id and job, answered in the last day, not
+ *    resent before) runs again, since no answer is kept here, but doesn't use the allowance a second time (fix F-46).
  *
  * A meal or label photo rides in the request itself (base64, made small on the phone), goes to the vision model for
  * that one call and is never written anywhere: not to storage, the ledger or a log.
@@ -84,17 +86,28 @@ export type AiReply = { status: number; body: unknown; headers?: Record<string, 
 const refuse = (status: number, error: string, message?: string): AiReply => ({ status, body: message ? { error, message } : { error } });
 const STATUS: Record<BrainError['code'], number> = { CONSENT_REQUIRED: 403, RATE_LIMITED: 429, INVALID_INPUT: 400, INVALID_OUTPUT: 502, TIMEOUT: 504, UNAVAILABLE: 503, OFFLINE: 503, CANCELLED: 503 };
 
-type Standing = { privateMode: boolean; grants: ConsentGrant[]; used: Record<Tier, { day: number; month: number }>; spentMicros: number };
+type Standing = { privateMode: boolean; grants: ConsentGrant[]; used: Record<Tier, { day: number; month: number }>; spentMicros: number; repeat: boolean };
 
-/** The person's synced settings and their ledger, read in one transaction as that person (row-level security on). */
-async function standing(db: Db, userId: string, now: number): Promise<Standing> {
+/**
+ * The person's synced settings and their ledger, read in one transaction as that person (row-level security on).
+ * `repeat`: this request was answered in the last day and its answer never reached the phone, so it is sent again.
+ * Its first answer is left out of the allowance this once; resends never count against it. All of it costs money,
+ * so the spending cap counts everything.
+ */
+async function standing(db: Db, userId: string, now: number, request?: { id: string; job: Job }): Promise<Standing> {
   return db.withUser(userId, async tx => {
     const [settings] = await tx.select({ private_mode: prefs.private_mode, fields: prefs.fields }).from(prefs).where(isNull(prefs.deleted_at)).orderBy(desc(prefs.updated_at)).limit(1);
     const dayAgo = new Date(now - DAY).toISOString();
+    const [before] = !request ? [] : await tx.select({
+      answered: sql<boolean | null>`bool_or(${aiUsage.outcome} = 'ok' and not ${aiUsage.repeat} and ${aiUsage.job} = ${request.job})`,
+      resent: sql<boolean | null>`bool_or(${aiUsage.repeat})`,
+    }).from(aiUsage).where(and(eq(aiUsage.request_id, request.id), gte(aiUsage.at, new Date(now - DAY))));
+    const repeat = before?.answered === true && before.resent !== true;
+    const counted = repeat && request ? sql`not ${aiUsage.repeat} and ${aiUsage.request_id} is distinct from ${request.id}` : sql`not ${aiUsage.repeat}`;
     const rows = await tx.select({
       tier: aiUsage.tier,
-      day: sql<number>`count(*) filter (where ${aiUsage.at} >= ${dayAgo}::timestamptz)::int`,
-      month: sql<number>`count(*)::int`,
+      day: sql<number>`count(*) filter (where ${aiUsage.at} >= ${dayAgo}::timestamptz and ${counted})::int`,
+      month: sql<number>`count(*) filter (where ${counted})::int`,
       cost: sql<string>`coalesce(sum(${aiUsage.cost_micros}), 0)::text`,
     }).from(aiUsage).where(gte(aiUsage.at, new Date(now - MONTH))).groupBy(aiUsage.tier);
     const used = Object.fromEntries(TIERS.map(t => [t, { day: 0, month: 0 }])) as Standing['used'];
@@ -107,7 +120,7 @@ async function standing(db: Db, userId: string, now: number): Promise<Standing> 
     const grants = ledger && Array.isArray(ledger.grants)
       ? activeGrants({ version: 1, policyVersion: typeof ledger.policyVersion === 'number' ? ledger.policyVersion : CONSENT_POLICY_VERSION, grants: ledger.grants as ConsentGrant[] }, now)
       : [];
-    return { privateMode: settings?.private_mode === true, grants, used, spentMicros };
+    return { privateMode: settings?.private_mode === true, grants, used, spentMicros, repeat };
   });
 }
 
@@ -131,7 +144,7 @@ export async function runAi(db: Db, userId: string, raw: unknown, ai: AiOptions 
   // 2. Private mode never leaves the phone: if it got here, nothing runs.
   if (request.privateMode) return refuse(409, 'PRIVATE_MODE', 'Private mode is on, so this stays on your phone. Nothing was sent to a model.');
   if (!ai?.models.length) return refuse(503, 'AI_NOT_CONFIGURED', 'No model is connected for this question yet. Your message is saved, but I won’t invent a reply.');
-  const me = await standing(db, userId, now);
+  const me = await standing(db, userId, now, request);
   if (me.privateMode) return refuse(409, 'PRIVATE_MODE', 'Private mode is on, so this stays on your phone. Nothing was sent to a model.');
   const allowances = ai.allowances ?? DEFAULT_ALLOWANCES;
   if (me.spentMicros >= allowances.costMicrosPerMonth) return refuse(429, 'RATE_LIMITED', 'You’ve reached this month’s AI limit. Your message is saved, and saved facts and calculations still work.');
@@ -167,7 +180,7 @@ export async function runAi(db: Db, userId: string, raw: unknown, ai: AiOptions 
     if (error instanceof BrainError && error.code === 'INVALID_OUTPUT' && last?.outcome === 'ok') last.outcome = 'rejected';
     return failed(error);
   } finally {
-    if (billed.length) await record(db, userId, sent.job, plan.tier, billed, now).catch(error => console.error('ai ledger write failed', error instanceof Error ? error.message : error));
+    if (billed.length) await record(db, userId, sent, plan.tier, billed, now, me.repeat).catch(error => console.error('ai ledger write failed', error instanceof Error ? error.message : error));
   }
 }
 
@@ -176,11 +189,12 @@ function failed(error: unknown): AiReply {
   throw error;
 }
 
-function record(db: Db, userId: string, job: Job, tier: Tier, billed: Billed[], now: number) {
+function record(db: Db, userId: string, request: { id: string; job: Job }, tier: Tier, billed: Billed[], now: number, repeat: boolean) {
   const at = new Date(now);
   return db.withUser(userId, tx => tx.insert(aiUsage).values(billed.map(b => ({
-    id: crypto.randomUUID(), user_id: userId, job, model: b.spec.id, location: 'cloud', tier, outcome: b.outcome,
+    id: crypto.randomUUID(), user_id: userId, job: request.job, model: b.spec.id, location: 'cloud', tier, outcome: b.outcome,
     input_tokens: b.usage.inputTokens, output_tokens: b.usage.outputTokens, cost_micros: costMicros(b.spec, b.usage), at,
+    request_id: request.id, repeat,
   }))));
 }
 

@@ -3,12 +3,14 @@ import AVFoundation
 import Speech
 import Vision
 import PDFKit
+import Network
 #if canImport(FoundationModels)
 import FoundationModels
 #endif
 
 public final class LifeIntelligenceModule: Module {
   private var speech: LocalSpeech?
+  private var connection: NWPathMonitor?
   public func definition() -> ModuleDefinition {
     Name("LifeIntelligence")
     // The encrypted database's key lives in the Keychain for this phone only, so a backup of the database alone could
@@ -18,7 +20,15 @@ public final class LifeIntelligenceModule: Module {
     OnCreate {
       excludeFromBackup(["SQLite", "profile"])
     }
-    Events("transcript")
+    Events("transcript", "connection")
+    // Life sends what was waiting (questions for an answer, changes to sync) the moment the phone is back online (fix
+    // F-46). Only whether there's a working route goes to JavaScript, never which network. Watched only while listened to.
+    OnStartObserving("connection") {
+      self.watchConnection()
+    }
+    OnStopObserving("connection") {
+      self.stopWatchingConnection()
+    }
     AsyncFunction("available") { () async -> Bool in
       #if canImport(FoundationModels)
       if #available(iOS 26.0, *) { return SystemLanguageModel.default.isAvailable }
@@ -74,8 +84,25 @@ public final class LifeIntelligenceModule: Module {
       return (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
     }
     OnDestroy {
+      self.stopWatchingConnection()
       Task { @MainActor in self.speech?.stop(); self.speech = nil }
     }
+  }
+
+  private func watchConnection() {
+    guard connection == nil else { return }
+    let monitor = NWPathMonitor()
+    monitor.pathUpdateHandler = { [weak self] path in
+      let online = path.status == .satisfied
+      DispatchQueue.main.async { self?.sendEvent("connection", ["online": online]) }
+    }
+    monitor.start(queue: DispatchQueue(label: "app.life.connection"))
+    connection = monitor
+  }
+
+  private func stopWatchingConnection() {
+    connection?.cancel()
+    connection = nil
   }
 }
 

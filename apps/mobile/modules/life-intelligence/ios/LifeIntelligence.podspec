@@ -12,6 +12,6 @@ Pod::Spec.new do |s|
   s.swift_version = '5.9'
   s.dependency 'ExpoModulesCore'
   s.source_files = '**/*.{h,m,swift}'
-  s.frameworks = 'Speech', 'AVFoundation', 'Vision', 'PDFKit'
+  s.frameworks = 'Speech', 'AVFoundation', 'Vision', 'PDFKit', 'Network'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
 end

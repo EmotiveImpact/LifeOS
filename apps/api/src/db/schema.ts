@@ -145,6 +145,10 @@ export const sceneCache = pgTable('scene_cache', { key: text('key').primaryKey()
  * The AI cost ledger: one row per billed model call, durable, per user and job (`src/router.ts`). `tier` is what the
  * allowances count; `outcome` is `ok`, `rejected` (the answer failed life's checks) or `declined` (the model refused
  * or its reply was cut off), because those calls cost money too.
+ *
+ * `request_id` is the phone's own random id for the question, never its words. A question resent after its answer was
+ * lost on the way (the connection dropped, or Life closed before saving it) runs again, because no answer is kept here,
+ * and is marked `repeat`: it counts toward the monthly spending cap, but not against the person's allowance (fix F-46).
  */
 export const aiUsage = pgTable('ai_usage', {
   id: text('id').primaryKey(),
@@ -158,7 +162,9 @@ export const aiUsage = pgTable('ai_usage', {
   output_tokens: integer('output_tokens').notNull().default(0),
   cost_micros: bigint('cost_micros', { mode: 'number' }).notNull().default(0),
   at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
-}, t => [index('ai_usage_user_at').on(t.user_id, t.at)]);
+  request_id: text('request_id'),
+  repeat: boolean('repeat').notNull().default(false),
+}, t => [index('ai_usage_user_at').on(t.user_id, t.at), index('ai_usage_user_request').on(t.user_id, t.request_id)]);
 
 /**
  * Meal photos and scanned letters in object storage (Phase 23, `src/storage.ts`). The server chooses every key:

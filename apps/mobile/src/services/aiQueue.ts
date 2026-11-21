@@ -19,6 +19,15 @@ export const BUSY_NOTE = 'Life’s AI is busy right now. Your message is saved, 
 /** Worth another try later: no connection, or every model busy. Anything else is final. */
 export const waits = (error: unknown): error is BrainError => error instanceof BrainError && error.code === 'OFFLINE';
 
+/**
+ * Turns the phone's reports about its connection into the moments it comes back (fix F-46): only a change from offline
+ * to online counts, so a report that it is still online, or the first report, sends nothing.
+ */
+export function whenBack(back: () => void): (online: boolean) => void {
+  let last: boolean | null = null;
+  return online => { const was = last; last = online; if (online && was === false) back(); };
+}
+
 /** Adds a request once, however often it is offered. The oldest goes first if the queue is full. */
 export const enqueue = (queue: QueuedAi[], item: QueuedAi): QueuedAi[] => queue.some(q => q.id === item.id) ? queue : [...queue, item].slice(-MAX_QUEUED);
 

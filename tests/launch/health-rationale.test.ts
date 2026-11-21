@@ -24,7 +24,7 @@ describe('Health Connect’s question opens the privacy policy', () => {
     expect(kotlin).toContain('intent?.action == "androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" || intent?.action == "android.intent.action.VIEW_PERMISSION_USAGE"');
     expect(kotlin).toContain('Function("launchedForHealthRationale") { isHealthRationale(appContext.currentActivity?.intent) }');
     expect(kotlin).toContain('OnNewIntent { intent -> if (isHealthRationale(intent)) sendEvent("healthRationale"');
-    expect(kotlin).toContain('Events("transcript", "healthRationale")');
+    expect(kotlin).toContain('Events("transcript", "healthRationale", "connection")');
   });
 
   test('the app opens About with the privacy policy unfolded', () => {
