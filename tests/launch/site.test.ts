@@ -99,8 +99,9 @@ describe('the documents stay true to the app', () => {
   test('the encrypted database stays out of device backups, as the privacy policy says', () => {
     expect(JSON.parse(read('apps/mobile/app.json')).expo.android.allowBackup).toBe(false);
     const swift = read('apps/mobile/modules/life-intelligence/ios/LifeIntelligenceModule.swift');
-    expect(swift).toContain('OnCreate {\n      excludeDatabasesFromBackup()');
-    expect(swift).toContain('appendingPathComponent("SQLite", isDirectory: true)');
+    // The database folder and the You tab's photo folder, both in Documents.
+    expect(swift).toContain('OnCreate {\n      excludeFromBackup(["SQLite", "profile"])');
+    expect(swift).toContain('documents.appendingPathComponent(name, isDirectory: true)');
     expect(swift).toContain('values.isExcludedFromBackup = true');
     expect(policy).toContain('left out of iCloud and other phone backups');
   });
