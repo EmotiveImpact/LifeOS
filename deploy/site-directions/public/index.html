@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Life · Three website directions</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  body { padding-bottom: 0; }
+  header { padding: 64px 0 40px; }
+  header .wordmark { display: block; margin-bottom: 40px; }
+  h1 { font-size: 64px; line-height: 1; letter-spacing: -0.045em; max-width: 12em; }
+  .lead { font-size: 20px; margin-top: 20px; max-width: 32em; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding-bottom: 64px; }
+  .opt { display: block; overflow: hidden; border-radius: 28px; background: var(--surface); box-shadow: var(--shadow); transition: transform 240ms cubic-bezier(.2,.7,.2,1), box-shadow 240ms ease; }
+  .opt:hover { transform: translateY(-3px); box-shadow: var(--lift); }
+  .opt img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; background: var(--surface2); }
+  .opt .t { padding: 22px 24px 26px; }
+  .opt .k { font: 600 13px/1 var(--sans); color: var(--ember-text); letter-spacing: 0.04em; }
+  .opt h2 { font: 500 28px/1.1 var(--display); letter-spacing: -0.03em; color: var(--ink); margin: 10px 0 8px; }
+  .opt p { font-size: 16px; line-height: 1.5; }
+  .opt .go { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font: 600 15px/1 var(--sans); color: var(--ink); }
+  .opt .go svg { width: 18px; height: 18px; }
+  footer { padding: 0 0 56px; }
+  @media (max-width: 899px) {
+    header { padding: 40px 0 28px; }
+    header .wordmark { margin-bottom: 28px; }
+    h1 { font-size: 40px; }
+    .lead { font-size: 17px; }
+    .grid { grid-template-columns: 1fr; gap: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="wordmark">LIFE</span>
+    <h1 class="tt">Three directions <b>for Life’s website.</b></h1>
+    <p class="lead">Each one is a working page. Tap through the menus, the questions, the price switch and the move cards, and try it on your phone.</p>
+  </header>
+  <div class="grid">
+    <a class="opt" href="/a/"><img src="/assets/img/thumb-a.webp" alt="Direction A, the opening of the page"><div class="t"><span class="k">A</span><h2>Today</h2><p>Light and product-led, closest to the app. The real Today screen leads.</p><span class="go">Open <svg data-ic="arrow"></svg></span></div></a>
+    <a class="opt" href="/b/"><img src="/assets/img/thumb-b.webp" alt="Direction B, the opening of the page"><div class="t"><span class="k">B</span><h2>Golden hour</h2><p>Warm and photo-led. Three move cards: what you’re owed, what’s due, what’s next.</p><span class="go">Open <svg data-ic="arrow"></svg></span></div></a>
+    <a class="opt" href="/c/"><img src="/assets/img/thumb-c.webp" alt="Direction C, the opening of the page"><div class="t"><span class="k">C</span><h2>Ten dots</h2><p>Dark and minimal. The orb is the hero, one dot for each area of life.</p><span class="go">Open <svg data-ic="arrow"></svg></span></div></a>
+  </div>
+  <footer><p class="fine">Previews only. Hidden from search engines, and the waitlist forms don’t send or save anything yet.</p></footer>
+</div>
+<script src="/assets/site.js"></script>
+</body>
+</html>

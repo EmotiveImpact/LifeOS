@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Life · Direction C · Ten dots</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Life brings your health, money and life admin into one calm plan for the day.">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/InterDisplay-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+<script>document.documentElement.classList.add("js")</script>
+<style>
+  :root { --canvas: #08090A; --surface: #141517; --surface2: #1B1C1F; --surface3: #26272B; --ink: #F7F8F8; --ink2: #8A8F98; --quiet: #62666D; --ember: #FF6B3D; --ember-text: #FF7A50; --ember-tint: rgba(255,107,61,0.14); }
+  body { background: var(--canvas); color: var(--ink2); }
+  .orb-label { font: 500 15px var(--sans); fill: var(--ink2); }
+  .orb-label.on { fill: var(--ink); }
+
+  nav.top { display: flex; align-items: center; justify-content: space-between; height: 84px; }
+  nav.top .brand { display: flex; align-items: center; gap: 12px; color: var(--ink); }
+  nav.top .brand [data-orb] { display: flex; }
+  nav.top .links { display: flex; gap: 32px; font: 500 15px/1 var(--sans); }
+  nav.top .btn { height: 44px; padding: 0 20px; font-size: 15px; }
+  .btn.light { background: var(--ink); color: var(--canvas); }
+  .btn.dim { background: var(--surface2); color: var(--ink); }
+
+  .hero { text-align: center; padding: 24px 0 120px; position: relative; }
+  .hero .glow { position: absolute; left: 50%; top: 40px; width: 720px; height: 620px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(255,107,61,0.16), rgba(255,107,61,0) 70%); pointer-events: none; }
+  .hero [data-orb] { display: flex; justify-content: center; color: var(--ink); position: relative; }
+  .hero h1 { font-size: 84px; line-height: 1; letter-spacing: -0.048em; margin: 8px auto 26px; max-width: 14em; }
+  .hero .lead { font-size: 21px; max-width: 31em; margin: 0 auto 36px; }
+  .field.dark { background: var(--surface); box-shadow: none; margin: 0 auto; }
+  .bar { --bar-ink: #F7F8F8; }
+  .bar.scrolled { box-shadow: 0 8px 24px -16px rgba(0,0,0,0.7); }
+  .field.dark span:not(.btn) { color: var(--quiet); }
+  .hero .fine { margin-top: 14px; }
+
+  section { padding: 112px 0; }
+  .sh { font-size: 60px; line-height: 1.02; letter-spacing: -0.042em; }
+  .sl { font-size: 20px; margin-top: 20px; max-width: 32em; }
+  .center { text-align: center; }
+  .center .sh, .center .sl { margin-left: auto; margin-right: auto; }
+
+  .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 64px; }
+  .how .c { background: var(--surface); border-radius: 32px; padding: 36px; }
+  .how .art { height: 200px; border-radius: 22px; background: var(--canvas); display: grid; place-items: center; margin-bottom: 32px; }
+  .how .k { font: 500 14px/1 var(--sans); color: var(--quiet); }
+  .how h3 { font: 500 30px/1.1 var(--display); letter-spacing: -0.03em; color: var(--ink); margin: 12px 0 12px; }
+  .how p { font-size: 17px; line-height: 1.5; }
+
+  .phones { position: relative; display: flex; justify-content: center; align-items: flex-end; gap: 36px; margin-top: 72px; height: 700px; overflow: hidden; }
+  .phones::before { content: ""; position: absolute; left: 50%; bottom: -100px; width: 900px; height: 700px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(255,107,61,0.14), rgba(255,107,61,0) 72%); }
+  .phones::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 110px; background: linear-gradient(180deg, rgba(8,9,10,0), #08090A); z-index: 2; }
+  .phones [data-phone] { position: relative; margin-bottom: -120px; box-shadow: inset 0 0 0 1.5px #2B2C30, 0 50px 90px -30px rgba(0,0,0,0.8); }
+  .phones [data-phone]:nth-child(2) { margin-bottom: -60px; }
+
+  .notify { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .notify [data-orb] { display: flex; justify-content: center; color: var(--ink); }
+  .notes { margin-top: 36px; display: grid; gap: 10px; }
+  .notes .n { display: flex; align-items: center; gap: 16px; background: var(--surface); border-radius: 20px; padding: 18px 20px; }
+  .notes .n i { width: 8px; height: 8px; border-radius: 50%; background: var(--ember); flex: none; box-shadow: 0 0 0 5px var(--ember-tint); }
+  .notes .n b { display: block; color: var(--ink); font: 600 16px/1.3 var(--sans); }
+  .notes .n span { font-size: 15px; }
+  .notes .n em { margin-left: auto; font-style: normal; font-size: 13px; color: var(--quiet); white-space: nowrap; }
+
+  .bento { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; margin-top: 64px; }
+  .bento .t { background: var(--surface); border-radius: 32px; padding: 40px; min-height: 360px; display: flex; flex-direction: column; }
+  .bento .t .k { display: inline-flex; align-items: center; gap: 8px; font: 500 14px/1 var(--sans); color: var(--ink2); }
+  .bento .t .k i { width: 6px; height: 6px; border-radius: 50%; }
+  .bento .big { font: 600 112px/1 var(--display); letter-spacing: -0.05em; color: var(--ink); margin-top: auto; font-variant-numeric: tabular-nums; }
+  .bento .big small { font: 500 22px/1 var(--sans); letter-spacing: 0; color: var(--ink2); margin-left: 6px; }
+  .bento .tt { font-size: 28px; line-height: 1.2; letter-spacing: -0.025em; margin-top: 16px; max-width: 16em; }
+  .bento .code { display: flex; align-items: flex-end; gap: 6px; margin-top: auto; font: 600 96px/1 var(--display); letter-spacing: -0.04em; color: var(--ink); }
+  .bento .code span { color: var(--ember); background: var(--ember-tint); border-radius: 14px; padding: 0 10px; }
+  .bento .due { margin-top: auto; display: grid; gap: 10px; }
+  .bento .due div { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border-radius: 18px; padding: 16px 18px; color: var(--ink); font-size: 16px; }
+  .bento .due div span { color: var(--ink2); font-size: 15px; }
+  .bento .due div.hot span { color: var(--ember-text); }
+
+  .private { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 72px; align-items: start; }
+  .plist { display: grid; gap: 12px; }
+  .plist .p { display: flex; gap: 18px; background: var(--surface); border-radius: 24px; padding: 24px 26px; }
+  .plist .p .i { width: 44px; height: 44px; border-radius: 14px; background: var(--surface2); display: grid; place-items: center; color: var(--ink); flex: none; }
+  .plist .p h4 { font: 600 17px/1.3 var(--sans); color: var(--ink); margin-bottom: 4px; }
+  .plist .p p { font-size: 15px; line-height: 1.5; }
+
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 880px; margin: 56px auto 0; }
+  .plan { background: var(--surface); border-radius: 32px; padding: 36px; position: relative; }
+  .plan.best { background: var(--surface2); }
+  .plan .name { font: 600 17px/1 var(--sans); color: var(--ink); }
+  .plan .price { font: 600 64px/1 var(--display); color: var(--ink); letter-spacing: -0.04em; margin: 28px 0 8px; font-variant-numeric: tabular-nums; }
+  .plan .price small { font: 500 18px/1 var(--sans); color: var(--ink2); letter-spacing: 0; margin-left: 4px; }
+  .plan .per { font-size: 16px; }
+  .plan .btn { width: 100%; margin-top: 28px; }
+  .plan .tag { position: absolute; top: 32px; right: 32px; font: 500 13px/1 var(--sans); color: var(--ember-text); background: var(--ember-tint); padding: 8px 12px; border-radius: 99px; }
+  .inc { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 28px; margin-top: 28px; color: var(--ink); font-size: 16px; }
+  .inc span { display: inline-flex; gap: 8px; align-items: center; }
+  .inc svg { width: 18px; height: 18px; color: var(--ember); }
+
+  .final { text-align: center; padding: 140px 0 112px; }
+  .final .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ember); margin: 0 auto; box-shadow: 0 0 24px 4px rgba(255,107,61,0.35); }
+  .final .mark { font: 600 64px/1 var(--sans); letter-spacing: 0.34em; padding-left: 0.34em; color: var(--ink); margin: 32px 0 26px; }
+  .final .tt { font-size: 32px; }
+  .final .field { margin-top: 40px; }
+  footer { padding: 40px 0 56px; }
+  footer .row { display: flex; justify-content: space-between; gap: 24px; }
+  footer .wordmark { color: var(--ink); }
+  footer .links { display: flex; gap: 28px; font-size: 15px; }
+  footer .fine { color: var(--quiet); margin-top: 24px; }
+
+  @media (max-width: 899px) {
+    nav.top { height: 64px; }
+    nav.top .links { display: none; }
+    nav.top .btn { height: 40px; padding: 0 16px; font-size: 14px; }
+    .hero { padding: 0 0 72px; }
+    .hero .glow { width: 350px; height: 380px; top: 10px; }
+    .hero [data-orb] svg { width: 380px; height: 380px; }
+    .orb-label { font-size: 17px; }
+    .hero h1 { font-size: 48px; margin-top: 0; }
+    .hero .lead { font-size: 18px; margin-bottom: 26px; }
+    .field span:not(.btn) { padding: 0 12px; font-size: 15px; }
+    .field .btn { padding: 0 18px; font-size: 15px; }
+    section { padding: 72px 0; }
+    .sh { font-size: 38px; }
+    .sl { font-size: 17px; }
+    .how { grid-template-columns: 1fr; gap: 12px; margin-top: 36px; }
+    .how .c { padding: 24px; border-radius: 26px; }
+    .how .art { height: 160px; margin-bottom: 22px; }
+    .how h3 { font-size: 26px; }
+    .phones { height: 520px; gap: 0; margin-top: 40px; }
+    .phones [data-phone]:not(:nth-child(2)) { display: none; }
+    .phones [data-phone]:nth-child(2) { --w: 280px !important; margin-bottom: -100px; }
+    .notify { grid-template-columns: 1fr; gap: 24px; }
+    .notify [data-orb] { order: 2; }
+    .notify [data-orb] svg { width: 340px; height: 340px; }
+    .notes .n em { display: none; }
+    .bento { grid-template-columns: 1fr; gap: 12px; margin-top: 36px; }
+    .bento .t { padding: 26px; min-height: 280px; border-radius: 26px; }
+    .bento .big { font-size: 84px; }
+    .bento .code { font-size: 72px; }
+    .bento .tt { font-size: 22px; }
+    .private { grid-template-columns: 1fr; gap: 32px; }
+    .plist .p { padding: 20px; }
+    .plans { grid-template-columns: 1fr; gap: 12px; margin-top: 36px; }
+    .plan { padding: 28px; }
+    .plan .tag { top: 26px; right: 26px; }
+    .plan .price { font-size: 52px; margin-top: 22px; }
+    .inc { justify-content: flex-start; flex-direction: column; }
+    .final { padding: 88px 0 72px; }
+    .final .mark { font-size: 42px; }
+    .final .tt { font-size: 24px; }
+    footer .row { flex-direction: column; }
+    footer .links { flex-wrap: wrap; gap: 14px 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="bar"><div class="wrap">
+  <nav class="top">
+    <a href="#" aria-label="Life, back to top"><div class="brand"><div data-orb="22" data-live data-dot="1.7" data-lit="0" data-ember="#FF6B3D"></div><span class="wordmark" style="color:var(--ink)">LIFE</span></div></a>
+    <div class="links"><a class="link" href="#how">How it works</a><a class="link" href="#orb">The orb</a><a class="link" href="#privacy">Privacy</a><a class="link" href="#pricing">Pricing</a></div>
+    <div class="right"><a class="btn light" href="#join">Join the waitlist</a><button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false"><svg data-ic="menu"></svg></button></div>
+  </nav>
+  <div class="menu-panel"><div class="inner"><a href="#how">How it works</a><a href="#orb">The orb</a><a href="#privacy">Privacy</a><a href="#pricing">Pricing</a><a href="#join">Join the waitlist</a></div></div>
+</div></div>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="glow"></div>
+    <div data-orb="300" data-dot="9" data-labels data-live data-lit="0,1,5" data-ember="#FF6B3D"></div>
+    <h1 class="tt">Ten parts of your life.<br><b>One clear move.</b></h1>
+    <p class="lead">Life holds your money, health, home, work and plans in one place, then tells you the one thing worth doing next.</p>
+    <form class="field dark" data-waitlist><input type="email" name="email" required placeholder="Your email" autocomplete="email" aria-label="Your email"><button class="btn light" type="submit" style="flex:none;padding:0 22px">Join the waitlist</button></form>
+    <p class="fine">Coming to iPhone. Free trial of the full app when we open.</p>
+  </header>
+</div>
+
+<section id="how" style="padding-top:24px">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">How it works</span>
+      <h2 class="tt sh" style="margin-top:20px">Listen. File. <b>Move.</b></h2>
+    </div>
+    <div class="how">
+      <div class="c"><div class="art" id="art-listen"></div><span class="k">01</span><h3>Tell it anything</h3><p>Talk or type, the way you’d tell a friend. A rent letter, a birthday, a rough night’s sleep.</p></div>
+      <div class="c"><div class="art" id="art-file"></div><span class="k">02</span><h3>It finds the right place</h3><p>Every date, amount and name goes to the right area, once you’ve checked it.</p></div>
+      <div class="c"><div class="art" id="art-move"></div><span class="k">03</span><h3>You get one move</h3><p>Each morning, a few moves sized for how you slept and what’s due. Take one, leave the rest.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="screens" style="padding-top:24px;padding-bottom:0">
+  <div class="wrap">
+    <div class="center">
+      <h2 class="tt sh">Calm on the surface. <b>Thorough underneath.</b></h2>
+      <p class="sl">Every screen leads with a sentence you can act on. The detail is one tap away when you want it.</p>
+    </div>
+    <div class="phones">
+      <div data-phone="2-talk" data-w="300"></div>
+      <div data-phone="1-today" data-w="340"></div>
+      <div data-phone="7-plan" data-w="300"></div>
+    </div>
+  </div>
+</section>
+
+<section id="orb">
+  <div class="wrap notify">
+    <div data-orb="320" data-dot="10" data-labels data-live data-lit="0,5,6" data-ember="#FF6B3D"></div>
+    <div>
+      <span class="eyebrow">The orb</span>
+      <h2 class="tt sh" style="margin-top:20px">Ten dots. <b>One for each area.</b></h2>
+      <p class="sl">When something new lands, that area’s dot lights up and the lit dots pulse in turn, newest first. Tap the orb to see what changed. The rest of the time it simply breathes.</p>
+      <div class="notes">
+        <div class="n"><i></i><div><b>Money</b><span>Your tax code changed. You may be owed £840.</span></div><em>08:02</em></div>
+        <div class="n"><i></i><div><b>Admin</b><span>Passport renewal opens in May</span></div><em>Yesterday</em></div>
+        <div class="n"><i></i><div><b>People</b><span>Kofi’s birthday is on Saturday</span></div><em>Yesterday</em></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="everyday" style="padding-top:0">
+  <div class="wrap">
+    <span class="eyebrow">Every day</span>
+    <h2 class="tt sh" style="margin-top:20px">The numbers that matter, <b>in plain words.</b></h2>
+    <div class="bento">
+      <div class="t"><span class="k"><i style="background:#FF7EB0"></i>Body</span><div class="big">72<small>/100</small></div><p class="tt">A good day for your <b>harder workout</b> or <b>the bigger decision.</b></p></div>
+      <div class="t"><span class="k"><i style="background:#3DD68C"></i>Money</span>
+        <div class="due"><div class="hot">Council tax<span>Due in 15 days</span></div><div>Phone contract<span>Renews 2 Dec</span></div><div>Rent<span>Up in March</span></div></div>
+        <p class="tt"><b>Deadlines,</b> caught early.</p></div>
+      <div class="t"><span class="k"><i style="background:#FF6B3D"></i>Learning</span><div class="code">1257<span>L</span></div><p class="tt">Your tax code, <b>explained in five minutes.</b></p></div>
+      <div class="t"><span class="k"><i style="background:#D6A47E"></i>Food</span><div class="big">640<small>kcal</small></div><p class="tt"><b>Snap a meal,</b> check the portions.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy" style="padding-top:0">
+  <div class="wrap private">
+    <div>
+      <span class="eyebrow">Privacy</span>
+      <h2 class="tt sh" style="margin-top:20px">On your phone, <b>first.</b></h2>
+      <p class="sl">Life keeps your plan in an encrypted database on your iPhone. Your subscription pays for Life, so your data never has to.</p>
+    </div>
+    <div class="plist">
+      <div class="p"><div class="i"><svg data-ic="heart"></svg></div><div><h4>Health stays on your phone</h4><p>Readings from Apple Health and what you wear stay there unless you choose to back them up.</p></div></div>
+      <div class="p"><div class="i"><svg data-ic="ask"></svg></div><div><h4>It asks before it reaches out</h4><p>When Life needs a bigger AI model, it asks you first. Health details only go if you say so.</p></div></div>
+      <div class="p"><div class="i"><svg data-ic="ban"></svg></div><div><h4>Never sold, never used for adverts</h4><p>And never used to train AI models, ours or anyone else’s.</p></div></div>
+      <div class="p"><div class="i"><svg data-ic="download"></svg></div><div><h4>See it, take it, delete it</h4><p>One file with everything Life knows, whenever you want it.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" style="padding-top:0">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">Pricing</span>
+      <h2 class="tt sh" style="margin-top:20px">Try everything. <b>Keep what helps.</b></h2>
+      <p class="sl">Start with a free trial of the full app. Then one plan covers everything.</p>
+    </div>
+    <div class="plans">
+      <div class="plan"><div class="name">Monthly</div><div class="price">£7.99<small>a month</small></div><div class="per">Cancel any time</div><a class="btn dim" href="#join">Join the waitlist</a></div>
+      <div class="plan best"><div class="name">Yearly</div><span class="tag">Save £15.89</span><div class="price">£79.99<small>a year</small></div><div class="per">Works out at £6.67 a month</div><a class="btn light" href="#join">Join the waitlist</a></div>
+    </div>
+    <div class="inc"><span><svg data-ic="check"></svg>All ten areas</span><span><svg data-ic="check"></svg>Talk and replies</span><span><svg data-ic="check"></svg>Daily moves</span><span><svg data-ic="check"></svg>Apple Health</span><span><svg data-ic="check"></svg>Lessons</span><span><svg data-ic="check"></svg>Prices include VAT</span></div>
+  </div>
+</section>
+
+<section id="join" class="final">
+  <div class="wrap">
+    <div class="dot"></div>
+    <div class="mark">LIFE</div>
+    <p class="tt">One clear move <b>at a time.</b></p>
+    <form class="field dark" data-waitlist><input type="email" name="email" required placeholder="Your email" autocomplete="email" aria-label="Your email"><button class="btn light" type="submit" style="flex:none;padding:0 22px">Join the waitlist</button></form>
+    <p class="fine" style="margin-top:14px">We’ll only use your address to tell you about Life.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="row"><span class="wordmark">LIFE</span><div class="links"><span>Privacy</span><span>Terms</span><span>Support</span><span>Delete your account</span></div></div>
+    <p class="fine">Life offers wellness and money guidance for adults in the UK. It isn’t medical care or regulated financial advice. © 2026 [Company name].</p>
+  </div>
+</footer>
+<nav class="switcher" aria-label="Directions"><a href="/a/"><b>A</b>Today</a><a href="/b/"><b>B</b>Golden hour</a><a href="/c/" class="on" aria-current="page"><b>C</b>Ten dots</a></nav>
+<script src="/assets/site.js"></script>
+<script>
+  // Three orb states for "How it works": listening, filing, done.
+  const N = 10, C = 100, R = 60, ink = '#F7F8F8', ember = '#FF6B3D';
+  const pos = (i, r = R) => { const a = -Math.PI / 2 + i * 2 * Math.PI / N; return [C + r * Math.cos(a), C + r * Math.sin(a)]; };
+  const svg = (body) => `<svg viewBox="0 0 200 200" width="200" height="200">${body}</svg>`;
+  let listen = '';
+  const sizes = [3, 5, 7.5, 5, 3, 4, 6.5, 8, 5.5, 3.5];
+  for (let i = 0; i < N; i++) { const [x, y] = pos(i); listen += `<circle cx="${x}" cy="${y}" r="${sizes[i]}" fill="${ink}"/>`; }
+  document.getElementById('art-listen').innerHTML = svg(listen);
+  let file = '';
+  const out = { 1: '#D6A47E', 5: '#9AA4AE', 3: '#FF7EB0' };
+  for (let i = 0; i < N; i++) {
+    const [x, y] = pos(i);
+    if (out[i]) { const [x2, y2] = pos(i, R + 26); file += `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" stroke="${out[i]}" stroke-opacity=".35" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 5"/><circle cx="${x2}" cy="${y2}" r="5.5" fill="${out[i]}"/><circle cx="${x}" cy="${y}" r="4" fill="${ink}" fill-opacity=".25"/>`; }
+    else file += `<circle cx="${x}" cy="${y}" r="4.5" fill="${ink}" fill-opacity=".9"/>`;
+  }
+  document.getElementById('art-file').innerHTML = svg(file);
+  let move = `<circle cx="${C}" cy="${C}" r="44" fill="${ember}" fill-opacity=".12"/><circle cx="${C}" cy="${C}" r="13" fill="${ember}"/>`;
+  for (let i = 0; i < N; i++) { const [x, y] = pos(i); move += `<circle cx="${x}" cy="${y}" r="3.5" fill="${ink}" fill-opacity=".22"/>`; }
+  document.getElementById('art-move').innerHTML = svg(move);
+</script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Life · Direction A · Today</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Life brings your health, money and life admin into one calm plan for the day.">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/InterDisplay-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+<script>document.documentElement.classList.add("js")</script>
+<style>
+  nav.top { display: flex; align-items: center; justify-content: space-between; height: 84px; }
+  nav.top .brand { display: flex; align-items: center; gap: 12px; }
+  nav.top .brand [data-orb] { color: var(--ink); display: flex; }
+  nav.top .links { display: flex; gap: 32px; font: 500 15px/1 var(--sans); color: var(--ink2); }
+  nav.top .btn { height: 44px; padding: 0 20px; font-size: 15px; }
+
+  .hero { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 48px; align-items: center; padding: 48px 0 112px; }
+  .hero h1 { font-size: 86px; line-height: 0.98; letter-spacing: -0.048em; margin: 28px 0 28px; }
+  .hero .lead { font-size: 21px; line-height: 1.5; max-width: 30em; margin-bottom: 36px; }
+  .hero .fine { margin-top: 14px; padding-left: 20px; }
+  .stage { position: relative; height: 700px; display: flex; justify-content: center; align-items: center; }
+  .stage .move { position: absolute; left: -24px; bottom: 70px; width: 270px; height: 214px; box-shadow: var(--lift); z-index: 4; }
+  .stage .move .cap h4 { font-size: 23px; }
+  .stage .filed { position: absolute; right: -40px; top: 300px; z-index: 4; padding: 16px 18px; border-radius: 22px; width: 236px; box-shadow: var(--lift); }
+  .filed .row { display: flex; align-items: center; gap: 10px; font: 500 14px/1.3 var(--sans); color: var(--ink); }
+  .filed .row + .row { margin-top: 10px; }
+  .filed .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .filed .row small { display: block; color: var(--ink2); font-weight: 400; font-size: 13px; }
+  .filed .head { font: 500 12px/1 var(--sans); color: var(--quiet); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+
+  section { padding: 104px 0; }
+  .sh { font-size: 60px; line-height: 1.02; letter-spacing: -0.042em; max-width: 13em; }
+  .sl { font-size: 20px; max-width: 34em; margin-top: 20px; }
+  .center { text-align: center; }
+  .center .sh, .center .sl { margin-left: auto; margin-right: auto; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 64px; }
+  .step { padding: 32px 32px 0; overflow: hidden; height: 600px; display: flex; flex-direction: column; }
+  .step .n { width: 32px; height: 32px; border-radius: 50%; background: var(--surface2); color: var(--ink); font: 600 14px/32px var(--sans); text-align: center; }
+  .step h3 { font: 500 28px/1.12 var(--display); color: var(--ink); letter-spacing: -0.03em; margin: 20px 0 10px; }
+  .step p { font-size: 17px; line-height: 1.5; }
+  .step [data-phone] { margin: 36px auto 0; }
+
+  .areas { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 56px; }
+  .areas .photo { aspect-ratio: 3 / 4; border-radius: 24px; }
+  .areas .photo .cap h4 { font-size: 22px; }
+
+  .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; padding: 64px 0; }
+  .feature.flip .copy { order: 2; }
+  .feature .art { position: relative; height: 640px; border-radius: 40px; background: var(--surface2); display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+  .feature .art.money { background: rgba(11,122,85,0.08); }
+  .feature .art.food { background: rgba(229,83,43,0.08); }
+  .feature .art [data-phone] { margin-bottom: -150px; }
+  .feature h3 { font-size: 48px; line-height: 1.04; letter-spacing: -0.04em; }
+  .feature p { font-size: 19px; margin-top: 20px; max-width: 26em; }
+  .ticks { margin-top: 28px; display: grid; gap: 14px; }
+  .ticks div { display: flex; gap: 12px; align-items: flex-start; color: var(--ink); font-size: 17px; line-height: 1.45; }
+  .ticks svg { color: var(--ember); margin-top: 1px; width: 20px; height: 20px; }
+
+  .private { background: var(--ink); border-radius: 44px; padding: 80px; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; overflow: hidden; position: relative; }
+  .private .sh { color: rgba(247,248,248,0.55); font-size: 56px; }
+  .private .sh b { color: #F7F8F8; }
+  .private .sl { color: rgba(247,248,248,0.6); }
+  .private .points { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 32px; margin-top: 48px; }
+  .private .pt svg { color: #F7F8F8; width: 24px; height: 24px; }
+  .private .pt h4 { font: 600 17px/1.3 var(--sans); color: #F7F8F8; margin: 14px 0 6px; }
+  .private .pt p { font-size: 15px; line-height: 1.5; color: rgba(247,248,248,0.6); }
+  .private .ph { position: relative; display: flex; justify-content: center; }
+  .private .ph [data-phone] { position: absolute; top: 10px; }
+
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 880px; margin: 56px auto 0; }
+  .plan { padding: 36px; position: relative; }
+  .plan .name { font: 600 17px/1 var(--sans); color: var(--ink); }
+  .plan .price { font: 600 64px/1 var(--display); color: var(--ink); letter-spacing: -0.04em; margin: 28px 0 8px; font-variant-numeric: tabular-nums; }
+  .plan .price small { font: 500 18px/1 var(--sans); color: var(--ink2); letter-spacing: 0; margin-left: 4px; }
+  .plan .per { font-size: 16px; color: var(--ink2); min-height: 24px; }
+  .plan .btn { width: 100%; margin-top: 28px; }
+  .plan .tag { position: absolute; top: 32px; right: 32px; display: inline-flex; gap: 8px; align-items: center; font: 500 13px/1 var(--sans); color: var(--ember-text); background: var(--ember-tint); padding: 8px 12px; border-radius: 99px; }
+  .included { max-width: 880px; margin: 20px auto 0; padding: 32px 36px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 24px; }
+  .included div { display: flex; gap: 10px; color: var(--ink); font-size: 16px; }
+  .included svg { width: 20px; height: 20px; color: var(--ink2); }
+  .after { text-align: center; margin-top: 24px; }
+
+  .faq { max-width: 880px; margin: 48px auto 0; display: grid; gap: 10px; }
+  .faq .q { padding: 26px 32px; border-radius: 24px; background: var(--surface); }
+  .faq .q h4 { display: flex; justify-content: space-between; gap: 20px; font: 500 19px/1.35 var(--sans); color: var(--ink); }
+  .faq summary { list-style: none; cursor: pointer; } .faq summary::-webkit-details-marker { display: none; }
+  .faq .q h4 svg { color: var(--ink2); transition: transform 240ms cubic-bezier(.2,.7,.2,1); } .faq details[open] h4 svg { transform: rotate(180deg); }
+  .faq .q p { margin-top: 10px; font-size: 16px; max-width: 40em; }
+
+  .final { text-align: center; padding: 96px 0 120px; }
+  .final .mark { font: 600 56px/1 var(--sans); letter-spacing: 0.34em; color: var(--ink); margin: 28px 0 24px; padding-left: 0.34em; }
+  .final .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ember); margin: 0 auto; }
+  .final .tt { font-size: 32px; }
+  .final .field { margin: 40px auto 0; }
+
+  footer { padding: 48px 0 56px; }
+  footer .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; }
+  footer .links { display: flex; gap: 28px; font-size: 15px; color: var(--ink2); }
+  footer .fine { margin-top: 28px; max-width: 52em; }
+
+  @media (max-width: 899px) {
+    nav.top { height: 64px; }
+    nav.top .links { display: none; }
+    nav.top .btn { height: 40px; padding: 0 16px; font-size: 14px; }
+    .hero { grid-template-columns: 1fr; padding: 20px 0 64px; gap: 8px; }
+    .hero h1 { font-size: 52px; margin: 20px 0 18px; }
+    .hero .lead { font-size: 18px; margin-bottom: 24px; }
+    .field span { padding: 0 12px; font-size: 15px; }
+    .field .btn { padding: 0 18px; font-size: 15px; }
+    .stage { height: 600px; margin-top: 24px; }
+    .stage [data-phone] { --w: 270px !important; }
+    .stage .move { left: -4px; bottom: 36px; width: 200px; height: 160px; }
+    .stage .move .cap h4 { font-size: 18px; }
+    .stage .move .cap p { font-size: 12px; }
+    .stage .move .chip { font-size: 11px; padding: 6px 9px; left: 12px; top: 12px; }
+    .stage .filed { right: -8px; top: 290px; width: 190px; padding: 12px 14px; }
+    .filed .row { font-size: 12px; } .filed .row small { font-size: 11px; }
+    section { padding: 64px 0; }
+    .sh { font-size: 38px; }
+    .sl { font-size: 17px; }
+    .steps { grid-template-columns: 1fr; margin-top: 36px; gap: 14px; }
+    .step { height: 470px; padding: 26px 24px 0; }
+    .step h3 { font-size: 24px; }
+    .step [data-phone] { --w: 250px !important; margin-top: 26px; }
+    .areas { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 36px; }
+    .areas .photo { border-radius: 20px; }
+    .areas .photo .cap { left: 14px; right: 14px; bottom: 12px; }
+    .areas .photo .cap h4 { font-size: 18px; }
+    .areas .photo .cap p { font-size: 12px; }
+    .areas .photo .chip { font-size: 11px; left: 10px; top: 10px; padding: 6px 9px; }
+    .feature { grid-template-columns: 1fr; gap: 32px; padding: 36px 0; }
+    .feature.flip .copy { order: 0; }
+    .feature .art { height: 440px; border-radius: 30px; }
+    .feature .art [data-phone] { --w: 250px !important; margin-bottom: -120px; }
+    .feature h3 { font-size: 34px; }
+    .feature p { font-size: 17px; }
+    .private { grid-template-columns: 1fr; padding: 40px 24px 0; border-radius: 32px; gap: 0; }
+    .private .sh { font-size: 36px; }
+    .private .points { grid-template-columns: 1fr; gap: 22px; margin-top: 32px; }
+    .private .ph { height: 330px; margin-top: 36px; overflow: hidden; }
+    .private .ph [data-phone] { --w: 260px !important; top: 0; }
+    .plans { grid-template-columns: 1fr; gap: 12px; margin-top: 36px; }
+    .plan { padding: 28px; }
+    .plan .tag { top: 26px; right: 26px; }
+    .plan .price { font-size: 52px; margin-top: 22px; }
+    .included { grid-template-columns: 1fr; padding: 26px 28px; gap: 12px; }
+    .faq .q { padding: 22px 24px; }
+    .faq .q h4 { font-size: 17px; }
+    .faq .q p { font-size: 15px; }
+    .final { padding: 88px 0 72px; }
+    .final .mark { font-size: 40px; }
+    .final .tt { font-size: 24px; }
+    footer .row { flex-direction: column; }
+    footer .links { flex-wrap: wrap; gap: 14px 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="bar"><div class="wrap">
+  <nav class="top">
+    <a href="#" aria-label="Life, back to top"><div class="brand"><div data-orb="22" data-live data-dot="1.7" data-lit="0"></div><span class="wordmark">LIFE</span></div></a>
+    <div class="links"><a class="link" href="#how">How it works</a><a class="link" href="#areas">Areas</a><a class="link" href="#privacy">Privacy</a><a class="link" href="#pricing">Pricing</a></div>
+    <div class="right"><a class="btn ink" href="#join">Join the waitlist</a><button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false"><svg data-ic="menu"></svg></button></div>
+  </nav>
+  <div class="menu-panel"><div class="inner"><a href="#how">How it works</a><a href="#areas">Areas</a><a href="#privacy">Privacy</a><a href="#pricing">Pricing</a><a href="#join">Join the waitlist</a></div></div>
+</div></div>
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <span class="eyebrow">Coming to iPhone</span>
+      <h1 class="tt"><b>One clear move</b> at a time.</h1>
+      <p class="lead">Life brings your health, money and life admin into one calm plan for the day. Say what’s going on, and it files the details, catches the deadlines and fits the day around how you slept.</p>
+      <form class="field" data-waitlist><input type="email" name="email" required placeholder="Your email" autocomplete="email" aria-label="Your email"><button class="btn ink" type="submit" style="flex:none;padding:0 22px">Join the waitlist</button></form>
+      <p class="fine">Be first in when Life opens, with a free trial of the full app.</p>
+    </div>
+    <div class="stage">
+      <div data-phone="1-today" data-w="340"></div>
+      <div class="photo move"><img src="/assets/img/payslip.webp" loading="lazy" decoding="async" alt=""><span class="chip">One form · about 6 min</span><div class="cap"><h4>Claim your tax rebate</h4><p>est. £840 back · for your first home</p></div></div>
+      <div class="card filed">
+        <div class="head">Filed just now</div>
+        <div class="row"><span class="dot" style="background:#A0704C"></span><div>Home<small>Rent goes up in March</small></div></div>
+        <div class="row"><span class="dot" style="background:#5D6B78"></span><div>People<small>Kofi’s birthday, Saturday</small></div></div>
+        <div class="row"><span class="dot" style="background:#C2457A"></span><div>Body<small>Sleeping badly this week</small></div></div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<section id="how" style="padding-top:40px">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">How it works</span>
+      <h2 class="tt sh" style="margin-top:20px">Say it once. <b>Life takes it from there.</b></h2>
+    </div>
+    <div class="steps">
+      <div class="card step">
+        <span class="n">1</span>
+        <h3>Tell it what’s going on</h3>
+        <p>Talk or type, the way you’d tell a friend. Rent letters, birthdays, a rough night’s sleep.</p>
+        <div data-phone="2-talk" data-w="290"></div>
+      </div>
+      <div class="card step">
+        <span class="n">2</span>
+        <h3>Life files every detail</h3>
+        <p>Each one lands in the right area with its date, once you’ve checked it. No folders to keep.</p>
+        <div data-phone="7-plan" data-w="290"></div>
+      </div>
+      <div class="card step">
+        <span class="n">3</span>
+        <h3>Your day fits you</h3>
+        <p>Life reads how you slept and what’s due, then offers a few moves sized for the day you’re having.</p>
+        <div data-phone="3-readiness" data-w="290"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="areas" style="padding-top:40px">
+  <div class="wrap">
+    <span class="eyebrow">Areas</span>
+    <h2 class="tt sh" style="margin-top:20px">Ten areas. <b>One picture of your life.</b></h2>
+    <p class="sl">Everything you’re managing has a place, so nothing waits in your head. Life keeps each area up to date and tells you when one needs you.</p>
+    <div class="areas">
+      <div class="photo"><img src="/assets/img/payslip.webp" loading="lazy" decoding="async" alt=""><span class="chip">2 ready</span><div class="cap"><h4>Money</h4><p>Bills and what you’re owed</p></div></div>
+      <div class="photo"><img src="/assets/img/keyshome.webp" loading="lazy" decoding="async" alt=""><span class="chip">1 situation</span><div class="cap"><h4>Home</h4><p>Rent, renewals, moving day</p></div></div>
+      <div class="photo"><img src="/assets/img/areawork.webp" loading="lazy" decoding="async" alt=""><div class="cap"><h4>Work</h4><p>Payslips and invoices</p></div></div>
+      <div class="photo"><img src="/assets/img/run.webp" loading="lazy" decoding="async" alt=""><span class="chip">Readiness 72</span><div class="cap"><h4>Body</h4><p>Sleep and readiness</p></div></div>
+      <div class="photo"><img src="/assets/img/food.webp" loading="lazy" decoding="async" alt=""><div class="cap"><h4>Food</h4><p>Meals that fit your day</p></div></div>
+      <div class="photo"><img src="/assets/img/birthday.webp" loading="lazy" decoding="async" alt=""><span class="chip">Saturday</span><div class="cap"><h4>People</h4><p>Birthdays, catch-ups, cards</p></div></div>
+      <div class="photo"><img src="/assets/img/letter.webp" loading="lazy" decoding="async" alt=""><span class="chip">3 unpaid</span><div class="cap"><h4>Admin</h4><p>Letters, forms, renewals</p></div></div>
+      <div class="photo"><img src="/assets/img/journal.webp" loading="lazy" decoding="async" alt=""><div class="cap"><h4>Learning</h4><p>Five-minute lessons</p></div></div>
+      <div class="photo"><img src="/assets/img/aimwrite.webp" loading="lazy" decoding="async" alt=""><span class="chip">24%</span><div class="cap"><h4>Goals</h4><p>One Aim, step by step</p></div></div>
+      <div class="photo"><img src="/assets/img/breathe.webp" loading="lazy" decoding="async" alt=""><div class="cap"><h4>You</h4><p>How you’re arriving today</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="features" style="padding-top:40px;padding-bottom:40px">
+  <div class="wrap">
+    <div class="feature">
+      <div class="copy">
+        <span class="eyebrow">Money</span>
+        <h3 class="tt" style="margin-top:20px"><b>Bills and deadlines,</b> caught early.</h3>
+        <p>Bills, subscriptions, renewals and tax estimates in one place. Life spots the date before it costs you and tells you what you might be owed.</p>
+        <div class="ticks">
+          <div><svg data-ic="check"></svg>Council tax, rent and direct debits on one calendar</div>
+          <div><svg data-ic="check"></svg>Tax code checks and rebates, worked out from published rules</div>
+          <div><svg data-ic="check"></svg>Subscriptions flagged before they renew</div>
+        </div>
+      </div>
+      <div class="art money"><div data-phone="4-money" data-w="320"></div></div>
+    </div>
+    <div class="feature flip">
+      <div class="copy">
+        <span class="eyebrow">Food</span>
+        <h3 class="tt" style="margin-top:20px"><b>Snap a meal,</b> check the portions.</h3>
+        <p>Take a photo or scan a barcode. Life estimates what’s on the plate, you adjust anything that looks off, and the day’s plan updates around it.</p>
+        <div class="ticks">
+          <div><svg data-ic="check"></svg>Calorie targets with safe floors built in</div>
+          <div><svg data-ic="check"></svg>Hide the numbers whenever you’d rather not see them</div>
+          <div><svg data-ic="check"></svg>Nothing is logged until you say so</div>
+        </div>
+      </div>
+      <div class="art food"><div data-phone="5-meal" data-w="320" data-over data-sb="transparent"></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <div class="private">
+      <div>
+        <span class="eyebrow" style="color:rgba(247,248,248,.6)">Privacy</span>
+        <h2 class="tt sh" style="margin-top:20px"><b>Yours,</b> and private.</h2>
+        <p class="sl">Life works on your phone first, in an encrypted database. Your subscription pays for Life, so your data never has to.</p>
+        <div class="points">
+          <div class="pt"><svg data-ic="heart"></svg><h4>Health stays on your phone</h4><p>Readings from Apple Health and what you wear stay there unless you choose to back them up.</p></div>
+          <div class="pt"><svg data-ic="ask"></svg><h4>It asks before it reaches out</h4><p>When Life needs a bigger AI model, it asks you first. Health details only go if you say so.</p></div>
+          <div class="pt"><svg data-ic="ban"></svg><h4>Never sold</h4><p>We never sell your data, never use it for advertising and never use it to train AI models.</p></div>
+          <div class="pt"><svg data-ic="download"></svg><h4>See it, take it, delete it</h4><p>One file with everything Life knows, whenever you want it.</p></div>
+        </div>
+      </div>
+      <div class="ph"><div data-phone="8-privacy" data-w="330"></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" style="padding-top:40px">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">Pricing</span>
+      <h2 class="tt sh" style="margin-top:20px">One plan. <b>Everything in it.</b></h2>
+      <p class="sl">Start with a free trial of the full app. If it earns its place, stay on monthly or yearly.</p>
+    </div>
+    <div class="plans">
+      <div class="card plan">
+        <div class="name">Monthly</div>
+        <div class="price">£7.99<small>a month</small></div>
+        <div class="per">Cancel any time</div>
+        <a class="btn soft" href="#join">Join the waitlist</a>
+      </div>
+      <div class="card plan">
+        <div class="name">Yearly</div>
+        <span class="tag">Save £15.89</span>
+        <div class="price">£79.99<small>a year</small></div>
+        <div class="per">Works out at £6.67 a month</div>
+        <a class="btn ink" href="#join">Join the waitlist</a>
+      </div>
+    </div>
+    <div class="card included">
+      <div><svg data-ic="check"></svg>All ten areas</div>
+      <div><svg data-ic="check"></svg>Talk, and Life’s replies</div>
+      <div><svg data-ic="check"></svg>Daily plans and moves</div>
+      <div><svg data-ic="check"></svg>Apple Health and wearables</div>
+      <div><svg data-ic="check"></svg>Five-minute lessons</div>
+      <div><svg data-ic="check"></svg>Your data, any time</div>
+    </div>
+    <p class="fine after">Prices include VAT. Payment goes through your Apple ID when the trial ends, and you can cancel in your App Store settings.</p>
+  </div>
+</section>
+
+<section id="faq" style="padding-top:40px">
+  <div class="wrap">
+    <div class="center">
+      <h2 class="tt sh">Questions, <b>answered.</b></h2>
+    </div>
+    <div class="faq">
+      <details class="q" open><summary><h4>Who is Life for? <svg data-ic="down"></svg></h4></summary><p>Adults in the UK who carry a lot in their heads: bills, health, family, work. Tax, benefit and money figures use UK rules.</p></details>
+      <details class="q"><summary><h4>Does Life give medical or financial advice? <svg data-ic="down"></svg></h4></summary><p>No. Life gives wellness guidance and money guidance from published rules. For anything important, it points you to the NHS, HMRC or a free service such as MoneyHelper.</p></details>
+      <details class="q"><summary><h4>Is it on Android? <svg data-ic="down"></svg></h4></summary><p>Life starts on iPhone, and Android follows. Join the waitlist and we’ll tell you when it’s ready.</p></details>
+      <details class="q"><summary><h4>What happens when the trial ends? <svg data-ic="down"></svg></h4></summary><p>If you keep Life, it’s £7.99 a month or £79.99 a year, charged to your Apple ID. Cancel in your App Store settings before the trial ends and you won’t pay anything.</p></details>
+      <details class="q"><summary><h4>Can I take my data with me? <svg data-ic="down"></svg></h4></summary><p>Yes. Download everything Life knows in one file, or delete it all, whenever you like.</p></details>
+    </div>
+  </div>
+</section>
+
+<section id="join" class="final">
+  <div class="wrap">
+    <div class="dot"></div>
+    <div class="mark">LIFE</div>
+    <p class="tt">One clear move <b>at a time.</b></p>
+    <form class="field" data-waitlist><input type="email" name="email" required placeholder="Your email" autocomplete="email" aria-label="Your email"><button class="btn ink" type="submit" style="flex:none;padding:0 22px">Join the waitlist</button></form>
+    <p class="fine" style="margin-top:14px">We’ll only use your address to tell you about Life.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span class="wordmark">LIFE</span>
+      <div class="links"><span>Privacy</span><span>Terms</span><span>Support</span><span>Delete your account</span></div>
+    </div>
+    <p class="fine">Life offers wellness and money guidance for adults in the UK. It isn’t medical care or regulated financial advice. © 2026 [Company name].</p>
+  </div>
+</footer>
+<nav class="switcher" aria-label="Directions"><a href="/a/" class="on" aria-current="page"><b>A</b>Today</a><a href="/b/"><b>B</b>Golden hour</a><a href="/c/"><b>C</b>Ten dots</a></nav>
+<script src="/assets/site.js"></script>
+</body>
+</html>
