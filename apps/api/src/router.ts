@@ -1,10 +1,10 @@
 import { and, desc, eq, gte, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
-  BASE_TIERS, BrainError, CONSENT_POLICY_VERSION, MAX_PHOTO_CHARS, TIERS, activeGrants, assertRequest, detectCrisis, parseTierTable, planRoute, runBrain,
+  BASE_TIERS, BrainError, CONSENT_POLICY_VERSION, MAX_PHOTO_CHARS, SYSTEM_POLICY, TIERS, activeGrants, assertRequest, detectCrisis, modelPayload, parseTierTable, planRoute, runBrain,
   type ConsentGrant, type Job, type ModelAdapter, type Request as BrainRequest, type RouteLimits, type Tier, type TierTable,
 } from '../../../packages/brain/src/index.ts';
-import type { Db } from './db/client';
+import type { Database, Db } from './db/client';
 import { aiUsage, prefs } from './db/schema';
 import { costMicros, jobsFor, type ModelSpec, type ProviderModel, type Usage } from './models/types';
 import tiersFile from './tiers.json';
@@ -24,8 +24,12 @@ import tiersFile from './tiers.json';
  * 5. The model comes from tiers.json; a busy provider hands over to the next model in the tier.
  * 6. The answer is checked by the brain's own rules (numbers only from facts, no claimed actions, proposals grounded
  *    in the person's words) and sent back unrendered, for the phone to check again.
- * 7. Every billed call is written to the ledger, including refused and rejected ones.
- * 8. A question resent after its answer was lost on the way (same request id and job, answered in the last day, not
+ * 7. Every billed call is written to the ledger, including refused and rejected ones. One stopped part-way (the time ran
+ *    out, or the phone hung up) is written as `stopped` with an estimate of what was sent, because the provider may
+ *    still charge for it; it counts toward the spending cap, never the allowance (fix F-45).
+ * 8. The allowance is read, checked and one call reserved in a single transaction, one request per person at a time,
+ *    so two questions at once can't both take the last call (fix F-45). The reservation is replaced by what was billed.
+ * 9. A question resent after its answer was lost on the way (same request id and job, answered in the last day, not
  *    resent before) runs again, since no answer is kept here, but doesn't use the allowance a second time (fix F-46).
  *
  * A meal or label photo rides in the request itself (base64, made small on the phone), goes to the vision model for
@@ -94,8 +98,15 @@ type Standing = { privateMode: boolean; grants: ConsentGrant[]; used: Record<Tie
  * Its first answer is left out of the allowance this once; resends never count against it. All of it costs money,
  * so the spending cap counts everything.
  */
-async function standing(db: Db, userId: string, now: number, request?: { id: string; job: Job }): Promise<Standing> {
-  return db.withUser(userId, async tx => {
+async function standing(db: Db, userId: string, now: number): Promise<Standing> {
+  return db.withUser(userId, tx => readStanding(tx, now));
+}
+
+/** A reservation older than this is from a request that never finished (the server stopped), so it no longer counts. */
+const RESERVATION_MS = 10 * 60 * 1000;
+
+async function readStanding(tx: Database, now: number, request?: { id: string; job: Job }): Promise<Standing> {
+  {
     const [settings] = await tx.select({ private_mode: prefs.private_mode, fields: prefs.fields }).from(prefs).where(isNull(prefs.deleted_at)).orderBy(desc(prefs.updated_at)).limit(1);
     const dayAgo = new Date(now - DAY).toISOString();
     const [before] = !request ? [] : await tx.select({
@@ -103,7 +114,9 @@ async function standing(db: Db, userId: string, now: number, request?: { id: str
       resent: sql<boolean | null>`bool_or(${aiUsage.repeat})`,
     }).from(aiUsage).where(and(eq(aiUsage.request_id, request.id), gte(aiUsage.at, new Date(now - DAY))));
     const repeat = before?.answered === true && before.resent !== true;
-    const counted = repeat && request ? sql`not ${aiUsage.repeat} and ${aiUsage.request_id} is distinct from ${request.id}` : sql`not ${aiUsage.repeat}`;
+    // Resends and stopped calls never use the allowance; a reservation does, until it is settled or goes stale.
+    const live = sql`not ${aiUsage.repeat} and ${aiUsage.outcome} <> 'stopped' and (${aiUsage.outcome} <> 'pending' or ${aiUsage.at} >= ${new Date(now - RESERVATION_MS).toISOString()}::timestamptz)`;
+    const counted = repeat && request ? sql`${live} and ${aiUsage.request_id} is distinct from ${request.id}` : live;
     const rows = await tx.select({
       tier: aiUsage.tier,
       day: sql<number>`count(*) filter (where ${aiUsage.at} >= ${dayAgo}::timestamptz and ${counted})::int`,
@@ -121,13 +134,15 @@ async function standing(db: Db, userId: string, now: number, request?: { id: str
       ? activeGrants({ version: 1, policyVersion: typeof ledger.policyVersion === 'number' ? ledger.policyVersion : CONSENT_POLICY_VERSION, grants: ledger.grants as ConsentGrant[] }, now)
       : [];
     return { privateMode: settings?.private_mode === true, grants, used, spentMicros, repeat };
-  });
+  }
 }
 
 const left = (allowances: Allowances, used: Standing['used']): RouteLimits =>
   Object.fromEntries(TIERS.map(t => [t, Math.max(0, allowances[t].calls - used[t][allowances[t].per])])) as RouteLimits;
 
-type Billed = { spec: ModelSpec; usage: Usage; outcome: 'ok' | 'rejected' | 'declined' };
+type Billed = { spec: ModelSpec; usage: Usage; outcome: 'ok' | 'rejected' | 'declined' | 'stopped' };
+/** What a model was sent, in tokens, roughly (four characters each), for a call stopped before it said what it used. */
+const estimateInput = (request: BrainRequest) => Math.ceil((SYSTEM_POLICY.length + JSON.stringify(modelPayload(request)).length) / 4);
 
 /** POST /ai/run */
 export async function runAi(db: Db, userId: string, raw: unknown, ai: AiOptions | undefined, now: number, signal?: AbortSignal): Promise<AiReply> {
@@ -144,16 +159,26 @@ export async function runAi(db: Db, userId: string, raw: unknown, ai: AiOptions 
   // 2. Private mode never leaves the phone: if it got here, nothing runs.
   if (request.privateMode) return refuse(409, 'PRIVATE_MODE', 'Private mode is on, so this stays on your phone. Nothing was sent to a model.');
   if (!ai?.models.length) return refuse(503, 'AI_NOT_CONFIGURED', 'No model is connected for this question yet. Your message is saved, but I won’t invent a reply.');
-  const me = await standing(db, userId, now, request);
-  if (me.privateMode) return refuse(409, 'PRIVATE_MODE', 'Private mode is on, so this stays on your phone. Nothing was sent to a model.');
   const allowances = ai.allowances ?? DEFAULT_ALLOWANCES;
-  if (me.spentMicros >= allowances.costMicrosPerMonth) return refuse(429, 'RATE_LIMITED', 'You’ve reached this month’s AI limit. Your message is saved, and saved facts and calculations still work.');
   const table = ai.table ?? loadTierTable();
-  const route = { table, remaining: left(allowances, me.used) };
-  // 3. Standing consent only from the person's own synced settings.
-  const sent: BrainRequest = { ...request, grants: me.grants };
-  let plan;
-  try { plan = planRoute(sent, route); } catch (error) { return failed(error); }
+  const reservation = crypto.randomUUID();
+  type Decided = { refusal: AiReply } | { me: Standing; route: { table: TierTable; remaining: RouteLimits }; sent: BrainRequest; plan: ReturnType<typeof planRoute> };
+  const decided = await db.withUser(userId, async (tx): Promise<Decided> => {
+    // One request per person at a time through here, so the allowance read and the reservation can't interleave.
+    await tx.execute(sql`select pg_advisory_xact_lock(4600, hashtext(${userId}))`);
+    const me = await readStanding(tx, now, request);
+    if (me.privateMode) return { refusal: refuse(409, 'PRIVATE_MODE', 'Private mode is on, so this stays on your phone. Nothing was sent to a model.') };
+    if (me.spentMicros >= allowances.costMicrosPerMonth) return { refusal: refuse(429, 'RATE_LIMITED', 'You’ve reached this month’s AI limit. Your message is saved, and saved facts and calculations still work.') };
+    const route = { table, remaining: left(allowances, me.used) };
+    // 3. Standing consent only from the person's own synced settings.
+    const sent: BrainRequest = { ...request, grants: me.grants };
+    let plan;
+    try { plan = planRoute(sent, route); } catch (error) { return { refusal: failed(error) }; }
+    await tx.insert(aiUsage).values({ id: reservation, user_id: userId, job: sent.job, model: 'pending', location: 'cloud', tier: plan.tier, outcome: 'pending', at: new Date(now), request_id: sent.id, repeat: me.repeat });
+    return { me, route, sent, plan };
+  });
+  if ('refusal' in decided) return decided.refusal;
+  const { me, route, sent, plan } = decided;
 
   const billed: Billed[] = [];
   const adapters: ModelAdapter[] = ai.models.map(model => ({
@@ -163,7 +188,12 @@ export async function runAi(db: Db, userId: string, raw: unknown, ai: AiOptions 
     tiers: model.spec.tiers,
     available: async () => true,
     generate: async (req, abort) => {
-      const reply = await model.call(req, abort);
+      let reply;
+      try { reply = await model.call(req, abort); }
+      catch (error) {
+        if (abort.aborted) billed.push({ spec: model.spec, usage: { inputTokens: estimateInput(req), outputTokens: 0 }, outcome: 'stopped' });
+        throw error;
+      }
       if (reply.usage.inputTokens + reply.usage.outputTokens > 0) billed.push({ spec: model.spec, usage: reply.usage, outcome: reply.failure ? (reply.failure.code === 'INVALID_OUTPUT' ? 'rejected' : 'declined') : 'ok' });
       if (reply.failure) throw reply.failure;
       return reply.output;
@@ -180,7 +210,7 @@ export async function runAi(db: Db, userId: string, raw: unknown, ai: AiOptions 
     if (error instanceof BrainError && error.code === 'INVALID_OUTPUT' && last?.outcome === 'ok') last.outcome = 'rejected';
     return failed(error);
   } finally {
-    if (billed.length) await record(db, userId, sent, plan.tier, billed, now, me.repeat).catch(error => console.error('ai ledger write failed', error instanceof Error ? error.message : error));
+    await settle(db, userId, reservation, sent, plan.tier, billed, now, me.repeat).catch(error => console.error('ai ledger write failed', error instanceof Error ? error.message : error));
   }
 }
 
@@ -189,13 +219,17 @@ function failed(error: unknown): AiReply {
   throw error;
 }
 
-function record(db: Db, userId: string, request: { id: string; job: Job }, tier: Tier, billed: Billed[], now: number, repeat: boolean) {
+/** Replaces the reservation with every billed call, in one transaction. */
+function settle(db: Db, userId: string, reservation: string, request: { id: string; job: Job }, tier: Tier, billed: Billed[], now: number, repeat: boolean) {
   const at = new Date(now);
-  return db.withUser(userId, tx => tx.insert(aiUsage).values(billed.map(b => ({
-    id: crypto.randomUUID(), user_id: userId, job: request.job, model: b.spec.id, location: 'cloud', tier, outcome: b.outcome,
-    input_tokens: b.usage.inputTokens, output_tokens: b.usage.outputTokens, cost_micros: costMicros(b.spec, b.usage), at,
-    request_id: request.id, repeat,
-  }))));
+  return db.withUser(userId, async tx => {
+    await tx.delete(aiUsage).where(eq(aiUsage.id, reservation));
+    if (billed.length) await tx.insert(aiUsage).values(billed.map(b => ({
+      id: crypto.randomUUID(), user_id: userId, job: request.job, model: b.spec.id, location: 'cloud', tier, outcome: b.outcome,
+      input_tokens: b.usage.inputTokens, output_tokens: b.usage.outputTokens, cost_micros: costMicros(b.spec, b.usage), at,
+      request_id: request.id, repeat,
+    })));
+  });
 }
 
 /** GET /ai/capabilities: which tiers have a model, which job sits in which tier, and what this person has left. */

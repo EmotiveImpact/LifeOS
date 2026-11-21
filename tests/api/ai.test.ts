@@ -258,14 +258,51 @@ describe.skipIf(!adminUrl)('the brain through the API', () => {
     await clearUsage(ama);
   });
 
-  test('a timed-out model leaves nothing changed', async () => {
+  test('a timed-out model leaves nothing changed, and the ledger keeps an estimate of what it was sent (F-45)', async () => {
     const stuck: ProviderModel = { spec: spec('m-fast', ['fast']), call: (_request, signal) => new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(new Error('aborted')))) };
-    const before = await countEverything(ama);
-    const res = await post(apiWith([stuck], { timeoutMs: 30 }), ama, okd(ask('Tell me something kind')));
+    const phoneRows = async () => { const { ai_usage: _ledger, ...rest } = await countEverything(ama); return rest; };
+    const before = await phoneRows();
+    const api = apiWith([stuck], { timeoutMs: 30, allowances: { fast: { calls: 1, per: 'day' }, strong: { calls: 5, per: 'day' }, top: { calls: 1, per: 'month' }, vision: { calls: 5, per: 'day' }, costMicrosPerMonth: 1_000_000 } });
+    const res = await post(api, ama, okd(ask('Tell me something kind')));
     expect(res.status).toBe(504);
     expect((await res.json() as { error: string }).error).toBe('TIMEOUT');
-    expect(await countEverything(ama)).toEqual(before);
-    expect(await usageOf(ama)).toEqual([]);
+    expect(await phoneRows()).toEqual(before);
+    // The provider may still charge for what it read, so the spending cap counts it; nothing came back, so no output.
+    const rows = await usageOf(ama);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ outcome: 'stopped', model: 'm-fast', output_tokens: 0 });
+    expect(rows[0].input_tokens).toBeGreaterThan(0);
+    expect(rows[0].cost_micros).toBeGreaterThan(0);
+    // It gave the person nothing, so it doesn't use their allowance: the day's one fast call is still there.
+    const calls: string[] = [];
+    expect((await post(apiWith(trio(calls), { allowances: { fast: { calls: 1, per: 'day' }, strong: { calls: 5, per: 'day' }, top: { calls: 1, per: 'month' }, vision: { calls: 5, per: 'day' }, costMicrosPerMonth: 1_000_000 } }), ama, okd(ask('Tell me something kind')))).status).toBe(200);
+    await clearUsage(ama);
+  });
+
+  test('two questions at once can’t both take the last call of an allowance (F-45)', async () => {
+    const calls: string[] = [];
+    let release!: () => void, started!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; }), begun = new Promise<void>(resolve => { started = resolve; });
+    const slow = trio(calls, async () => { started(); await gate; return good; });
+    const api = apiWith(slow, { allowances: { fast: { calls: 1, per: 'day' }, strong: { calls: 5, per: 'day' }, top: { calls: 1, per: 'month' }, vision: { calls: 5, per: 'day' }, costMicrosPerMonth: 1_000_000 } });
+    const first = post(api, ama, okd(ask('Tell me something kind')));
+    // While the first is still being answered, its call is reserved, so the second finds the allowance used.
+    await begun;
+    const second = await post(api, ama, okd(ask('Tell me something else kind')));
+    expect(second.status).toBe(429);
+    release();
+    expect((await first).status).toBe(200);
+    expect(calls).toEqual(['m-fast']);
+    // The reservation became the billed call: one row, no reservation left behind.
+    expect((await usageOf(ama)).map(r => r.outcome)).toEqual(['ok']);
+    await clearUsage(ama);
+  });
+
+  test('a reservation left by a request that never finished stops counting after ten minutes', async () => {
+    await env.db.withUser(ama, tx => tx.insert(aiUsage).values({ id: crypto.randomUUID(), user_id: ama, job: 'ask', model: 'pending', location: 'cloud', tier: 'fast', outcome: 'pending', at: new Date(now - 11 * 60 * 1000) }));
+    const api = apiWith(trio([]), { allowances: { fast: { calls: 1, per: 'day' }, strong: { calls: 5, per: 'day' }, top: { calls: 1, per: 'month' }, vision: { calls: 5, per: 'day' }, costMicrosPerMonth: 1_000_000 } });
+    expect((await post(api, ama, okd(ask('Tell me something kind')))).status).toBe(200);
+    await clearUsage(ama);
   });
 
   test('usage is recorded per user and job', async () => {
