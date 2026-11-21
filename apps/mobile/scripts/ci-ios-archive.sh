@@ -76,8 +76,15 @@ security import "$SIGNING_DIR/distribution.p12" -P "$IOS_DISTRIBUTION_P12_PASSWO
 security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
 security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" >/dev/null
 unset IOS_DISTRIBUTION_P12_BASE64 IOS_DISTRIBUTION_P12_PASSWORD IOS_PROVISION_PROFILE_BASE64
+# The native project is named after the app (app.json "name"), so read it from what prebuild made rather than
+# assuming it: "life" became "Life" on 20 Nov and Xcode's scheme names are case-sensitive.
+WORKSPACES=(ios/*.xcworkspace)
+[[ ${#WORKSPACES[@]} -eq 1 && -d "${WORKSPACES[0]}" ]] || { printf 'Expected one Xcode workspace in ios/\n' >&2; exit 1; }
+PROJECT_NAME=$(basename "${WORKSPACES[0]}" .xcworkspace)
+[[ "$PROJECT_NAME" =~ ^[A-Za-z0-9_-]+$ && -d "ios/$PROJECT_NAME.xcodeproj" && -f "ios/$PROJECT_NAME/Info.plist" ]] || { printf 'Unexpected Xcode project layout\n' >&2; exit 1; }
+export PROJECT_NAME
 ruby -rxcodeproj - <<'RUBY'
-p = Xcodeproj::Project.open('ios/life.xcodeproj')
+p = Xcodeproj::Project.open("ios/#{ENV.fetch('PROJECT_NAME')}.xcodeproj")
 apps = p.targets.select { |t| t.product_type == 'com.apple.product-type.application' }
 abort('Expected one application target') unless apps.length == 1
 apps.first.build_configurations.each do |config|
@@ -89,9 +96,9 @@ apps.first.build_configurations.each do |config|
 end
 p.save
 RUBY
-/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/life/Info.plist
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "ios/$PROJECT_NAME/Info.plist"
 # No account login, secrets in app code, or provisioning changes are performed here.
-xcodebuild -workspace ios/life.xcworkspace -scheme life -configuration Release \
+xcodebuild -workspace "ios/$PROJECT_NAME.xcworkspace" -scheme "$PROJECT_NAME" -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/life.xcarchive" archive -quiet
 xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/life.xcarchive" \
   -exportPath "$RUNNER_TEMP/life-export" -exportOptionsPlist "$SIGNING_DIR/ExportOptions.plist" -quiet
