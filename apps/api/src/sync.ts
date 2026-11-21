@@ -1,7 +1,7 @@
 import { and, asc, eq, gt, gte, inArray, ne, sql } from 'drizzle-orm';
 import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core';
-import type { Database } from './db/client';
-import { phoneTables, syncOps } from './db/schema';
+import type { Database, Db } from './db/client';
+import { phoneTables, syncOps, users } from './db/schema';
 
 /**
  * Sync (BUILD_V26 Phase 22, SYSTEM_DESIGN §4). Phones push the ops in their outbox and pull everyone else's by cursor.
@@ -14,6 +14,8 @@ import { phoneTables, syncOps } from './db/schema';
  * - The cursor is the server's `sync_ops.seq`, opaque to the phone and only ever increasing. A pull skips the
  *   caller's own device, and always moves the cursor past what it looked at.
  * - `user_id` never comes from the phone: rows are stored under the session's user, and pulled rows carry none.
+ * - The log is compacted once a week per account (fix F-42): for each row only the winning op stays, so a new phone
+ *   pulls one op per row rather than every edit ever made.
  */
 
 export type TableName = keyof typeof phoneTables;
@@ -153,4 +155,50 @@ export async function forget(tx: Tx, table: TableName, ids: string[]): Promise<n
   const gone = await tx.delete(specs[table].table).where(inArray(t.id, ids)).returning({ id: t.id });
   await tx.delete(syncOps).where(and(eq(syncOps.table_name, table), inArray(syncOps.row_id, ids)));
   return gone.length;
+}
+
+/** Ops that arrived in the last day are never compacted, so a phone part-way through a pull sees the log it started on. */
+export const COMPACT_AFTER_MS = 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Compacts one person's sync log (fix F-42). For each row only the op that wins remains: the newest `updated_at`,
+ * a delete winning a tie (as `apply` decides), then the latest to arrive. Every phone still ends with the same rows:
+ * one whose cursor is before the winner pulls it, and one past it already has it. The losers it drops could never
+ * change a phone's copy, because a phone keeps the newer edit too. Returns how many ops went.
+ */
+/** The row's `updated_at` inside an op's payload, whether the driver stored the payload as an object or as JSON text. */
+const updatedAt = sql`coalesce(${syncOps.payload}->>'updated_at', (${syncOps.payload}#>>'{}')::jsonb->>'updated_at')`;
+export async function compact(tx: Tx, now: number): Promise<number> {
+  const before = new Date(now - COMPACT_AFTER_MS).toISOString();
+  const gone = await tx.delete(syncOps).where(sql`${syncOps.seq} IN (
+    SELECT ranked.seq FROM (
+      SELECT ${syncOps.seq} AS seq, ${syncOps.received_at} AS received_at, row_number() OVER (
+        PARTITION BY ${syncOps.table_name}, ${syncOps.row_id}
+        ORDER BY ${updatedAt} DESC NULLS LAST, (${syncOps.op} = 'delete') DESC, ${syncOps.seq} DESC
+      ) AS rank
+      FROM ${syncOps}
+    ) ranked
+    WHERE ranked.rank > 1 AND ranked.received_at < ${before}::timestamptz
+  )`).returning({ seq: syncOps.seq });
+  return gone.length;
+}
+
+/** Which day of the week an account's log is compacted on, from its id. */
+export const compactionDay = (userId: string) => [...userId].reduce((hash, c) => (hash * 31 + c.charCodeAt(0)) >>> 0, 7) % 7;
+
+/**
+ * The daily sweep's part (fix F-42): today's seventh of accounts, each as that person, with row-level security on.
+ * One account failing doesn't stop the rest.
+ */
+export async function compactSyncLogs(db: Db, now: number): Promise<{ accounts: number; ops: number; failed: number }> {
+  const today = Math.floor(now / DAY_MS) % 7;
+  const people = await db.db.select({ id: users.id }).from(users);
+  let accounts = 0, ops = 0, failed = 0;
+  for (const { id } of people) {
+    if (compactionDay(id) !== today) continue;
+    try { ops += await db.withUser(id, tx => compact(tx, now)); accounts++; }
+    catch (error) { failed++; console.error('sync compaction failed', error instanceof Error ? error.message : error); }
+  }
+  return { accounts, ops, failed };
 }

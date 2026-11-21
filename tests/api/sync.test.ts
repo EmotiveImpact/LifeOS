@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { createApi } from '../../apps/api/src/app';
 import { eq } from '../../apps/api/src/db/kit';
 import { habitLog, memory, record, syncOps } from '../../apps/api/src/db/schema';
+import { compact, compactSyncLogs, compactionDay } from '../../apps/api/src/sync';
 import { adminUrl, freshDatabase, makeUser } from './support';
 
 /**
@@ -193,5 +194,77 @@ describe.skipIf(!adminUrl)('sync through the API', () => {
     expect(await env.db.withUser(ama, tx => tx.select().from(syncOps).where(eq(syncOps.row_id, health)))).toEqual([]);
     const notAllowed = await call('/sync/forget', ama, phoneA, { method: 'POST', body: JSON.stringify({ table: 'record', ids: [uuid()] }) });
     expect(notAllowed.status).toBe(400);
+  });
+
+  describe('compacting the log (fix F-42)', () => {
+    const DAY = 24 * 60 * 60 * 1000;
+    type Change = { table: string; op: string; row: Record<string, unknown> };
+    /** A phone's copy: per row, the newer `updated_at` wins and a delete wins a tie, as the phone's store decides. */
+    const phoneCopy = (changes: Change[], start: Record<string, Change> = {}) => {
+      const copy = { ...start };
+      for (const change of changes) {
+        const id = change.row.id as string, have = copy[id];
+        const newer = !have || (change.row.updated_at as string) > (have.row.updated_at as string) || (change.row.updated_at === have.row.updated_at && change.op === 'delete' && have.op !== 'delete');
+        if (newer) copy[id] = change;
+      }
+      return copy;
+    };
+    const opsOf = (user: string) => env.db.withUser(user, tx => tx.select().from(syncOps));
+    const notes = (copy: Record<string, Change>) => Object.fromEntries(Object.entries(copy).map(([id, c]) => [id, c.op === 'delete' ? 'deleted' : (c.row.fields as { note: string }).note]));
+
+    test('each row keeps only its winning op, and every phone still ends with the same rows', async () => {
+      const yaa = await makeUser(env.db, 'yaa@example.com');
+      const edited = uuid(), deleted = uuid(), late = uuid();
+      await pushAs(yaa, phoneA, [recordOp(edited, 1, 'first'), recordOp(edited, 2, 'second'), recordOp(edited, 3, 'third'), recordOp(deleted, 1, 'gone soon'), remove('record', deleted, 5)]);
+      // An older edit that arrives after a newer one: stored in the log, but it never wins.
+      await pushAs(yaa, phoneA, [recordOp(late, 10, 'newer')]);
+      await pushAs(yaa, phoneA, [recordOp(late, 4, 'older, arrived late')]);
+      const midway = (await pullAs(yaa, phoneB, null, 1)).cursor;
+      const before = phoneCopy((await pullAs(yaa, phoneB, null)).changes);
+      expect(notes(before)).toEqual({ [edited]: 'third', [deleted]: 'deleted', [late]: 'newer' });
+      expect(await opsOf(yaa)).toHaveLength(7);
+
+      // Ops from the last day stay as they came.
+      expect(await env.db.withUser(yaa, tx => compact(tx, Date.now()))).toBe(0);
+      expect(await env.db.withUser(yaa, tx => compact(tx, Date.now() + 2 * DAY))).toBe(4);
+      expect((await opsOf(yaa)).map(o => o.row_id).sort()).toEqual([edited, deleted, late].sort());
+
+      // A new phone pulls one op per row and ends the same.
+      const fresh = await pullAs(yaa, phoneB, null);
+      expect(fresh.changes).toHaveLength(3);
+      expect(notes(phoneCopy(fresh.changes))).toEqual(notes(before));
+      // A phone that had pulled only the first op still ends the same.
+      const firstOnly = phoneCopy([{ table: 'record', op: 'upsert', row: recordOp(edited, 1, 'first').payload }]);
+      expect(notes(phoneCopy((await pullAs(yaa, phoneB, midway)).changes, firstOnly))).toEqual(notes(before));
+      // The server's own rows are untouched.
+      expect(((await serverRecord(yaa, edited)).fields as { note: string }).note).toBe('third');
+      expect((await serverRecord(yaa, deleted)).deleted_at).not.toBeNull();
+    });
+
+    test('a delete still stops an older edit that arrives after compaction', async () => {
+      const esi = await makeUser(env.db, 'esi@example.com');
+      const row = uuid();
+      await pushAs(esi, phoneA, [recordOp(row, 1, 'kept'), remove('record', row, 6)]);
+      await env.db.withUser(esi, tx => compact(tx, Date.now() + 2 * DAY));
+      await pushAs(esi, phoneB, [recordOp(row, 3, 'from a phone that was offline')]);
+      expect((await serverRecord(esi, row)).deleted_at).not.toBeNull();
+    });
+
+    test('the sweep compacts a seventh of accounts a day, each as that person', async () => {
+      const kwame = await makeUser(env.db, 'kwame@example.com'), row = uuid();
+      await pushAs(kwame, phoneA, [recordOp(row, 1, 'one'), recordOp(row, 2, 'two')]);
+      await pushAs(ama, phoneA, [recordOp(uuid(), 1, 'a'), recordOp(uuid(), 2, 'b')]);
+      const amaOps = (await opsOf(ama)).length;
+      // A day, at least two from now, that is Kwame's day.
+      let day = Math.floor((Date.now() + 2 * DAY) / DAY);
+      while (day % 7 !== compactionDay(kwame)) day++;
+      const result = await compactSyncLogs(env.db, day * DAY + 1000);
+      expect(result.accounts).toBeGreaterThanOrEqual(1);
+      expect(result.failed).toBe(0);
+      expect(await opsOf(kwame)).toHaveLength(1);
+      // On someone else's day, Kwame's log isn't touched; and Ama's only on Ama's day.
+      if (compactionDay(ama) !== compactionDay(kwame)) expect((await opsOf(ama)).length).toBe(amaOps);
+      expect([...new Set(Array.from({ length: 50 }, () => compactionDay(uuid())))].every(d => d >= 0 && d < 7)).toBe(true);
+    });
   });
 });

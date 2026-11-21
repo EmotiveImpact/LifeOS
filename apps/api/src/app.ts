@@ -9,7 +9,7 @@ import { SearchBody, listMemories, searchMemories } from './memory';
 import { MovesBody, countWeek, reportableWeeks } from './metrics';
 import { aiCapabilities, runAi, type AiOptions } from './router';
 import type { Storage } from './storage';
-import { MAX_PULL, MAX_PUSH, forget, forgettable, isTable, pull, push, refusedByPolicy } from './sync';
+import { MAX_PULL, MAX_PUSH, compactSyncLogs, forget, forgettable, isTable, pull, push, refusedByPolicy } from './sync';
 import { PROVIDERS, SamplesQuery, callbackPage, connectUrl, disconnect, finishConnect, isProvider, listConnections, wearableSamples, type WearableOptions } from './wearables';
 
 type Route = (request: Request, principal: Principal) => Promise<Response>;
@@ -187,7 +187,9 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
         const swept = await purgeClosedAccounts(db, storage, now());
         // Sign-in counters from more than a day ago (fix F-11).
         const limits = await pruneLimits(db.db, now()).catch(error => { console.error('limit prune failed', error instanceof Error ? error.message : error); return 0; });
-        return json({ ...swept, limits });
+        // A seventh of accounts a day have their sync log compacted, so each one is compacted weekly (fix F-42).
+        const sync = await compactSyncLogs(db, now()).catch(error => { console.error('sync compaction failed', error instanceof Error ? error.message : error); return null; });
+        return json({ ...swept, limits, sync });
       }
       // RevenueCat tells Life what changed in a subscription, signed with its own secret and with no session (fix F-20).
       if (pathname === '/billing/revenuecat' && request.method === 'POST') {
