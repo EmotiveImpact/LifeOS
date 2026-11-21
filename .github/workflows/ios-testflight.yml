@@ -1,6 +1,17 @@
 name: iOS TestFlight
 
 on:
+  # Edem, 21 Nov 2026: builds go to TestFlight by themselves when new app work lands, without anyone pressing Run
+  # workflow. A push builds the review build: Ama's sample life on, starting from the beginning, uploaded. Pushes that
+  # only touch notes or the server don't build. Runs queue (see concurrency), so a burst of pushes makes one build.
+  push:
+    branches:
+      - v26-integration
+      - claude/project-thread-9pucu2
+    paths:
+      - apps/mobile/**
+      - packages/**
+      - .github/workflows/ios-testflight.yml
   workflow_dispatch:
     inputs:
       upload_to_testflight:
@@ -41,7 +52,7 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
           ASC_APP_ID: ${{ vars.ASC_APP_ID }}
-          UPLOAD: ${{ inputs.upload_to_testflight }}
+          UPLOAD: ${{ github.event_name == 'push' || inputs.upload_to_testflight }}
         shell: bash
         run: |
           missing=0
@@ -65,8 +76,8 @@ jobs:
       CI: '1'
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       BUILD_NUMBER: ${{ inputs.build_number }}
-      EXPO_PUBLIC_SAMPLE_DATA: ${{ inputs.sample_life && '1' || '0' }}
-      START_FRESH: ${{ inputs.sample_life && inputs.start_fresh && '1' || '0' }}
+      EXPO_PUBLIC_SAMPLE_DATA: ${{ (github.event_name == 'push' || inputs.sample_life) && '1' || '0' }}
+      START_FRESH: ${{ (github.event_name == 'push' || (inputs.sample_life && inputs.start_fresh)) && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -105,7 +116,7 @@ jobs:
       # The signed IPA remains only on GitHub's ephemeral runner. This repository
       # is public, so upload directly to Apple rather than retaining an artifact.
       - name: Upload for TestFlight processing
-        if: ${{ inputs.upload_to_testflight }}
+        if: ${{ github.event_name == 'push' || inputs.upload_to_testflight }}
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
