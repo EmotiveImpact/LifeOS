@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ENTITLEMENT, planOfProduct, plansFrom, purchaseOutcome, standingFrom, trialOf, trialWords } from '../../apps/mobile/src/services/billingModel';
+import { ENTITLEMENT, needsPlus, planOfProduct, plansFrom, purchaseOutcome, standingFrom, trialOf, trialWords } from '../../apps/mobile/src/services/billingModel';
 
 /**
  * Fix F-20, the phone half. The paywall shows the store's own prices and a free trial only when the store says this
@@ -127,5 +127,69 @@ describe('the screens and the build', () => {
   test('phone and server use the same entitlement', () => {
     expect(ENTITLEMENT).toBe('life');
     expect(read('apps/api/src/billing.ts')).toContain("export const DEFAULT_ENTITLEMENT = 'life';");
+  });
+});
+
+describe('Life Plus at the end of setup, and when a plan has ended (Edem, 21 Nov 2026)', () => {
+  const settings = read('apps/mobile/src/screens/v26/settings.tsx');
+  const firstopen = read('apps/mobile/src/screens/v26/firstopen.tsx');
+  const gate = read('apps/mobile/src/services/plusGate.ts');
+  const offer = settings.slice(settings.indexOf('export type PlusMode'), settings.indexOf('/* ───────────────────────── Welcome to life Plus'));
+  const standing = (status: 'none' | 'trial' | 'active' | 'grace' | 'ended') => ({ status, renews: false, ends: null, plan: null, manageUrl: null });
+
+  test('Life asks only on the store’s definite word that there is no plan', () => {
+    expect(needsPlus(standing('none'))).toBe(true);
+    expect(needsPlus(standing('ended'))).toBe(true);
+    expect(needsPlus(standing('trial'))).toBe(false);
+    expect(needsPlus(standing('active'))).toBe(false);
+    // Payment trouble keeps Life open while the store retries; no answer (offline, billing off) never shuts anyone out.
+    expect(needsPlus(standing('grace'))).toBe(false);
+    expect(needsPlus(null)).toBe(false);
+    expect(needsPlus(undefined)).toBe(false);
+  });
+
+  test('setup ends on Life Plus after Save your progress, and the first move follows a started plan', () => {
+    const building = firstopen.slice(firstopen.indexOf('export function BuildingV26'), firstopen.indexOf('/* ───────────────────────── Where do you live?'));
+    expect(building).toContain("if (asked && !was.current) nav.replace('plusstart');");
+    expect(building).toContain("if (asked) nav.replace('plusstart'); else nav.go('signin');");
+    expect(building).not.toContain("'firstmove'");
+    expect(offer).toContain("const onward = () => nav.replace(mode === 'setup' ? 'firstmove' : 'plussuccess');");
+    expect(offer).toContain("if (mode === 'setup') set({ onboardingDone: true });");
+  });
+
+  test('with billing live there is no way past but a plan, Restore, or your data and account', () => {
+    expect(offer).toContain('const held = full && billingLive;');
+    expect(offer).toContain("bar={held ? { kind: 'none' } : { kind: 'flow'");
+    expect(offer).toContain("BackHandler.addEventListener('hardwareBackPress', () => true)");
+    expect(offer).toContain("{held ? <QuietLink label=\"Your data\" onPress={() => nav.go('privacy')} /> : null}");
+    expect(offer).toContain('<QuietLink label="Restore purchases"');
+    expect(read('apps/mobile/src/app/(flows)/_layout.tsx')).toContain('<Stack.Screen name="plusstart" options={{ gestureEnabled: false }} />');
+  });
+
+  test('a build that can’t sell keeps Skip, so it never stops anyone using Life', () => {
+    expect(offer).toContain("const skip = mode === 'setup' ? () => nav.replace('firstmove') : nav.close;");
+    expect(offer).toContain("action: { kind: 'text', label: 'Skip', onPress: skip }");
+  });
+
+  test('opening Life checks again, only once billing is live, setup is done and the 18+ check passed', () => {
+    expect(gate).toContain("const ready = billingLive && hydrated && data.onboardingDone && readAgeCheck(data)?.result === 'adult';");
+    expect(gate).toContain('if (!live || plusGate.open || !needsPlus(standing)) return;');
+    expect(gate).toContain("AppState.addEventListener('change'");
+    expect(gate).toContain("router.push(`/(flows)/plusstart?why=${standing?.status === 'ended' ? 'ended' : 'start'}` as Href);");
+    expect(read('apps/mobile/src/app/_layout.tsx')).toContain('<PlusGateRunner />');
+  });
+
+  test('an ended plan says the person’s things are still there, and each place has its own words', () => {
+    expect(offer).toContain("if (mode === 'ended') return 'Your {Life Plus has ended}.';");
+    expect(offer).toContain('Everything you’ve told Life {is still here}.');
+    expect(offer).toContain("return mode === 'setup' ? `Your plan is ready. ${offer}` : offer;");
+    // A trial is named only when the store offers this person one.
+    expect(offer).toContain("const offer = trial ? `Try {all of Life} free for {${trialWords(trial)}}.` : '{Life Plus} opens {all of Life}.';");
+  });
+
+  test('the full screen is a route of its own in the catalogue', () => {
+    expect(read('apps/mobile/src/app/(flows)/plusstart.tsx')).toContain('<SettingsScreen screen="plusstart" />');
+    expect(read('apps/mobile/src/navigation/screens.ts')).toContain('"route": "/(flows)/plusstart"');
+    expect(read('apps/mobile/src/screens/Settings.tsx')).toContain("case 'plusstart': return <PlusstartV26 />;");
   });
 });

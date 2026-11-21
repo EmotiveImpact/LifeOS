@@ -368,10 +368,11 @@ export function BuildingV26() {
   const [done, setDone] = useState(params.state === 'done');
   const found = planFound(data.profile, data.completed);
   useEffect(() => { if (done) return; const id = setTimeout(() => { setDone(true); feedback.cleared(); }, calm ? 700 : 2600); return () => clearTimeout(id); }, [done, calm]);
-  // Save your progress rises over the finished plan once; when it's answered, the first move follows.
+  // Save your progress rises over the finished plan once. When it's answered, setup ends on Life Plus (Edem, 21 Nov
+  // 2026), so the account is known before a trial starts; the first move follows it.
   const asked = !!data.flags['signin-asked'], was = useRef(asked);
-  useEffect(() => { if (asked && !was.current) nav.replace('firstmove'); was.current = asked; }, [asked]); // eslint-disable-line react-hooks/exhaustive-deps
-  const see = () => { if (!done) { setDone(true); return; } if (asked) nav.replace('firstmove'); else nav.go('signin'); };
+  useEffect(() => { if (asked && !was.current) nav.replace('plusstart'); was.current = asked; }, [asked]); // eslint-disable-line react-hooks/exhaustive-deps
+  const see = () => { if (!done) { setDone(true); return; } if (asked) nav.replace('plusstart'); else nav.go('signin'); };
   return (
     <Page screen="building" bar={{ kind: 'push', title: 'Building your plan', close: true }}
       footer={<><Btn label="See my plan" ghost={!done} icon={done ? 'arrow' : undefined} trail onPress={see} /><Callout center>Estimates from what you told Life and published rules, not a link to HMRC or the NHS.</Callout></>}>

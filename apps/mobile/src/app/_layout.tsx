@@ -17,6 +17,7 @@ import { setBackgroundWork } from '@/services/background';
 import { consentFrom } from '@/services/health/consent';
 import { HEALTH_RATIONALE_TARGET, onHealthRationale } from '@/services/healthRationale';
 import { useNavigation } from '@/navigation/useNavigation';
+import { usePlusGate } from '@/services/plusGate';
 import '../global.css';
 
 void SplashScreen.preventAutoHideAsync();
@@ -26,7 +27,7 @@ function AppShell() {
   if (!fonts) return null;
   if (storageError) return <SafeAreaView style={{ flex: 1, backgroundColor: t.canvas, padding: space.gutter, justifyContent: 'center', gap: space.md }}><Text variant="headline">Your local data is unavailable</Text><Text variant="body" tone="ink2">Nothing has been reset. The app could not open or save its local store. Native builds require encrypted storage support.</Text><Button label="Try again" onPress={retryStorage} /></SafeAreaView>;
   if (!hydrated) return null;
-  return <><AiQueueRunner /><HealthRunner /><DayRunner /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas }, animation: 'default', statusBarStyle: t.scheme === 'dark' ? 'light' : 'dark' }}>
+  return <><AiQueueRunner /><HealthRunner /><DayRunner /><PlusGateRunner /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas }, animation: 'default', statusBarStyle: t.scheme === 'dark' ? 'light' : 'dark' }}>
     <Stack.Screen name="(tabs)" />
     {/* The browser has no native sheet and hides the page under a form sheet, so the preview presents sheets as a
         transparent layer instead: the page stays in view, dimmed, and the sheet rises over it (Page draws it). */}
@@ -39,6 +40,8 @@ function AppShell() {
 /** Sends AI requests that waited for a connection, whichever screen is open (services/useAiQueue.ts). */
 function AiQueueRunner() { useAiQueueRunner(); return null; }
 function HealthRunner() { useHealthRunner(); return null; }
+/** Life Plus when Life opens for someone without a plan, once billing is live (services/plusGate.ts). */
+function PlusGateRunner() { usePlusGate(); return null; }
 /**
  * Plans the phone's nudges and keeps background work registered while nudges or health reading are on. Also counts
  * finished moves, only once the person has switched that on (services/moves.ts).

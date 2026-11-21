@@ -92,6 +92,15 @@ export function standingFrom(info: CustomerInfo | null | undefined): Standing {
   return { status, renews: entitlement.willRenew, ends, plan, manageUrl };
 }
 
+/**
+ * Whether Life asks for Life Plus before going on (paid only, Edem, 20 Nov 2026): only on the store's definite word
+ * that this person has no plan, never started or ended. Payment trouble (grace) keeps Life open while the store
+ * retries, and no answer (offline, or billing off) never shuts anyone out: the server still checks paid features.
+ */
+export function needsPlus(standing: Standing | null | undefined): boolean {
+  return !!standing && (standing.status === 'none' || standing.status === 'ended');
+}
+
 export type PurchaseOutcome = 'subscribed' | 'cancelled' | 'pending' | 'failed';
 
 /** What a purchase error means for the person: tapping away isn't a failure, and a pending payment isn't either. */

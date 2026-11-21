@@ -1544,6 +1544,14 @@ export const screens = {
     "route": "/you/settings/subscription",
     "chapter": "You · Settings and account"
   },
+  "plusstart": {
+    "key": "plusstart",
+    "title": "Life+ to start",
+    "kind": "Full screen",
+    "from": "the end of setup, or opening Life with no plan",
+    "route": "/(flows)/plusstart",
+    "chapter": "You · Settings and account"
+  },
   "plussuccess": {
     "key": "plussuccess",
     "title": "Welcome to Life+",

@@ -4,7 +4,7 @@
  * words and figures live in `state/settings.ts`; every switch saves to the same preferences and flags as before.
  */
 import React, { useEffect, useState, type ReactNode } from 'react';
-import { Alert, Appearance, AppState, Linking, Platform, Share, StyleSheet, View } from 'react-native';
+import { Alert, Appearance, AppState, BackHandler, Linking, Platform, Share, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams } from 'expo-router';
@@ -21,6 +21,7 @@ import { SHOW_SAMPLES } from '@/state/sample';
 import { openSupport, supportAddress, type SupportKind, type SupportResult } from '@/services/support';
 import { billingLive, loadPlans, loadStanding, manageSubscription, restore, subscribe, type PlansResult } from '@/services/billing';
 import { trialWords, type Plan, type Standing } from '@/services/billingModel';
+import { plusGate } from '@/services/plusGate';
 import { ai } from '@/services/ai';
 import { closeAccount, exportAccount, isSignedIn, type AccountDataProblem } from '@/services/account';
 import { sharesMoves, withMovesSharing } from '@/services/moves';
@@ -653,11 +654,47 @@ function offerLine(plan: Plan): string {
   return plan.key === 'annual' ? `${plan.price} a year${plan.perMonth ? ` · ${plan.perMonth} a month` : ''}` : `${plan.price} a month`;
 }
 
-export function PlusV26() {
-  const t = useTokens(), nav = useNavigation(), { flag } = useSeed(), plans = usePlans();
+/**
+ * Where Life Plus is showing. offer: the sheet from Settings or a locked feature (the board's). setup: the end of setup,
+ * after Save your progress and before the first move (Edem, 21 Nov 2026). start and ended: opening Life with no plan,
+ * or once a trial or plan has ended (services/plusGate.ts).
+ */
+export type PlusMode = 'offer' | 'setup' | 'start' | 'ended';
+
+/** Life Plus as a full screen: the end of setup, or Life opening for someone without a plan. */
+export function PlusstartV26() {
+  const { why } = useLocalSearchParams<{ why?: string }>();
+  return <PlusV26 mode={why === 'ended' ? 'ended' : why === 'start' ? 'start' : 'setup'} />;
+}
+
+/** The headline for each place Life Plus shows. A free trial is named only when the store offers this person one. */
+function plusHeadline(mode: PlusMode, trial: Plan['trial']): string {
+  if (mode === 'offer') return 'Unlock {@mic unlimited Talk}, {@book every lesson}, {@repeat your routines} and more.';
+  if (mode === 'ended') return 'Your {Life Plus has ended}.';
+  const offer = trial ? `Try {all of Life} free for {${trialWords(trial)}}.` : '{Life Plus} opens {all of Life}.';
+  return mode === 'setup' ? `Your plan is ready. ${offer}` : offer;
+}
+
+export function PlusV26({ mode = 'offer' }: { mode?: PlusMode }) {
+  const t = useTokens(), nav = useNavigation(), { flag, set } = useSeed(), plans = usePlans();
   const [plan, setPlan] = useState<'annual' | 'monthly'>('annual');
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const full = mode !== 'offer';
+  // Paid only: once billing is live, the full screen has no Back or Skip, only a plan, Restore, and the way to your data
+  // and account. A build that can't sell keeps the board's Skip, so it never stops anyone using Life.
+  const held = full && billingLive;
+  useEffect(() => {
+    if (!full) return;
+    // Setup's questions are done by now, so leaving here comes back to this screen rather than to the start of setup.
+    if (mode === 'setup') set({ onboardingDone: true });
+    if (!held) return;
+    plusGate.open = true;
+    const back = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => { plusGate.open = false; back.remove(); };
+  }, [full, held, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  // After a plan starts, setup goes on to the first move; anywhere else, the welcome to Life Plus.
+  const onward = () => nav.replace(mode === 'setup' ? 'firstmove' : 'plussuccess');
   const offered = plans?.ok ? plans.plans : [];
   const chosen = offered.find(p => p.key === plan) ?? offered[0] ?? null;
   const annual = offered.find(p => p.key === 'annual'), monthly = offered.find(p => p.key === 'monthly');
@@ -675,14 +712,14 @@ export function PlusV26() {
     if (!billingLive) {
       // Sample builds keep the board's preview; a real build without billing never pretends to sell anything.
       if (!SHOW_SAMPLES) { setNote(notConnected); feedback.warn(); return; }
-      flag('plus-cancelled', false); feedback.select(); nav.replace('plussuccess');
+      flag('plus-cancelled', false); feedback.select(); onward();
       return;
     }
     if (!chosen || busy) return;
     setBusy(true);
     const outcome = await subscribe(chosen);
     setBusy(false);
-    if (outcome === 'subscribed') { feedback.select(); nav.replace('plussuccess'); }
+    if (outcome === 'subscribed') { feedback.select(); onward(); }
     else if (outcome === 'pending') setNote('Your payment is waiting for approval. Life Plus opens as soon as it goes through.');
     else if (outcome === 'failed') { setNote('The purchase didn’t go through. Try again in a moment.'); feedback.warn(); }
     else if (outcome === 'not-set') setNote(notConnected);
@@ -695,12 +732,13 @@ export function PlusV26() {
       return;
     }
     const outcome = await restore();
-    if (outcome === 'restored') nav.replace('plussuccess');
+    if (outcome === 'restored') onward();
     else if (outcome === 'nothing') Alert.alert('Nothing to restore', `No earlier Life Plus purchase was found on this ${Platform.OS === 'android' ? 'Google' : 'Apple'} account.`);
     else Alert.alert('The store can’t be reached', 'Check your connection, then try again.');
   };
+  const skip = mode === 'setup' ? () => nav.replace('firstmove') : nav.close;
   return (
-    <Page screen="plus" bar={{ kind: 'flow', left: 'Back', leftIcon: 'back', action: { kind: 'text', label: 'Skip', onPress: nav.close } }}
+    <Page screen={full ? 'plusstart' : 'plus'} bar={held ? { kind: 'none' } : { kind: 'flow', left: 'Back', leftIcon: 'back', action: { kind: 'text', label: 'Skip', onPress: skip } }}
       footer={<View style={{ gap: space.xs }}>
         {note ? <Callout>{note}</Callout> : null}
         <Btn label={trial ? 'Start free trial' : 'Subscribe'} disabled={billingLive && (!chosen || busy)} onPress={() => { void buy(); }} style={{ minHeight: 56 }} />
@@ -709,10 +747,13 @@ export function PlusV26() {
         <View style={styles.legalLinks}>
           <QuietLink label="Terms" onPress={() => nav.go('legal', { open: 'terms' })} />
           <QuietLink label="Privacy" onPress={() => nav.go('legal', { open: 'privacy' })} />
+          {/* With no way past, downloading your data and deleting your account stay one tap away (Apple asks for both). */}
+          {held ? <QuietLink label="Your data" onPress={() => nav.go('privacy')} /> : null}
         </View>
       </View>}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.xs, marginTop: space.xl }}><Wordmark variant="title" /><Text variant="title" tone="ink2">Plus</Text></View>
-      <Display s="Unlock {@mic unlimited Talk}, {@book every lesson}, {@repeat your routines} and more." style={{ marginTop: 6 }} />
+      <Display s={plusHeadline(mode, trial)} style={{ marginTop: 6 }} />
+      {mode === 'ended' ? <Body s="Everything you’ve told Life {is still here}. Subscribe to carry on, or download it from Your data." style={{ marginTop: space.xs }} /> : null}
       <Press haptic="select" onPress={() => setPlan(plan === 'annual' ? 'monthly' : 'annual')} accessibilityLabel={`${plan === 'annual' ? 'Annual' : 'Monthly'}, ${line}. Tap to switch`} pressScale={0.99}
         style={[styles.pick, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -722,6 +763,8 @@ export function PlusV26() {
         {plan === 'annual' ? (save ? <Chip label={`Save ${save}%`} tone="live" /> : null) : <Chip label="Switch to annual" tone="q" />}
       </Press>
       {trial && chosen ? <Callout style={{ marginTop: space.md }}>{`Free for ${trialWords(trial)}. Then ${offerLine(chosen)}, renewing until you cancel. Cancel before the trial ends and you won’t be charged.`}</Callout> : null}
+      {/* A whole screen has room to say what Life Plus holds, in the same words as Your Life Plus. */}
+      {full ? <Statement s={`Includes ${INCLUDES}.`} style={{ marginTop: space.lg }} /> : null}
     </Page>
   );
 }

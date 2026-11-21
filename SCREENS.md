@@ -2,7 +2,7 @@
 
 > Generated from board v17 (`design-board/life-design-board-v17.html`). **This is the build checklist.** One row per board screen: build it, match the board, tick it. Nothing outside this list gets built; nothing on it gets redesigned.
 > Open the board, find the screen by its key (each phone has id `s-<key>`), and match it: layout, copy, spacing, imagery, motion.
-**223 screens** (221 from the board, plus the 18+ check and health consent from the gap list). Routes use expo-router; sheets use `presentation: 'formSheet'`, full-screen flows `fullScreenModal`. States are not routes: they're how their parent screen looks in that state.
+**224 screens** (221 from the board, plus the 18+ check and health consent from the gap list, and Life+ at the end of setup, which is the board's life+ as a full screen). Routes use expo-router; sheets use `presentation: 'formSheet'`, full-screen flows `fullScreenModal`. States are not routes: they're how their parent screen looks in that state.
 
 Tick legend: `[ ]` not started · `[~]` built, needs polish · `[x]` matches the board in light and dark
 
@@ -273,7 +273,7 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 | [x] | `birthdaynudge` | A birthday, on Today **V26** | Card | Today, 4 days before | component on Today / anywhere |
 | [x] | `dates` | Important dates **V26** | Push | People → Dates | `/you/people/dates` |
 
-## You · Settings and account (14)
+## You · Settings and account (15)
 
 | ✓ | Key | Screen | Opens as | From | Route |
 |---|---|---|---|---|---|
@@ -287,6 +287,7 @@ V26 marker: **V26** after a screen's name means it has been rebuilt to the V26 b
 | [x] | `privacy` | Your data **V26** | Push | Settings | `/you/settings/privacy` |
 | [x] | `deleteacct` | Delete your account **V26** | Push | Your data | `/you/settings/deleteacct` |
 | [x] | `subscription` | Your life+ **V26** | Push | Settings → life+ | `/you/settings/subscription` |
+| [x] | `plusstart` | life+ to start (the board's life+ as a full screen: the end of setup, Edem 21 Nov 2026, and opening Life with no plan) | Full screen | Save your progress, or opening Life | `/(flows)/plusstart` · fullScreenModal |
 | [x] | `plussuccess` | Welcome to life+ **V26** | Full screen | after subscribing | `/(flows)/plussuccess` · fullScreenModal |
 | [x] | `help` | Help **V26** | Push | Settings | `/you/settings/help` |
 | [x] | `legal` | About life **V26** | Push | Settings | `/you/settings/legal` |
