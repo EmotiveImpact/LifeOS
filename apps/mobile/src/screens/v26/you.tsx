@@ -534,7 +534,7 @@ export function ProfileV26() {
   const [name, setName] = useState(data.profile.name), [city, setCity] = useState(data.profile.city);
   const p = data.profile, others = Math.max(0, p.householdSize - 1), born = bornOn(p);
   // A real account reads its own work and pay day; the sample life keeps the board's words.
-  const payN = Number(data.choices['payday-day']) || 0;
+  const payN = Number(p.payDay ?? data.choices['payday-day']) || 0;
   const work = SHOW_SAMPLES ? details.work : workWords[p.workStatus] ?? 'Not set', payDay = SHOW_SAMPLES ? details.payDay : payN ? ordinalDay(payN) : 'Not set';
   const fullName = SHOW_SAMPLES && p.name === 'Ama' ? 'Ama Mensah' : p.name;
   const kids = Number(data.choices.children ?? 0) || 0;

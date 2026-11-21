@@ -363,6 +363,8 @@ export interface UserProfile {
   countryName: string;
   workStatus: WorkStatus;
   annualIncome: number;
+  /** The day of the month pay arrives, when the person has said (F-37). */
+  payDay?: number;
   taxCode: string;
   taxSettings?: TaxSettings;
   taxReviewed?: boolean;

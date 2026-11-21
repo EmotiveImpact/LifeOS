@@ -1,5 +1,5 @@
 import type { Proposal } from './types.ts';
-import { extractRecords, type Add } from './proposals.ts';
+import { extractRecords, numbersIn, type Add } from './proposals.ts';
 import { detectCrisis, supportResponse, type CrisisSignal, type SupportReply } from './safety.ts';
 
 /** Conservative offline extraction. Only explicit statements; no
@@ -40,6 +40,10 @@ export function extractStatements(text: string): Proposal[] {
     if ((m = clause.match(/\bmy rent is\s*£?\s*([\d,]+(?:\.\d+)?)\s*(?:(?:a|per)\s*)?month\b/i))) {
       const amount = Number(m[1].replace(/,/g, '')); if (amount > 0 && amount <= 1e6) add('rent', 'money', 'Monthly rent', raw, amount);
     }
+    if ((m = clause.match(PAYDAY)) && !/\bof\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(clause.slice((m.index ?? 0) + m[0].length, (m.index ?? 0) + m[0].length + 8))) {
+      const day = numbersIn(m[1]).find(n => Number.isInteger(n) && n >= 1 && n <= 31);
+      if (day) add('payday', 'money', `Paid on the ${ordinal(day)}`, raw, day);
+    }
     if (/\bi want to buy (?:my (?:first |own )?|a )(?:home|house|flat|place)\b/i.test(clause)) add('goal', 'goal', 'Buy a home', raw, 'buy-home');
     extractRecords(clause, raw, add, hash);
     const note = raw.match(/^\s*(?:please\s+)?remember(?:\s+that)?\s+(.+?)[.!]?\s*$/i);
@@ -47,6 +51,10 @@ export function extractStatements(text: string): Proposal[] {
   }
   return proposals;
 }
+/** "I get paid on the 28th", "my pay day is the first", "my salary lands on the 15th of each month". A day of the
+ * month only: "on Fridays", "every two weeks" and "the last working day" file nothing. */
+const PAYDAY = /\b(?:i(?:'m| am| get) paid|i get my (?:pay|wages|salary)|(?:my |our )?pay ?day is|my (?:pay|wages|salary) (?:comes in|lands|goes in|arrives))\s+(?:monthly\s+|every month\s+|each month\s+)?(?:on\s+)?(?:the\s+)?(\d{1,2}(?:st|nd|rd|th)?|[a-z]+(?:-[a-z]+)?)\b/i;
+const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
 export function hash(text: string): string { let value = 2166136261; for (let i = 0; i < text.length; i++) value = Math.imul(value ^ text.charCodeAt(i), 16777619); return (value >>> 0).toString(16); }
 
 /** Talk's entry point: the crisis check first, then filing. Words in distress

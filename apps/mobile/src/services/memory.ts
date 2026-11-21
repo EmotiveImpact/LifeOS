@@ -9,7 +9,7 @@
 import { applyMemoryChanges, isOpen, planMemoryChanges, rankMemories, type MemoryCandidate, type Memory, type MemoryKind, type Proposal, type StoredMemory } from '@life/brain';
 import type { FiledRecord, MemoryCategory, MemoryEntry } from '@/state/seed';
 
-const KIND: Record<Proposal['field'], MemoryKind> = { age: 'fact', location: 'fact', household: 'fact', work: 'fact', income: 'fact', rent: 'fact', goal: 'goal', note: 'fact', bill: 'fact', subscription: 'fact', date: 'person', person: 'person', document: 'event', appointment: 'event' };
+const KIND: Record<Proposal['field'], MemoryKind> = { age: 'fact', location: 'fact', household: 'fact', work: 'fact', income: 'fact', rent: 'fact', payday: 'fact', goal: 'goal', note: 'fact', bill: 'fact', subscription: 'fact', date: 'person', person: 'person', document: 'event', appointment: 'event' };
 const CATEGORY: Partial<Record<FiledRecord['area'], MemoryCategory>> = { money: 'Money', home: 'Money', work: 'Money', goal: 'Money', health: 'Body', you: 'People' };
 const shortDate = (at: string) => new Date(at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 

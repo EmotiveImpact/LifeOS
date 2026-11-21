@@ -51,8 +51,8 @@ describe('the starting life', () => {
 describe('screens made only of sample figures', () => {
   // Each opens its day-one state, or its real variant, when the sample is off.
   const gated: [string, string][] = [
-    ['apps/mobile/src/screens/v26/money.tsx', 'return SHOW_SAMPLES ? <MoneySampleV26 /> : <MoneyNotYetV26 screen="money" title="Money" />;'],
-    ['apps/mobile/src/screens/v26/money.tsx', 'return SHOW_SAMPLES ? <AreaMoneySampleV26 /> : <MoneyNotYetV26 screen="area" />;'],
+    ['apps/mobile/src/screens/v26/money.tsx', 'return SHOW_SAMPLES ? <MoneySampleV26 /> : <MoneyRealV26 screen="money" title="Money" />;'],
+    ['apps/mobile/src/screens/v26/money.tsx', 'return SHOW_SAMPLES ? <AreaMoneySampleV26 /> : <MoneyRealV26 screen="area" />;'],
     ['apps/mobile/src/screens/v26/plan.tsx', 'if (!SHOW_SAMPLES) return <NotYetV26 screen="areahome"'],
     ['apps/mobile/src/screens/v26/plan.tsx', '<NotYetV26 screen="areahealth"'],
     ['apps/mobile/src/screens/v26/plan.tsx', 'if (!SHOW_SAMPLES) return <NotYetV26 screen="areawork"'],

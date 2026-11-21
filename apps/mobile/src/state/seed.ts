@@ -51,7 +51,9 @@ export const seedTaxClaim = {
   reference: 'P800-7Q2-K41',
   note: 'Illustrative annual PAYE/expense scenario, calculated by the existing engine; not a live HMRC record.',
 };
-export type FiledRecord = { id: string; kind: 'fact' | 'insight' | 'mission' | 'decision' | 'goal' | 'answer'; area: Area; label: string; value?: string | number; profilePatch?: Partial<UserProfile>; taskId?: string; source: { type: 'talk' | 'chat' | 'question' | 'document' | 'record'; at: string; excerpt?: string }; status: 'proposed' | 'confirmed' | 'removed' };
+/** A bill or subscription as Talk filed it: who is paid, how much, how often (when said) and the day it's due. */
+export type MoneyDetails = { kind: 'bill'; payee: string; amount: number; frequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly'; dueDay?: number } | { kind: 'subscription'; service: string; amount: number; frequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly' };
+export type FiledRecord = { id: string; kind: 'fact' | 'insight' | 'mission' | 'decision' | 'goal' | 'answer'; area: Area; label: string; value?: string | number; details?: MoneyDetails; profilePatch?: Partial<UserProfile>; taskId?: string; source: { type: 'talk' | 'chat' | 'question' | 'document' | 'record'; at: string; excerpt?: string }; status: 'proposed' | 'confirmed' | 'removed' };
 export type MemoryCategory = 'Money' | 'Body' | 'People';
 /** One thing life remembers (services/memory.ts). `validTo` set: no longer true, kept for the record, never used to answer. */
 export type MemoryEntry = { id: string; text: string; source: string; category?: MemoryCategory; recordId?: string; kind?: MemoryKind; confidence?: number; validFrom?: string; validTo?: string; lastUsed?: string; uses?: number };

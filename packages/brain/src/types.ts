@@ -12,10 +12,10 @@ export type Sensitivity = 'health' | 'money' | 'other';
 export type Fact = { id: string; label: string; value: string; source: Source; sensitivity?: Sensitivity };
 export type Memory = { id: string; text: string; source: Source; recordId?: string; sensitivity?: Sensitivity };
 export type Move = { id: string; title: string; reasons: string[]; area: Area; urgent: boolean };
-/** The six profile facts, a goal, a note, and the record kinds Talk can now
+/** The seven profile facts, a goal, a note, and the record kinds Talk can now
  * file. `details` carries the structured fields for the record kinds; its
  * `kind` always equals `field`. Every value in it must appear in `quote`. */
-export type ProfileField = 'age' | 'location' | 'household' | 'work' | 'income' | 'rent';
+export type ProfileField = 'age' | 'location' | 'household' | 'work' | 'income' | 'rent' | 'payday';
 export type RecordField = 'bill' | 'subscription' | 'date' | 'person' | 'document' | 'appointment';
 export type Field = ProfileField | 'goal' | 'note' | RecordField;
 export type When = { year?: number; month?: number; day?: number; time?: string };
