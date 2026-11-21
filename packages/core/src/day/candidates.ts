@@ -40,6 +40,8 @@ export interface CandidateSource {
   mission?: string;
   /** Where tapping it goes. */
   to?: string;
+  /** The part of life it serves (`money`, `body`, `people`…), when known. Money and body keep a nudge's words general. */
+  area?: string;
 }
 
 /** Steps this long or longer need focus. */
@@ -67,7 +69,7 @@ export function dayCandidates(input: CandidateInput): CandidateSource[] {
     out.push({
       candidate: { id: `plan:${step.key}`, kind: kindFor(p), title: step.title, chosen: true, ...sized(step.minutes), ...(aim ? { aimFit: aim } : {}) },
       from: 'plan', priority: p.text, priorityId: p.id, step,
-      ...(mission ? { mission } : {}), ...(step.to ? { to: step.to } : {}),
+      ...(mission ? { mission } : {}), ...(step.to ? { to: step.to } : {}), ...(p.area ? { area: p.area } : {}),
     });
   }
 
@@ -79,7 +81,7 @@ export function dayCandidates(input: CandidateInput): CandidateSource[] {
         id: `mission:${m.id}`, kind: 'mission', title: m.title, ...sized(m.minutes),
         ...(m.valueGBP ? { valueGBP: m.valueGBP } : {}), ...(m.dueAt !== undefined ? { dueAt: m.dueAt } : {}), ...(aim ? { aimFit: aim } : {}),
       },
-      from: 'mission', mission: m.id, to: 'mission',
+      from: 'mission', mission: m.id, to: 'mission', ...(m.area ? { area: m.area } : {}),
     });
   }
 

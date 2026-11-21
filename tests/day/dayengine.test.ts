@@ -106,8 +106,8 @@ describe('nudges for the day', () => {
   const base = { now: at(TODAY, 8, 30), timeZone: LDN };
   test('today’s move goes in the first free stretch it fits, inside the nudge window', () => {
     const gaps = freeGaps([{ start: at(TODAY, 9), end: at(TODAY, 13, 40) }, { start: at(TODAY, 14), end: at(TODAY, 18) }], at(TODAY, 8, 30), at(TODAY, 19));
-    const [move] = dayNudges({ ...base, next: { id: 'plan:x', title: 'Finish the P87', minutes: 15 }, gaps });
-    expect(move).toMatchObject({ kind: 'move', title: 'Life', body: 'You’ve got 20 free minutes. Finish the P87 fits.', to: 'today' });
+    const [move] = dayNudges({ ...base, next: { id: 'plan:x', title: 'Clear the spare room', minutes: 15 }, gaps });
+    expect(move).toMatchObject({ kind: 'move', title: 'Life', body: 'You’ve got 20 free minutes. Clear the spare room fits.', to: 'today' });
     expect(localMinutes(move.earliest, LDN)).toBe(13 * 60 + 40);
     expect(localMinutes(move.latest!, LDN)).toBe(NUDGE_WINDOW.end);
   });

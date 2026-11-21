@@ -26,6 +26,8 @@ const ensureChannel = () => {
   if (Platform.OS !== 'android') return Promise.resolve();
   channelReady ??= Notifications.setNotificationChannelAsync(CHANNEL, {
     name: 'Nudges', importance: Notifications.AndroidImportance.DEFAULT, sound: null, enableVibrate: false, showBadge: false,
+    // On a secure lock screen Android shows that Life sent something, not what it says (fix F-28).
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PRIVATE,
   });
   return channelReady;
 };
