@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+"""Read-only report of where recent TestFlight builds stand, for when a build doesn't show on the phone.
+
+Runs on GitHub with the App Store Connect key from the secrets. The repository is public, so it prints build
+numbers and states only: no tester names or emails, no group names, nothing from the key. Changes nothing.
+Standard library and the openssl command only.
+"""
+import base64, json, os, plistlib, re, subprocess, sys, tempfile, time, urllib.error, urllib.parse, urllib.request
+
+API = 'https://api.appstoreconnect.apple.com'
+
+
+def b64url(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b'=').decode()
+
+
+def der_to_raw(sig: bytes) -> bytes:
+    """openssl writes an ECDSA signature as DER; a JWT wants r and s as 32 bytes each."""
+    if sig[0] != 0x30:
+        raise SystemExit('Unexpected signature format from openssl.')
+    i = 2 if sig[1] < 0x80 else 2 + (sig[1] & 0x7F)
+    out = b''
+    for _ in range(2):
+        if sig[i] != 0x02:
+            raise SystemExit('Unexpected signature format from openssl.')
+        length = sig[i + 1]
+        out += sig[i + 2:i + 2 + length].lstrip(b'\0').rjust(32, b'\0')
+        i += 2 + length
+    return out
+
+
+def token() -> str:
+    key_id, issuer, key = os.environ['ASC_KEY_ID'], os.environ['ASC_ISSUER_ID'], os.environ['ASC_PRIVATE_KEY']
+    now = int(time.time())
+    head = b64url(json.dumps({'alg': 'ES256', 'kid': key_id, 'typ': 'JWT'}).encode())
+    body = b64url(json.dumps({'iss': issuer, 'iat': now, 'exp': now + 600, 'aud': 'appstoreconnect-v1'}).encode())
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, 'key.p8')
+        with open(os.open(path, os.O_WRONLY | os.O_CREAT, 0o600), 'w') as handle:
+            handle.write(key)
+        sig = subprocess.run(['openssl', 'dgst', '-sha256', '-sign', path], input=f'{head}.{body}'.encode(),
+                             capture_output=True, check=True).stdout
+    return f'{head}.{body}.{b64url(der_to_raw(sig))}'
+
+
+def get(path: str, params: dict, jwt: str) -> dict:
+    url = f'{API}{path}?{urllib.parse.urlencode(params)}'
+    request = urllib.request.Request(url, headers={'Authorization': f'Bearer {jwt}'})
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.load(response)
+    except urllib.error.HTTPError as error:
+        detail = ''
+        try:
+            first = json.load(error).get('errors', [{}])[0]
+            detail = f": {first.get('title', '')} {first.get('detail', '')}".rstrip()
+        except Exception:
+            pass
+        raise SystemExit(f'App Store Connect answered {error.code} for {path}{detail}')
+
+
+def profile_report() -> None:
+    raw = os.environ.get('IOS_PROVISION_PROFILE_BASE64', '')
+    if not raw:
+        print('Profile secret: missing')
+        return
+    data = base64.b64decode(raw)
+    start, end = data.find(b'<?xml'), data.find(b'</plist>')
+    if start < 0 or end < 0:
+        print('Profile secret: not a readable provisioning profile')
+        return
+    profile = plistlib.loads(data[start:end + len(b'</plist>')])
+    granted = profile.get('Entitlements', {})
+    print(f"Profile secret: created {profile.get('CreationDate')}, expires {profile.get('ExpirationDate')}")
+    print(f"  HealthKit: {'yes' if 'com.apple.developer.healthkit' in granted else 'no'}")
+    print(f"  Push notifications: {granted.get('aps-environment', 'no')}")
+
+
+def main() -> None:
+    app_id = os.environ.get('ASC_APP_ID', '')
+    if not re.fullmatch(r'[0-9]+', app_id):
+        raise SystemExit('ASC_APP_ID must be the numeric Apple app ID.')
+    profile_report()
+    jwt = token()
+
+    builds = get('/v1/builds', {
+        'filter[app]': app_id, 'sort': '-uploadedDate', 'limit': '6',
+        'include': 'buildBetaDetail,preReleaseVersion',
+        'fields[builds]': 'version,uploadedDate,processingState,expired,usesNonExemptEncryption,buildBetaDetail,preReleaseVersion',
+        'fields[buildBetaDetails]': 'internalBuildState,externalBuildState',
+        'fields[preReleaseVersions]': 'version',
+    }, jwt)
+    included = {(item['type'], item['id']): item.get('attributes', {}) for item in builds.get('included', [])}
+    print('\nLatest uploads (newest first):')
+    for build in builds.get('data', []):
+        a, rel = build['attributes'], build.get('relationships', {})
+        beta = included.get(('buildBetaDetails', (rel.get('buildBetaDetail', {}).get('data') or {}).get('id')), {})
+        version = included.get(('preReleaseVersions', (rel.get('preReleaseVersion', {}).get('data') or {}).get('id')), {})
+        print(f"  build {a.get('version')} (app version {version.get('version')}), uploaded {a.get('uploadedDate')}: "
+              f"processing {a.get('processingState')}, internal testing {beta.get('internalBuildState')}, "
+              f"encryption answer {a.get('usesNonExemptEncryption')}, expired {a.get('expired')}")
+
+    groups = get(f'/v1/apps/{app_id}/betaGroups', {
+        'limit': '50', 'fields[betaGroups]': 'isInternalGroup,hasAccessToAllBuilds'}, jwt).get('data', [])
+    print(f'\nTester groups: {len(groups)}')
+    for number, group in enumerate(groups, 1):
+        a = group['attributes']
+        testers = get(f"/v1/betaGroups/{group['id']}/betaTesters", {'limit': '200', 'fields[betaTesters]': 'inviteType'}, jwt)
+        members = get(f"/v1/betaGroups/{group['id']}/builds", {'limit': '10', 'fields[builds]': 'version'}, jwt)
+        print(f"  group {number}: {'internal' if a.get('isInternalGroup') else 'external'}, "
+              f"{len(testers.get('data', []))} testers, gets every build automatically: {a.get('hasAccessToAllBuilds')}, "
+              f"builds added: {', '.join(b['attributes']['version'] for b in members.get('data', [])) or 'none'}")
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except subprocess.CalledProcessError:
+        sys.exit('openssl could not sign with the App Store Connect key.')
