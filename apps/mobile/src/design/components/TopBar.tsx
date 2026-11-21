@@ -21,7 +21,7 @@ export type TopBarAction =
 /** `look: 'v26'` draws the board's bars (52pt, round 40pt buttons, the orb at the right of root bars). Leave it unset for the V23 bars. */
 type BarLook = { look?: 'v26' };
 export type TopBarProps = BarLook & (
-  | { kind: 'root'; eyebrow?: string; title: string; /** V26: the quiet words after the title ("Mon 16 Nov"). */ sub?: string; actions?: TopBarAction[]; avatar?: ReactNode; /** V26: the orb at the right end, opening what Life has to tell you. */ orb?: { onPress: () => void; unread?: boolean; /** The area the newest note is about: its dot turns red. */ area?: OrbArea }; onImage?: boolean }
+  | { kind: 'root'; eyebrow?: string; title: string; /** V26: the quiet words after the title ("Mon 16 Nov"). */ sub?: string; actions?: TopBarAction[]; avatar?: ReactNode; /** V26: the orb at the right end, opening what Life has to tell you. */ orb?: { onPress: () => void; unread?: boolean; /** The areas with something new, newest first: their dots light up red. */ areas?: OrbArea[] }; onImage?: boolean }
   | { kind: 'push'; title?: string; /** V26: something other than words in the middle (the orb and "life" on Chat). */ titleNode?: ReactNode; action?: TopBarAction; onBack: () => void; /** V26: a close cross in place of the back arrow. */ closeIcon?: boolean; onImage?: boolean }
   | { kind: 'sheet'; title: string; action?: TopBarAction; onClose: () => void; onImage?: boolean }
   | { kind: 'flow'; center?: ReactNode; step?: string; action?: TopBarAction; onClose: () => void; /** V26 text bar: the words on the left ("Back"). */ closeLabel?: string; closeIcon?: GlyphName; onImage?: boolean });
@@ -129,16 +129,16 @@ function TopBarV26(props: TopBarProps) {
 }
 
 /** The orb at the right end of Today, Plan and You (Edem, 20 and 21 Nov 2026): Life's own place in the bar, in the
- * same disc as the buttons beside it. Tapping it opens "From Life". When something new is waiting the ring spins and
- * the dot for that note's area turns red, leading the ring; when there's nothing it rests and breathes. With Reduce
- * Motion the ring stays still and the red dot alone carries the news. */
-function OrbButton({ onPress, unread, area, onImage }: { onPress: () => void; unread?: boolean; area?: OrbArea; onImage?: boolean }) {
+ * same disc as the buttons beside it. Tapping it opens "From Life". The ring holds still; when something new is waiting,
+ * the dots for those areas light up red and pulse one after another, and when there's nothing it breathes slowly.
+ * With Reduce Motion the red dots simply stay lit. */
+function OrbButton({ onPress, unread, areas, onImage }: { onPress: () => void; unread?: boolean; areas?: OrbArea[]; onImage?: boolean }) {
   const t = useTokens();
-  const mark = unread ? Math.max(0, area ? ORB_AREAS.indexOf(area) : ORB_AREAS.length - 1) : undefined;
+  const marks = unread ? (areas?.length ? areas.map(a => ORB_AREAS.indexOf(a)).filter(i => i >= 0) : [ORB_AREAS.length - 1]) : undefined;
   return (
     <Press haptic="select" onPress={onPress} accessibilityLabel={unread ? 'From Life, something new' : 'From Life'} hitSlop={2}
       style={[styles.v26Orb, { backgroundColor: onImage ? photo.onPhoto : t.surface2 }]}>
-      <LifeOrb size={24} state={unread ? 'news' : 'rest'} color={onImage ? photo.ink : t.ink} mark={mark} markColor={t.ember} />
+      <LifeOrb size={24} state={unread ? 'news' : 'rest'} color={onImage ? photo.ink : t.ink} marks={marks} markColor={t.ember} />
     </Press>
   );
 }

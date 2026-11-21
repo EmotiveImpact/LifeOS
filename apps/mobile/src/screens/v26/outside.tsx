@@ -375,7 +375,7 @@ export function SiriV26() {
 const ORB_STATES: [OrbState, string, string, string][] = [
   ['ring', 'Ring', 'The everyday mark: tab bar, headers, small sizes.', 'Default'],
   ['rest', 'Resting', 'Top bar, nothing new. It stops and breathes slowly.', 'Top bar'],
-  ['news', 'Something new', 'Top bar, a note is waiting. It spins; the red dot is its area.', 'Top bar'],
+  ['news', 'Something new', 'Top bar, notes waiting. Their areas light red and pulse in turn.', 'Top bar'],
   ['thinking', 'Thinking', 'Only while Life is working something out.', 'Over 1s'],
   ['working', 'Working', 'While Life builds or files something in front of you.', ''],
   ['searching', 'Searching', 'While Life checks or looks something up.', ''],
@@ -394,7 +394,7 @@ export function OrbV26() {
           <View key={i} style={{ flexDirection: 'row', gap: space.tile }}>
             {r.map(([st, name, when, tag]) => (
               <View key={st} accessible accessibilityLabel={`${name}. ${when}`} style={[styles.orbTile, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-                <Between style={{ alignItems: 'flex-start' }}><LifeOrb size={60} state={st} {...(st === 'news' ? { mark: 0, markColor: t.ember } : {})} />{tag ? <Chip label={tag} tone="q" /> : null}</Between>
+                <Between style={{ alignItems: 'flex-start' }}><LifeOrb size={60} state={st} {...(st === 'news' ? { marks: [0, 6], markColor: t.ember } : {})} />{tag ? <Chip label={tag} tone="q" /> : null}</Between>
                 <Text variant="title" style={{ marginTop: space.sm }}>{name}</Text>
                 <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>{when}</Text>
               </View>
@@ -403,7 +403,7 @@ export function OrbV26() {
         ))}
       </View>
       <OrbAreas />
-      <Callout style={{ marginTop: space.sm }}>The everyday ring takes 12 seconds a lap; with something new, 1.6 seconds. With Reduce Motion each state is shown still; the red dot still says something new.</Callout>
+      <Callout style={{ marginTop: space.sm }}>The everyday ring takes 12 seconds a lap. In the top bar the ring holds still, first dot at the top. With Reduce Motion nothing pulses; the red dots simply stay lit.</Callout>
     </Page>
   );
 }
@@ -415,10 +415,10 @@ function OrbAreas() {
   return (
     <View style={[styles.orbAreas, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
       <Text variant="title">Ten dots, ten areas</Text>
-      <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>Each dot belongs to one part of your life. When a note arrives, its dot turns red and leads the ring round. Here, a Money note.</Text>
+      <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>Each dot belongs to one part of your life. When notes arrive, their dots light up red and pulse one after another. Here, Money and Admin.</Text>
       <View accessible accessibilityLabel={`The ten areas: ${ORB_AREAS.map(a => ORB_AREA_NAMES[a]).join(', ')}.`} style={{ width: box, height: box, alignSelf: 'center', marginTop: space.sm }}>
         {ORB_AREAS.map((a, i) => {
-          const angle = -Math.PI / 2 + (i / ORB_AREAS.length) * Math.PI * 2, red = a === 'money';
+          const angle = -Math.PI / 2 + (i / ORB_AREAS.length) * Math.PI * 2, red = a === 'money' || a === 'admin';
           const x = c + Math.cos(angle) * ring, y = c + Math.sin(angle) * ring, lx = c + Math.cos(angle) * label, ly = c + Math.sin(angle) * label;
           return (
             <View key={a} pointerEvents="none" style={StyleSheet.absoluteFill}>

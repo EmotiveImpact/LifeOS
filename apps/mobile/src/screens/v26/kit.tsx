@@ -15,7 +15,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   Appear, Button, Card, Footer, Icon, LifeOrb, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
   cardShadow, componentSize, motion, photo, photoScrims, radius, space, useCalmMotion, useTokens,
-  type Focal, type GlyphName, type SpineItem, type StatusKind, type Tone, type TopBarAction, type TwoToneSegment, type TypeStyle, type V26RowProps,
+  type Focal, type GlyphName, type OrbArea, type SpineItem, type StatusKind, type Tone, type TopBarAction, type TwoToneSegment, type TypeStyle, type V26RowProps,
 } from '@/design';
 import { screens, type ScreenKey } from '@/navigation/screens';
 import { useNavigation } from '@/navigation/useNavigation';
@@ -240,8 +240,9 @@ export function PhotoRound({ icon, label, onPress }: { icon: GlyphName; label: s
 /** Today, Plan and You: the page name on the left, its buttons and then the orb on the right. */
 function RootBar({ bar, onImage }: { bar: Extract<Bar, { kind: 'root' }>; onImage: boolean }) {
   const nav = useNavigation(), { data } = useSeed();
-  // The newest note in From Life is the tax rebate, a Money note, until the day engine hands over real notes with their area.
-  const orb = bar.orb === false ? undefined : { onPress: () => nav.go('inbox'), unread: !data.flags['inbox-read'], area: 'money' as const };
+  // From Life's two new notes in the sample: the tax rebate (Money) and the nudge to finish the P87 (Admin). The day
+  // engine hands over real notes with their areas later.
+  const orb = bar.orb === false ? undefined : { onPress: () => nav.go('inbox'), unread: !data.flags['inbox-read'], areas: ['money', 'admin'] as OrbArea[] };
   return <TopBar look="v26" kind="root" title={bar.title} sub={bar.sub} actions={bar.actions} orb={orb} onImage={onImage} />;
 }
 

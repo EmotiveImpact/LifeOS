@@ -7,16 +7,20 @@ import { useCalmMotion, useTokens } from '../theme';
 /** Port of board v17 mountOrb: the same thirty dots travel between every state.
  * Original ring, Fibonacci sphere, clockwork, searching web, voice and spring gather.
  * Geometry and animation run on Reanimated's UI thread; no JS animation timer. */
-/** `news` and `rest` belong to the orb in the top bar (Edem, 21 Nov 2026): it spins round when Life has
- * something new for you, and when there's nothing it stops travelling and breathes slowly. */
+/** `news` and `rest` belong to the orb in the top bar (Edem, 21 Nov 2026). Both hold the ring still with the first
+ * dot at the top, so each dot keeps its area's place. `rest` breathes slowly. `news` stays still while the dots of the
+ * areas with something new light up red and pulse one after another. */
 export type OrbState = 'ring' | 'thinking' | 'working' | 'searching' | 'listening' | 'done' | 'voice' | 'news' | 'rest';
 type Point = { x: number; y: number; z: number; alpha: number; scale: number };
 const STATES = ['ring', 'thinking', 'working', 'searching', 'listening', 'done', 'news', 'rest'] as const;
-/** Laps a second: everyday ring one lap in 12 s; something new one lap in 1.6 s; resting, still. */
-const LAPS = [1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 1.6, 0];
+/** Laps a second: the everyday ring one lap in 12 s; the top bar's two states hold still. */
+const LAPS = [1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 12, 1 / 12, 0, 0];
+/** Something new: each lit dot pulses for PULSE_S in turn, then the ring waits PAUSE_S before the next round. */
+const PULSE_S = .8, PAUSE_S = 1;
 const BREATH_S = 5;
-/** Ten dots, ten areas of a life (Edem, 21 Nov 2026). Each ring dot belongs to one area, in this order; when Life has
- * something new, that area's dot turns red and leads the spinning ring. */
+const NONE: number[] = [];
+/** Ten dots, ten areas of a life (Edem, 21 Nov 2026). Each ring dot belongs to one area, clockwise from the top in this
+ * order; when Life has something new, that area's dot lights up red. */
 export const ORB_AREAS = ['money', 'home', 'work', 'body', 'food', 'people', 'admin', 'learning', 'goals', 'you'] as const;
 export type OrbArea = (typeof ORB_AREAS)[number];
 export const ORB_AREA_NAMES: Record<OrbArea, string> = { money: 'Money', home: 'Home', work: 'Work', body: 'Body', food: 'Food', people: 'People', admin: 'Admin', learning: 'Learning', goals: 'Goals', you: 'You' };
@@ -28,19 +32,23 @@ const SPHERE = sphere(30), SEARCH = sphere(10);
 const NEIGHBOURS = SEARCH.map((a, i) => SEARCH.map((b, j) => ({ j, d: a.reduce((s, v, k) => s + v * b[k], 0) })).filter(v => v.j !== i).sort((a, b) => b.d - a.d).slice(0, 3).map(v => v.j));
 const PAIRS = Array.from({ length: 10 }, (_, a) => Array.from({ length: 9 - a }, (_, i) => [a, a + i + 1])).flat();
 const ALine = Animated.createAnimatedComponent(Line);
-function target(state: number, k: number, r: number, t: number, spin: number, voice: number, head: number, trail: number[], mark = -1): Point {
+function target(state: number, k: number, r: number, t: number, spin: number, voice: number, head: number, trail: number[], marks: number[] = []): Point {
   'worklet';
   const i = k % 10, a = i / 10 * Math.PI * 2 + spin, tail = .3 + .7 * i / 10;
   const ring = { x: Math.cos(a) * r, y: Math.sin(a) * r, z: .5, alpha: k < 10 ? tail : 0, scale: 1 };
   if (state === 0 || state === 5) return ring;
-  if (state === 6) {
-    // Something new: a comet. The marked (red) dot is the head at full strength; the rest trail behind it.
-    const lead = mark >= 0 ? mark : 9, rel = (i - lead + 19) % 10;
-    return { ...ring, alpha: k < 10 ? (i === lead ? 1 : .12 + .7 * Math.pow(rel / 9, 1.6)) : 0, scale: k < 10 && i === lead && mark >= 0 ? 1.3 : 1 };
-  }
-  if (state === 7) {
-    const breath = .5 - .5 * Math.cos(t / BREATH_S * Math.PI * 2), rr = r * (.84 + .16 * breath);
-    return { x: Math.cos(a) * rr, y: Math.sin(a) * rr, z: .5, alpha: k < 10 ? .4 + .32 * breath : 0, scale: .9 + .1 * breath };
+  if (state === 6 || state === 7) {
+    // The top bar: still, first dot at twelve o'clock, so a dot's place is its area.
+    const b = i / 10 * Math.PI * 2 - Math.PI / 2;
+    if (state === 7) {
+      const breath = .5 - .5 * Math.cos(t / BREATH_S * Math.PI * 2), rr = r * (.84 + .16 * breath);
+      return { x: Math.cos(b) * rr, y: Math.sin(b) * rr, z: .5, alpha: k < 10 ? .4 + .32 * breath : 0, scale: .9 + .1 * breath };
+    }
+    const at = k < 10 ? marks.indexOf(i) : -1;
+    if (at < 0) return { x: Math.cos(b) * r, y: Math.sin(b) * r, z: .5, alpha: k < 10 ? .42 : 0, scale: .92 };
+    const cycle = marks.length * PULSE_S + PAUSE_S, inCycle = t % cycle, turn = Math.floor(inCycle / PULSE_S);
+    const env = turn === at ? Math.pow(Math.sin((inCycle - at * PULSE_S) / PULSE_S * Math.PI), 2) : 0;
+    return { x: Math.cos(b) * r, y: Math.sin(b) * r, z: 1, alpha: .9 + .1 * env, scale: 1.18 + .6 * env };
   }
   if (state === 2) {
     if (k < 10) { const b = a + t / 12 * Math.PI * 2 * 1.2; return { ...ring, x: Math.cos(b) * r, y: Math.sin(b) * r }; }
@@ -62,29 +70,30 @@ function target(state: number, k: number, r: number, t: number, spin: number, vo
     alpha: state === 1 ? (.1 + .9 * Math.pow(depth, 1.5)) * (.82 + .18 * (.5 + .5 * Math.sin(t * 2.2 + k * 1.37))) : hop * (.45 + .55 * depth),
     scale: state === 1 ? .5 + .62 * depth : (.78 + .34 * depth) * (k === head ? 1.15 : 1) };
 }
-export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings, mark, markColor }: {
+export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings, marks, markColor }: {
   size?: number; state?: OrbState; color?: string; rings?: 1 | 2;
-  /** One ring dot (0 to 9, see ORB_AREAS) drawn in `markColor`: the area something new is about. */
-  mark?: number; markColor?: string;
+  /** Ring dots (0 to 9, see ORB_AREAS) drawn in `markColor`: the areas with something new, newest first. In `news` they pulse in this order. */
+  marks?: number[]; markColor?: string;
 }) {
   const tokens = useTokens(), calm = useCalmMotion(), ink = color ?? tokens.ink;
   const dot = Math.max(2.6, size / 12), r = size / 2 - Math.max(2, size / 14) - dot / 2;
   const initialMode = STATES.indexOf(state === 'voice' ? 'listening' : state);
-  const lead = mark ?? -1;
-  const initialPoints = Array.from({ length: 30 }, (_, k) => target(initialMode, k, r, 0, 0, .5, 0, [], lead));
+  const lit = marks ?? NONE, litKey = lit.join(',');
+  const initialPoints = Array.from({ length: 30 }, (_, k) => target(initialMode, k, r, 0, 0, .5, 0, [], lit));
   const mode = useSharedValue(initialMode);
   const points = useSharedValue<Point[]>(initialPoints);
   const frozen = useSharedValue(initialPoints), elapsed = useSharedValue(2000), time = useSharedValue(0), spin = useSharedValue(0);
   const head = useSharedValue(0), trail = useSharedValue<number[]>([]), edges = useSharedValue<Record<string, number>>({});
   const hopAt = useSharedValue(0), gather = useSharedValue(0), velocity = useSharedValue(0), voice = useSharedValue(0);
-  const laps = useSharedValue(LAPS[initialMode] ?? 1 / 12), markAt = useSharedValue(lead);
+  const laps = useSharedValue(LAPS[initialMode] ?? 1 / 12), markAt = useSharedValue<number[]>(lit);
   useEffect(() => {
     frozen.value = points.value;
     mode.value = STATES.indexOf(state === 'voice' ? 'listening' : state);
     elapsed.value = calm ? 2000 : 0;
-    markAt.value = lead;
-    if (calm) points.value = Array.from({ length: 30 }, (_, k) => target(mode.value, k, r, 0, 0, .5, 0, [], lead));
-  }, [state, calm, r, mode, elapsed, frozen, points, lead, markAt]);
+    markAt.value = lit;
+    if (calm) points.value = Array.from({ length: 30 }, (_, k) => target(mode.value, k, r, 0, 0, .5, 0, [], lit));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- litKey stands for lit
+  }, [state, calm, r, mode, elapsed, frozen, points, litKey, markAt]);
   const frame = useFrameCallback(f => {
     const dt = Math.min(50, f.timeSincePreviousFrame ?? 16), factor = dt / 16;
     time.value += dt / 1000; elapsed.value += dt;
@@ -120,7 +129,7 @@ export function LifeOrb({ size = 56, state = 'ring', color, rings: _rings, mark,
     <Svg width={size} height={size} style={{ position: 'absolute' }} pointerEvents="none">
       {PAIRS.map(([a, b]) => <OrbEdge key={`${a}-${b}`} a={a} b={b} points={points} edges={edges} time={time} size={size} color={ink} dot={dot} />)}
     </Svg>
-    {Array.from({ length: 30 }, (_, k) => <OrbDot key={k} k={k} points={points} size={size} dot={dot} color={k === lead && markColor ? markColor : ink} />)}
+    {Array.from({ length: 30 }, (_, k) => <OrbDot key={k} k={k} points={points} size={size} dot={dot} color={k < 10 && lit.includes(k) && markColor ? markColor : ink} />)}
   </View>;
 }
 function OrbDot({ k, points, size, dot, color }: { k: number; points: SharedValue<Point[]>; size: number; dot: number; color: string }) {
