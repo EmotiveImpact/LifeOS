@@ -1,6 +1,6 @@
 # Real accounts start empty (fix F-01)
 
-Branch `fix-empty-life`, from `v26-integration` after Phase 31 and the new orb and docked search. This was the one build fix blocking the beta: release builds started with Ama's life.
+Branch `fix-empty-life`, from `v26-integration` after Phase 31, the docked search and the still orb with pulsing areas. This was the one build fix blocking the beta: release builds started with Ama's life.
 
 ## What changed
 
@@ -37,7 +37,7 @@ Development builds keep Ama's life, as Edem asked. The build profiles now say so
   - meal timing shows your eating window. It no longer claims a link to sleep;
   - food quality gives the target and what counts, and says plants aren't counted yet;
   - quick log's Recent lists your own last meals.
-- **From Life** says nothing is new and keeps the weekly recap. The orb rests for a real account.
+- **From Life** says nothing is new and keeps the weekly recap. The orb rests for a real account, with no area lit.
 - **Routines** says nothing is running yet, and lists the two that start once Life knows the payday and bills.
 - **The share card** says only what happened ("My first week with Life" until something does).
 - **Missions** use the engine's own steps. The sample's P800 reference and £1,240 of kit are gone.
@@ -64,7 +64,7 @@ Development builds keep Ama's life, as Edem asked. The build profiles now say so
 
 ## Screenshots
 
-Two sheets, in light and dark (`empty-life-light.jpg`, `empty-life-dark.jpg`):
+Two sheets, in light and dark (`empty-life-light.jpg`, `empty-life-dark.jpg`). Each screen is also here on its own, as `<screen>.light.jpg` and `<screen>.dark.jpg`; a `-filled` name is the account with a few things filed.
 
 - **Day one**, a real account with nothing filed:
   - Plan;
@@ -74,7 +74,8 @@ Two sheets, in light and dark (`empty-life-light.jpg`, `empty-life-dark.jpg`):
   - Body numbers;
   - Add people and Writing your Aim;
   - the share card;
-  - onboarding's first question and body numbers.
+  - onboarding's first question and body numbers;
+  - Building your plan and your first move, for answers that qualify for a council tax discount.
 - **A few things filed:**
   - Plan and the Aim;
   - the gambit;
@@ -83,7 +84,7 @@ Two sheets, in light and dark (`empty-life-light.jpg`, `empty-life-dark.jpg`):
 
 ## Checks
 
-- **Tests:** `bun test` with Postgres passes. `tests/launch/empty-life.test.ts` is new (36 tests).
+- **Tests:** `bun test` with Postgres passes (839 tests). `tests/launch/empty-life.test.ts` is new (59 tests).
 - **Typecheck:** clean.
 - **Bundles:** the iOS, Android and web exports build.
 - **Crawls of the release web build:**
