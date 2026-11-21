@@ -66,6 +66,7 @@ Version 1, 21 November 2026. Everything known that stands between Life and beta,
 | F-57 | Writing your Aim offers no suggestions in a real account (the board's were the sample life's). Suggest from what Life knows once it knows something | F-01 |
 | F-58 | **Progress toward the Aim has no measure yet.** A real account's Aim shows its own words and today's move, without a percentage. The month's gambit and the earned glimpse wait for that measure (their suggestions were the sample life's), and show a day-one state until then | F-01 |
 | F-59 | **Fuel's insights need real sources.** Plant variety and how processed food was aren't counted from logged meals, and the link between late meals and sleep isn't drawn. A real account sees the target and its own eating window instead | F-01 |
+| F-65 | **The focus timer still shows the sample's task** ("Portfolio case study", a 38-minute block). Only the sample calendar opens it, so a real account can't reach it. Give it a real version, started from a step on Today, before anything links to it | F-01 |
 
 ## P3: later
 
