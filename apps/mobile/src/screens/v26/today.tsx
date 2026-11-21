@@ -17,6 +17,7 @@ import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { isOnLocalDay, useLocalDay } from '@/state/day';
+import { useDayPlan } from '@/state/dayplan';
 import { money, seed, seedTaxClaim } from '@/state/seed';
 import { budgetScale, fuelShare, macroParts, useFuelDay } from '@/state/fuel';
 import { TODAY_MOVES, councilTax, dayShape, heavyCount, heavyWeek, hm, lighterDay, moveOrder, payday, readDecisions, todayBrief } from '@/state/today';
@@ -360,6 +361,11 @@ export function SupportRowsV26({ style }: { style?: object }) {
 export function CustomiseV26() {
   const t = useTokens(), nav = useNavigation(), { data } = useSeed();
   const { visible, hidden, toggle, move } = useTodayMetrics();
+  // The preview shows what Today will show: the sample's figures in a sample build, this phone's own readings otherwise
+  // (fix F-64), never the sample's numbers on a real account.
+  const body = useBodyToday(), fuel = useFuelDay();
+  const preview = (n: MetricName) => SHOW_SAMPLES ? metricValue(n, data.prefs.hideNumbers)
+    : n === 'Fuel' ? { value: data.prefs.hideNumbers ? 'Balanced' : fuel.eaten.toLocaleString('en-GB') } : realMetricValue(n, body);
   const tintFor = (n: MetricName) => n === 'Readiness' ? 'health' as const : n === 'Sleep' ? 'work' as const : null;
   return (
     <Page screen="customise" bar={{ kind: 'sheet', title: 'Today’s numbers' }} footer={<Btn label="Done" onPress={nav.close} />}>
@@ -367,7 +373,7 @@ export function CustomiseV26() {
       <Between style={{ marginTop: space.lg }}><Micro>PREVIEW</Micro><Callout>{`${visible.length} of 5 chosen`}</Callout></Between>
       <View style={[styles.mini, { marginTop: space.xs }]}>
         {visible.map(n => {
-          const v = metricValue(n, data.prefs.hideNumbers), area = tintFor(n);
+          const v = preview(n), area = tintFor(n);
           const cell = <><Text variant="micro" tone="ink2">{n === 'Stress' ? 'Stress · estimate' : n}</Text><Text variant="headline" style={{ fontVariant: ['tabular-nums'] }}>{v.value}</Text></>;
           const wide = n === 'Fuel';
           return area
@@ -546,6 +552,41 @@ function CalendarSampleV26() {
 /* ───────────────────────── Morning brief ───────────────────────── */
 
 export function MorningBriefV26() {
+  return SHOW_SAMPLES ? <MorningBriefSampleV26 /> : <MorningBriefRealV26 />;
+}
+
+/** Braces and @ shape a Display line, so words from elsewhere are kept plain inside one. */
+const plainWords = (s: string) => s.replace(/[{}@]/g, '').trim();
+
+/**
+ * A real account's morning brief (fix F-64): last night's sleep from this phone and the day's first move, only what
+ * Life knows. The sample's sleep, bill, run and flat never show, and there's no Listen control until Life can read the
+ * brief aloud itself.
+ */
+function MorningBriefRealV26() {
+  const t = useTokens(), nav = useNavigation(), { data } = useSeed();
+  const { now } = useLocalDay();
+  const body = useBodyToday(), { left } = useDayPlan();
+  const stamp = `${now.toLocaleDateString('en-GB', { weekday: 'long' })} · ${now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+  const name = plainWords(data.profile.name);
+  const readiness = body?.readiness.status === 'ready' ? body.readiness.score : null;
+  const feel = readiness === null ? '' : readiness >= 67 ? ', and you’re {well recovered}' : readiness >= 34 ? ', and you’re {steady}' : ', so go {a little easier} today';
+  const night = body?.sleep?.last ? `You slept {@moon ${hm(body.sleep.last.asleepMinutes)}}${feel}. ` : '';
+  const first = left[0] ? plainWords(left[0].title) : '';
+  const day = first ? `First up: {${first}}${left.length > 1 ? `, then ${left.length - 1} more` : ''}.` : '{Nothing planned yet.} Tell Life what’s going on and it plans the day.';
+  return (
+    <Page screen="morningbrief" scroll={false} backdrop={<><PhotoBackdrop source={photos.calmdesk} /><LinearGradient pointerEvents="none" colors={['rgba(8,9,10,0)', t.scrim]} locations={[0.3, 0.75]} style={StyleSheet.absoluteFill} /></>}
+      bar={{ kind: 'photo', left: <Chip label={stamp} onPhoto /> }}
+      footer={<Btn label="Start the day" onPhoto onPress={nav.close} />}>
+      <View style={{ flex: 1 }} />
+      <Text variant="title" tone="paper">{name ? `Good morning, ${name}` : 'Good morning'}</Text>
+      <Display onPhoto s={night + day} style={{ marginTop: space.xs }} />
+      <Sp h={space.xs} />
+    </Page>
+  );
+}
+
+function MorningBriefSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag } = useSeed();
   const { now } = useLocalDay();
   const playing = !!data.flags['brief-playing'];

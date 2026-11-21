@@ -315,7 +315,11 @@ export function AskV26() {
 
 /* ───────────────────────── Attach ───────────────────────── */
 
-export function AttachV26() {
+/**
+ * Add a photo, scan or file to the conversation. From Talk it closes back to the chat; as a real account's Scan (fix
+ * F-64) it opens the chat with the attachment, where Life reads it with you.
+ */
+export function AttachV26({ screen = 'attach', then = 'close' }: { screen?: 'attach' | 'scan'; then?: 'close' | 'chat' } = {}) {
   const nav = useNavigation(), { data, update } = useSeed();
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const add = async (kind: 'camera' | 'photos' | 'files') => {
@@ -332,14 +336,14 @@ export function AttachV26() {
         const next = { ...target, attachments: [...target.attachments, attachment], updatedAt: new Date().toISOString() };
         return { ...state, brain: { ...state.brain, activeConversationId: next.id, conversations: existing ? state.brain.conversations.map(c => c.id === next.id ? next : c) : [...state.brain.conversations, next] } };
       });
-      nav.close();
+      if (then === 'chat') nav.replace('chat'); else nav.close();
     } catch (e) { setError(e instanceof Error ? e.message : 'The attachment could not be added.'); }
     finally { setBusy(false); }
   };
   const corner = (icon: 'camera' | 'images' | 'folder' | 'pulse') => <View style={[styles.photoRound, { backgroundColor: photo.onPhoto }]}><Icon name={icon} size={componentSize.iconXs} color={photo.ink} /></View>;
   return (
-    <Page screen="attach" bar={{ kind: 'push', title: 'Attach', close: true }}>
-      <Display s="{Add something} to the conversation." flush />
+    <Page screen={screen} bar={{ kind: 'push', title: then === 'chat' ? 'Scan' : 'Attach', close: true }}>
+      <Display s={then === 'chat' ? '{Scan a letter or a document,} and Life reads it with you.' : '{Add something} to the conversation.'} flush />
       <PhotoCard source={photos.letter} focal={{ y: 0.6 }} height={204} chips={['Life reads it for you']} topRight={corner('camera')} title="Scan a letter" sub="Use your camera. Life files what matters." onPress={() => { void add('camera'); }} style={{ marginTop: space.lg }} />
       <PhotoGrid style={{ marginTop: space.tile }}>
         <PhotoCard source={photos.food} focal={{ x: 0.38, y: 0.42 }} height={138} size="sm" topRight={corner('camera')} title="Camera" sub="Take a photo" onPress={() => { void add('camera'); }} />
@@ -355,6 +359,11 @@ export function AttachV26() {
 /* ───────────────────────── Letter, understood ───────────────────────── */
 
 export function ScanV26() {
+  // A real account scans its own letter: the sample's Lambeth council tax bill never shows (fix F-64).
+  return SHOW_SAMPLES ? <ScanSampleV26 /> : <AttachV26 screen="scan" then="chat" />;
+}
+
+function ScanSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, flag } = useSeed();
   const annual = seed.finance.councilTaxAnnual, instalment = annual / 10;
   const alone = data.profile.householdSize === 1;

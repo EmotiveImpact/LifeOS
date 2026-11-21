@@ -461,7 +461,24 @@ export function VaultV26() {
   );
 }
 
-export function DocDetailV26() {
+/**
+ * A real account's document or renewal (fix F-64). Documents start empty, so these pages are only reached from a link
+ * elsewhere; they show the day-one shape, never the sample's passport or car insurance.
+ */
+function DocsNotYetV26({ screen, title }: { screen: ScreenKey; title: string }) {
+  const nav = useNavigation();
+  return (
+    <NotYetV26 screen={screen} title={title} eyebrow="Documents · day one" line="Life keeps the dates on your documents and renewals once you tell it about them."
+      source="letter" focal={{ y: 0.6 }} ask="Tell Life about a document" examples="Your passport’s expiry, a renewal letter, your MOT.">
+      <Btn label="Scan a document" icon="camera" ghost onPress={() => nav.go('scan')} style={{ marginTop: space.md }} />
+    </NotYetV26>
+  );
+}
+
+export function DocDetailV26() { return SHOW_SAMPLES ? <DocDetailSampleV26 /> : <DocsNotYetV26 screen="docdetail" title="Document" />; }
+export function RenewalV26() { return SHOW_SAMPLES ? <RenewalSampleV26 /> : <DocsNotYetV26 screen="renewal" title="Renewal" />; }
+
+function DocDetailSampleV26() {
   const nav = useNavigation(), t = useTokens(), { data, flag } = useSeed();
   const doc = seedDocuments.find(d => d.id === data.choices.document) ?? seedDocuments.find(d => d.id === 'passport')!;
   const passport = doc.id === 'passport';
@@ -500,7 +517,7 @@ export function DocDetailV26() {
   );
 }
 
-export function RenewalV26() {
+function RenewalSampleV26() {
   const nav = useNavigation(), { data, flag } = useSeed(), { show } = useMoney();
   const steps = [
     { key: 'renew-compare', label: 'Compare quotes', sub: 'From 22 January' },
