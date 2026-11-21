@@ -15,6 +15,8 @@ import {
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed, type SeedData } from '@/state/SeedProvider';
 import { money, seed, type FiledRecord } from '@/state/seed';
+import { compareUKBusinessStructures } from '@life/core/finance';
+import { structureProfit } from './toolkit';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { ai } from '@/services/ai';
 import { SAMPLE_TALK, chunkTranscript, sampleStream, voice, type HeardChunk } from '@/services/voice';
@@ -23,7 +25,7 @@ import { useBrainJob } from '@/services/useBrainJob';
 import { proposalRecord } from '@/services/brainState';
 import { pickAttachment, removeAttachmentCopy } from '@/services/attachments';
 import { ConversationAttachments } from '../ConversationAttachments';
-import { Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, QuietLink, Row, RowsCard, Statement, Between } from './kit';
+import { Body, Btn, Callout, Chip, Display, Eyebrow, Micro, NotYetV26, Page, QuietLink, Row, RowsCard, Statement, Between, MoreRows, useLongList } from './kit';
 
 const AREAS: [Area, string][] = [['you', 'You'], ['home', 'Home'], ['work', 'Work'], ['money', 'Money'], ['health', 'Health'], ['goal', 'Goals']];
 const areaName = (a: Area) => AREAS.find(x => x[0] === a)?.[1] ?? a;
@@ -285,7 +287,9 @@ export function Composer({ value, onChange, placeholder, onSend, onAttach, onMic
 export function AskV26() {
   const nav = useNavigation(), { data, update, engine } = useSeed();
   const saved = !!data.flags['ask-saved'];
-  const sole = engine.structures.soleTrader.netTakeHomeAnnual, ltd = engine.structures.director.netTakeHomeAnnual;
+  // A real account asks about the profit it tried in Income and structure (or its own income), never £0.
+  const structures = SHOW_SAMPLES ? engine.structures : compareUKBusinessStructures({ ...data.profile, annualIncome: structureProfit(data) });
+  const sole = structures.soleTrader.netTakeHomeAnnual, ltd = structures.director.netTakeHomeAnnual;
   const gap = Math.abs(ltd - sole), fees = seed.finance.accountantFees;
   const stay = ltd - sole < fees;
   const revisit = 60_000;
@@ -299,7 +303,7 @@ export function AskV26() {
             leave={{ label: 'Not now', onPress: nav.close }} confirm={{ label: 'Save to Work', onPress: () => { save(); feedback.file(); }, haptic: null }} ask={{ label: 'Ask a follow-up', icon: 'mic', onPress: () => nav.go('talk') }} />}>
       <View style={{ alignItems: 'flex-end' }}><ChatBubble text="Should I go limited company or stay a sole trader?" /></View>
       <PhotoCard source={photos.gotit} focal={{ y: 0.39 }} height={214} chips={[{ label: 'Life, from your numbers', orb: true }]} lead="For now," title={stay ? 'stay a sole trader.' : 'a company may pay.'} style={{ marginTop: space.md }} />
-      <Body style={{ marginTop: space.sm }} s={`At your {${money(data.profile.annualIncome / 1000)}k} profit, the two come out within about {${money(Math.max(100, Math.round(gap / 100) * 100))} a year}, and a company adds around {${money(fees)}} in accountant fees.`} />
+      <Body style={{ marginTop: space.sm }} s={`At your {${money((SHOW_SAMPLES ? data.profile.annualIncome : structureProfit(data)) / 1000)}k} profit, the two come out within about {${money(Math.max(100, Math.round(gap / 100) * 100))} a year}, and a company adds around {${money(fees)}} in accountant fees.`} />
       <TintCard area="work" padding={space.md} style={{ marginTop: space.md }}>
         <Between><Micro>{`Take-home per year · ${engine.income.taxYear}`}</Micro><Chip label="Engine estimate" /></Between>
         <View style={{ marginTop: space.xs }}><KeyValue label="Sole trader" value={money(sole)} /><KeyValue label="Limited company" value={money(ltd)} /></View>
@@ -424,6 +428,7 @@ export function ChatV26() {
   const ask = async (q: string) => { if (!q.trim() || conversation.thinking || conversation.pending) return; setText(''); await conversation.send(q); };
   useEffect(() => { if (params.question && !first.current) { first.current = true; void ask(params.question); } }, [params.question]); // eslint-disable-line react-hooks/exhaustive-deps
   const messages = conversation.current?.messages ?? [];
+  const long = useLongList(messages, { from: 'end' });
   const title = (
     <Press haptic="select" onPress={() => nav.go('chathistory')} accessibilityLabel="Life, your conversations" style={styles.chatTitle}>
       <LifeOrb size={18} state={conversation.thinking ? 'thinking' : 'ring'} /><Text variant="title">Life</Text>
@@ -447,7 +452,7 @@ export function ChatV26() {
       </>}>
       <View style={{ gap: 14 }}>
         {messages.length
-          ? messages.map(m => <ChatMessage key={m.id} message={m} onReview={() => { conversation.review(m.proposals ?? []); flag('records-confirmed', false); nav.go('understood'); }} />)
+          ? <><MoreRows earlier more={long.more} onPress={long.showMore} style={{ marginTop: 0 }} />{long.visible.map(m => <ChatMessage key={m.id} message={m} onReview={() => { conversation.review(m.proposals ?? []); flag('records-confirmed', false); nav.go('understood'); }} />)}</>
           : SHOW_SAMPLES ? <SampleThread /> : <>
             <Text variant="titleSerif" style={{ marginTop: space.md }}>What’s on your mind?</Text>
             <Body s="Ask about your plan, tell Life something to remember, or attach a document. {Nothing is saved until you say so.}" />
@@ -554,8 +559,9 @@ export function ChatHistoryV26() {
   const filedTotal = useSamples ? 12 : threads.reduce((n, c) => n + filedCount(c), 0);
   const when = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   const open = (id: string) => { conversation.openThread(id); nav.go('chat'); };
+  const long = useLongList(threads.slice(1));
   return (
-    <Page screen="chathistory" bar={{ kind: 'push', action: { kind: 'icon', icon: searching ? 'close' : 'search', label: searching ? 'Close search' : 'Search conversations', onPress: () => { setSearching(s => !s); setQuery(''); } } }}>
+    <Page screen="chathistory" onEnd={long.showMore} bar={{ kind: 'push', action: { kind: 'icon', icon: searching ? 'close' : 'search', label: searching ? 'Close search' : 'Search conversations', onPress: () => { setSearching(s => !s); setQuery(''); } } }}>
       <Eyebrow>Talk · your conversations</Eyebrow>
       {searching
         ? <TextInput maxFontSizeMultiplier={1.3} autoFocus value={query} onChangeText={setQuery} placeholder="Search conversations" placeholderTextColor={t.ink2} accessibilityLabel="Search conversations" selectionColor={t.ember}
@@ -570,8 +576,9 @@ export function ChatHistoryV26() {
       </> : threads.length && (filter === 'All' || filter === 'Chat') ? <>
         <PhotoCard source={photos[THREAD_PHOTOS[0]]} focal={{ x: 0.78 }} height={176} chips={[`Latest · Chat · ${when(threads[0].updatedAt)}`]} chipRight={`Filed ${filedCount(threads[0])}`} title={threads[0].title} sub={`“${threads[0].messages.find(m => m.role === 'user')?.text ?? ''}”`} onPress={() => open(threads[0].id)} style={{ marginTop: space.md }} />
         <PhotoGrid style={{ marginTop: space.tile }}>
-          {threads.slice(1).map((c, i) => <PhotoCard key={c.id} source={photos[THREAD_PHOTOS[(i + 1) % THREAD_PHOTOS.length]]} height={150} size="sm" chips={[`Chat · ${when(c.updatedAt)}`]} title={c.title} sub={`Filed ${filedCount(c)}`} onPress={() => open(c.id)} />)}
+          {long.visible.map((c, i) => <PhotoCard key={c.id} source={photos[THREAD_PHOTOS[(i + 1) % THREAD_PHOTOS.length]]} height={150} size="sm" chips={[`Chat · ${when(c.updatedAt)}`]} title={c.title} sub={`Filed ${filedCount(c)}`} onPress={() => open(c.id)} />)}
         </PhotoGrid>
+        <MoreRows more={long.more} onPress={long.showMore} />
       </> : null}
       <Btn label="New conversation" ghost onPress={() => { conversation.newThread(); nav.go('chat'); }} style={{ marginTop: space.lg }} />
       <Callout style={{ marginTop: space.md }}>Nothing here is needed to use Life. Everything useful is already filed in its place.</Callout>
@@ -583,7 +590,18 @@ export function ChatHistoryV26() {
 
 type Token = 'what' | 'amount' | 'due' | 'where';
 
+/** Changing something filed from chat. The sample's council tax line is Ama's; a real account changes its own in What Life knows. */
 export function EditFiledV26() {
+  const nav = useNavigation();
+  return SHOW_SAMPLES ? <EditFiledSampleV26 /> : (
+    <NotYetV26 screen="editfiled" title="Filed from chat" eyebrow="Filed from chat" line="What you tell Life is filed in What Life knows, and you can change it there."
+      source="letter" focal={{ y: 0.6 }} ask="Tell Life something to file" examples="A bill, a date, a person, a goal.">
+      <QuietLink label="See what Life knows" ink center={false} onPress={() => nav.go('knows')} style={{ marginTop: space.md }} />
+    </NotYetV26>
+  );
+}
+
+function EditFiledSampleV26() {
   const t = useTokens(), nav = useNavigation(), { data, update, flag } = useSeed();
   const [what, setWhat] = useState('Council tax');
   const [amount, setAmount] = useState(seed.finance.councilTaxMonthly);

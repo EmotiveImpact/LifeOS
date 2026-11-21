@@ -45,3 +45,14 @@ Dependencies of `apps/api`, not copied source. Exact pins and integrity are in `
 
 ## Libraries
 Add each installed MIT / Apache-2.0 library here with its copyright line when it's added to `package.json` (Phase 1b onwards).
+
+## Food (Phase 27)
+- **React Native VisionCamera 5.2.4 (MIT).** Copyright (c) Marc Rousavy. https://github.com/mrousavy/react-native-vision-camera . The iPhone camera for barcodes. Installed as a dependency, not copied source.
+- **React Native Nitro Image 0.15.2 (MIT).** Copyright (c) Marc Rousavy. https://github.com/mrousavy/react-native-nitro-image . Required by VisionCamera, and used to make meal and label photos small before they're sent.
+- **Open Food Facts: data under the Open Database Licence (ODbL) 1.0, product images under CC BY-SA.** https://world.openfoodfacts.org . Product names and nutrition are looked up by barcode at the moment you scan and are not copied into life's code or database. Every screen that shows them credits Open Food Facts and the licence.
+
+## The day engine (Phase 29)
+- **expo-notifications 58.1.9, expo-background-task 58.0.13, expo-task-manager 58.0.14, expo-calendar 58.0.8 and expo-device 58.0.5 (MIT).** Copyright (c) 2015-present 650 Industries, Inc. (aka Expo). https://github.com/expo/expo . Local nudges, background work, reading busy times from the phone's calendars, and telling a phone from a simulator for push tokens. Installed as dependencies, not copied source.
+
+## Quality (Phase 30)
+- **Sentry React Native SDK 8.28.0 (MIT).** Copyright (c) Functional Software, Inc. dba Sentry. https://github.com/getsentry/sentry-react-native . Crash reports, started only when the build carries the owner's DSN and the person hasn't switched them off. Installed as a dependency with its own Sentry JavaScript and native SDK dependencies (MIT), not copied source.

@@ -6,7 +6,7 @@
  *
  * The random source is passed in, so a test (or "Why am I seeing this?") can replay exactly what happened.
  */
-import { clamp } from '../math/stats';
+import { clamp, seededRandom } from '../math/stats';
 import { localMinutes } from '../time/zone';
 
 export interface Arm { done: number; skipped: number }
@@ -17,6 +17,8 @@ export type Outcome = 'done' | 'skipped' | 'dismissed';
 export const FORGET = 0.98;
 /** How far a learned preference can move a move's score either way. */
 export const LEARNED_WEIGHT = 2;
+/** Outcomes (after fading) before the learned boost has its full weight. */
+export const LEARNED_FULL_AFTER = 5;
 
 export type MoodGroup = 'heavy' | 'up' | 'even';
 export const moodGroup = (mood: string | null | undefined): MoodGroup =>
@@ -69,7 +71,10 @@ export interface Learned {
 export function learnedBoost(state: BanditState, kind: string, context: string, random: () => number): Learned {
   const arm = state[armKey(kind, context)] ?? { done: 0, skipped: 0 };
   const draw = sampleBeta(arm.done + 1, arm.skipped + 1, random);
-  return { boost: clamp((draw - 0.5) * 2 * LEARNED_WEIGHT, -LEARNED_WEIGHT, LEARNED_WEIGHT), rate: (arm.done + 1) / (arm.done + arm.skipped + 2), seen: arm.done + arm.skipped };
+  const seen = arm.done + arm.skipped;
+  // Trust grows with evidence: nothing learned yet leaves the order to the rules, so a new life isn't shuffled.
+  const trust = Math.min(1, seen / LEARNED_FULL_AFTER);
+  return { boost: clamp((draw - 0.5) * 2 * LEARNED_WEIGHT * trust, -LEARNED_WEIGHT, LEARNED_WEIGHT), rate: (arm.done + 1) / (seen + 2), seen };
 }
 
 /** The state after one outcome. Returns a new object; the old one is left as it was. */
@@ -78,4 +83,11 @@ export function recordOutcome(state: BanditState, kind: string, context: string,
   const arm = state[key] ?? { done: 0, skipped: 0 };
   const next = { done: arm.done * FORGET + (outcome === 'done' ? 1 : 0), skipped: arm.skipped * FORGET + (outcome === 'done' ? 0 : 1) };
   return { ...state, [key]: next };
+}
+
+/** A random source that stays the same all day, so today's order doesn't reshuffle each time Today opens. */
+export function dayRandom(key: string): () => number {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return seededRandom(h >>> 0);
 }

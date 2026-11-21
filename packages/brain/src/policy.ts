@@ -16,7 +16,13 @@ export function assertRequest(request: Request): void {
   if (!request.id || request.id.length > 120 || !request.text.trim() || request.text.length > 12000) throw new BrainError('INVALID_INPUT', 'Use a message between 1 and 12,000 characters.');
   if (request.history.length > 20 || request.history.some(m => m.text.length > 12000)) throw new BrainError('INVALID_INPUT', 'This conversation needs a shorter context window. Earlier messages remain saved on your phone.');
   if (request.attachments.length > 5 || request.attachments.some(a => a.size > 10 * 1024 * 1024 || (a.text?.length ?? 0) > 40000)) throw new BrainError('INVALID_INPUT', 'Attach at most five files, up to 10 MB and 40,000 text characters each.');
+  const photos = request.attachments.filter(a => a.data !== undefined);
+  if (photos.length && (!PHOTO_JOBS.includes(request.job) || photos.length > 1 || photos.some(a => !PHOTO_TYPES.includes(a.mime) || !a.data || a.data.length > MAX_PHOTO_CHARS || !/^[A-Za-z0-9+/]+={0,2}$/.test(a.data)))) throw new BrainError('INVALID_INPUT', 'Send one small photo (JPEG, PNG or WebP, under 2 MB) for a meal or a label.');
 }
+/** Jobs that read a photo itself, and the photos they take: one, made small on the phone. */
+export const PHOTO_JOBS: readonly Request['job'][] = ['food'];
+export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const MAX_PHOTO_CHARS = 2_800_000;
 export const evidenceText = (request: Request): string => [request.text, ...request.attachments.filter(a => a.status === 'ready').map(a => a.text ?? '')].join('\n');
 export function validateOutput(raw: unknown, request: Request): ModelOutput {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new BrainError('INVALID_OUTPUT', 'The model did not return a valid answer. Nothing was changed.');
@@ -48,8 +54,11 @@ export function reconcilePendingRequest(request: Request, current: Request['cont
   const moves = new Set(current.moves.map(move => move.id));
   return { ...request, context: { ...request.context, facts: request.context.facts.filter(fact => facts.has(fact.id)), memories: request.context.memories.filter(memory => memories.has(memory.id)), moves: request.context.moves.filter(move => moves.has(move.id)) }, attachments: request.attachments.filter(attachment => attachmentIds.has(attachment.id)) };
 }
+/** What leaves the phone: extracted text, and for a photo job the photo itself. Never a file name or a path. */
 export function prepareExternalRequest(request: Request): Request {
-  return { ...request, attachments: request.attachments.filter(attachment => attachment.status === 'ready' && !!attachment.text).map(attachment => ({ id: attachment.id, name: 'Extracted text', mime: 'text/plain', uri: '', size: attachment.text!.length, text: attachment.text, status: 'ready' })) };
+  const photos = PHOTO_JOBS.includes(request.job) ? request.attachments.filter(a => a.data && PHOTO_TYPES.includes(a.mime)).slice(0, 1).map(a => ({ id: a.id, name: 'Photo', mime: a.mime, uri: '', size: a.data!.length, data: a.data, status: 'ready' as const })) : [];
+  const texts = request.attachments.filter(attachment => attachment.status === 'ready' && !!attachment.text).map(attachment => ({ id: attachment.id, name: 'Extracted text', mime: 'text/plain', uri: '', size: attachment.text!.length, text: attachment.text, status: 'ready' as const }));
+  return { ...request, attachments: [...photos, ...texts] };
 }
 export function modelPayload(request: Request) {
   return { job: request.job, output: JOB_SHAPES[request.job], question: request.text, context: request.context, history: request.history, attachments: request.attachments.map(({ id, name, mime, text, status }) => ({ id, name, mime, text, status })), candidateProposals: extractStatements(evidenceText(request)) };

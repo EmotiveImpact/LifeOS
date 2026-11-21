@@ -28,6 +28,8 @@ import { typesAllowed } from '@/services/health/mapping';
 import { readHealthNow } from '@/services/health/useHealthRunner';
 import { problemWords, sendCode, signInWith, verifyCode } from '@/services/account';
 import { voice } from '@/services/voice';
+import { askNotifications, notificationsSupported } from '@/services/notifications';
+import { askCalendar, calendarSupported } from '@/services/calendar';
 import {
   CHILDLINE, CITIES, DESTINATIONS, HEALTH_TYPES, TELL_TOPICS, WORK, birthDate, birthDateProblem, longDate, needsSupport, nextAfterConsent, planFound, useAgeCheck,
   useHealthConsent, type HealthType,
@@ -135,9 +137,9 @@ export function AgecheckV26() {
       <Display s="{When were you born?}" style={{ marginTop: space.xxs }} />
       <Body s="Life asks once. Your date of birth sets {age rules}, like pensions and the Lifetime ISA, and it stays {on this phone}." style={{ marginTop: space.xs }} />
       <View style={styles.dob}>
-        <Field label="Day" value={d} placeholder="DD" onChangeText={v => setD(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
-        <Field label="Month" value={m} placeholder="MM" onChangeText={v => setM(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
-        <Field label="Year" value={y} placeholder="YYYY" onChangeText={v => setY(digits(v, 4))} keyboardType="numeric" style={{ flex: 1.5 }} />
+        <Field label="Day" testID="age-day" value={d} placeholder="DD" onChangeText={v => setD(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
+        <Field label="Month" testID="age-month" value={m} placeholder="MM" onChangeText={v => setM(digits(v, 2))} keyboardType="numeric" style={{ flex: 1 }} />
+        <Field label="Year" testID="age-year" value={y} placeholder="YYYY" onChangeText={v => setY(digits(v, 4))} keyboardType="numeric" style={{ flex: 1.5 }} />
       </View>
       <Callout tone={problem ? 'ink' : 'ink2'} style={{ marginTop: space.sm }}>{problem ?? 'For example, 14 3 1999'}</Callout>
     </Page>
@@ -161,7 +163,7 @@ function UnderAge() {
 export function QuestionV26() {
   const nav = useNavigation(), { data, set, choose } = useSeed();
   const [open, setOpen] = useState<null | 'want' | 'live' | 'work'>(null);
-  const dest = DESTINATIONS.find(x => x.value === data.profile.destination);
+  const dest = DESTINATIONS.find(x => x.value === data.choices['setup-want']);
   const city = data.choices['setup-city'];
   const work = WORK.find(w => w.value === data.choices['setup-work']);
   return (
@@ -178,7 +180,7 @@ export function QuestionV26() {
         <PickRow label="My work is" value={work?.label ?? 'Select'} set={!!work} onPress={() => setOpen('work')} />
       </View>
       <ChoiceDrawer visible={open === 'want'} title="I want to" options={DESTINATIONS} value={dest?.value ?? null} onClose={() => setOpen(null)}
-        onPick={v => set({ profile: { ...data.profile, destination: v } })} />
+        onPick={v => { set({ profile: { ...data.profile, destination: v } }); choose('setup-want', v); }} />
       <ChoiceDrawer visible={open === 'live'} title="I live in" options={CITIES.map(c => ({ value: c, label: c }))} value={(city as (typeof CITIES)[number]) ?? null} onClose={() => setOpen(null)}
         onPick={v => { set({ profile: { ...data.profile, city: v } }); choose('setup-city', v); }} />
       <ChoiceDrawer visible={open === 'work'} title="My work is" options={WORK} value={work?.value ?? null} onClose={() => setOpen(null)}
@@ -269,17 +271,22 @@ export function BuildingV26() {
         <LifeOrb size={52} state={done ? 'done' : 'working'} />
         <View style={{ flex: 1 }}>
           <Micro>{done ? `${engine.tasks.length > 4 ? 5 : engine.tasks.length} OF 5 CHECKED` : 'CHECKING 5 OF 5'}</Micro>
-          <Text variant="title" style={{ marginTop: space.xxs }}>Your monthly costs</Text>
-          <Callout>{`Rent, bills, subscriptions${done ? ' · Mapped' : ''}`}</Callout>
+          {/* The sample maps its monthly costs; a real account has only told Life its answers so far. */}
+          <Text variant="title" style={{ marginTop: space.xxs }}>{SHOW_SAMPLES ? 'Your monthly costs' : 'Your answers'}</Text>
+          <Callout>{SHOW_SAMPLES ? `Rent, bills, subscriptions${done ? ' · Mapped' : ''}` : `Against published rules${done ? ' · Checked' : ''}`}</Callout>
         </View>
       </View>
-      <Display s={`Found {${money(found.owed)}} you may be owed, {${found.urgent} urgent deadline${found.urgent === 1 ? '' : 's'}} and {${found.setUp} things} to set up.`} />
+      <Display s={found.owed
+        ? `Found {${money(found.owed)}} you may be owed, {${found.urgent} urgent deadline${found.urgent === 1 ? '' : 's'}} and {${found.setUp} things} to set up.`
+        : found.setUp || found.urgent ? `Found {${found.setUp} ${found.setUp === 1 ? 'thing' : 'things'}} to set up and {${found.urgent} urgent deadline${found.urgent === 1 ? '' : 's'}}.`
+        : '{Nothing urgent.} Life keeps looking as you tell it more.'} />
       <PhotoGrid style={{ marginTop: 14 }}>
         {found.findings.map(f => (
           <PhotoCard key={f.title} source={photos[f.photo]} focal={f.focal} height={150} size="sm" title={f.title} sub={f.sub} onPress={done ? () => nav.go(f.to) : undefined}
             chips={[f.urgent ? { label: f.tag, dot: t.ember } : f.tag]} />
         ))}
       </PhotoGrid>
+      {found.findings.length ? null : <Callout style={{ marginTop: space.sm }}>Missions appear as Life finds things worth doing.</Callout>}
     </Page>
   );
 }
@@ -358,10 +365,10 @@ export function HealthconsentV26() {
       </RowsCard>
       <Micro style={{ marginTop: space.lg }}>WHAT LIFE PROMISES</Micro>
       <RowsCard style={{ marginTop: space.sm }}>
-        <Row icon="shield" title="Kept on this phone, encrypted" sub="Never in iCloud, never for ads, never sold" />
+        <Row icon="shield" title="Encrypted, on this phone first" sub="Readings stay on it. Body numbers and meals back up only if you sign in" />
         <Row icon="eyeOff" title="Yours to take back" sub="Withdraw here or in Settings, and Life stops at once" />
       </RowsCard>
-      <Callout style={{ marginTop: space.md }}>Wellness guidance from your own readings, not a diagnosis. Life keeps a note of your answer and the date, so you can see it here later.</Callout>
+      <Callout style={{ marginTop: space.md }}>Never in iCloud, never for ads, never sold. Wellness guidance from your own readings, not a diagnosis. Life keeps a note of your answer and the date, so you can see it here later.</Callout>
     </Page>
   );
 }
@@ -403,17 +410,24 @@ export function HealthprimerV26() {
 /* ───────────────────────── One nudge a day, at most ───────────────────────── */
 
 export function NotifprimerV26() {
-  const nav = useNavigation(), t = useTokens(), { data, pref, flag } = useSeed();
+  const nav = useNavigation(), t = useTokens(), { data, pref, flag, choose } = useSeed();
   const quiet = !data.flags['quiet-hours-off'], deadlines = !data.flags['notification-off-deadlines'];
   const next = () => { if (data.onboardingDone) nav.close(); else nav.go('aimnew'); };
+  // On a phone the system asks next (Phase 29). Saying no there is remembered, and Settings shows how to turn them on.
+  const turnOn = async () => {
+    pref('notifications', true); feedback.primary();
+    if (notificationsSupported) { const ok = await askNotifications(); choose('notification-permission', ok ? 'granted' : 'declined'); choose('notification-asked', String(Date.now())); }
+    next();
+  };
+  const example = SHOW_SAMPLES ? `You’ve got 20 free minutes. Finish the P87 and ${money(seedTaxClaim.refund)} starts moving.` : 'You’ve got 20 free minutes. Your first move fits.';
   return (
-    <Page screen="notifprimer" footer={<><Btn label="Turn on nudges" onPress={() => { pref('notifications', true); feedback.primary(); next(); }} /><QuietLink label="Not now" onPress={() => { pref('notifications', false); next(); }} /></>}>
+    <Page screen="notifprimer" footer={<><Btn label="Turn on nudges" onPress={() => { void turnOn(); }} /><QuietLink label="Not now" onPress={() => { pref('notifications', false); next(); }} /></>}>
       <View style={[styles.nudgePhoto, { backgroundColor: t.surface2, ...cardShadow(t.scheme) }]}>
         <PhotoFill source={photos.calmdesk} focal={{ y: 0.7 }} />
         <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
         <View style={[styles.nudgeCard, { backgroundColor: t.surface, ...floatLift(t.scheme) }]}>
           <Between><View style={styles.inline}><LifeOrb size={20} /><Text variant="buttonCompact">Life</Text></View><Callout>now</Callout></Between>
-          <Text variant="body" style={{ marginTop: 6 }}>{`You’ve got 20 free minutes. Finish the P87 and ${money(seedTaxClaim.refund)} starts moving.`}</Text>
+          <Text variant="body" style={{ marginTop: 6 }}>{example}</Text>
         </View>
         <Text variant="callout" style={{ color: photo.onPhoto2 }}>An example nudge</Text>
       </View>
@@ -526,10 +540,20 @@ export function Corners({ inset = 28, bottom = 76, top = 8 }: { inset?: number; 
 
 export function CalprimerV26() {
   const nav = useNavigation(), t = useTokens(), { flag, choose } = useSeed();
-  const params = useLocalSearchParams<{ next?: string }>();
   const busy = <View style={[styles.busy, { backgroundColor: t.surface2 }]}><Text variant="label" tone="ink2">Busy</Text></View>;
+  // On a phone the system asks next, read only (Phase 29). The web preview keeps the board's sample day.
+  const allow = async () => {
+    feedback.primary();
+    if (calendarSupported) {
+      const ok = await askCalendar();
+      choose('calendar-permission', ok ? 'granted' : 'declined');
+      if (!ok) { nav.close(); return; }
+    }
+    flag('calendar-preview', true);
+    nav.replace('calendar');
+  };
   return (
-    <Page screen="calprimer" footer={<><Btn label="Allow calendar access" onPress={() => { flag('calendar-preview', true); feedback.primary(); nav.replace(params.next === 'calendar' || !params.next ? 'calendar' : 'calendar'); }} /><QuietLink label="Not now" onPress={() => { choose('calendar-permission', 'declined'); nav.close(); }} /></>}>
+    <Page screen="calprimer" footer={<><Btn label="Allow calendar access" onPress={() => { void allow(); }} /><QuietLink label="Not now" onPress={() => { choose('calendar-permission', 'declined'); nav.close(); }} /></>}>
       <View style={{ alignItems: 'flex-start' }}><MarkTile icon="calendar" /></View>
       <Display s="Nudges that {fit your day.}" style={{ marginTop: space.md }} />
       <Body s="Life looks at {when you’re busy}, never at what the meeting is about, and {never changes your calendar}." style={{ marginTop: space.xs }} />
@@ -585,7 +609,7 @@ export function DevicesetupV26() {
 export function FirstmoveV26() {
   const nav = useNavigation(), { set } = useSeed();
   const finish = () => { set({ onboardingDone: true }); nav.home(); };
-  const doIt = () => { set({ onboardingDone: true }); nav.home(); nav.go('taxcheck', { state: 'code' }); };
+  const doIt = () => { set({ onboardingDone: true }); nav.home(); nav.go('taxcheck', SHOW_SAMPLES ? { state: 'code' } : undefined); };
   return (
     <Page screen="firstmove" scroll={false} contentStyle={{ justifyContent: 'flex-end' }}
       backdrop={<PhotoBackdropFull />}
@@ -594,7 +618,8 @@ export function FirstmoveV26() {
       footer={<><Btn label="Do it now" icon="arrow" trail onPhoto onPress={doIt} /><PaperLink label="Go to Today" onPress={finish} /></>}>
       <Chip label="Your first move · 2 minutes" icon="clock" onPhoto />
       <Text variant="welcome" tone="paper" accessibilityRole="header" style={{ marginTop: 14 }}>Start with two minutes.</Text>
-      <TwoTone size="welcomeStatement" onAtmosphere segments={two('{Check your tax code.} Your payslip shows an emergency code, so you might be {owed money}.')} style={{ marginTop: space.sm }} />
+      {/* The emergency code is on the sample life's payslip. A real account starts where the day-one Plan does. */}
+      <TwoTone size="welcomeStatement" onAtmosphere segments={two(SHOW_SAMPLES ? '{Check your tax code.} Your payslip shows an emergency code, so you might be {owed money}.' : '{Find money you’re owed.} Tax rebates, refunds and schemes people often {miss}.')} style={{ marginTop: space.sm }} />
     </Page>
   );
 }
@@ -612,15 +637,21 @@ function PhotoBackdropFull() {
 type Measure = 'h' | 'w' | 's';
 const ORDER: Measure[] = ['h', 'w', 's'];
 const NAMES: Record<Measure, string> = { h: 'Height', w: 'Weight', s: 'Waist' };
+/** Where each stepper starts before a number is given (cm, kg, cm). Never saved unless the person keeps it. */
+const START: Record<Measure, number> = { h: 170, w: 70, s: 85 };
 
 export function MeasuresetupV26() {
   const nav = useNavigation(), t = useTokens(), { data, set, choose } = useSeed();
   const [active, setActive] = useState<Measure>('h');
   const imperial = data.choices.units === 'Imperial';
+  // A real account starts with no body numbers (0): the steppers start from a typical figure until one is given.
+  const given = (m: Measure) => (m === 'h' ? data.heightCm : m === 'w' ? data.weightKg : data.waistCm) > 0;
+  const metric = (m: Measure) => (m === 'h' ? data.heightCm : m === 'w' ? data.weightKg : data.waistCm) || START[m];
   const shown = (m: Measure) => {
-    if (m === 'h') return imperial ? { value: Math.round(data.heightCm / 2.54), unit: 'in', min: 48, max: 90, fmt: (n: number) => `${Math.floor(n / 12)}ft ${n % 12}` } : { value: Math.round(data.heightCm), unit: 'cm', min: 120, max: 230, fmt: String };
-    if (m === 'w') return imperial ? { value: Math.round(data.weightKg * 2.20462), unit: 'lb', min: 66, max: 550, fmt: (n: number) => `${Math.floor(n / 14)}st ${n % 14}` } : { value: Math.round(data.weightKg), unit: 'kg', min: 30, max: 250, fmt: String };
-    return imperial ? { value: Math.round(data.waistCm / 2.54), unit: 'in', min: 20, max: 70, fmt: String } : { value: Math.round(data.waistCm), unit: 'cm', min: 50, max: 180, fmt: String };
+    const v = metric(m);
+    if (m === 'h') return imperial ? { value: Math.round(v / 2.54), unit: 'in', min: 48, max: 90, fmt: (n: number) => `${Math.floor(n / 12)}ft ${n % 12}` } : { value: Math.round(v), unit: 'cm', min: 120, max: 230, fmt: String };
+    if (m === 'w') return imperial ? { value: Math.round(v * 2.20462), unit: 'lb', min: 66, max: 550, fmt: (n: number) => `${Math.floor(n / 14)}st ${n % 14}` } : { value: Math.round(v), unit: 'kg', min: 30, max: 250, fmt: String };
+    return imperial ? { value: Math.round(v / 2.54), unit: 'in', min: 20, max: 70, fmt: String } : { value: Math.round(v), unit: 'cm', min: 50, max: 180, fmt: String };
   };
   const change = (m: Measure, n: number) => {
     if (m === 'h') set({ heightCm: imperial ? n * 2.54 : n });
@@ -628,7 +659,11 @@ export function MeasuresetupV26() {
     else set({ waistCm: imperial ? n * 2.54 : n });
   };
   const now = shown(active);
-  const next = () => { const i = ORDER.indexOf(active); if (i < ORDER.length - 1) setActive(ORDER[i + 1]); else nav.go('devicesetup'); };
+  const next = () => {
+    // Continue keeps the height and weight on screen; the waist is optional, so only a changed one is kept.
+    if (!given(active) && active !== 's') change(active, now.value);
+    const i = ORDER.indexOf(active); if (i < ORDER.length - 1) setActive(ORDER[i + 1]); else nav.go('devicesetup');
+  };
   return (
     <Page screen="measuresetup" bar={{ kind: 'flow', left: 'Back', action: { kind: 'text', label: 'Skip', onPress: () => nav.go('devicesetup') } }} footer={<Btn label="Continue" onPress={next} />}>
       <Eyebrow>Your body</Eyebrow>
@@ -650,7 +685,7 @@ export function MeasuresetupV26() {
       <TileGrid style={{ marginTop: 10 }}>
         {ORDER.filter(m => m !== active).map(m => {
           const s = shown(m);
-          return <V26Tile key={m} label={NAMES[m]} scale={m === 's' ? 'optional' : undefined} value={s.fmt(s.value)} unit={s.unit} onPress={() => setActive(m)} style={{ minHeight: 0 }} />;
+          return <V26Tile key={m} label={NAMES[m]} scale={m === 's' ? 'optional' : undefined} value={given(m) ? s.fmt(s.value) : 'Add'} unit={given(m) ? s.unit : undefined} onPress={() => setActive(m)} style={{ minHeight: 0 }} />;
         })}
       </TileGrid>
     </Page>
@@ -701,7 +736,7 @@ export function SigninV26() {
     <Page screen="signin" bar={{ kind: 'sheet', title: 'Save your progress' }}>
       {step === 'code' ? <>
         <Statement s={`{Check your email.} We sent a six-digit code to ${email.trim()}.`} />
-        <Field label="Code" value={code} placeholder="123456" onChangeText={text => setCode(text.replace(/\D/g, '').slice(0, 6))} keyboardType="numeric" autoComplete="one-time-code" maxLength={6} style={{ marginTop: space.lg }} />
+        <Field label="Code" testID="signin-code" value={code} placeholder="123456" onChangeText={text => setCode(text.replace(/\D/g, '').slice(0, 6))} keyboardType="numeric" autoComplete="one-time-code" maxLength={6} style={{ marginTop: space.lg }} />
         <Btn label="Sign in" disabled={busy || code.length !== 6} onPress={() => { void checkCode(); }} style={{ marginTop: space.sm }} />
         {note}
         <View style={[styles.inline, { justifyContent: 'center', gap: space.lg, marginTop: space.sm }]}>
@@ -711,9 +746,9 @@ export function SigninV26() {
       </> : <>
         <Wordmark variant="callout" tone="ink2" style={{ marginBottom: space.xs }} />
         <Statement s="{Keep your plan safe.} Sign in so it survives a new phone." />
-        <Body s="Life never posts anything and never sells your data." style={{ marginTop: space.xs }} />
+        <Body s="Life backs up your plan, body numbers and meals, encrypted. Readings stay on this phone, and Life never sells your data." style={{ marginTop: space.xs }} />
         {step === 'email' ? <>
-          <Field label="Your email" value={email} placeholder="you@example.com" onChangeText={setEmail} keyboardType="email-address" autoComplete="email" style={{ marginTop: space.lg }} />
+          <Field label="Your email" testID="signin-email" value={email} placeholder="you@example.com" onChangeText={setEmail} keyboardType="email-address" autoComplete="email" style={{ marginTop: space.lg }} />
           <Btn label="Send me a code" disabled={busy || !emailOk} onPress={() => { void askCode(); }} style={{ marginTop: space.sm }} />
           {note}
           <QuietLink label="Back to other ways" onPress={() => go('ways')} style={{ marginTop: space.sm }} />

@@ -4,7 +4,7 @@
  * words and figures live in `state/settings.ts`; every switch saves to the same preferences and flags as before.
  */
 import React, { useEffect, useState, type ReactNode } from 'react';
-import { Alert, Appearance, Platform, Share, StyleSheet, View } from 'react-native';
+import { Alert, Appearance, AppState, Linking, Platform, Share, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams } from 'expo-router';
@@ -20,7 +20,11 @@ import { money } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { ai } from '@/services/ai';
 import { closeAccount, exportAccount, isSignedIn, type AccountDataProblem } from '@/services/account';
+import { sharesMoves, withMovesSharing } from '@/services/moves';
+import { privacyPolicy, terms, type LegalDoc } from '@/content/legal';
+import { CRASH_REPORTS_KEY, crashReportsAvailable } from '@/services/crashes';
 import { voice } from '@/services/voice';
+import { askNotifications, notificationPermission, notificationsSupported, type NotificationPermission } from '@/services/notifications';
 import { faces } from '@/state/people';
 import { workTitle } from '@/state/you';
 import { longDate, useHealthConsent } from '@/state/firstopen';
@@ -173,8 +177,22 @@ function QuietHoursRuler({ from, until }: { from: number; until: number }) {
 
 const FROM = [20, 21, 22, 23], UNTIL = [6, 7, 8, 9];
 
+/** The phone's own notification setting for Life, checked again when you come back from Settings. */
+function useNotificationPermission(): NotificationPermission {
+  const [state, setState] = useState<NotificationPermission>('unavailable');
+  useEffect(() => {
+    const check = () => { void notificationPermission().then(setState); };
+    check();
+    const sub = AppState.addEventListener('change', s => { if (s === 'active') check(); });
+    return () => sub.remove();
+  }, []);
+  return state;
+}
+
 export function NotifsV26() {
-  const { data, flag, choose } = useSeed(), L = useLoops();
+  const { data, flag, choose, pref } = useSeed(), L = useLoops();
+  const permission = useNotificationPermission();
+  const turnOn = async () => { pref('notifications', true); if (notificationsSupported) choose('notification-permission', await askNotifications() ? 'granted' : 'declined'); };
   const style = L.loops.checkIn, words = CHECK_IN_WORDS[style];
   const from = Number(data.choices['quiet-from'] ?? quietHours.from), until = Number(data.choices['quiet-until'] ?? quietHours.until);
   const isOn = (key: string, fallback: boolean) => data.flags[`notification-off-${key}`] === undefined ? fallback : !data.flags[`notification-off-${key}`];
@@ -184,6 +202,19 @@ export function NotifsV26() {
     <Page screen="notifs" bar={{ kind: 'push', title: 'Notifications' }}>
       <Eyebrow>{`${on} of ${kinds.length} kinds are on`}</Eyebrow>
       <Display s={style === 'off' ? 'Life {@bell won’t ask}, and {@moon nothing at night}.' : `Life checks in {@bell ${words.line}}, and {@moon nothing at night}.`} />
+      {!data.prefs.notifications ? (
+        <Card style={{ marginTop: space.lg }}>
+          <Text variant="title">Nudges are off</Text>
+          <Callout style={{ marginTop: space.xxs }}>Turn them on and Life sends one a day at most, never in quiet hours.</Callout>
+          <Btn label="Turn on nudges" sm fit onPress={() => { void turnOn(); }} style={{ marginTop: space.sm }} />
+        </Card>
+      ) : notificationsSupported && permission === 'denied' ? (
+        <Card style={{ marginTop: space.lg }}>
+          <Text variant="title">Your phone has notifications off for Life</Text>
+          <Callout style={{ marginTop: space.xxs }}>Turn them on in Settings and Life can nudge you. Nothing changes here until you do.</Callout>
+          <Btn label="Open Settings" sm fit ghost onPress={() => { void Linking.openSettings(); }} style={{ marginTop: space.sm }} />
+        </Card>
+      ) : null}
       <Card style={{ marginTop: space.lg }}>
         <Micro>HOW LIFE CHECKS IN</Micro>
         <SegmentedV26 style={{ marginTop: space.xs }} options={CHECK_IN_STYLES.map(v => ({ value: v, label: CHECK_IN_WORDS[v].label }))} value={style} onChange={v => L.setCheckIn(v)} />
@@ -394,7 +425,7 @@ export function ServicesV26() {
 /* ───────────────────────── Your data ───────────────────────── */
 
 export function PrivacyV26() {
-  const nav = useNavigation(), { data } = useSeed(), exportData = useExport(), health = useHealthConsent();
+  const nav = useNavigation(), { data, update, choose } = useSeed(), exportData = useExport(), health = useHealthConsent();
   // The recorded health-data yes (Phase 20's consent step). Withdrawing happens on that same screen.
   const healthLine = health.consent ? `You said yes on ${longDate(health.consent.at)}`
     : health.withdrawnAt ? 'You took your yes back · off' : health.declined ? 'Off · you said not now' : 'Not asked yet';
@@ -419,6 +450,9 @@ export function PrivacyV26() {
         <Row icon="pulse" title="Health data" sub={healthLine} onPress={() => nav.go('healthconsent', { next: 'settings' })} />
         <Row icon="shield" title="Backed up" sub="Encrypted, in the UK and EU" />
         <Row icon="people" title="Who helps run Life" sub="Hosting, AI, email · 4 companies" onPress={() => nav.go('legal')} />
+        {/* Off until the person says yes (services/moves.ts). Off again forgets every count. */}
+        <SwitchRow icon="chart" title="Share how much gets done" sub="One number a week, never who it’s from" value={sharesMoves(data.choices)} onChange={v => update(d => withMovesSharing(d, v))} />
+        {crashReportsAvailable() || SHOW_SAMPLES ? <SwitchRow icon="info" title="Send crash reports" sub="What broke and where, never who or what you wrote" value={data.choices[CRASH_REPORTS_KEY] !== 'off'} onChange={v => choose(CRASH_REPORTS_KEY, v ? 'on' : 'off')} /> : null}
       </RowsCard>
       <Row icon="trash" title="Delete my account" sub="30 days to change your mind" onPress={() => nav.go('deleteacct')} style={{ marginTop: space.xl }} />
     </Page>
@@ -632,8 +666,28 @@ function EmailCard({ sent }: { sent: boolean }) {
 
 /* ───────────────────────── About life ───────────────────────── */
 
+/** One legal document, block by block (`content/legal.ts`, generated from docs/launch). Tables read as one line per row. */
+function LegalText({ doc }: { doc: LegalDoc }) {
+  const plain = (s: string) => s.replace(/[{}]/g, '');
+  return (
+    <View style={{ marginTop: space.md }}>
+      <Text variant="title" accessibilityRole="header">{doc.title}</Text>
+      {doc.blocks.map((b, i) => {
+        if (b.kind === 'heading') return <SectionHead key={i} title={plain(b.text)} />;
+        if (b.kind === 'subheading') return <Text key={i} variant="headline" accessibilityRole="header" style={{ marginTop: space.md }}>{plain(b.text)}</Text>;
+        if (b.kind === 'text') return <Body key={i} s={b.text} style={{ marginTop: space.xs }} />;
+        if (b.kind === 'list') return <View key={i} style={{ marginTop: space.xs, gap: space.xxs }}>{b.items.map((item, j) => <Body key={j} s={`•  ${item}`} />)}</View>;
+        return <View key={i} style={{ marginTop: space.xs, gap: space.xs }}>{b.rows.map((row, j) => <Body key={j} s={`{${plain(row[0])}}  ${row.slice(1).filter(Boolean).join(' · ')}`} />)}</View>;
+      })}
+    </View>
+  );
+}
+
 export function LegalV26() {
-  const t = useTokens(), nav = useNavigation(), { data, flag } = useSeed();
+  const t = useTokens(), nav = useNavigation();
+  // Which text is open under the rows. One at a time, so the page stays readable.
+  const [open, setOpen] = useState<'terms' | 'privacy' | 'notices' | null>(null);
+  const toggle = (k: 'terms' | 'privacy' | 'notices') => setOpen(o => (o === k ? null : k));
   return (
     <Page screen="legal" bar={{ kind: 'push', title: 'About' }}>
       <View style={{ alignItems: 'center', paddingTop: space.md }}>
@@ -644,12 +698,13 @@ export function LegalV26() {
       <Display center s="{@heart Wellness}, not medical. {@cash Guidance}, not advice." style={{ marginTop: space.xl }} />
       <Body align="center" s="Life helps you notice and decide. It doesn’t diagnose, and it isn’t a financial adviser." style={{ marginTop: space.sm }} />
       <RowsCard style={{ marginTop: space.xl }}>
-        <Row icon="doc" title="Terms" onPress={() => flag('legal-terms')} style={{ minHeight: 56 }} />
-        <Row icon="shield" title="Privacy policy" onPress={() => nav.go('privacy')} style={{ minHeight: 56 }} />
-        <Row icon="layers" title="Open-source notices" sub={`${openSource.count} libraries · ${openSource.licences}`} onPress={() => flag('legal-notices')} />
+        <Row icon="doc" title="Terms" onPress={() => toggle('terms')} style={{ minHeight: 56 }} />
+        <Row icon="shield" title="Privacy policy" onPress={() => toggle('privacy')} style={{ minHeight: 56 }} />
+        <Row icon="layers" title="Open-source notices" sub={`${openSource.count} libraries · ${openSource.licences}`} onPress={() => toggle('notices')} />
       </RowsCard>
-      {data.flags['legal-terms'] ? <Body s="Life is a wellness and life-admin app, not a medical service or a regulated financial adviser. {Full terms are published before launch.}" style={{ marginTop: space.md }} /> : null}
-      {data.flags['legal-notices'] ? <Body s="Expo, React, React Native, Reanimated, Gesture Handler and SVG: MIT. Atria and Cal-AI: MIT. Fenny teaching references: the owner’s code, reused with permission. {Every notice is kept in THIRD_PARTY_NOTICES.md.}" style={{ marginTop: space.md }} /> : null}
+      {open === 'terms' ? <LegalText doc={terms} /> : null}
+      {open === 'privacy' ? <><LegalText doc={privacyPolicy} /><QuietLink label="See and manage your data" onPress={() => nav.go('privacy')} style={{ marginTop: space.md }} /></> : null}
+      {open === 'notices' ? <Body s="Expo, React, React Native, Reanimated, Gesture Handler and SVG: MIT. Atria and Cal-AI: MIT. Fenny teaching references: the owner’s code, reused with permission. Food facts © Open Food Facts contributors, under the Open Database Licence. {Every notice is kept in THIRD_PARTY_NOTICES.md.}" style={{ marginTop: space.md }} /> : null}
     </Page>
   );
 }

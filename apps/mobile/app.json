@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "life",
+    "name": "Life",
     "slug": "life",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -18,18 +18,19 @@
       "bundleIdentifier": "app.life.os",
       "supportsTablet": false,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "life uses the microphone only when you choose to talk.",
-        "NSSpeechRecognitionUsageDescription": "life turns your words into text on this phone, with your permission.",
+        "NSMicrophoneUsageDescription": "Life uses the microphone only when you choose to talk.",
+        "NSSpeechRecognitionUsageDescription": "Life turns your words into text on this phone, with your permission.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "app.life.os",
+      "allowBackup": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#F6F5F1"
       },
-      "predictiveBackGestureEnabled": false,
+      "predictiveBackGestureEnabled": true,
       "permissions": [
         "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
         "android.permission.health.READ_HEART_RATE",
@@ -40,6 +41,9 @@
         "android.permission.health.READ_SKIN_TEMPERATURE",
         "android.permission.health.READ_SLEEP",
         "android.permission.health.READ_STEPS"
+      ],
+      "blockedPermissions": [
+        "android.permission.WRITE_CALENDAR"
       ]
     },
     "plugins": [
@@ -65,9 +69,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "life uses only the photos you choose to attach.",
-          "cameraPermission": "life uses the camera when you choose to scan a letter or take a photo.",
-          "microphonePermission": "life uses the microphone only when you choose to talk."
+          "photosPermission": "Life uses only the photos you choose to attach.",
+          "cameraPermission": "Life uses the camera when you choose to photograph a meal or a label, scan a barcode or scan a letter.",
+          "microphonePermission": "Life uses the microphone only when you choose to talk."
         }
       ],
       [
@@ -80,12 +84,21 @@
       [
         "@kingstinct/react-native-healthkit",
         {
-          "NSHealthShareUsageDescription": "life reads only the sleep, heart and activity you switch on, to show your readiness and plan your day. It stays on your phone.",
+          "NSHealthShareUsageDescription": "Life reads only the sleep, heart and activity you switch on, to show your readiness and plan your day. It stays on your phone.",
           "NSHealthUpdateUsageDescription": false,
           "background": false
         }
       ],
       "react-native-health-connect",
+      "expo-notifications",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Life reads only when you’re busy, to fit nudges around your day. It never reads what your events are and never changes your calendar.",
+          "remindersPermission": false
+        }
+      ],
+      "expo-background-task",
       [
         "./plugins/withAndroidMinSdk",
         26

@@ -107,7 +107,8 @@ export const experiment = SHOW_SAMPLES ? {
   ],
   says: '5 more days and Life will tell you if it’s a real effect for you or just noise.',
 } : null;
-export const nextExperiments = ['Morning daylight', 'Bedtime 22:45', 'No screens in bed'];
+// 22:45 is the sample life's own bedtime; a real account is offered a fixed bedtime of its choosing.
+export const nextExperiments = ['Morning daylight', SHOW_SAMPLES ? 'Bedtime 22:45' : 'A fixed bedtime', 'No screens in bed'];
 
 /* ── What life remembers ── */
 

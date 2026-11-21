@@ -11,7 +11,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   DashPager, DotGrid, DotStrip, LifeOrb, LifeSays, PhotoFill, StatusPill, Text, TileGrid, V26Tile, cardShadow, feedback, motion, photo, photoScrims,
-  photos, radius, space, useCalmMotion, useTokens, type DotCell,
+  photos, radius, space, useCalmMotion, useTokens, type DotCell, durations
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
@@ -123,13 +123,14 @@ export function LevelupV26() {
   const first = levelupFirst[reached];
   const pages = [
     { chip: `Level ${reached} unlocked`, title: first.title, line: first.line, photo: 'sky' as const, focal: { x: 0.35, y: 0, zoom: 3.1 }, to: 'plan' as const },
-    ...levelupMore.map(m => ({ ...m, line: m.line.replace('DEPOSIT', String(pct)) })),
+    // The deposit is the sample life's; a real account's Aim has no measure yet, so its page says so plainly.
+    ...levelupMore.map(m => ({ ...m, line: SHOW_SAMPLES ? m.line.replace('DEPOSIT', String(pct)) : m.to === 'aim' ? 'Every level is a step toward {your Aim}.' : m.line })),
   ];
   const p = pages[page], last = page === pages.length - 1;
   const scale = useSharedValue(calm ? 1 : 0.92), fade = useSharedValue(0);
   useEffect(() => {
     if (page === 0) feedback.cleared();
-    fade.value = 0; fade.value = withTiming(1, { duration: calm ? 200 : 320 });
+    fade.value = 0; fade.value = withTiming(1, { duration: calm ? durations.quick : durations.item });
     scale.value = calm ? 1 : 0.92; if (!calm) scale.value = withSpring(1, motion.smooth);
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
   const orb = useAnimatedStyle(() => ({ opacity: fade.value, transform: [{ scale: scale.value }] }));

@@ -104,7 +104,8 @@ export const seedDocuments = [
   { id: 'licence', name: 'Driving licence photo', expires: '2031', actFrom: '2030', reference: 'Saved from your document', summary: 'Expires 2031', status: 'Sorted' },
   { id: 'tv', name: 'TV Licence', expires: 'October 2027', actFrom: 'September 2027', reference: 'Saved from your document', summary: 'Paid to Oct 2027', status: 'Sorted' },
 ];
-export type MealItem = { name: string; grams: number; kcal: number; protein: number; carbs: number; fat: number; fibre: number; confidence: number };
+/** One part of a meal. `needsFigures` marks a part a photo named but gave no figures for (Phase 27). */
+export type MealItem = { name: string; grams: number; kcal: number; protein: number; carbs: number; fat: number; fibre: number; confidence: number; needsFigures?: true };
 export const seedMeal: MealItem[] = [
   { name: 'Salmon', grams: 120, kcal: 247, protein: 26, carbs: 0, fat: 15, fibre: 0, confidence: .9 },
   { name: 'Rice', grams: 150, kcal: 195, protein: 4, carbs: 43, fat: 0, fibre: 1, confidence: .8 },

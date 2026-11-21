@@ -36,6 +36,20 @@
       "when": 1795206155849,
       "tag": "0004_ai_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795218202463,
+      "tag": "0005_weekly_moves",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795229143074,
+      "tag": "0006_sign_in_limits",
+      "breakpoints": true
     }
   ]
 }

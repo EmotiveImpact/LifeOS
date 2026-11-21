@@ -6,7 +6,7 @@ import { feedback } from '../feedback';
 import { Press } from '../Press';
 import { Callout, Text } from '../Text';
 import { useCalmMotion, useTokens } from '../theme';
-import { areaColors, radius, springs, type Area } from '../tokens';
+import { areaColors, durations, radius, springs, type Area } from '../tokens';
 import { DottedOrb } from './Chrome';
 import { TwoTone, type TwoToneSegment } from './Story';
 import { LifeOrb } from './Orb';
@@ -164,7 +164,7 @@ export function LifeReply({ segments, card, chips, onChip, thinking, look }: { s
         <Callout tone="ink2">{thinking ? 'Life is thinking…' : 'Life'}</Callout>
       </View>
       {segments && !thinking ? <TwoTone segments={segments} size="headline" /> : null}
-      {card && !thinking ? <Animated.View entering={FadeIn}>{card}</Animated.View> : null}
+      {card && !thinking ? <Animated.View entering={FadeIn.duration(durations.quick)}>{card}</Animated.View> : null}
       {chips && chips.length && !thinking ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           {chips.slice(0, 4).map((c) => (

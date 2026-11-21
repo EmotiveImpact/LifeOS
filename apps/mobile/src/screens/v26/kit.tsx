@@ -13,13 +13,14 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Appear, Button, Card, Footer, Icon, LifeOrb, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
-  cardShadow, componentSize, motion, photo, photoScrims, radius, space, useCalmMotion, useTokens,
-  type Focal, type GlyphName, type SpineItem, type StatusKind, type Tone, type TopBarAction, type TwoToneSegment, type TypeStyle, type V26RowProps,
+  Appear, Button, Card, Footer, Icon, LifeOrb, PhotoCard, PhotoFill, Press, RichText, SpineTimeline, StatusPill, Text, Thumb, TopBar, TwoTone, V26Row,
+  cardShadow, componentSize, motion, photo, photos, photoScrims, radius, space, useCalmMotion, useTokens,
+  type Focal, type GlyphName, type OrbArea, type SpineItem, type StatusKind, type Tone, type TopBarAction, type TwoToneSegment, type TypeStyle, type V26RowProps,
 } from '@/design';
 import { screens, type ScreenKey } from '@/navigation/screens';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
+import { SHOW_SAMPLES } from '@/state/sample';
 import { setWebExit, takeReturn } from '@/navigation/webExit';
 
 /* ───────────────────────── Copy ───────────────────────── */
@@ -51,12 +52,12 @@ const Depth = createContext<'root' | 'detail' | 'moment'>('root');
  */
 export function Display({ s, onPhoto, flush, center, style }: { s: string; onPhoto?: boolean; flush?: boolean; center?: boolean; style?: StyleProp<ViewStyle> }) {
   const depth = useContext(Depth);
-  return <TwoTone size={depth === 'detail' && !onPhoto ? 'statement' : 'display'} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={[flush ? null : { marginTop: space.tile }, style]} />;
+  return <TwoTone header size={depth === 'detail' && !onPhoto ? 'statement' : 'display'} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={[flush ? null : { marginTop: space.tile }, style]} />;
 }
 
 /** The 24pt two-tone sentence (board `.statement`). */
-export function Statement({ s, onPhoto, size = 'statement', center, style }: { s: string; onPhoto?: boolean; size?: 'statement' | 'lead' | 'headline'; center?: boolean; style?: StyleProp<ViewStyle> }) {
-  return <TwoTone size={size} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={style} />;
+export function Statement({ s, onPhoto, size = 'statement', center, header, style }: { s: string; onPhoto?: boolean; size?: 'statement' | 'lead' | 'headline'; center?: boolean; /** When the sentence is the screen's title, so screen readers can jump to it. */ header?: boolean; style?: StyleProp<ViewStyle> }) {
+  return <TwoTone header={header} size={size} segments={two(s)} onAtmosphere={onPhoto} align={center ? 'center' : undefined} style={style} />;
 }
 
 /** Quiet copy with the braced words in ink (board `.body`, `.callout`). */
@@ -78,7 +79,8 @@ export function Eyebrow({ children, orb, star, icon, right, onPhoto, style }: { 
       {orb ? <LifeOrb size={18} color={onPhoto ? photo.onPhoto : t.ink} /> : null}
       {star ? <View style={[styles.dot, { backgroundColor: t.ember }]} /> : null}
       {icon ? <Icon name={icon} size={componentSize.iconXs - 2} color={color} /> : null}
-      <Text variant="callout" style={{ color, flexShrink: 1 }}>{children}</Text>
+      {/* The label above a screen's opening sentence: read as a heading, so it can be jumped to. */}
+      <Text variant="callout" accessibilityRole="header" style={{ color, flexShrink: 1 }}>{children}</Text>
     </View>
   );
   if (!right) return <View style={style}>{label}</View>;
@@ -239,7 +241,10 @@ export function PhotoRound({ icon, label, onPress }: { icon: GlyphName; label: s
 /** Today, Plan and You: the page name on the left, its buttons and then the orb on the right. */
 function RootBar({ bar, onImage }: { bar: Extract<Bar, { kind: 'root' }>; onImage: boolean }) {
   const nav = useNavigation(), { data } = useSeed();
-  const orb = bar.orb === false ? undefined : { onPress: () => nav.go('inbox'), unread: !data.flags['inbox-read'] };
+  // From Life's two new notes in the sample: the tax rebate (Money) and the nudge to finish the P87 (Admin). The day
+  // engine hands over real notes with their areas later. Only the sample life has notes waiting; a real account's orb
+  // rests until something real arrives.
+  const orb = bar.orb === false ? undefined : { onPress: () => nav.go('inbox'), unread: SHOW_SAMPLES && !data.flags['inbox-read'], areas: ['money', 'admin'] as OrbArea[] };
   return <TopBar look="v26" kind="root" title={bar.title} sub={bar.sub} actions={bar.actions} orb={orb} onImage={onImage} />;
 }
 
@@ -275,13 +280,15 @@ export type PageProps = {
   onPull?: () => void;
   /** Dark status bar text over a light photograph (board `status('lt-ink')`). */
   statusInk?: boolean;
+  /** Called as you scroll near the bottom, so a long list (`useLongList`) can draw its next page. */
+  onEnd?: () => void;
 };
 
 /**
  * One V26 screen: the bar fixed outside the scroll, content with the board's 4/20/28 padding and no automatic gaps
  * (each block sets its own space above, as the board does), then the foot.
  */
-export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, onPull, statusInk }: PageProps) {
+export function Page({ screen, bar, children, footer, bottom, scroll = true, backdrop, onClose, center, contentStyle, onPull, statusInk, onEnd }: PageProps) {
   const t = useTokens(), nav = useNavigation(), insets = useSafeAreaInsets(), calm = useCalmMotion();
   const meta = screens[screen];
   const web = Platform.OS === 'web';
@@ -333,7 +340,11 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
   const content = <Depth.Provider value={meta.kind === 'Tab' ? 'root' : meta.kind === 'Push' || sheet ? 'detail' : 'moment'}>{children}</Depth.Provider>;
   const body = scroll
     ? <ScrollView style={fits && fit.web ? { flexGrow: 0, flexShrink: 1, minHeight: 0 } : { flex: 1, minHeight: 0 }} contentInsetAdjustmentBehavior="never" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
-        onScroll={onPull ? e => { if (e.nativeEvent.contentOffset.y < -60) onPull(); } : undefined} scrollEventThrottle={16}
+        onScroll={onPull || onEnd ? e => {
+          const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+          if (onPull && contentOffset.y < -60) onPull();
+          if (onEnd && contentOffset.y + layoutMeasurement.height > contentSize.height - END_REACH) onEnd();
+        } : undefined} scrollEventThrottle={16}
         onContentSizeChange={fits ? (_w, h) => fit.part('body', h) : undefined}
         contentContainerStyle={[pad, center ? { flexGrow: 1, justifyContent: 'center' } : null, contentStyle]}>{content}</ScrollView>
     : <View style={[{ flex: 1, minHeight: 0 }, pad, center ? { justifyContent: 'center' } : null, contentStyle]}>{content}</View>;
@@ -381,6 +392,31 @@ export function Page({ screen, bar, children, footer, bottom, scroll = true, bac
       <Appear from={meta.kind === 'Push' ? 'right' : 'below'} rise={meta.kind === 'Push' ? 36 : 40} style={{ flex: 1, minHeight: 0 }}>{page}</Appear>
     </Animated.View>
   );
+}
+
+/** How close to the bottom (pt) a long list starts drawing its next page: about a screen and a half ahead. */
+const END_REACH = 1200;
+/** Rows a long list draws at a time. */
+export const LONG_LIST_PAGE = 40;
+
+/**
+ * A long list (what Life remembers, what it knows, your people, a conversation) draws a page of rows at a time and
+ * the next as you scroll near the end (`Page`'s `onEnd`), so a year of records never builds hundreds of rows at
+ * once. `from: 'end'` keeps the newest rows, for a conversation. The rows stay inside their card, as on the board.
+ */
+export function useLongList<T>(items: T[], { page = LONG_LIST_PAGE, from = 'start' }: { page?: number; from?: 'start' | 'end' } = {}) {
+  const [shown, setShown] = useState(page);
+  const visible = items.length <= shown ? items : from === 'end' ? items.slice(items.length - shown) : items.slice(0, shown);
+  const more = items.length - visible.length;
+  const showMore = useCallback(() => setShown(n => (n < items.length ? n + page : n)), [items.length, page]);
+  return { visible, more, showMore };
+}
+
+/** The way to the rest of a long list for anyone not scrolling: VoiceOver, TalkBack, a keyboard. */
+export function MoreRows({ more, onPress, earlier, style }: { more: number; onPress: () => void; earlier?: boolean; style?: StyleProp<ViewStyle> }) {
+  if (more <= 0) return null;
+  const n = Math.min(more, LONG_LIST_PAGE);
+  return <QuietLink label={earlier ? `Show ${n} earlier` : `Show ${n} more`} onPress={onPress} style={[{ marginTop: space.sm }, style]} />;
 }
 
 /** How a page leaves in the web preview: short, moving at once and easing to a stop, so the page underneath shows
@@ -557,3 +593,32 @@ const styles = StyleSheet.create({
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   ptile: { borderRadius: radius.tile, overflow: 'hidden', justifyContent: 'flex-end' },
 });
+
+/* ───────────────────────── Not yet: a part of life Life hasn't heard about ───────────────────────── */
+
+/**
+ * A real account (no sample life) on a screen whose figures would otherwise be the sample life's, until Life has heard
+ * about that part of life: Plan's day-one shape (board `emptyplan`) with one way in, never a stranger's figures and
+ * never a zero dressed up as a reading. `children` holds anything that is already true (a preview row, a calculator).
+ */
+export function NotYetV26({ screen, title, eyebrow, line, source, focal, ask, examples, children }: {
+  screen: ScreenKey; title?: string; eyebrow: string; line: string; source: keyof typeof photos; focal?: { x?: number; y?: number };
+  /** The photograph's title: what to tell Life. */
+  ask: string;
+  /** Its line: a few examples. */
+  examples: string;
+  children?: ReactNode;
+}) {
+  const nav = useNavigation();
+  return (
+    <Page screen={screen} bar={{ kind: 'push', title }}>
+      <Eyebrow star>{eyebrow}</Eyebrow>
+      <Display s={`{Nothing here yet.} ${line}`} />
+      <PhotoCard source={photos[source]} focal={focal} height={250} chips={['Your first move · about a minute']} title={ask} sub={examples} style={{ marginTop: space.lg }}>
+        <Btn label="Talk to Life" icon="mic" onPhoto onPress={() => nav.go('talk')} style={{ marginTop: space.md }} />
+      </PhotoCard>
+      {children}
+      <Callout center style={{ marginTop: space.md }}>Nothing is saved until you say so.</Callout>
+    </Page>
+  );
+}

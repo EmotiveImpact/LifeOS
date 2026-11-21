@@ -1,0 +1,8 @@
+# Today may open with "Set today’s pace". The flows leave it for later.
+appId: app.life.os
+---
+- runFlow:
+    when:
+      visible: "Set today’s pace"
+    commands:
+      - tapOn: "Not now"

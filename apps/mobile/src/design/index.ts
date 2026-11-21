@@ -43,3 +43,4 @@ export * from './components/V26Tiles';
 export * from './components/V26Controls';
 export * from './components/V26Deck';
 export * from './components/V26Feel';
+export * from './a11y';

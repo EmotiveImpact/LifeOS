@@ -12,7 +12,7 @@ import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import {
   AccordionGroup, BecomingScale, CheckRows, CompactStepper, DotGrid, DotStrip, FEEL_MOODS, FilterChips, Field, Icon, InitialsAvatar, LifeSays, PhotoCard,
   PhotoFill, Press, Ruler, SectionHead, SegmentedV26, Text, TileGrid, TintCard, V26Tile, areaColors, cardShadow, componentSize, feedback, fonts, motion,
-  photo, photoScrims, photos, radius, space, useAreaTint, useCalmMotion, useTokens, type DotCell, type FeelMoodId,
+  photo, photoScrims, photos, radius, space, useAreaTint, useCalmMotion, useTokens, type DotCell, type FeelMoodId, durations
 } from '@/design';
 import type { Area } from '@/design/tokens';
 import { useNavigation } from '@/navigation/useNavigation';
@@ -24,7 +24,7 @@ import {
   becoming, bornOn, childrenLine, details, ordinalDay, workWords, experiment, factPhoto, gateTo, gateWords, householdLine, knowsArea, knowsFilters, levelPlan, memoryFilters, memoryPhoto,
   moodGrid, moodPatterns, moodSummary, nextExperiments, season, shared, streak, usedToday, workTitle, youAreas, youRows, type KnowsFilter,
 } from '@/state/you';
-import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, QuietLink, Row, RowsCard, Shelf, Statement } from './kit';
+import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, QuietLink, Row, RowsCard, Shelf, Statement, MoreRows, useLongList } from './kit';
 import { useWidth } from './bodykit';
 import { SoftChip } from './fuel';
 
@@ -67,7 +67,7 @@ function Person({ size, enter, quiet }: { size: number; enter: boolean; quiet?: 
   const x = useSharedValue(enter && !calm ? 12 : 0), s = useSharedValue(enter && !calm ? 0.92 : 1), o = useSharedValue(enter ? 0 : 1);
   useEffect(() => {
     if (!enter) return;
-    o.value = withTiming(1, { duration: calm ? 200 : 260 });
+    o.value = withTiming(1, { duration: calm ? durations.quick : durations.item });
     if (!calm) { x.value = withSpring(0, motion.smooth); s.value = withSpring(1, motion.smooth); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const anim = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateX: x.value }, { scale: s.value }] }));
@@ -149,7 +149,7 @@ export function HouseholdV26() {
   const [count, setCount] = useState(Math.max(1, Math.min(16, data.profile.householdSize || 1)));
   return (
     <Page screen="household" footer={<Btn label="Save household" onPress={() => { set({ profile: { ...data.profile, householdSize: count } }); feedback.file(); nav.close(); }} />}>
-      <Statement s="How many people live {in your home}, counting you?" />
+      <Statement header s="How many people live {in your home}, counting you?" />
       <View style={{ marginTop: space.lg }}><Crowd count={count} size={46} /></View>
       <View style={{ marginTop: space.xs }}><CompactStepper value={count} onChange={setCount} min={1} max={16} unit={count === 1 ? 'person' : 'people'} label="People in your home, counting you" /></View>
       <LifeSays style={{ marginTop: space.lg }}><Body s={householdLine(count)} tone="ink" /></LifeSays>
@@ -226,9 +226,10 @@ export function KnowsV26() {
   const [filter, setFilter] = useState<KnowsFilter>('All');
   const area = knowsArea(filter);
   const facts = data.records.filter(r => r.status !== 'proposed' && (!area || r.area === area));
+  const long = useLongList(facts);
   const exportData = async () => { try { await Share.share({ title: 'Your life data', message: JSON.stringify(await exportEverything(), null, 2) }); } catch { Alert.alert('Couldn’t export your data', 'Your data has not changed. Please try again.'); } };
   return (
-    <Page screen="knows" bar={{ kind: 'push', title: 'What Life knows', action: { kind: 'icon', icon: 'info', label: 'How Life uses this', onPress: () => nav.go('privacy') } }}
+    <Page screen="knows" onEnd={long.showMore} bar={{ kind: 'push', title: 'What Life knows', action: { kind: 'icon', icon: 'info', label: 'How Life uses this', onPress: () => nav.go('privacy') } }}
       footer={<><Btn label="Export everything" icon="arrowUp" onPress={exportData} /><QuietLink label="Delete everything" onPress={() => nav.go('deleteacct')} /></>}>
       <Display s={`{${n(data.knowledge.recordCount)} things}, all from you or sources you connected.`} flush style={{ marginTop: space.xxs }} />
       <Box style={{ marginTop: space.xl }}>
@@ -243,12 +244,13 @@ export function KnowsV26() {
       </Box>
       <FilterChips options={knowsFilters.map(v => ({ value: v, label: v }))} value={filter} onChange={setFilter} style={{ marginTop: space.lg }} />
       <RowsCard style={{ marginTop: space.sm }}>
-        {facts.length ? facts.map(r => {
+        {facts.length ? long.visible.map(r => {
           const removed = r.status === 'removed';
           return <Row key={r.id} thumb={photos[factPhoto(r)]} title={r.label} sub={removed ? 'Removed · Life won’t use this' : r.source.excerpt ?? `From your ${r.source.type}`}
             right={<Chip label={removed ? 'Undo' : 'Remove'} tone="q" onPress={() => { set({ records: data.records.map(v => v.id === r.id ? { ...v, status: removed ? 'confirmed' : 'removed' } : v) }); feedback.select(); }} />} />;
         }) : <Text variant="body" tone="ink2" style={{ paddingVertical: space.md }}>{filter === 'All' ? 'Nothing filed yet. Tell Life something in Talk and it lands here.' : `Nothing filed under ${filter} yet.`}</Text>}
       </RowsCard>
+      <MoreRows more={long.more} onPress={long.showMore} />
       <Callout style={{ marginTop: space.md }}>Delete everything removes your data from this phone and Life’s servers. It can’t be undone.</Callout>
     </Page>
   );
@@ -283,12 +285,12 @@ function LevelPath({ current }: { current: number }) {
 }
 
 export function LevelsV26() {
-  const t = useTokens(), nav = useNavigation(), { engine } = useSeed();
+  const t = useTokens(), nav = useNavigation(), { data, engine } = useSeed();
   const lv = engine.level, cur = Math.max(1, Math.min(4, lv.currentLevel)), left = lv.toAdvance.filter(g => !g.done).length;
   const here = levelPlan[cur - 1];
   return (
     <Page screen="levels" bar={{ kind: 'push', title: 'Your levels' }}>
-      <PhotoCard source={photos.keyshome} focal={{ x: 0.55, y: 0.62 }} height={170} chips={[season.label]} lead="Climbing toward" title={season.toward} style={{ marginTop: space.xxs }} onPress={() => nav.go('aim')} />
+      <PhotoCard source={photos.keyshome} focal={{ x: 0.55, y: 0.62 }} height={170} chips={[season.label]} lead="Climbing toward" title={SHOW_SAMPLES ? season.toward : data.aim?.what ? data.aim.what.charAt(0).toUpperCase() + data.aim.what.slice(1) : 'Your Chief Aim'} style={{ marginTop: space.xxs }} onPress={() => nav.go('aim')} />
       <Box style={{ marginTop: space.sm }}>
         <Between><Text variant="title">Four levels this season</Text>{cur < 4 ? <Callout>{left ? `${left} ${left === 1 ? 'move' : 'moves'} to Level ${cur + 1}` : `Ready for Level ${cur + 1}`}</Callout> : null}</Between>
         <LevelPath current={cur} />
@@ -397,10 +399,11 @@ export function MemoryV26() {
   useEffect(() => { update(purgeForgotten); return () => update(purgeForgotten); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const kept = data.memories.filter(m => !data.flags[`forgot-${m.id}`] && liveMemory(m));
   const list = data.memories.filter(m => (filter === 'All' || m.category === filter) && (!search || `${m.text} ${m.source}`.toLowerCase().includes(search.toLowerCase())));
+  const long = useLongList(list);
   const save = () => { if (editing) update(c => ({ ...c, memories: editMemory(c.memories, editing.id, editing.text) })); setEditing(null); feedback.select(); };
   const total = kept.length + usedToday.length;
   return (
-    <Page screen="memory" bar={{ kind: 'push', action: { kind: 'icon', icon: search === null ? 'search' : 'close', label: search === null ? 'Search memories' : 'Close search', onPress: () => setSearch(s => (s === null ? '' : null)) } }}>
+    <Page screen="memory" onEnd={long.showMore} bar={{ kind: 'push', action: { kind: 'icon', icon: search === null ? 'search' : 'close', label: search === null ? 'Search memories' : 'Close search', onPress: () => setSearch(s => (s === null ? '' : null)) } }}>
       {search !== null ? (
         <View style={[styles.search, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
           <Icon name="search" size={18} color={t.ink2} />
@@ -417,7 +420,7 @@ export function MemoryV26() {
       <SegmentedV26 options={memoryFilters.map(v => ({ value: v, label: v }))} value={filter} onChange={setFilter} style={{ marginTop: space.lg }} />
       <Between style={{ marginTop: space.lg }}><Micro>OTHER MEMORIES</Micro><Callout>Tap to correct · swipe to forget</Callout></Between>
       <View style={{ gap: space.xs, marginTop: space.xs }}>
-        {list.length ? list.map((m, i) => editing?.id === m.id ? (
+        {list.length ? long.visible.map((m, i) => editing?.id === m.id ? (
           <View key={m.id} style={[styles.editMemory, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
             <TextInput maxFontSizeMultiplier={1.3} autoFocus multiline value={editing.text} onChangeText={text => setEditing({ id: m.id, text })} maxLength={300}
               accessibilityLabel="Correct this memory" selectionColor={t.ember} style={[styles.editInput, { color: t.ink }]} />
@@ -430,6 +433,7 @@ export function MemoryV26() {
           <SwipeMemory key={m.id} id={m.id} title={m.text} sub={m.validTo ? `No longer true · ${m.source}` : m.source} source={photos[memoryPhoto(m.id, m.category)]} peek={hint && i === 0} forgotten={!!data.flags[`forgot-${m.id}`]} onForget={() => flag(`forgot-${m.id}`)} onEdit={() => setEditing({ id: m.id, text: m.text })} />
         )) : <Text variant="body" tone="ink2">{search ? 'Nothing matches that.' : 'Nothing remembered here yet.'}</Text>}
       </View>
+      <MoreRows more={long.more} onPress={long.showMore} />
       <Callout style={{ marginTop: space.md }}>Life never remembers health details or money in ways you can’t see here.</Callout>
       {SHOW_SAMPLES ? null : <QuietLink label="What Life knows" ink center={false} onPress={() => nav.go('knows')} style={{ marginTop: space.sm }} />}
     </Page>
@@ -518,10 +522,10 @@ export function ProfileV26() {
   const living = others === 0 ? '{on your own}' : `with {${others} ${others === 1 ? 'other' : 'others'}}`;
   const sentence = SHOW_SAMPLES
     ? `You’re {${p.age}}, a {@briefcase ${details.work.toLowerCase()}} in {@home ${details.area}}, living ${living} and paid on the {@calendar ${details.payDay}}.`
-    : `You’re {${p.age}}, living in {@home ${p.city}}, ${living.replace('{on your own}', '{on your own}')}.`;
+    : `You’re {${p.age}}, ${p.city ? `living in {@home ${p.city}}, ` : 'living '}${living}.`;
   const save = () => { if (editing) set({ profile: { ...p, name: name.trim() || p.name, city: city.trim() || p.city } }); flag('profile-edit'); feedback.select(); };
   const rows: { photo: keyof typeof photos; title: string; sub: string; to?: Parameters<typeof nav.go>[0] }[] = [
-    { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: 'yourbirthday' },
+    { photo: 'birthday', title: `Birthday · ${born ?? 'Not set'}`, sub: 'Age rules, and your birthday recap', to: born ? 'yourbirthday' : undefined },
     { photo: 'terrace', title: `Lives in · ${SHOW_SAMPLES ? `${details.area}, ` : ''}${p.city}`, sub: 'Council tax, schemes' },
     { photo: 'work', title: `Work · ${work}`, sub: 'Tax and structure', to: 'income' },
     { photo: 'home', title: `Lives with · ${others === 0 ? 'Just me' : `${others} ${others === 1 ? 'other' : 'others'}`}`, sub: 'Discounts, benefits', to: 'household' },

@@ -9,6 +9,9 @@ import type { Fetch, ModelReply, Usage } from './types';
  */
 export const systemPrompt = (): string => SYSTEM_POLICY;
 export const userPrompt = (request: Request): string => JSON.stringify(modelPayload(request));
+/** The photo a job reads (a meal or a label), sent to the model as an image beside the words, never inside them. */
+export const photosOf = (request: Request): { mime: string; data: string }[] =>
+  request.attachments.filter(a => typeof a.data === 'string' && a.data.length > 0).map(a => ({ mime: a.mime, data: a.data as string }));
 
 const zero: Usage = { inputTokens: 0, outputTokens: 0 };
 const busy = (provider: string, why: string) => { console.error('model unavailable', provider, why); return new BrainError('UNAVAILABLE', 'The model service is busy. Your message is saved.'); };

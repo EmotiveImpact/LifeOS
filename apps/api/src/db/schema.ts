@@ -8,7 +8,7 @@
  * - Row-level security on every user table lives in `drizzle/0001_row_level_security.sql`.
  * - The auth tables (`users`, `sessions`, `accounts`, `verifications`) follow Better Auth's core schema.
  */
-import { bigint, bigserial, boolean, doublePrecision, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { bigint, bigserial, boolean, doublePrecision, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 /* ───────────────────────── Accounts (Better Auth core schema) ───────────────────────── */
 
@@ -188,4 +188,27 @@ export const accountClosures = pgTable('account_closures', {
 }, t => [index('account_closures_due').on(t.delete_after)]);
 
 /** Tables that hold one person's rows. Each has row-level security on `user_id`. */
+/**
+ * The north star (Phase 30): moves finished per week, as a tally. Each row counts how many phones on a platform
+ * finished `moves` moves in `week`. It holds no person: no user, device, address or time beyond the ISO week, so
+ * it has no row-level security, like the caches. Phones send it only when the person switches it on.
+ */
+export const weeklyMoves = pgTable('weekly_moves', {
+  week: text('week').notNull(),
+  platform: text('platform').notNull(),
+  moves: integer('moves').notNull(),
+  reports: integer('reports').notNull().default(0),
+}, t => [primaryKey({ columns: [t.week, t.platform, t.moves] })]);
+
+/**
+ * Counters for sign-in limits (`src/limits.ts`, fix F-11): how many codes an address or a network address asked for,
+ * how many guesses an address made, how many codes failed. `key` is a keyed hash, so no email or network address is
+ * stored, and the daily sweep deletes rows whose window has long passed. No row-level security: it holds no person.
+ */
+export const authLimits = pgTable('auth_limits', {
+  key: text('key').primaryKey(),
+  count: integer('count').notNull().default(0),
+  window_start: timestamp('window_start', { withTimezone: true }).notNull().defaultNow(),
+}, t => [index('auth_limits_window').on(t.window_start)]);
+
 export const userTables = [...Object.keys(phoneTables), 'devices', 'sync_ops', 'oauth_tokens', 'ai_usage', 'files'] as const;

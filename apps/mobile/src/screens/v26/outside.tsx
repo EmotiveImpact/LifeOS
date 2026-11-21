@@ -9,7 +9,7 @@ import { Share, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Icon, LifeOrb, PhotoFill, Press, RoundButton, SegmentedV26, StatusPill, Text, TopBar, TwoTone, areaColors, cardShadow, componentSize, feedback,
+  Icon, LifeOrb, ORB_AREAS, ORB_AREA_NAMES, PhotoFill, Press, RoundButton, SegmentedV26, StatusPill, Text, TopBar, TwoTone, areaColors, cardShadow, componentSize, feedback,
   floatLift, photo, photoScrims, photos, radius, space, useAreaTint, useCalmMotion, useTokens, type Area, type GlyphName, type OrbState,
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
@@ -17,7 +17,7 @@ import { useSeed } from '@/state/SeedProvider';
 import { money, seed, seedTaxClaim } from '@/state/seed';
 import { councilTax } from '@/state/today';
 import { platform } from '@/services/platform';
-import { isoWeek, shareWeek } from '@/state/firstopen';
+import { isoWeek, shareWeekOf } from '@/state/firstopen';
 import { PhotoStatus } from './firstopen';
 import { Between, Body, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, Statement, two } from './kit';
 
@@ -178,10 +178,14 @@ export function WidgetsV26({ lock: startLock = false }: { lock?: boolean }) {
 export function ShareCardV26() {
   const t = useTokens(), { data, choose } = useSeed();
   const hidden = data.choices['share-hide-numbers'] === '1';
-  const nights = shareWeek.nights.split('').map(b => b === '1');
-  const sentence = hidden
-    ? 'I cleared {missions}, slept {well} most nights and kept {my habits}.'
-    : `I cleared {${shareWeek.missions} missions}, slept {7h+} ${nights.filter(Boolean).length} nights and kept {${shareWeek.habits} habits}.`;
+  const week = shareWeekOf(data), nights = week.nights.split('').map(b => b === '1'), slept = nights.filter(Boolean).length;
+  // Only what happened goes on the card: a real first week with nothing yet says so.
+  const parts = [
+    week.missions ? (hidden ? 'cleared {missions}' : `cleared {${week.missions} mission${week.missions === 1 ? '' : 's'}}`) : '',
+    slept ? (hidden ? 'slept {well} most nights' : `slept {7h+} ${slept} night${slept === 1 ? '' : 's'}`) : '',
+    week.habits ? (hidden ? 'kept {my habits}' : `kept {${week.habits} habits}`) : '',
+  ].filter(Boolean);
+  const sentence = parts.length ? `I ${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0]}.` : 'My first week with {Life}.';
   const plain = sentence.replace(/[{}]/g, '');
   const share = () => { feedback.primary(); void Share.share({ message: `${plain} Made with Life.` }); };
   return (
@@ -195,7 +199,7 @@ export function ShareCardV26() {
         <LinearGradient pointerEvents="none" colors={photoScrims.card.colors} locations={photoScrims.card.locations} style={StyleSheet.absoluteFill} />
         <Between>
           <StatusPill size="chip" onPhoto label={`Week ${isoWeek()}`} />
-          {hidden ? null : <View style={styles.week} accessible accessibilityLabel={`Slept 7 hours or more on ${nights.filter(Boolean).length} of 7 nights`}>{nights.map((on, i) => <View key={i} style={[styles.night, { backgroundColor: on ? photo.onPhoto : photo.fill }]} />)}</View>}
+          {hidden || !slept ? null : <View style={styles.week} accessible accessibilityLabel={`Slept 7 hours or more on ${slept} of 7 nights`}>{nights.map((on, i) => <View key={i} style={[styles.night, { backgroundColor: on ? photo.onPhoto : photo.fill }]} />)}</View>}
         </Between>
         <Text variant="titleSerif" style={{ marginTop: 14, color: photo.onPhoto2 }} accessibilityLabel={plain}>
           {two(sentence).map((s, i) => <Text key={i} variant="titleSerif" style={{ color: s.tone === 'quiet' ? photo.onPhoto2 : photo.onPhoto }}>{s.text}</Text>)}
@@ -374,6 +378,8 @@ export function SiriV26() {
 
 const ORB_STATES: [OrbState, string, string, string][] = [
   ['ring', 'Ring', 'The everyday mark: tab bar, headers, small sizes.', 'Default'],
+  ['rest', 'Resting', 'Top bar, nothing new. It stops and breathes slowly.', 'Top bar'],
+  ['news', 'Something new', 'Top bar, notes waiting. Their areas light red and pulse in turn.', 'Top bar'],
   ['thinking', 'Thinking', 'Only while Life is working something out.', 'Over 1s'],
   ['working', 'Working', 'While Life builds or files something in front of you.', ''],
   ['searching', 'Searching', 'While Life checks or looks something up.', ''],
@@ -383,16 +389,16 @@ const ORB_STATES: [OrbState, string, string, string][] = [
 
 export function OrbV26() {
   const t = useTokens();
-  const rows = [ORB_STATES.slice(0, 2), ORB_STATES.slice(2, 4), ORB_STATES.slice(4, 6)];
+  const rows = [ORB_STATES.slice(0, 2), ORB_STATES.slice(2, 4), ORB_STATES.slice(4, 6), ORB_STATES.slice(6, 8)];
   return (
     <Page screen="orb" bar={{ kind: 'push', title: 'The orb' }}>
-      <Display s="{One ring of 10 dots.} Six states." flush style={{ marginTop: space.xxs }} />
+      <Display s="{One ring of 10 dots.} Eight states." flush style={{ marginTop: space.xxs }} />
       <View style={{ gap: space.tile, marginTop: space.md }}>
         {rows.map((r, i) => (
           <View key={i} style={{ flexDirection: 'row', gap: space.tile }}>
             {r.map(([st, name, when, tag]) => (
               <View key={st} accessible accessibilityLabel={`${name}. ${when}`} style={[styles.orbTile, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
-                <Between style={{ alignItems: 'flex-start' }}><LifeOrb size={60} state={st} />{tag ? <Chip label={tag} tone="q" /> : null}</Between>
+                <Between style={{ alignItems: 'flex-start' }}><LifeOrb size={60} state={st} {...(st === 'news' ? { marks: [0, 6], markColor: t.ember } : {})} />{tag ? <Chip label={tag} tone="q" /> : null}</Between>
                 <Text variant="title" style={{ marginTop: space.sm }}>{name}</Text>
                 <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>{when}</Text>
               </View>
@@ -400,8 +406,33 @@ export function OrbV26() {
           </View>
         ))}
       </View>
-      <Callout style={{ marginTop: space.sm }}>One lap every 12 seconds. With Reduce Motion, each state is shown still.</Callout>
+      <OrbAreas />
+      <Callout style={{ marginTop: space.sm }}>The everyday ring takes 12 seconds a lap. In the top bar the ring holds its place, first dot at the top, and breathes. With Reduce Motion nothing pulses; the red dots simply stay lit.</Callout>
     </Page>
+  );
+}
+
+/** Ten dots, ten areas (Edem, 21 Nov 2026): which ring dot belongs to which part of a life. Here a Money note has arrived. */
+function OrbAreas() {
+  const t = useTokens();
+  const box = 300, c = box / 2, ring = 78, label = 124;
+  return (
+    <View style={[styles.orbAreas, { backgroundColor: t.surface, ...cardShadow(t.scheme) }]}>
+      <Text variant="title">Ten dots, ten areas</Text>
+      <Text variant="callout" tone="ink2" style={{ marginTop: 2 }}>Each dot belongs to one part of your life. When notes arrive, their dots light up red and pulse one after another. Here, Money and Admin.</Text>
+      <View accessible accessibilityLabel={`The ten areas: ${ORB_AREAS.map(a => ORB_AREA_NAMES[a]).join(', ')}.`} style={{ width: box, height: box, alignSelf: 'center', marginTop: space.sm }}>
+        {ORB_AREAS.map((a, i) => {
+          const angle = -Math.PI / 2 + (i / ORB_AREAS.length) * Math.PI * 2, red = a === 'money' || a === 'admin';
+          const x = c + Math.cos(angle) * ring, y = c + Math.sin(angle) * ring, lx = c + Math.cos(angle) * label, ly = c + Math.sin(angle) * label;
+          return (
+            <View key={a} pointerEvents="none" style={StyleSheet.absoluteFill}>
+              <View style={[styles.orbAreaDot, { left: x - (red ? 7 : 5), top: y - (red ? 7 : 5), width: red ? 14 : 10, height: red ? 14 : 10, backgroundColor: red ? t.ember : t.ink }]} />
+              <Text variant="callout" tone={red ? 'ink' : 'ink2'} style={[styles.orbAreaName, { left: lx - 44, top: ly - 10 }]}>{ORB_AREA_NAMES[a]}</Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -522,6 +553,9 @@ const styles = StyleSheet.create({
   search: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 52, marginTop: 18, paddingHorizontal: 18, borderRadius: 26 },
   gesture: { width: 108, height: 4, borderRadius: 2, backgroundColor: photo.onPhoto, alignSelf: 'center', marginTop: 14, marginBottom: 10 },
   say: { height: 32, paddingHorizontal: 12, borderRadius: radius.full, justifyContent: 'center' },
+  orbAreas: { borderRadius: radius.lg, padding: space.cardPad, marginTop: space.tile },
+  orbAreaDot: { position: 'absolute', borderRadius: radius.full },
+  orbAreaName: { position: 'absolute', width: 88, textAlign: 'center' },
   orbTile: { flex: 1, minWidth: 0, borderRadius: radius.lg, padding: space.cardPad },
   spec: { marginTop: space.xs, paddingVertical: 4, borderRadius: radius.lg, overflow: 'hidden' },
   overPhoto: { height: 84, marginTop: space.xs, paddingTop: 6, borderRadius: 20, overflow: 'hidden' },

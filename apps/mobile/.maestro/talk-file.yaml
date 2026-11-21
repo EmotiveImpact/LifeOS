@@ -1,0 +1,34 @@
+# Talk, then file: speak (or, where the phone has no on-device speech, Life's labelled sample talk plays), stop,
+# review what Life heard, file it all, and see it can be undone.
+appId: app.life.os
+name: Talk then file
+tags:
+  - core
+---
+- launchApp:
+    clearState: true
+    permissions:
+      microphone: allow
+      speech: allow
+- runFlow: common/setup.yaml
+- tapOn: "Talk"
+- runFlow:
+    when:
+      visible: "Allow the microphone"
+    commands:
+      - tapOn: "Allow the microphone"
+- extendedWaitUntil:
+    visible: "Stop and review"
+    timeout: 15000
+# The sample talk takes about ten seconds to play through.
+- waitForAnimationToEnd:
+    timeout: 12000
+- tapOn: "Stop and review"
+- extendedWaitUntil:
+    visible: "File these \\d+ details\\?"
+    timeout: 10000
+- tapOn: "File all \\d+"
+- extendedWaitUntil:
+    visible: "Filed\\."
+    timeout: 10000
+- assertVisible: "Undo"

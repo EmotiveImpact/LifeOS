@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { DeleteBody, FileIdBody, PushBody, SignBody, closeAccount, deleteFile, exportAccount, purgeClosedAccounts, registerPush, sameSecret, signFile, tidyFiles } from './account';
+import { pruneLimits } from './limits';
 import type { Auth, Principal } from './auth';
 import type { Db } from './db/client';
 import { devices } from './db/schema';
 import { SearchBody, listMemories, searchMemories } from './memory';
+import { MovesBody, countWeek, reportableWeeks } from './metrics';
 import { aiCapabilities, runAi, type AiOptions } from './router';
 import type { Storage } from './storage';
 import { MAX_PULL, MAX_PUSH, forget, forgettable, isTable, pull, push, refusedByPolicy } from './sync';
@@ -15,6 +17,8 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const fail = (status: number, code: string) => json({ error: code }, status);
 
 const uuid = z.string().uuid();
+/** The largest `/ai/run` body: one photo of up to 2.8 million base64 characters, plus the words and context. */
+const MAX_AI_BODY = 3_500_000;
 /** The calling phone, from the `life-device` header: sync skips its own changes when it pulls. */
 const deviceOf = (request: Request) => { const id = request.headers.get('life-device'); return id && uuid.safeParse(id).success ? id : null; };
 const ForgetBody = z.object({ table: z.string(), ids: z.array(uuid).min(1).max(MAX_PUSH) });
@@ -34,7 +38,7 @@ const DeviceBody = z.object({
 function withCors(response: Response, origin: string): Response {
   const headers = new Headers(response.headers);
   headers.set('access-control-allow-origin', origin);
-  headers.set('access-control-expose-headers', 'set-auth-token, life-model, life-tier');
+  headers.set('access-control-expose-headers', 'set-auth-token, life-model, life-tier, x-retry-after');
   headers.append('vary', 'Origin');
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
@@ -121,6 +125,8 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       return json(await closeAccount(db, storage, principal.userId, now(), graceDays));
     },
     'POST /ai/run': async (request, principal) => {
+      // One small photo at most (a meal or a label), so anything far bigger is refused before it is read.
+      if (Number(request.headers.get('content-length') ?? 0) > MAX_AI_BODY) return fail(413, 'TOO_LARGE');
       const reply = await runAi(db, principal.userId, await readJson(request), ai, now(), request.signal);
       const response = json(reply.body, reply.status);
       for (const [name, value] of Object.entries(reply.headers ?? {})) response.headers.set(name, value);
@@ -132,6 +138,13 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       const parsed = SearchBody.safeParse(await readJson(request));
       if (!parsed.success) return fail(400, 'BAD_REQUEST');
       return json(await searchMemories(db, principal.userId, parsed.data, now()));
+    },
+    'POST /metrics/moves': async request => {
+      // One week's count of finished moves, shared by choice. Only the week, platform and count are read and kept.
+      const parsed = MovesBody.safeParse(await readJson(request));
+      if (!parsed.success || !reportableWeeks(now()).has(parsed.data.week)) return fail(400, 'BAD_REQUEST');
+      await countWeek(db, parsed.data);
+      return new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } });
     },
     'GET /wearables': async (_request, principal) => (wearables ? json(await listConnections(db, wearables, principal.userId)) : json({ available: [], connections: [] })),
     'GET /wearables/samples': async (request, principal) => {
@@ -167,7 +180,10 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       if (pathname === '/jobs/sweep' && request.method === 'POST') {
         const given = /^Bearer (.+)$/.exec(request.headers.get('authorization') ?? '')?.[1];
         if (!jobsSecret || !given || !sameSecret(given, jobsSecret)) return fail(401, 'UNAUTHENTICATED');
-        return json(await purgeClosedAccounts(db, storage, now()));
+        const swept = await purgeClosedAccounts(db, storage, now());
+        // Sign-in counters from more than a day ago (fix F-11).
+        const limits = await pruneLimits(db.db, now()).catch(error => { console.error('limit prune failed', error instanceof Error ? error.message : error); return 0; });
+        return json({ ...swept, limits });
       }
       // A wearable's sign-in page sends the browser back here, with no session: the signed, single-use state says who.
       const callback = /^\/wearables\/([a-z]+)\/callback$/.exec(pathname);

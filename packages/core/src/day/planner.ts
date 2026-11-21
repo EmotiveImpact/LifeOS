@@ -13,6 +13,7 @@
  *   no glimpses.
  * - Payday: the payday sweep card. A hard day with under 70% of today's food eaten: the fuel card, before the evening.
  * - A habit one miss from a second: the never-miss-twice card. Moves that serve the Chief Aim are tagged.
+ * - A step from your own plan for today (`chosen`) gets a boost as big as a deadline's urgency, so it leads.
  * Every move and every rule that fired carries a plain sentence for "Why am I seeing this?" (SPEC §1.3).
  */
 import { clamp, round } from '../math/stats';
@@ -39,6 +40,8 @@ export interface Candidate {
   aimFit?: number;
   /** A new commitment that starts at this local clock time (minutes after midnight). */
   startsAt?: number;
+  /** On the person's own plan for today: what they chose comes first. */
+  chosen?: boolean;
 }
 
 export type CardId = 'rest-habit' | 'take-it-easy' | 'health-stack' | 'caffeine-cutoff' | 'fuel' | 'never-miss-twice' | 'payday-sweep';
@@ -91,6 +94,8 @@ export interface DayPlan {
 }
 
 export const PLAN_WEIGHTS = { urgency: 3, aim: 2, value: 1.5, ease: 1 } as const;
+/** Added for a step from the person's own plan: as much as a deadline's urgency, so what they chose leads. */
+export const CHOSEN_WEIGHT = 3;
 export const LOW_READINESS = 34;
 export const HIGH_READINESS = 67;
 export const SHORT_SLEEP_3_NIGHTS = 180;
@@ -155,10 +160,11 @@ export function planToday(candidates: readonly Candidate[], ctx: PlanContext): D
     const reasons: string[] = [];
     if (deadline) { tags.push('deadline'); reasons.push('Due within a day, so it comes first.'); }
     else if (hoursLeft <= 7 * 24) { tags.push('due-soon'); reasons.push(`Due in ${Math.max(1, Math.round(hoursLeft / 24))} days.`); }
+    if (c.chosen) reasons.push('On your plan for today.');
     const aim = ctx.hasAim ? clamp(c.aimFit ?? 0, 0, 1) : 0;
     if (aim >= 0.5) { tags.push('for-your-aim'); reasons.push('For your Aim.'); }
     if ((c.valueGBP ?? 0) >= 10) reasons.push(`Worth about ${pounds(c.valueGBP!)}.`);
-    let score = PLAN_WEIGHTS.urgency * urgency(c, ctx.now) + PLAN_WEIGHTS.aim * aim + PLAN_WEIGHTS.value * Math.max(moneyValue(c.valueGBP), clamp(c.healthValue ?? 0, 0, 1)) + PLAN_WEIGHTS.ease * ease(c, pressures) - fatigue(c, ctx);
+    let score = PLAN_WEIGHTS.urgency * urgency(c, ctx.now) + PLAN_WEIGHTS.aim * aim + PLAN_WEIGHTS.value * Math.max(moneyValue(c.valueGBP), clamp(c.healthValue ?? 0, 0, 1)) + PLAN_WEIGHTS.ease * ease(c, pressures) + (c.chosen ? CHOSEN_WEIGHT : 0) - fatigue(c, ctx);
     if (ctx.learning) {
       const learned = learnedBoost(ctx.learning.state, c.kind, context, ctx.learning.random);
       score += learned.boost;

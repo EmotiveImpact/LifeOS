@@ -14,6 +14,9 @@ import { emptyBrainState, type BrainState } from '@life/brain';
 import { emptyLoops, type LoopsState } from '@life/core';
 import { confirmBrainRecords } from '@/services/brainState';
 import { currentTransport } from '@/services/syncTransport';
+import { lastBackgroundWrite } from '@/services/backgroundMark';
+import { SHOW_SAMPLES } from './sample';
+import { emptyLife, type LifeContent } from './empty';
 
 export type SeedData = {
   brain: BrainState;
@@ -32,18 +35,29 @@ export type SeedData = {
   /** The three core loops: plans by day, step ticks, check-in style and what counts as a win (`state/loops.ts`). */
   loops: LoopsState;
 };
+/** Ama's life, for development and preview builds only, so every screen can be seen filled in. */
+const sampleLife: LifeContent = {
+  profile: seedProfile, aim: seedAim, records: seedKnownRecords, proposals: seedRecords, knowledge: seedKnowledge, selectedMission: 'uk-hmrc-tax-code', pulseLog: seedPulseLog, people: seedPeople,
+  meal: seedMeal, habits: seed.habits, weightKg: seed.body.weightKg, heightCm: seed.body.heightCm, waistCm: seed.body.waistCm,
+  memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov', category: 'Money' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov', category: 'People' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov', category: 'Money' }],
+};
 const initial: SeedData = {
   brain: emptyBrainState(),
-  profile: seedProfile, onboardingDone: false, aim: seedAim, records: seedKnownRecords, proposals: seedRecords, knowledge: seedKnowledge, completed: [], missionSteps: {}, selectedMission: 'uk-hmrc-tax-code', pulseLog: seedPulseLog, people: seedPeople,
-  meal: seedMeal, mealLogged: false, meals: [], habits: seed.habits, journal: [], weightKg: seed.body.weightKg, heightCm: seed.body.heightCm, waistCm: seed.body.waistCm, learned: [],
+  // Release builds start empty (state/empty.ts); development and preview builds start with Ama's life.
+  ...(SHOW_SAMPLES ? sampleLife : emptyLife()),
+  onboardingDone: false, completed: [], missionSteps: {}, mealLogged: false, meals: [], journal: [], learned: [],
   aiQueue: [],
   health: emptyHealth(),
-  memories: [{ id: 'rent', text: 'Your rent goes up in March.', source: 'From your talk · 12 Nov', category: 'Money' }, { id: 'kofi', text: 'Kofi loves cooking.', source: 'From your chat · 9 Nov', category: 'People' }, { id: 'aim', text: 'You’re saving for your own front door.', source: 'Your Aim · 2 Nov', category: 'Money' }],
   prefs: { dark: true, sounds: true, haptics: true, handDrawn: false, hideNumbers: false, hideBalances: false, glimpses: true, followMood: true, look: 'mix', notifications: true, privateMode: false, addback: 'Half', sentenceIcons: true },
   flags: {}, choices: {}, drafts: {}, loops: emptyLoops(),
 };
 type SeedContextValue = {
   data: SeedData; hydrated: boolean; storageError: boolean; storageMode: ProjectionStorage['mode'] | null;
+  /**
+   * Goes up each time `data` is read back from storage (opening, what sync or background work brought in, a reset)
+   * rather than changed on this phone, so anything that watches for changes made here can tell the two apart.
+   */
+  loads: number;
   retryStorage: () => void; exportEverything: () => Promise<unknown>;
   /** Erases this life. `thisPhoneOnly` once the account has been closed on the server, so nothing is queued for it. */
   reset: (options?: { thisPhoneOnly?: boolean }) => Promise<boolean>;
@@ -60,7 +74,8 @@ type SeedContextValue = {
   /** Pushes and pulls now (also runs when the app comes to the front and a few seconds after each change). */
   syncNow: () => Promise<void>;
 };
-/** Fills in anything a saved projection lacks from the defaults. */
+/** Fills in anything a saved projection lacks from the defaults. Also used by background work (Phase 29). */
+export function hydrateSeed(loaded: unknown): SeedData { return hydrate(loaded); }
 function hydrate(loaded: unknown): SeedData {
   if (loaded !== null && (typeof loaded !== 'object' || Array.isArray(loaded))) throw new Error('Invalid local projection');
   const saved = (loaded ?? {}) as Partial<SeedData>;
@@ -71,12 +86,14 @@ const Context = createContext<SeedContextValue | null>(null);
 
 export function SeedProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
-  const [data, setData] = useState(initial), [hydrated, setHydrated] = useState(false);
+  const [data, setData] = useState(initial), [hydrated, setHydrated] = useState(false), [loads, setLoads] = useState(0);
   const [storageError, setStorageError] = useState(false), [storageMode, setStorageMode] = useState<ProjectionStorage['mode'] | null>(null), [retry, setRetry] = useState(0);
   const storage = useRef<ProjectionStorage | null>(null), writes = useRef<Promise<void>>(Promise.resolve());
   const latest = useRef(data), lastQueued = useRef(''), revision = useRef(0), committed = useRef(0);
   const resetting = useRef<true | SeedData | null>(null);
   const needsReload = useRef(false), syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The last background save this app has loaded (Phase 29), so coming to the front reloads anything newer.
+  const seenBackground = useRef(0);
   latest.current = data;
 
   useEffect(() => {
@@ -92,10 +109,11 @@ export function SeedProvider({ children }: { children: ReactNode }) {
         await opened.save(latest.current);
         committed.current = revision.current;
       }
+      seenBackground.current = await lastBackgroundWrite();
       const next = hydrate(await opened.load());
       if (!active) return;
       lastQueued.current = JSON.stringify(next);
-      latest.current = next; setData(next); setStorageMode(opened.mode); setHydrated(true);
+      latest.current = next; setData(next); setLoads(n => n + 1); setStorageMode(opened.mode); setHydrated(true);
       void syncNow();
     })().catch(() => { if (active) setStorageError(true); });
     return () => {
@@ -131,7 +149,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
 
   // Sync whenever the app comes back to the front.
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', state => { if (state === 'active') void syncNow(); });
+    const subscription = AppState.addEventListener('change', state => { if (state === 'active') { void reloadAfterBackground(); void syncNow(); } });
     return () => { subscription.remove(); if (syncTimer.current) clearTimeout(syncTimer.current); };
   }, []);
 
@@ -141,7 +159,14 @@ export function SeedProvider({ children }: { children: ReactNode }) {
     needsReload.current = false;
     const next = hydrate(await target.load());
     if (storage.current !== target) return;
-    latest.current = next; setData(next);
+    latest.current = next; setData(next); setLoads(n => n + 1);
+  }
+  /** Background work saved while the app was away: show what it brought in rather than writing over it. */
+  async function reloadAfterBackground() {
+    const at = await lastBackgroundWrite(), target = storage.current;
+    if (!target || at <= seenBackground.current) return;
+    seenBackground.current = at;
+    writes.current = writes.current.then(() => reload(target)).catch(() => {});
   }
   /** The network part runs beside the local saves, never in their queue, so a slow connection can't hold up a save. */
   async function syncNow() {
@@ -157,7 +182,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
 
   const engine = useMemo(() => engineSnapshot(data.profile, data.completed), [data.profile, data.completed]);
   const value: SeedContextValue = {
-    data, hydrated, storageError, storageMode, engine,
+    data, hydrated, storageError, storageMode, engine, loads,
     retryStorage: () => setRetry(value => value + 1),
     exportEverything: async () => { await writes.current; if (!storage.current) throw new Error('Local data unavailable'); return storage.current.exportEverything(); },
     set: patch => setData(current => {
@@ -197,7 +222,7 @@ export function SeedProvider({ children }: { children: ReactNode }) {
         await storage.current.clear(options?.thisPhoneOnly ? 'this-phone' : 'everywhere');
         const next = { ...initial, onboardingDone: false };
         lastQueued.current = JSON.stringify(next); revision.current = 0; committed.current = 0;
-        resetting.current = next; latest.current = next; setData(next);
+        resetting.current = next; latest.current = next; setData(next); setLoads(n => n + 1);
         return true;
       } catch { resetting.current = null; setStorageError(true); return false; }
     },

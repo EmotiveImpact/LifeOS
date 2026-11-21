@@ -108,7 +108,19 @@ export function PulseField({ initial = { x: 0.72, y: 0.48 }, onChange, height = 
       onLayout={(e: LayoutChangeEvent) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
       {...responder.panHandlers}
       accessibilityRole="adjustable"
-      accessibilityLabel={`Mood: ${mood.id}`}
+      accessibilityLabel="How you feel"
+      accessibilityValue={{ text: mood.id }}
+      // Without sight of the field, VoiceOver's swipe up and down (TalkBack's volume keys) step through the moods.
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      onAccessibilityAction={(e) => {
+        const at = MOODS.findIndex(m => m.id === mood.id);
+        const next = MOODS[(at + (e.nativeEvent.actionName === 'increment' ? 1 : MOODS.length - 1)) % MOODS.length];
+        const p = { x: next.x, y: next.y };
+        setPos(p);
+        moodRef.current = next;
+        feedback.select();
+        onChange?.(next, p);
+      }}
       style={[styles.field, { height, backgroundColor: t.surface }]}
     >
       <Svg width={size.w} height={size.h}>

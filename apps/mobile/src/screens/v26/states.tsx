@@ -4,8 +4,7 @@
  * Body until health data is allowed and arrives.
  */
 import { useEffect, useState, type ReactNode } from 'react';
-import { AppState, Linking, Modal, Platform, Share, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
+import { AppState, Linking, Platform, Share, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,7 +17,7 @@ import { useNavigation } from '@/navigation/useNavigation';
 import type { ScreenKey } from '@/navigation/screens';
 import { useSeed } from '@/state/SeedProvider';
 import { useLocalDay } from '@/state/day';
-import { useFuelDay } from '@/state/fuel';
+import { budgetScale, fuelShare, useFuelDay } from '@/state/fuel';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { money, seed } from '@/state/seed';
 import { bufferMonths } from '@/state/plan';
@@ -29,7 +28,8 @@ import {
 } from '@/state/firstopen';
 import { Corners, PaperLink, PhotoStatus } from './firstopen';
 import { Composer } from './talk';
-import { SearchV26, TodayV26 } from './today';
+import { TodayV26 } from './today';
+import { SearchModal } from './search';
 import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Micro, Page, PhotoTile, QuietLink, Row, RowsCard, Shelf, Statement, two } from './kit';
 import { TodayLoops } from './loops';
 
@@ -42,9 +42,7 @@ const dayMonth = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', mo
 function useSearchOverlay() {
   const [open, setOpen] = useState(false);
   const modal = (
-    <Modal visible={open} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => setOpen(false)}>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}><SearchV26 onClose={() => setOpen(false)} /></SafeAreaProvider>
-    </Modal>
+    <SearchModal visible={open} onClose={() => setOpen(false)} />
   );
   return { open: () => setOpen(true), modal };
 }
@@ -287,7 +285,7 @@ export function ConnectFailV26() {
     flag('device-retry', true);
   };
   return (
-    <Page screen="body" bar={{ kind: 'push', title: 'Body', action: { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: () => { void Share.share({ message: `Fuel ${fuel.eaten.toLocaleString('en-GB')} of ${fuel.budget.toLocaleString('en-GB')} kcal today. Made with Life.` }); } } }}>
+    <Page screen="body" bar={{ kind: 'push', title: 'Body', action: { kind: 'icon', icon: 'arrowUp', label: 'Share', onPress: () => { void Share.share({ message: fuel.ready ? `Fuel ${fuel.eaten.toLocaleString('en-GB')} of ${fuel.budget.toLocaleString('en-GB')} kcal today. Made with Life.` : `Fuel ${fuel.eaten.toLocaleString('en-GB')} kcal so far today. Made with Life.` }); } } }}>
       <Chip label={`${quietDevice.name} · ${quietDevice.last}`} icon="clock" tone="q" />
       <Display s={`{${quietDevice.name}} hasn’t synced {since ${quietDevice.last}.}`} />
       <PhotoCard source={photos.bedroom} focal={{ y: 0.52 }} height={236} size="md" chips={['The fix that usually works']} title={`Open the ${quietDevice.name} app once to send last night’s sleep.`} style={{ marginTop: space.lg }}>
@@ -297,10 +295,10 @@ export function ConnectFailV26() {
         <StaleTile label="Readiness" scale="/100" last={quietDevice.last} />
         <StaleTile label="Sleep" scale={`/${hm(seed.health.sleepNeed)}`} last={quietDevice.last} />
       </TileGrid>
-      <TintCard area="home" onPress={() => nav.go('fuel')} accessibilityLabel={`Fuel, ${fuel.eaten} of ${fuel.budget} kcal. Logged by you, so still up to date.`} style={{ marginTop: space.tile }}>
-        <Between><View style={styles.inline}><Badge icon="food" /><Text variant="callout" tone="ink2">Fuel</Text></View><Text variant="micro" tone="quiet">{`/${fuel.budget.toLocaleString('en-GB')} kcal`}</Text></Between>
+      <TintCard area="home" onPress={() => nav.go('fuel')} accessibilityLabel={`Fuel, ${fuel.eaten} ${fuel.ready ? `of ${fuel.budget} kcal` : 'kcal so far'}. Logged by you, so still up to date.`} style={{ marginTop: space.tile }}>
+        <Between><View style={styles.inline}><Badge icon="food" /><Text variant="callout" tone="ink2">Fuel</Text></View><Text variant="micro" tone="quiet">{budgetScale(fuel)}</Text></Between>
         <Text variant="numeralL" style={{ marginTop: 14 }}>{fuel.eaten.toLocaleString('en-GB')}</Text>
-        <Meter value={fuel.eaten / fuel.budget} />
+        <Meter value={fuelShare(fuel)} />
         <Callout style={{ marginTop: space.tile }}>Logged by you, so still up to date.</Callout>
       </TintCard>
       <Callout style={{ marginTop: space.md }}>Wellness guidance from your own readings, not a diagnosis.</Callout>
@@ -406,7 +404,7 @@ export function SyncIssueV26() {
   return (
     <Page screen="syncissue" bar={{ kind: 'sheet' }}>
       <Between style={{ alignItems: 'flex-start' }}>
-        <Statement s={`Which {@calendar ${syncConflict.label}} is right?`} style={{ flex: 1, minWidth: 0 }} />
+        <Statement header s={`Which {@calendar ${syncConflict.label}} is right?`} style={{ flex: 1, minWidth: 0 }} />
         <RoundButton icon="close" size="sm" label="Decide later" onPress={nav.close} />
       </Between>
       <Body s={`You changed it on two phones while offline: the ${syncConflict.here}th here, the ${syncConflict.there}th on ${syncConflict.where}.`} style={{ marginTop: space.xs }} />

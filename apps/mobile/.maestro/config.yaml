@@ -1,0 +1,7 @@
+# Maestro workspace for Life (BUILD_V26 Phase 30). `maestro test .maestro` runs the flows below; the shared steps in
+# common/ and the two-phone sync in sync/ are run from other flows or from sync/run.sh. See README.md.
+flows:
+  - onboarding.yaml
+  - talk-file.yaml
+  - snap-meal.yaml
+  - lesson.yaml

@@ -107,6 +107,13 @@ function TicksV23({ count, filled = 0, variant = 'streak', activeIndex, onScrub,
       accessibilityRole={scrub ? 'adjustable' : 'progressbar'}
       accessibilityLabel={accessibilityLabel}
       accessibilityValue={scrub ? { text: scrubLabel } : { min: 0, max: count, now: filled }}
+      // VoiceOver's swipe up and down (TalkBack's volume keys) step one tick, as dragging does.
+      accessibilityActions={scrub && onScrub ? [{ name: 'increment' }, { name: 'decrement' }] : undefined}
+      onAccessibilityAction={scrub && onScrub ? (e) => {
+        const at = activeIndex ?? lastIndex.current;
+        const i = Math.max(0, Math.min(count - 1, at + (e.nativeEvent.actionName === 'increment' ? 1 : -1)));
+        if (i !== at) { lastIndex.current = i; onScrub(i); feedback.select(); }
+      } : undefined}
     >
       {scrub && scrubLabel && width > 0 ? (
         <View style={[styles.datePill, { left: Math.max(0, Math.min(width - 120, handleX - 60)), backgroundColor: onAtmos ? onAtmosphere.glass : t.surface2 }]}>

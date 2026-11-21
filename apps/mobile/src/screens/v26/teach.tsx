@@ -11,7 +11,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ChatBubble, Icon, LifeOrb, LifeSays, PhotoFill, Press, RoundButton, SectionHead, SegmentedV26, Text, TileGrid, V26Tile, cardShadow, feedback,
-  fonts, motion, photo, photos, radius, space, useCalmMotion, useTokens,
+  fonts, motion, photo, photos, radius, space, useCalmMotion, useTokens, durations
 } from '@/design';
 import { useNavigation } from '@/navigation/useNavigation';
 import { useSeed } from '@/state/SeedProvider';
@@ -347,7 +347,7 @@ export function TellbackV26() {
         {typing ? (
           <View style={[styles.typeRow, { backgroundColor: t.surface2 }]}>
             <TextInput maxFontSizeMultiplier={1.3} value={typed} onChangeText={setTyped} placeholder="Type it instead" placeholderTextColor={t.inkQuiet} selectionColor={t.ember} onSubmitEditing={sendTyped}
-              style={[styles.typeInput, { color: t.ink }]} accessibilityLabel="Type your explanation" returnKeyType="send" />
+              style={[styles.typeInput, { color: t.ink }]} accessibilityLabel="Type your explanation" testID="tellback-input" returnKeyType="send" />
             <RoundButton icon="arrowUp" label="Add this" size="sm" solid onPress={sendTyped} disabled={!typed.trim()} />
           </View>
         ) : null}
@@ -417,7 +417,7 @@ export function GotitV26() {
   useEffect(() => {
     if (!data.learned.includes('tax-codes')) set({ learned: [...data.learned, 'tax-codes'] });
     feedback.cleared();
-    fade.value = withTiming(1, { duration: calm ? 200 : 260 });
+    fade.value = withTiming(1, { duration: calm ? durations.quick : durations.item });
     if (!calm) scale.value = withSpring(1, motion.smooth);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const words = useAnimatedStyle(() => ({ opacity: fade.value, transform: [{ scale: scale.value }] }));

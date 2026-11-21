@@ -2,6 +2,7 @@ import { Children, cloneElement, isValidElement, type ReactElement, type ReactNo
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Icon, type GlyphName } from '../Icon';
 import { Press } from '../Press';
+import { containsControl } from '../a11y';
 import { Text } from '../Text';
 import { useTokens } from '../theme';
 import { areaColors, cardShadow, componentSize, radius, space, type Area } from '../tokens';
@@ -57,7 +58,7 @@ export function V26Tile({ label, dot, scale, value, unit, sub, slim, meter, part
   const label11y = [label, value, unit, sub].filter(Boolean).join(' ');
   return onPress
     ? <Press haptic="open" onPress={onPress} accessibilityLabel={label11y} style={[shape, box, style]}>{body}</Press>
-    : <View accessible accessibilityLabel={label11y} style={[shape, box, style]}>{body}</View>;
+    : <View accessible={!containsControl(children)} accessibilityLabel={label11y} style={[shape, box, style]}>{body}</View>;
 }
 
 /** Tiles two to a row, 10pt apart (board `.tiles`), or three to a row 8pt apart for slim tiles. A child with `wide` takes the whole row. */
@@ -118,7 +119,7 @@ export function Reading({ name, icon, tag, tagKind = 'quiet', value, unit, delta
     </View>
     <View style={styles.readingRow}>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text variant="heading" numberOfLines={1}>{value}{unit ? <Text variant="unit" tone="ink2">{unit.startsWith('.') ? unit : ` ${unit}`}</Text> : null}</Text>
+        <Text variant="heading" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{value}{unit ? <Text variant="unit" tone="ink2">{unit.startsWith('.') ? unit : ` ${unit}`}</Text> : null}</Text>
         {delta ? <Text variant="callout" tone="ink2" style={{ marginTop: 4 }}>{delta}</Text> : null}
       </View>
       <Sparkline values={series} normal={normal} />
