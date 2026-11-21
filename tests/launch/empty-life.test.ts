@@ -73,9 +73,48 @@ describe('screens made only of sample figures', () => {
     ['apps/mobile/src/screens/v26/toolkit.tsx', 'return SHOW_SAMPLES ? <BedroomsSampleV26 /> : <HomeNotYet screen="bedrooms"'],
     ['apps/mobile/src/screens/v26/toolkit.tsx', 'return SHOW_SAMPLES ? <BufferSampleV26 /> : <MoneyNotYetV26 screen="buffer"'],
     ['apps/mobile/src/screens/v26/toolkit.tsx', 'return SHOW_SAMPLES ? <BloodSampleV26 /> : <NotYetV26 screen="blood"'],
+    // Past day one: Plan, the Aim, Fuel and quick log read the account's own records, meals and weigh-ins.
+    ['apps/mobile/src/screens/v26/plan.tsx', 'return SHOW_SAMPLES ? <PlanSampleV26 /> : <PlanRealV26 />;'],
+    ['apps/mobile/src/screens/v26/plan.tsx', "const waitingIds = SHOW_SAMPLES ? ['uk-single-person-council', 'nhs-outpatient-referral'] : [];"],
+    ['apps/mobile/src/screens/v26/aim.tsx', "<Eyebrow onPhoto>{SHOW_SAMPLES ? `Chief Aim · ${p}% there` : 'Chief Aim'}</Eyebrow>"],
+    ['apps/mobile/src/screens/v26/aim.tsx', 'return SHOW_SAMPLES ? <GambitSampleV26 /> : ('],
+    ['apps/mobile/src/screens/v26/aim.tsx', 'return SHOW_SAMPLES ? <GlimpseSampleV26 /> : ('],
+    ['apps/mobile/src/screens/v26/fuelmore.tsx', 'return SHOW_SAMPLES ? <FuelprogressSampleV26 /> : <FuelprogressRealV26 />;'],
+    ['apps/mobile/src/screens/v26/fuelmore.tsx', 'return SHOW_SAMPLES ? <WeekbudgetSampleV26 /> : <WeekbudgetRealV26 />;'],
+    ['apps/mobile/src/screens/v26/fuelmore.tsx', 'return SHOW_SAMPLES ? <MealtimingSampleV26 /> : <MealtimingRealV26 />;'],
+    ['apps/mobile/src/screens/v26/fuelmore.tsx', 'return SHOW_SAMPLES ? <FoodqualitySampleV26 /> : ('],
+    ['apps/mobile/src/screens/v26/fuelmore.tsx', 'const days = SHOW_SAMPLES ? weightDays.slice(-14).map(d => r1(d.day + offset)) : real.map(w => w.kg)'],
+    ['apps/mobile/src/screens/v26/fuelmore.tsx', 'choose(`weight-${dayKey()}`, String(kg))'],
+    ['apps/mobile/src/screens/v26/fuelmore.tsx', "(SHOW_SAMPLES ? 'Halal' : 'High-protein')"],
+    ['apps/mobile/src/screens/v26/fuel.tsx', 'const recent: { name: string; brand?: string; kcal: number; items?: MealItem[] }[] = SHOW_SAMPLES ? quick.small'],
+    ['apps/mobile/src/screens/v26/talk.tsx', 'return SHOW_SAMPLES ? <EditFiledSampleV26 /> : ('],
+    ['apps/mobile/src/state/you.ts', "SHOW_SAMPLES ? 'Bedtime 22:45' : 'A fixed bedtime'"],
+    // Onboarding: every new account passes these, so none of them may carry the sample's rebate, payslip or first home.
+    ['apps/mobile/src/state/firstopen.ts', 'const owed = (SHOW_SAMPLES ? seedTaxClaim.refund : tax?.estimatedValueAmount ?? 0)'],
+    ['apps/mobile/src/state/firstopen.ts', "sub: SHOW_SAMPLES ? 'Cardiology · Guy’s' : profile.referralSpecialty || 'Your referral'"],
+    ['apps/mobile/src/screens/v26/firstopen.tsx', "{SHOW_SAMPLES ? 'Your monthly costs' : 'Your answers'}"],
+    ['apps/mobile/src/screens/v26/firstopen.tsx', "'{Find money you’re owed.} Tax rebates, refunds and schemes people often {miss}.'"],
+    ['apps/mobile/src/screens/v26/firstopen.tsx', "'You’ve got 20 free minutes. Your first move fits.'"],
+    ['apps/mobile/src/screens/v26/you.tsx', "title={SHOW_SAMPLES ? season.toward : data.aim?.what"],
+    ['apps/mobile/src/screens/v26/grow.tsx', "line: SHOW_SAMPLES ? m.line.replace('DEPOSIT', String(pct))"],
+    // Tools and self-knowledge a real account reaches as it levels up.
+    ['apps/mobile/src/screens/v26/toolkit.tsx', 'return SHOW_SAMPLES ? <HealthstackSampleV26 /> : ('],
+    ['apps/mobile/src/screens/v26/toolkit.tsx', "'{Your growth path.} A weekly check-in, and lessons for earning more.'"],
+    ['apps/mobile/src/screens/v26/learn.tsx', 'return SHOW_SAMPLES ? <LensaskSampleV26 /> : ('],
+    ['apps/mobile/src/screens/v26/self.tsx', 'return SHOW_SAMPLES ? <ChronotypeSampleV26 /> : ('],
+    ['apps/mobile/src/screens/v26/self.tsx', "'Five to start from · put them in your order'"],
+    ['apps/mobile/src/screens/v26/money.tsx', "'{Nothing here yet.} Your documents and renewals, with their dates.'"],
+    ['apps/mobile/src/screens/v26/money.tsx', '<Display s="{Nothing here yet.} Subscriptions you tell Life about show here, with what each costs." />'],
   ];
   test.each(gated)('%s: %s', (file, line) => {
     expect(read(file)).toContain(line);
+  });
+
+  test('weigh-ins are kept one a day and read back oldest first', () => {
+    const fuel = read('apps/mobile/src/state/fuel.ts');
+    // Weight writes `weight-YYYY-MM-DD`; progress and the weigh-in chart read the same keys back.
+    expect(fuel).toContain(".filter(([k]) => /^weight-\\d{4}-\\d{2}-\\d{2}$/.test(k))");
+    expect(fuel).toContain('.sort((a, b) => a.day.localeCompare(b.day));');
   });
 
   test('onboarding keeps its first answer in choices, so an empty profile shows "Select"', () => {

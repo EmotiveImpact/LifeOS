@@ -16,7 +16,7 @@ import { useSeed } from '@/state/SeedProvider';
 import { seed } from '@/state/seed';
 import { SHOW_SAMPLES } from '@/state/sample';
 import { bigFive, bodyClock, defaultValues, likertLabels, moneyStatements, personalityStatements, sampleTestsDone, tests, valueHeights, valuePhotos, type TestKey } from '@/state/you';
-import { Between, Body, Box, Btn, Callout, Display, Eyebrow, Micro, Page, Row, RowsCard } from './kit';
+import { Between, Body, Box, Btn, Callout, Display, Eyebrow, Micro, NotYetV26, Page, Row, RowsCard } from './kit';
 import { Head, Ticks } from './bodykit';
 import { RoundPhoto } from './you';
 
@@ -180,7 +180,15 @@ export function BigfiveV26() {
 
 /* ───────────────────────── Your body clock ───────────────────────── */
 
+/** Your body clock. The result is the sample life's (asleep by 23:20); there are no questions for it yet, so a real account tells Life. */
 export function ChronotypeV26() {
+  return SHOW_SAMPLES ? <ChronotypeSampleV26 /> : (
+    <NotYetV26 screen="chronotype" title="Body clock" eyebrow="Your body clock · day one" line="Life places focus, workouts and wind-down once it knows when you sleep best."
+      source="calmdesk" focal={{ y: 0.76 }} ask="Tell Life when you sleep best" examples="An early bird, a night owl, or somewhere between." />
+  );
+}
+
+function ChronotypeSampleV26() {
   const t = useTokens(), nav = useNavigation(), { tint, accent } = useAreaTint('work');
   return (
     <Page screen="chronotype" bar={{ kind: 'push', title: 'Body clock' }}>
@@ -219,7 +227,8 @@ export function ValuesV26() {
   };
   return (
     <Page screen="values" bar={{ kind: 'push', title: 'Values', action: { kind: 'icon', icon: sorting ? 'check' : 'swap', label: sorting ? 'Done reordering' : 'Reorder your values', onPress: () => setSorting(s => !s) } }}>
-      <Eyebrow>{sorting ? 'Tap a value to move it up' : 'Your top five · sorted from 20 cards'}</Eyebrow>
+      {/* The sample life sorted its five; a real account starts from five common ones and puts them in its own order. */}
+      <Eyebrow>{sorting ? 'Tap a value to move it up' : SHOW_SAMPLES ? 'Your top five · sorted from 20 cards' : data.choices.values ? 'Your top five · in your order' : 'Five to start from · put them in your order'}</Eyebrow>
       <View style={{ gap: space.xs, marginTop: space.sm }}>
         {values.map((v, i) => {
           const pic = valuePhotos[v] ?? { photo: 'freedom' as const, focal: {} };

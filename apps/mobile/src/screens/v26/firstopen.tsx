@@ -271,17 +271,22 @@ export function BuildingV26() {
         <LifeOrb size={52} state={done ? 'done' : 'working'} />
         <View style={{ flex: 1 }}>
           <Micro>{done ? `${engine.tasks.length > 4 ? 5 : engine.tasks.length} OF 5 CHECKED` : 'CHECKING 5 OF 5'}</Micro>
-          <Text variant="title" style={{ marginTop: space.xxs }}>Your monthly costs</Text>
-          <Callout>{`Rent, bills, subscriptions${done ? ' · Mapped' : ''}`}</Callout>
+          {/* The sample maps its monthly costs; a real account has only told Life its answers so far. */}
+          <Text variant="title" style={{ marginTop: space.xxs }}>{SHOW_SAMPLES ? 'Your monthly costs' : 'Your answers'}</Text>
+          <Callout>{SHOW_SAMPLES ? `Rent, bills, subscriptions${done ? ' · Mapped' : ''}` : `Against published rules${done ? ' · Checked' : ''}`}</Callout>
         </View>
       </View>
-      <Display s={`Found {${money(found.owed)}} you may be owed, {${found.urgent} urgent deadline${found.urgent === 1 ? '' : 's'}} and {${found.setUp} things} to set up.`} />
+      <Display s={found.owed
+        ? `Found {${money(found.owed)}} you may be owed, {${found.urgent} urgent deadline${found.urgent === 1 ? '' : 's'}} and {${found.setUp} things} to set up.`
+        : found.setUp || found.urgent ? `Found {${found.setUp} ${found.setUp === 1 ? 'thing' : 'things'}} to set up and {${found.urgent} urgent deadline${found.urgent === 1 ? '' : 's'}}.`
+        : '{Nothing urgent.} Life keeps looking as you tell it more.'} />
       <PhotoGrid style={{ marginTop: 14 }}>
         {found.findings.map(f => (
           <PhotoCard key={f.title} source={photos[f.photo]} focal={f.focal} height={150} size="sm" title={f.title} sub={f.sub} onPress={done ? () => nav.go(f.to) : undefined}
             chips={[f.urgent ? { label: f.tag, dot: t.ember } : f.tag]} />
         ))}
       </PhotoGrid>
+      {found.findings.length ? null : <Callout style={{ marginTop: space.sm }}>Missions appear as Life finds things worth doing.</Callout>}
     </Page>
   );
 }
@@ -414,7 +419,7 @@ export function NotifprimerV26() {
     if (notificationsSupported) { const ok = await askNotifications(); choose('notification-permission', ok ? 'granted' : 'declined'); choose('notification-asked', String(Date.now())); }
     next();
   };
-  const example = SHOW_SAMPLES ? `You’ve got 20 free minutes. Finish the P87 and ${money(seedTaxClaim.refund)} starts moving.` : 'You’ve got 20 free minutes. Finish the P87 fits.';
+  const example = SHOW_SAMPLES ? `You’ve got 20 free minutes. Finish the P87 and ${money(seedTaxClaim.refund)} starts moving.` : 'You’ve got 20 free minutes. Your first move fits.';
   return (
     <Page screen="notifprimer" footer={<><Btn label="Turn on nudges" onPress={() => { void turnOn(); }} /><QuietLink label="Not now" onPress={() => { pref('notifications', false); next(); }} /></>}>
       <View style={[styles.nudgePhoto, { backgroundColor: t.surface2, ...cardShadow(t.scheme) }]}>
@@ -604,7 +609,7 @@ export function DevicesetupV26() {
 export function FirstmoveV26() {
   const nav = useNavigation(), { set } = useSeed();
   const finish = () => { set({ onboardingDone: true }); nav.home(); };
-  const doIt = () => { set({ onboardingDone: true }); nav.home(); nav.go('taxcheck', { state: 'code' }); };
+  const doIt = () => { set({ onboardingDone: true }); nav.home(); nav.go('taxcheck', SHOW_SAMPLES ? { state: 'code' } : undefined); };
   return (
     <Page screen="firstmove" scroll={false} contentStyle={{ justifyContent: 'flex-end' }}
       backdrop={<PhotoBackdropFull />}
@@ -613,7 +618,8 @@ export function FirstmoveV26() {
       footer={<><Btn label="Do it now" icon="arrow" trail onPhoto onPress={doIt} /><PaperLink label="Go to Today" onPress={finish} /></>}>
       <Chip label="Your first move · 2 minutes" icon="clock" onPhoto />
       <Text variant="welcome" tone="paper" accessibilityRole="header" style={{ marginTop: 14 }}>Start with two minutes.</Text>
-      <TwoTone size="welcomeStatement" onAtmosphere segments={two('{Check your tax code.} Your payslip shows an emergency code, so you might be {owed money}.')} style={{ marginTop: space.sm }} />
+      {/* The emergency code is on the sample life's payslip. A real account starts where the day-one Plan does. */}
+      <TwoTone size="welcomeStatement" onAtmosphere segments={two(SHOW_SAMPLES ? '{Check your tax code.} Your payslip shows an emergency code, so you might be {owed money}.' : '{Find money you’re owed.} Tax rebates, refunds and schemes people often {miss}.')} style={{ marginTop: space.sm }} />
     </Page>
   );
 }

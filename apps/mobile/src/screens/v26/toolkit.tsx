@@ -312,17 +312,18 @@ function Press2({ label, onPress }: { label: string; onPress: () => void }) {
 
 export function GrowthV26() {
   const t = useTokens(), nav = useNavigation(), { data, choose } = useSeed();
+  // The payday sweep, the rate and the lessons done are the sample life's; a real account sees the path itself.
   const picked = data.choices['growth-checkin'];
   return (
     <Page screen="growth" bar={{ kind: 'push', action: { kind: 'text', label: 'Levels', onPress: () => nav.go('levels') } }}>
       <Eyebrow>Level 4 · growth path</Eyebrow>
-      <Display s="You’ve kept your {payday sweep} for {3 months}. Next: {raise your rate.}" />
+      <Display s={SHOW_SAMPLES ? 'You’ve kept your {payday sweep} for {3 months}. Next: {raise your rate.}' : '{Your growth path.} A weekly check-in, and lessons for earning more.'} />
       <PhotoCard source={photos.journal} focal={{ y: 0.6 }} height={284} size="md" chips={['This week’s check-in']} chipRight={{ label: 'Due Sun', dot: t.ember }} title="What did you do this week that future-you will thank you for?" style={{ marginTop: space.lg }}>
         <View style={styles.photoChips}>
           {['Saved more', 'Learned something', 'Rested properly'].map(c => <Chip key={c} label={c} onPhoto icon={picked === c ? 'check' : undefined} onPress={() => { choose('growth-checkin', c); feedback.select(); }} />)}
         </View>
       </PhotoCard>
-      <SectionHead title="Lessons" link="2 of 6" onLink={() => nav.go('library')} />
+      <SectionHead title="Lessons" link={SHOW_SAMPLES ? '2 of 6' : 'All'} onLink={() => nav.go('library')} />
       <Shelf>
         <PhotoTile source={photos.areawork} focal={{ y: 0.55 }} width={150} title="Pricing your work" meta="6 min" metaIcon="play" onPress={() => nav.go('idea')} />
         <PhotoTile source={photos.friends} width={150} title="Asking for a rate rise" meta="5 min" metaIcon="play" onPress={() => nav.go('idea')} />
@@ -516,7 +517,15 @@ function Press3({ label, onPress }: { label: string; onPress: () => void }) {
 
 /* ───────────────────────── Health stack ───────────────────────── */
 
+/** What you take, and when. The stack (and the low iron) are the sample life's, so a real account starts by telling Life. */
 export function HealthstackV26() {
+  return SHOW_SAMPLES ? <HealthstackSampleV26 /> : (
+    <NotYetV26 screen="healthstack" title="Health stack" eyebrow="Health stack · day one" line="Your stack builds from what you tell Life you take."
+      source="walk" focal={{ y: 0.3 }} ask="Tell Life what you take" examples="Vitamins, supplements, medicines, and when." />
+  );
+}
+
+function HealthstackSampleV26() {
   const t = useTokens(), nav = useNavigation();
   const ironLow = true;
   const caps: { icon: 'sun' | 'fitness' | 'water'; title: string; sub: string; end?: string; gp?: boolean }[] = [

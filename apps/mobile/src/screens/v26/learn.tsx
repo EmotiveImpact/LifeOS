@@ -24,7 +24,7 @@ import {
   recall, recallLadder, recallWhen, results, shelf, talebLens, todaysIdea, type IdeaKey,
 } from '@/state/learn';
 import { voice } from '@/services/voice';
-import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, Page, PhotoRound, QuietLink, Row, RowsCard, Shelf, Statement, drawerStyle, two, useDrawerPhoto } from './kit';
+import { Between, Body, Box, Btn, Callout, Chip, Display, Eyebrow, Figure, Micro, NotYetV26, Page, PhotoRound, QuietLink, Row, RowsCard, Shelf, Statement, drawerStyle, two, useDrawerPhoto } from './kit';
 import { Composer } from './talk';
 import { IdeaPic, Device, PicAim, PicCap, type DeviceName } from './lessonpics';
 
@@ -296,7 +296,15 @@ export function IdeaV26() {
 
 type LensName = 'Taleb' | 'Housel' | 'Munger';
 
+/** Ask through a lens. Its answers are worked from the sample life's rebate and buffer, so a real account asks Life directly. */
 export function LensaskV26() {
+  return SHOW_SAMPLES ? <LensaskSampleV26 /> : (
+    <NotYetV26 screen="lensask" title="Ask through a lens" eyebrow="Ask through a lens · day one" line="Life answers through a thinker’s lens once it knows your own numbers."
+      source="desk" ask="Ask Life a money question" examples="Should I pay off my card or save first?" />
+  );
+}
+
+function LensaskSampleV26() {
   const nav = useNavigation(), { data, choose, flag } = useSeed();
   const params = useLocalSearchParams<{ question?: string }>();
   const refund = seedTaxClaim.refund;

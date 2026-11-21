@@ -285,12 +285,12 @@ function LevelPath({ current }: { current: number }) {
 }
 
 export function LevelsV26() {
-  const t = useTokens(), nav = useNavigation(), { engine } = useSeed();
+  const t = useTokens(), nav = useNavigation(), { data, engine } = useSeed();
   const lv = engine.level, cur = Math.max(1, Math.min(4, lv.currentLevel)), left = lv.toAdvance.filter(g => !g.done).length;
   const here = levelPlan[cur - 1];
   return (
     <Page screen="levels" bar={{ kind: 'push', title: 'Your levels' }}>
-      <PhotoCard source={photos.keyshome} focal={{ x: 0.55, y: 0.62 }} height={170} chips={[season.label]} lead="Climbing toward" title={season.toward} style={{ marginTop: space.xxs }} onPress={() => nav.go('aim')} />
+      <PhotoCard source={photos.keyshome} focal={{ x: 0.55, y: 0.62 }} height={170} chips={[season.label]} lead="Climbing toward" title={SHOW_SAMPLES ? season.toward : data.aim?.what ? data.aim.what.charAt(0).toUpperCase() + data.aim.what.slice(1) : 'Your Chief Aim'} style={{ marginTop: space.xxs }} onPress={() => nav.go('aim')} />
       <Box style={{ marginTop: space.sm }}>
         <Between><Text variant="title">Four levels this season</Text>{cur < 4 ? <Callout>{left ? `${left} ${left === 1 ? 'move' : 'moves'} to Level ${cur + 1}` : `Ready for Level ${cur + 1}`}</Callout> : null}</Between>
         <LevelPath current={cur} />

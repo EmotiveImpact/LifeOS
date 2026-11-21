@@ -147,7 +147,7 @@ export function SubsV26() {
       <Eyebrow>Checked every quarter</Eyebrow>
       {s.unused.length
         ? <Display s={`{${show(s.unusedMonthly * 12, 2)} a year} goes on ${word(s.unused.length).toLowerCase()} ${s.unused.length === 1 ? 'thing' : 'things'} you {haven’t used} in 60 days.`} />
-        : <Display s="{Everything you pay for,} you use." />}
+        : s.all.length ? <Display s="{Everything you pay for,} you use." /> : <Display s="{Nothing here yet.} Subscriptions you tell Life about show here, with what each costs." />}
       <TintCard area="money" style={{ marginTop: space.xl }}>
         <Between><Text variant="title">Every month</Text><Text variant="title">{show(s.monthly, 2)}</Text></Between>
         <SplitBar style={{ marginTop: space.sm }} parts={[{ flex: Math.max(1, s.inUseMonthly), color: t.ink }, ...(s.unusedMonthly ? [{ flex: s.unusedMonthly, color: t.ember }] : [])]} />
@@ -434,7 +434,7 @@ export function VaultV26() {
   return (
     <Page screen="vault" bar={{ kind: 'push', action: { kind: 'node', node: <View style={styles.acts}><RoundButton icon="search" label="Search documents" onPress={() => nav.go('search')} /><RoundButton icon="add" label="Add a document" onPress={() => nav.go('scan')} /></View> } }}>
       <Eyebrow>Documents and renewals</Eyebrow>
-      <Display s={`{${word(act.length)}} to act on. {${word(sorted.length)}} sorted.`} />
+      <Display s={docs.length ? `{${act.length ? word(act.length) : 'Nothing'}} to act on. {${sorted.length ? word(sorted.length) : 'Nothing'}} sorted.` : '{Nothing here yet.} Your documents and renewals, with their dates.'} />
       {front ? (
         <PeekStack style={{ marginTop: space.xl }} peeks={soon.slice(0, 2).map((d, k) => ({ left: `${d.name} · ${d.summary.charAt(0).toLowerCase()}${d.summary.slice(1)}`, right: String(3 - k), onPress: () => open(d.id) }))}>
           <Box pad={0} style={{ overflow: 'hidden' }}>
