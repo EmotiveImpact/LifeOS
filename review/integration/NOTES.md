@@ -73,6 +73,7 @@ No merge conflicts. Phase 20 added routes, so the typed route file needs regener
 | 21 Nov, ~04:38 UTC | `fix-sync-compaction` (fast-forward, F-42: the daily sweep compacts a seventh of accounts' sync logs, so each is compacted weekly; per row only the winning op stays once older ops are a day old, run as each person with row-level security on. Server only; the DPIA's risk 8 updated) | see `git log` | 942 tests with Postgres, API typecheck; no phone file changed |
 | 21 Nov, ~04:40 UTC | `fix-export-files` (fast-forward, F-44: each file still kept comes with a signed download link in the account export, for 7 days or until the file goes; storage keys stay on the server. Server only) | see `git log` | 943 tests with Postgres, API typecheck; no phone file changed |
 | 21 Nov, ~04:43 UTC | `fix-ai-allowance-race` (fast-forward, F-45's first two parts: one AI call reserved in the same transaction as the allowance check, one request per person at a time; a stopped call goes in the ledger as an estimate for the spending cap only. Calendar days versus rolling windows left for Edem. Server only) | see `git log` | 945 tests with Postgres, API typecheck; no phone file changed |
+| 21 Nov, ~04:48 UTC | `fix-store-shots` (fast-forward, F-35: the store screenshot script fixes the clock at 08:10 London; the set in `review/phase-31/store/` retaken, three frames changed (morning Today, "Breakfast · 08:10", the You tab's initial)) | see `git log` | sample web build; every frame compared with Phase 31's by eye; no app code changed |
 
 ## Screenshots
 
