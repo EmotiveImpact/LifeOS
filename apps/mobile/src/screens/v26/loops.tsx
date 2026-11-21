@@ -178,9 +178,9 @@ function UnstuckBody({ onClose }: { onClose: () => void }) {
   } else if (probe.kind === 'none' && probe.reason === 'nothing-planned') {
     body = <>
       <Statement s="Nothing planned for today. {That’s fine.}" style={{ marginTop: space.sm }} />
-      <Body s="Plan what matters, or just ask life something. {Neither needs the other.}" style={{ marginTop: space.xxs }} />
+      <Body s="Plan what matters, or just ask Life something. {Neither needs the other.}" style={{ marginTop: space.xxs }} />
       <Btn label="Plan today" icon="arrow" trail onPress={() => go(() => nav.go('evening', { for: 'today' }))} style={{ marginTop: space.lg }} />
-      <QuietLink label="Ask life instead" onPress={() => go(() => nav.go('chat'))} style={{ marginTop: space.xs }} />
+      <QuietLink label="Ask Life instead" onPress={() => go(() => nav.go('chat'))} style={{ marginTop: space.xs }} />
     </>;
   } else if (probe.kind === 'none' && probe.reason === 'all-done') {
     body = <>
@@ -194,10 +194,10 @@ function UnstuckBody({ onClose }: { onClose: () => void }) {
     body = <>
       {ticked ? <Callout style={{ marginTop: space.sm }}>{`Ticked “${ticked}”. Got a few more minutes?`}</Callout> : null}
       <Statement s="How much time {do you have}?" style={{ marginTop: space.sm }} />
-      <Body s={gap ? `The sample calendar shows {${gap.minutes} minutes free from ${gap.at}}.` : 'Roughly is fine. life finds {one step} that fits.'} style={{ marginTop: space.xxs }} />
+      <Body s={gap ? `The sample calendar shows {${gap.minutes} minutes free from ${gap.at}}.` : 'Roughly is fine. Life finds {one step} that fits.'} style={{ marginTop: space.xxs }} />
       <Duo style={{ marginTop: space.lg }}>{sizes.slice(0, 2)}</Duo>
       <Duo style={{ marginTop: space.xs }}>{sizes.slice(2)}</Duo>
-      <QuietLink label="Ask life instead" onPress={() => go(() => nav.go('chat'))} style={{ marginTop: space.sm }} />
+      <QuietLink label="Ask Life instead" onPress={() => go(() => nav.go('chat'))} style={{ marginTop: space.sm }} />
     </>;
   } else if (offer.kind === 'step') {
     body = <>
@@ -226,7 +226,7 @@ function UnstuckBody({ onClose }: { onClose: () => void }) {
   } else {
     // Nothing fits: say so, and point to the honest fixes (more time, or a smaller or first step), never an invented one.
     const first = offer.needsSteps[0];
-    const needs = offer.reason === 'no-steps' ? (offer.unsized.length ? 'Your next steps need {a rough time} before life can offer one.' : first ? `“${first.text}” needs {a first step}.` : 'Nothing on your list {has a next step}.') : null;
+    const needs = offer.reason === 'no-steps' ? (offer.unsized.length ? 'Your next steps need {a rough time} before Life can offer one.' : first ? `“${first.text}” needs {a first step}.` : 'Nothing on your list {has a next step}.') : null;
     body = <>
       <Statement s={needs ?? `Nothing on your list fits {${minutes} minutes} yet.`} style={{ marginTop: space.sm }} />
       {!needs && offer.smallest ? <Body s={`The smallest next step needs about {${offer.smallest} minutes}.`} style={{ marginTop: space.xxs }} /> : null}
@@ -245,7 +245,7 @@ function UnstuckBody({ onClose }: { onClose: () => void }) {
       <View style={[styles.unstuck, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, space.lg) + space.xs, ...sheetShadow }]}>
         <SheetHandle />
         <View style={styles.head}>
-          <Eyebrow orb>life · one step</Eyebrow>
+          <Eyebrow orb>Life · one step</Eyebrow>
           <RoundButton icon="close" size="sm" label="Not now" onPress={onClose} />
         </View>
         {body}
@@ -450,7 +450,7 @@ export function NudgeV26({ onClose }: { onClose?: () => void }) {
       </> : null}
 
       {offer.kind !== 'none' || offer.reason !== 'nothing-planned' ? <QuietLink label="Ask Life instead" onPress={() => { close(); nav.go('chat'); }} style={{ marginTop: space.lg }} /> : null}
-      <Callout style={{ marginTop: space.md }}>{gap ? 'The free time comes from the sample calendar in this build. ' : ''}life never sends, submits or pays for anything. You do it, then tick it.</Callout>
+      <Callout style={{ marginTop: space.md }}>{gap ? 'The free time comes from the sample calendar in this build. ' : ''}Life never sends, submits or pays for anything. You do it, then tick it.</Callout>
     </Page>
   );
 }
