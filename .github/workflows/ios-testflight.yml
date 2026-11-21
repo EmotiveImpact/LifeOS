@@ -34,8 +34,10 @@ on:
 permissions:
   contents: read
 
+# One queue per branch: the review branch and v26-integration build side by side, and a burst of pushes to one branch
+# makes one build.
 concurrency:
-  group: ios-testflight
+  group: ios-testflight-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -66,6 +68,8 @@ jobs:
   build:
     needs: preflight
     runs-on: macos-26
+    outputs:
+      build_number: ${{ steps.number.outputs.build_number }}
     timeout-minutes: 60
     environment: testflight
     defaults:
@@ -92,10 +96,12 @@ jobs:
       # Build numbers 22 and 7 are already in App Store Connect, so an empty box starts above them. A review build that
       # starts from the beginning uses its build number as the marker (apps/mobile/src/state/freshStart.ts).
       - name: Choose the build number
+        id: number
         run: |
           number="${BUILD_NUMBER:-$((GITHUB_RUN_NUMBER + 30))}"
           [[ "$number" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || { echo "::error::The build number must be digits, such as 40"; exit 1; }
           echo "BUILD_NUMBER=$number" >> "$GITHUB_ENV"
+          echo "build_number=$number" >> "$GITHUB_OUTPUT"
           if [[ "$START_FRESH" == 1 ]]; then echo "EXPO_PUBLIC_FRESH_START=$number" >> "$GITHUB_ENV"; fi
           echo "Build $number, sample life $EXPO_PUBLIC_SAMPLE_DATA, start from the beginning $START_FRESH"
       - name: Install pinned JavaScript dependencies
@@ -126,3 +132,25 @@ jobs:
           BUNDLE_ID: ${{ steps.archive.outputs.bundle_id }}
           APP_VERSION: ${{ steps.archive.outputs.app_version }}
         run: bash scripts/ci-testflight-upload.sh
+
+  # Apple checks each upload after it arrives and can still turn it down (build 42, 21 Nov). This waits for that
+  # verdict, shows Apple's reasons if it fails, and otherwise adds the build to the internal tester group, which
+  # doesn't take new builds by itself, so it shows in TestFlight without anyone tapping in App Store Connect.
+  distribute:
+    needs: build
+    if: ${{ github.event_name == 'push' || inputs.upload_to_testflight }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    environment: testflight
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Wait for Apple, then give the build to the internal testers
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          ASC_APP_ID: ${{ vars.ASC_APP_ID }}
+          BUILD_NUMBER: ${{ needs.build.outputs.build_number }}
+        run: python3 .github/scripts/testflight-status.py distribute
