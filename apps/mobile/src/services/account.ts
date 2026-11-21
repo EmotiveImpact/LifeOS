@@ -15,7 +15,7 @@ import { sessionStore } from './sessionStore';
 
 export type SignInProvider = 'apple' | 'google' | 'email';
 /** Why a sign-in didn't finish, in words the sheet can show. */
-export type AccountProblem = 'offline' | 'bad-code' | 'too-many' | 'not-ready' | 'failed';
+export type AccountProblem = 'offline' | 'bad-code' | 'too-many' | 'held' | 'not-ready' | 'failed';
 export type AccountResult<T> = { ok: true; data: T; mode: 'account' | 'local-preview' } | { ok: false; problem: AccountProblem };
 export interface SignedIn { userId: string; name: string; email: string }
 
@@ -53,6 +53,8 @@ async function call(path: string, body: unknown, token?: string | null, method: 
 
 function problemOf(response: Response | null, code?: string): AccountProblem {
   if (!response) return 'offline';
+  // The server's hourly limits (fix F-11) hold sign-in for longer than a burst does, and say so in seconds.
+  if (response.status === 429 && Number(response.headers.get('x-retry-after') ?? 0) > 120) return 'held';
   if (response.status === 429 || code === 'TOO_MANY_ATTEMPTS') return 'too-many';
   if (code === 'INVALID_OTP' || code === 'OTP_EXPIRED') return 'bad-code';
   return 'failed';
@@ -193,6 +195,7 @@ export const problemWords: Record<AccountProblem, string> = {
   offline: 'Life couldn’t reach the internet. Check your connection and try again.',
   'bad-code': 'That code didn’t work. Check the email, or send a new code.',
   'too-many': 'Too many tries. Wait a minute, then send a new code.',
+  held: 'That’s a lot of codes in a short time, so Life is pausing sign-in to keep your account safe. Try again in an hour.',
   'not-ready': 'That way of signing in arrives with the next update. Use email for now.',
   failed: 'Sign-in didn’t go through. Try again in a moment.',
 };

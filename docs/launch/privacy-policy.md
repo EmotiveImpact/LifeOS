@@ -153,6 +153,7 @@ Some of the companies above process data in the United States or the European Un
 | Your backed-up life | While your account is open |
 | After you delete your account | Sessions end at once. Your account closes and can be reopened by signing in within 30 days. After 30 days every row and file is deleted. Backups of the database roll off within [7] days after that |
 | Sign-in codes | 10 minutes |
+| Counts of sign-in attempts, to stop people guessing codes (kept as scrambled values, never your email or network address) | A day |
 | Sign-in sessions | Until you sign out, or 7 days after you last used Life |
 | Photos only needed for reading | Deleted once read, and within a day at most |
 | Kept letters and documents | Until you delete them or your account |

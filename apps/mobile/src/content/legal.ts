@@ -591,6 +591,10 @@ export const privacyPolicy: LegalDoc = {
           "10 minutes"
         ],
         [
+          "Counts of sign-in attempts, to stop people guessing codes (kept as scrambled values, never your email or network address)",
+          "A day"
+        ],
+        [
           "Sign-in sessions",
           "Until you sign out, or 7 days after you last used Life"
         ],

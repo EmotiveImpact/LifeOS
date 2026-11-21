@@ -200,4 +200,15 @@ export const weeklyMoves = pgTable('weekly_moves', {
   reports: integer('reports').notNull().default(0),
 }, t => [primaryKey({ columns: [t.week, t.platform, t.moves] })]);
 
+/**
+ * Counters for sign-in limits (`src/limits.ts`, fix F-11): how many codes an address or a network address asked for,
+ * how many guesses an address made, how many codes failed. `key` is a keyed hash, so no email or network address is
+ * stored, and the daily sweep deletes rows whose window has long passed. No row-level security: it holds no person.
+ */
+export const authLimits = pgTable('auth_limits', {
+  key: text('key').primaryKey(),
+  count: integer('count').notNull().default(0),
+  window_start: timestamp('window_start', { withTimezone: true }).notNull().defaultNow(),
+}, t => [index('auth_limits_window').on(t.window_start)]);
+
 export const userTables = [...Object.keys(phoneTables), 'devices', 'sync_ops', 'oauth_tokens', 'ai_usage', 'files'] as const;

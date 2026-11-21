@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DeleteBody, FileIdBody, PushBody, SignBody, closeAccount, deleteFile, exportAccount, purgeClosedAccounts, registerPush, sameSecret, signFile, tidyFiles } from './account';
+import { pruneLimits } from './limits';
 import type { Auth, Principal } from './auth';
 import type { Db } from './db/client';
 import { devices } from './db/schema';
@@ -37,7 +38,7 @@ const DeviceBody = z.object({
 function withCors(response: Response, origin: string): Response {
   const headers = new Headers(response.headers);
   headers.set('access-control-allow-origin', origin);
-  headers.set('access-control-expose-headers', 'set-auth-token, life-model, life-tier');
+  headers.set('access-control-expose-headers', 'set-auth-token, life-model, life-tier, x-retry-after');
   headers.append('vary', 'Origin');
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
@@ -179,7 +180,10 @@ export function createApi(options: ApiOptions): (request: Request) => Promise<Re
       if (pathname === '/jobs/sweep' && request.method === 'POST') {
         const given = /^Bearer (.+)$/.exec(request.headers.get('authorization') ?? '')?.[1];
         if (!jobsSecret || !given || !sameSecret(given, jobsSecret)) return fail(401, 'UNAUTHENTICATED');
-        return json(await purgeClosedAccounts(db, storage, now()));
+        const swept = await purgeClosedAccounts(db, storage, now());
+        // Sign-in counters from more than a day ago (fix F-11).
+        const limits = await pruneLimits(db.db, now()).catch(error => { console.error('limit prune failed', error instanceof Error ? error.message : error); return 0; });
+        return json({ ...swept, limits });
       }
       // A wearable's sign-in page sends the browser back here, with no session: the signed, single-use state says who.
       const callback = /^\/wearables\/([a-z]+)\/callback$/.exec(pathname);

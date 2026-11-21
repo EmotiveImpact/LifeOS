@@ -8,7 +8,7 @@ Everything marked P0 in [fix-list.md](fix-list.md). In short:
 
 1. **Owner accounts and settings:** Apple Developer, App Store Connect, Play Console, EAS, the Neon and Vercel production setup, an email sender, Sign in with Apple and Google, AI keys with zero retention, Sentry, the domain.
 2. **Legal:** the DPIA signed off (with the backup decision), the ICO fee paid, the privacy policy published at a real address.
-3. **Build:** support reaches a person (F-10), sign-in code rate limits (F-11), then a security review (F-12). Real accounts starting empty (was F-01) is done.
+3. **Build:** support reaches a person (F-10), then a security review (F-12). Real accounts starting empty (was F-01) and sign-in code limits (was F-11) are done.
 
 Billing is not needed for the beta. TestFlight and Play testing tracks don't charge, and testers use the full app.
 

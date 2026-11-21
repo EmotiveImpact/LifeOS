@@ -23,6 +23,8 @@ export function handler(request: Request): Promise<Response> {
       db: db.db, secret: env.BETTER_AUTH_SECRET, baseURL: env.BETTER_AUTH_URL,
       trustedOrigins: origins,
       sendCode: async () => { throw new Error('Email sign-in codes need an email provider (open owner decision)'); },
+      // Hourly sign-in limits and failed-code alerts (fix F-11); alerts go to the host's log as `auth alert`.
+      limits: {},
       apple: env.APPLE_CLIENT_ID ? { clientId: env.APPLE_CLIENT_ID, clientSecret: env.APPLE_CLIENT_SECRET, appBundleIdentifier: env.APPLE_APP_BUNDLE_IDENTIFIER } : undefined,
       google: env.GOOGLE_CLIENT_ID ? { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } : undefined,
     });
