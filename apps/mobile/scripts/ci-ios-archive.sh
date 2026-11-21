@@ -112,6 +112,11 @@ if relative:
     path = Path('ios') / relative
     granted = plistlib.loads((root / 'profile.plist').read_bytes())['Entitlements']
     wanted = plistlib.loads(path.read_bytes())
+    # expo-notifications writes aps-environment "development"; an App Store profile grants "production".
+    if isinstance(wanted.get('aps-environment'), str) and isinstance(granted.get('aps-environment'), str) \
+            and wanted['aps-environment'] != granted['aps-environment']:
+        wanted['aps-environment'] = granted['aps-environment']
+        path.write_bytes(plistlib.dumps(wanted))
     missing = sorted(key for key in wanted if key not in granted)
     if missing:
         names = ', '.join(sorted({'Push Notifications' if key == 'aps-environment'
