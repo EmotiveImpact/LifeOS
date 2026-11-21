@@ -37,7 +37,8 @@ export interface NudgeInput {
   next?: { id: string; title: string; minutes?: number; private?: boolean } | null;
   /** Today's free stretches, when a calendar is shared. */
   gaps?: readonly Gap[] | null;
-  deadlines?: readonly { id: string; title: string; dueAt: number; private?: boolean }[];
+  /** `allDay`: due on a day with no time said, so the nudge names the day only (`dueAt` is 09:00 that day). */
+  deadlines?: readonly { id: string; title: string; dueAt: number; private?: boolean; allDay?: boolean }[];
   habitsAtRisk?: readonly { id: string; name: string; private?: boolean }[];
   recallDue?: number;
   /** Bedtime as a local clock time, when the reminder is on. */
@@ -90,7 +91,8 @@ export function dayNudges(input: NudgeInput): Nudge[] {
     const latest = d.dueAt - 30 * 60_000;
     if (latest <= now || d.dueAt - now > DEADLINE_LOOKAHEAD) continue;
     const earliest = Math.max(now, d.dueAt - 24 * HOUR);
-    const when = `${dayWord(localDate(d.dueAt, timeZone), localDate(earliest, timeZone))} at ${clock(localMinutes(d.dueAt, timeZone))}`;
+    const day = dayWord(localDate(d.dueAt, timeZone), localDate(earliest, timeZone));
+    const when = d.allDay ? day : `${day} at ${clock(localMinutes(d.dueAt, timeZone))}`;
     add({ id: `deadline-${d.id}`, kind: 'deadlines', earliest, latest, body: named(d.title, d.private) ? `${d.title} is due ${when}.` : `Something is due ${when}.`, to: 'today' });
   }
 

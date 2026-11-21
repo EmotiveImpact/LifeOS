@@ -21,6 +21,7 @@ import {
 } from '@life/core';
 import { hasRealHealth } from '@/services/health/consent';
 import { isOnLocalDay } from './dayCore';
+import { recordDeadlines } from './areaKnown';
 import { deviceTimeZone, missionStepList } from './loops';
 import { kindOf } from './people';
 import { quietHours as QUIET_DEFAULT, notifGroups } from './settings';
@@ -177,7 +178,8 @@ export function nudgesFor(data: SeedData, now: number, busy: Busy[] | null, time
   return dayNudges({
     now, timeZone, gaps, off: kindsOff(data),
     next: next ? { id: next.id, title: next.title, minutes: built.sources[next.id]?.candidate.minutes, private: privateMove(built.sources[next.id]) } : null,
-    deadlines: [],
+    // What you told Life with a date: appointments, documents and bills due (F-50). The sample life has none of its own.
+    deadlines: recordDeadlines(data.records, now, timeZone),
     habitsAtRisk: habitsAtRisk(data),
     recallDue: 0,
     bedtime: built.bedtime,

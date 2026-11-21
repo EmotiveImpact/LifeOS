@@ -1,4 +1,6 @@
 import { whenText, type When } from '@life/brain';
+import { addDays, instantAt, localDate } from '@life/core';
+import { daysToDay } from './moneyKnown';
 import type { FiledRecord } from './seed';
 
 /**
@@ -53,4 +55,33 @@ export function knownArea(input: { records: FiledRecord[]; area: FiledRecord['ar
   }
   next.sort((a, b) => a.date.localeCompare(b.date));
   return { facts, lead, next: next.map(({ date: _date, ...rest }) => rest) };
+}
+
+/**
+ * Deadlines from what you told Life (F-50), for the "Deadlines under 24 hours" nudge: appointments and documents on a
+ * known day still ahead, and bills with a due day. Health appointments and bills are private, so a locked screen says
+ * only that something is due. A day with no time said is all day (09:00 for the nudge's timing, never shown).
+ */
+export type RecordDeadline = { id: string; title: string; dueAt: number; private: boolean; allDay: boolean };
+const DOC_EVENT = { expires: ' expiry', renews: ' renewal', due: '' } as const;
+const NINE = 9 * 60;
+
+export function recordDeadlines(records: FiledRecord[], now: number, timeZone: string, withinDays = 7): RecordDeadline[] {
+  const today = localDate(now, timeZone), out: RecordDeadline[] = [];
+  const minutesOf = (time?: string) => time ? Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5)) : NINE;
+  for (const r of records) {
+    const d = r.details;
+    if (r.status !== 'confirmed' || !d) continue;
+    if (d.kind === 'appointment' || d.kind === 'document') {
+      const on = upcoming(d.when, today, r.source.at.slice(0, 10));
+      if (!on?.exact) continue;
+      const time = d.kind === 'appointment' ? d.when.time : undefined;
+      const said = whenText(d.when), name = d.kind === 'document' ? r.label.slice(0, Math.max(0, r.label.indexOf(` ${d.event}`))) || r.label.replace(said, '').trim() : d.what;
+      const title = d.kind === 'document' ? `${name}${DOC_EVENT[d.event]}` : name;
+      out.push({ id: r.id, title, dueAt: instantAt(on.date, minutesOf(time), timeZone), private: r.area === 'health' || r.area === 'money', allDay: !time });
+    } else if (d.kind === 'bill' && d.dueDay) {
+      out.push({ id: r.id, title: d.payee, dueAt: instantAt(addDays(today, daysToDay(d.dueDay, today)), NINE, timeZone), private: true, allDay: true });
+    }
+  }
+  return out.filter(x => x.dueAt > now && x.dueAt - now <= withinDays * 86_400_000).sort((a, b) => a.dueAt - b.dueAt);
 }
